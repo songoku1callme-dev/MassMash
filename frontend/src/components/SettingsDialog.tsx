@@ -260,7 +260,7 @@ export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsCh
               >
                 <span
                   className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                    voiceSettings.autoRead ? "translate-x-4.5" : "translate-x-0.5"
+                    voiceSettings.autoRead ? "translate-x-[18px]" : "translate-x-[2px]"
                   }`}
                 />
               </button>
