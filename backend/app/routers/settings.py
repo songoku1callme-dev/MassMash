@@ -10,16 +10,7 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 @router.get("/", response_model=SettingsResponse)
 async def get_settings() -> SettingsResponse:
     """Return the current settings (API keys are masked)."""
-    return SettingsResponse(
-        llm_provider=settings.LLM_PROVIDER,
-        openai_api_key_set=bool(settings.OPENAI_API_KEY),
-        openai_model=settings.OPENAI_MODEL,
-        openai_base_url=settings.OPENAI_BASE_URL,
-        gemini_api_key_set=bool(settings.GEMINI_API_KEY),
-        gemini_model=settings.GEMINI_MODEL,
-        anthropic_api_key_set=bool(settings.ANTHROPIC_API_KEY),
-        anthropic_model=settings.ANTHROPIC_MODEL,
-    )
+    return _build_response()
 
 
 @router.put("/", response_model=SettingsResponse)
@@ -44,7 +35,15 @@ async def update_settings(req: SettingsRequest) -> SettingsResponse:
         settings.ANTHROPIC_API_KEY = req.anthropic_api_key
     if req.anthropic_model is not None:
         settings.ANTHROPIC_MODEL = req.anthropic_model
+    if req.ollama_base_url is not None:
+        settings.OLLAMA_BASE_URL = req.ollama_base_url
+    if req.ollama_model is not None:
+        settings.OLLAMA_MODEL = req.ollama_model
 
+    return _build_response()
+
+
+def _build_response() -> SettingsResponse:
     return SettingsResponse(
         llm_provider=settings.LLM_PROVIDER,
         openai_api_key_set=bool(settings.OPENAI_API_KEY),
@@ -54,4 +53,6 @@ async def update_settings(req: SettingsRequest) -> SettingsResponse:
         gemini_model=settings.GEMINI_MODEL,
         anthropic_api_key_set=bool(settings.ANTHROPIC_API_KEY),
         anthropic_model=settings.ANTHROPIC_MODEL,
+        ollama_base_url=settings.OLLAMA_BASE_URL,
+        ollama_model=settings.OLLAMA_MODEL,
     )

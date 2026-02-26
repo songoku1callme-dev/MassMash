@@ -54,6 +54,8 @@ export interface SettingsData {
   gemini_model: string;
   anthropic_api_key_set: boolean;
   anthropic_model: string;
+  ollama_base_url: string;
+  ollama_model: string;
 }
 
 export interface SettingsUpdate {
@@ -65,6 +67,20 @@ export interface SettingsUpdate {
   gemini_model?: string;
   anthropic_api_key?: string;
   anthropic_model?: string;
+  ollama_base_url?: string;
+  ollama_model?: string;
+}
+
+export interface OllamaModelInfo {
+  name: string;
+  size: number;
+  digest: string;
+}
+
+export interface OllamaStatus {
+  available: boolean;
+  base_url: string;
+  models: OllamaModelInfo[];
 }
 
 export type ChatMode = "normal" | "programmer" | "document_analysis";

@@ -25,6 +25,10 @@ class Settings:
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
+    # Ollama (local models)
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.2")
+
     # Search API (Tavily or compatible)
     SEARCH_API_KEY: str = os.getenv("SEARCH_API_KEY", "")
     SEARCH_API_URL: str = os.getenv("SEARCH_API_URL", "https://api.tavily.com/search")

@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import chat, files, settings, tools
+from app.routers import chat, files, ollama, settings, tools
 
 app = FastAPI(
     title="MassMash AI Desktop Client",
@@ -25,6 +25,7 @@ app.include_router(chat.router)
 app.include_router(files.router)
 app.include_router(settings.router)
 app.include_router(tools.router)
+app.include_router(ollama.router)
 
 
 @app.get("/healthz")

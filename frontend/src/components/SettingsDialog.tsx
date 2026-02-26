@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { X, Save, CheckCircle, AlertCircle } from "lucide-react";
-import { getSettings, updateSettings } from "@/services/api";
-import type { SettingsData, SettingsUpdate, VoiceSettings } from "@/types";
+import { X, Save, CheckCircle, AlertCircle, Wifi, WifiOff } from "lucide-react";
+import { getSettings, updateSettings, getOllamaStatus } from "@/services/api";
+import type { OllamaModelInfo, SettingsData, SettingsUpdate, VoiceSettings } from "@/types";
 
 interface Props {
   open: boolean;
@@ -16,6 +16,7 @@ const providers = [
   { value: "openai", label: "OpenAI (GPT)" },
   { value: "gemini", label: "Google Gemini" },
   { value: "anthropic", label: "Anthropic Claude" },
+  { value: "ollama", label: "Ollama (Lokal / Offline)" },
 ];
 
 export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsChange, voices }: Props) {
@@ -24,6 +25,9 @@ export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsCh
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [ollamaAvailable, setOllamaAvailable] = useState<boolean | null>(null);
+  const [ollamaModels, setOllamaModels] = useState<OllamaModelInfo[]>([]);
+  const [ollamaChecking, setOllamaChecking] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -33,8 +37,24 @@ export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsCh
           setForm({ llm_provider: data.llm_provider });
         })
         .catch(() => setError("Einstellungen konnten nicht geladen werden."));
+      // Check Ollama status
+      checkOllama();
     }
   }, [open]);
+
+  const checkOllama = async () => {
+    setOllamaChecking(true);
+    try {
+      const status = await getOllamaStatus();
+      setOllamaAvailable(status.available);
+      setOllamaModels(status.models);
+    } catch {
+      setOllamaAvailable(false);
+      setOllamaModels([]);
+    } finally {
+      setOllamaChecking(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -164,6 +184,73 @@ export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsCh
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
+          </fieldset>
+
+          {/* Ollama Settings */}
+          <fieldset className="space-y-3 border border-zinc-800 rounded-lg p-3">
+            <legend className="text-sm font-medium text-zinc-400 px-2 flex items-center gap-2">
+              Ollama (Lokal)
+              {ollamaChecking ? (
+                <span className="text-xs text-zinc-500">pruefe...</span>
+              ) : ollamaAvailable === true ? (
+                <span className="flex items-center gap-1 text-xs text-emerald-400">
+                  <Wifi size={12} /> Online
+                </span>
+              ) : ollamaAvailable === false ? (
+                <span className="flex items-center gap-1 text-xs text-red-400">
+                  <WifiOff size={12} /> Offline
+                </span>
+              ) : null}
+            </legend>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Base URL</label>
+              <input
+                type="text"
+                defaultValue={settings?.ollama_base_url || "http://localhost:11434"}
+                onChange={(e) => setForm({ ...form, ollama_base_url: e.target.value })}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Model</label>
+              {ollamaModels.length > 0 ? (
+                <select
+                  value={form.ollama_model || settings?.ollama_model || "llama3.2"}
+                  onChange={(e) => setForm({ ...form, ollama_model: e.target.value })}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                >
+                  {ollamaModels.map((m) => (
+                    <option key={m.name} value={m.name}>
+                      {m.name} ({(m.size / 1e9).toFixed(1)} GB)
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  defaultValue={settings?.ollama_model || "llama3.2"}
+                  onChange={(e) => setForm({ ...form, ollama_model: e.target.value })}
+                  placeholder="llama3.2, mistral, etc."
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                />
+              )}
+            </div>
+            {ollamaAvailable === false && (
+              <p className="text-xs text-zinc-500">
+                Ollama nicht erreichbar. Starte Ollama mit{" "}
+                <code className="bg-zinc-800 px-1 rounded text-zinc-400">ollama serve</code>{" "}
+                und lade ein Model mit{" "}
+                <code className="bg-zinc-800 px-1 rounded text-zinc-400">ollama pull llama3.2</code>.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={checkOllama}
+              disabled={ollamaChecking}
+              className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              {ollamaChecking ? "Pruefe..." : "Verbindung testen"}
+            </button>
           </fieldset>
 
           {/* Voice I/O Settings */}

@@ -4,6 +4,7 @@ import type {
   ChatRequest,
   ChatResponse,
   FileUploadResponse,
+  OllamaStatus,
   SettingsData,
   SettingsUpdate,
   ToolInfo,
@@ -66,4 +67,8 @@ export async function healthCheck(): Promise<{ status: string }> {
 
 export async function listTools(): Promise<ToolInfo[]> {
   return request<ToolInfo[]>("/api/tools/");
+}
+
+export async function getOllamaStatus(): Promise<OllamaStatus> {
+  return request<OllamaStatus>("/api/ollama/status");
 }

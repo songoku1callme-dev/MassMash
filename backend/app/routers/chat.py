@@ -65,6 +65,13 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         provider = get_llm_provider()
 
+        # Ollama fallback: if Ollama is selected but unreachable, fall back to dummy
+        if provider.provider_name() == "ollama":
+            from app.llm.ollama_provider import ollama_health_check
+            if not await ollama_health_check():
+                from app.llm.dummy import DummyProvider
+                provider = DummyProvider()
+
         # Determine system prompt: custom > mode default
         system_prompt = request.system_prompt
         if not system_prompt:

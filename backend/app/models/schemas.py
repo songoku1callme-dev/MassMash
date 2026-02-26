@@ -59,6 +59,8 @@ class SettingsRequest(BaseModel):
     gemini_model: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     anthropic_model: Optional[str] = None
+    ollama_base_url: Optional[str] = None
+    ollama_model: Optional[str] = None
 
 
 class SettingsResponse(BaseModel):
@@ -71,3 +73,19 @@ class SettingsResponse(BaseModel):
     gemini_model: str
     anthropic_api_key_set: bool
     anthropic_model: str
+    ollama_base_url: str
+    ollama_model: str
+
+
+class OllamaModelInfo(BaseModel):
+    """Information about a locally available Ollama model."""
+    name: str
+    size: int = 0
+    digest: str = ""
+
+
+class OllamaStatusResponse(BaseModel):
+    """Health / status response for the Ollama server."""
+    available: bool
+    base_url: str
+    models: list[OllamaModelInfo] = []
