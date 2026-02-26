@@ -6,6 +6,7 @@ import type {
   FileUploadResponse,
   SettingsData,
   SettingsUpdate,
+  ToolInfo,
 } from "@/types";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -61,4 +62,8 @@ export async function updateSettings(
 
 export async function healthCheck(): Promise<{ status: string }> {
   return request<{ status: string }>("/healthz");
+}
+
+export async function listTools(): Promise<ToolInfo[]> {
+  return request<ToolInfo[]>("/api/tools/");
 }

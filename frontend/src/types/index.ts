@@ -5,17 +5,38 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface ToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+export interface ToolResult {
+  tool_call_id: string;
+  name: string;
+  result: string;
+}
+
 export interface ChatRequest {
   messages: ChatMessage[];
   mode: string;
   system_prompt?: string;
   file_context?: string;
+  enable_tools?: boolean;
 }
 
 export interface ChatResponse {
   message: ChatMessage;
   provider: string;
   model: string;
+  tool_calls: ToolCall[];
+  tool_results: ToolResult[];
+}
+
+export interface ToolInfo {
+  name: string;
+  description: string;
+  parameters: Record<string, unknown>;
 }
 
 export interface FileUploadResponse {
@@ -48,6 +69,12 @@ export interface SettingsUpdate {
 
 export type ChatMode = "normal" | "programmer" | "document_analysis";
 
+/** Tool data attached to a specific message index in a conversation. */
+export interface MessageToolData {
+  toolCalls: ToolCall[];
+  toolResults: ToolResult[];
+}
+
 export interface Conversation {
   id: string;
   title: string;
@@ -55,4 +82,6 @@ export interface Conversation {
   mode: ChatMode;
   fileContext?: string;
   createdAt: number;
+  /** Map from message index to tool data (only for assistant messages that used tools). */
+  toolDataByIndex?: Record<number, MessageToolData>;
 }

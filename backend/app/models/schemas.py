@@ -1,7 +1,7 @@
 """Pydantic schemas for request/response models."""
 
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional
 
 
 class ChatMessage(BaseModel):
@@ -10,12 +10,27 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class ToolCall(BaseModel):
+    """A tool invocation requested by the LLM."""
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+class ToolResult(BaseModel):
+    """The result of executing a tool."""
+    tool_call_id: str
+    name: str
+    result: str
+
+
 class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
     messages: list[ChatMessage]
     mode: str = "normal"  # "normal", "programmer", "document_analysis"
     system_prompt: Optional[str] = None
     file_context: Optional[str] = None
+    enable_tools: bool = True
 
 
 class ChatResponse(BaseModel):
@@ -23,6 +38,8 @@ class ChatResponse(BaseModel):
     message: ChatMessage
     provider: str
     model: str
+    tool_calls: list[ToolCall] = []
+    tool_results: list[ToolResult] = []
 
 
 class FileUploadResponse(BaseModel):

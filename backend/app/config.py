@@ -25,6 +25,10 @@ class Settings:
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
+    # Search API (Tavily or compatible)
+    SEARCH_API_KEY: str = os.getenv("SEARCH_API_KEY", "")
+    SEARCH_API_URL: str = os.getenv("SEARCH_API_URL", "https://api.tavily.com/search")
+
     # File upload settings
     UPLOAD_DIR: str = os.getenv("UPLOAD_DIR", "uploads")
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "10"))

@@ -6,7 +6,7 @@ import { ModeSelector } from "@/components/ModeSelector";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoadingDots } from "@/components/LoadingDots";
 import { sendChat } from "@/services/api";
-import type { ChatMessage, ChatMode, Conversation } from "@/types";
+import type { ChatMessage, ChatMode, Conversation, MessageToolData } from "@/types";
 import { Bot } from "lucide-react";
 
 function generateId(): string {
@@ -127,13 +127,21 @@ function App() {
           file_context: fileContext || currentConv?.fileContext,
         });
 
-        // Append assistant response
+        // Append assistant response with optional tool data
+        const hasToolData = response.tool_calls.length > 0 || response.tool_results.length > 0;
         setConversations((prev) =>
-          prev.map((c) =>
-            c.id === convId
-              ? { ...c, messages: [...c.messages, response.message] }
-              : c
-          )
+          prev.map((c) => {
+            if (c.id !== convId) return c;
+            const newMessages = [...c.messages, response.message];
+            const newToolData = { ...(c.toolDataByIndex || {}) };
+            if (hasToolData) {
+              newToolData[newMessages.length - 1] = {
+                toolCalls: response.tool_calls,
+                toolResults: response.tool_results,
+              } as MessageToolData;
+            }
+            return { ...c, messages: newMessages, toolDataByIndex: newToolData };
+          })
         );
       } catch (err) {
         const errorMsg: ChatMessage = {
@@ -192,9 +200,17 @@ function App() {
             </div>
           ) : (
             <>
-              {activeConv.messages.map((msg, i) => (
-                <ChatMessageItem key={i} message={msg} />
-              ))}
+              {activeConv.messages.map((msg, i) => {
+                const toolData = activeConv.toolDataByIndex?.[i];
+                return (
+                  <ChatMessageItem
+                    key={i}
+                    message={msg}
+                    toolCalls={toolData?.toolCalls}
+                    toolResults={toolData?.toolResults}
+                  />
+                );
+              })}
               {loading && <LoadingDots />}
               <div ref={messagesEndRef} />
             </>
