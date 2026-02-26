@@ -4,6 +4,11 @@
  * Single-command desktop launcher: starts the FastAPI backend automatically,
  * waits for it to be healthy, then opens the UI window.
  * If the backend crashes it is restarted automatically.
+ *
+ * Includes:
+ * - Splash screen while backend starts
+ * - Auto-update support via electron-updater
+ * - Proper resource paths for packaged builds
  */
 
 const { app, BrowserWindow, shell, dialog } = require("electron");
@@ -12,6 +17,7 @@ const { spawn } = require("child_process");
 const http = require("http");
 
 let mainWindow = null;
+let splashWindow = null;
 let backendProcess = null;
 let isQuitting = false;
 let backendRestartCount = 0;
@@ -24,6 +30,23 @@ const HEALTH_URL = `${BACKEND_URL}/healthz`;
 const HEALTH_CHECK_INTERVAL_MS = 1000;
 const HEALTH_CHECK_MAX_RETRIES = 30;
 const MAX_BACKEND_RESTARTS = 5;
+
+// ---------------------------------------------------------------------------
+// Resource path helpers (works in both dev and packaged mode)
+// ---------------------------------------------------------------------------
+
+/**
+ * In packaged mode, extraResources are placed next to the app.asar:
+ *   <install>/resources/backend/...
+ *   <install>/resources/frontend/dist/...
+ * In dev mode, paths are relative to __dirname (electron/).
+ */
+function getResourcePath(...segments) {
+  if (isDev) {
+    return path.join(__dirname, "..", ...segments);
+  }
+  return path.join(process.resourcesPath, ...segments);
+}
 
 // ---------------------------------------------------------------------------
 // Health check helper
@@ -70,9 +93,9 @@ function waitForBackend(retries = HEALTH_CHECK_MAX_RETRIES) {
 function startBackend() {
   if (backendProcess) return; // already running
 
-  const backendDir = path.join(__dirname, "..", "backend");
+  const backendDir = getResourcePath("backend");
 
-  console.log("[Electron] Starting backend server...");
+  console.log("[Electron] Starting backend server from:", backendDir);
 
   // Use `fastapi dev` in development, `fastapi run` in production
   const fastapiCmd = isDev ? "dev" : "run";
@@ -141,7 +164,41 @@ function stopBackend() {
 }
 
 // ---------------------------------------------------------------------------
-// Window management
+// Splash screen
+// ---------------------------------------------------------------------------
+
+function createSplashWindow() {
+  splashWindow = new BrowserWindow({
+    width: 420,
+    height: 320,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    alwaysOnTop: true,
+    icon: path.join(__dirname, "icon.png"),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  splashWindow.loadFile(path.join(__dirname, "splash.html"));
+  splashWindow.center();
+
+  splashWindow.on("closed", () => {
+    splashWindow = null;
+  });
+}
+
+function closeSplash() {
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.close();
+    splashWindow = null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main window
 // ---------------------------------------------------------------------------
 
 function createWindow() {
@@ -166,6 +223,7 @@ function createWindow() {
 
   // Show window only once content is ready (avoids white flash)
   mainWindow.once("ready-to-show", () => {
+    closeSplash();
     mainWindow.show();
   });
 
@@ -173,9 +231,9 @@ function createWindow() {
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    mainWindow.loadFile(
-      path.join(__dirname, "..", "frontend", "dist", "index.html")
-    );
+    // In packaged mode, frontend dist is in extraResources
+    const frontendIndex = getResourcePath("frontend", "dist", "index.html");
+    mainWindow.loadFile(frontendIndex);
   }
 
   // Open external links in browser
@@ -190,14 +248,62 @@ function createWindow() {
 }
 
 // ---------------------------------------------------------------------------
+// Auto-update (only in packaged mode)
+// ---------------------------------------------------------------------------
+
+function setupAutoUpdate() {
+  if (isDev) return;
+
+  try {
+    const { autoUpdater } = require("electron-updater");
+
+    autoUpdater.logger = console;
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on("update-available", (info) => {
+      console.log("[AutoUpdate] Update available:", info.version);
+    });
+
+    autoUpdater.on("update-downloaded", (info) => {
+      console.log("[AutoUpdate] Update downloaded:", info.version);
+      dialog
+        .showMessageBox(mainWindow, {
+          type: "info",
+          title: "Update verfuegbar",
+          message: `MassMash AI v${info.version} wurde heruntergeladen. Die App wird beim naechsten Neustart aktualisiert.`,
+          buttons: ["Jetzt neustarten", "Spaeter"],
+        })
+        .then((result) => {
+          if (result.response === 0) {
+            autoUpdater.quitAndInstall();
+          }
+        });
+    });
+
+    autoUpdater.on("error", (err) => {
+      console.error("[AutoUpdate] Error:", err.message);
+    });
+
+    autoUpdater.checkForUpdatesAndNotify();
+  } catch (err) {
+    // electron-updater may not be installed in dev
+    console.log("[AutoUpdate] Skipped:", err.message);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // App lifecycle
 // ---------------------------------------------------------------------------
 
 app.whenReady().then(async () => {
-  // 1. Start the backend
+  // 1. Show splash screen
+  createSplashWindow();
+
+  // 2. Start the backend
   startBackend();
 
-  // 2. Wait until the backend is healthy
+  // 3. Wait until the backend is healthy
   try {
     console.log("[Electron] Waiting for backend to become healthy...");
     await waitForBackend();
@@ -208,8 +314,11 @@ app.whenReady().then(async () => {
     );
   }
 
-  // 3. Create the main window
+  // 4. Create the main window (splash closes on ready-to-show)
   createWindow();
+
+  // 5. Setup auto-update
+  setupAutoUpdate();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
