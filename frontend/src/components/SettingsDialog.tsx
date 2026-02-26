@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { X, Save, CheckCircle, AlertCircle } from "lucide-react";
 import { getSettings, updateSettings } from "@/services/api";
-import type { SettingsData, SettingsUpdate } from "@/types";
+import type { SettingsData, SettingsUpdate, VoiceSettings } from "@/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  voiceSettings: VoiceSettings;
+  onVoiceSettingsChange: (settings: VoiceSettings) => void;
+  voices: SpeechSynthesisVoice[];
 }
 
 const providers = [
@@ -15,7 +18,7 @@ const providers = [
   { value: "anthropic", label: "Anthropic Claude" },
 ];
 
-export function SettingsDialog({ open, onClose }: Props) {
+export function SettingsDialog({ open, onClose, voiceSettings, onVoiceSettingsChange, voices }: Props) {
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [form, setForm] = useState<SettingsUpdate>({});
   const [saving, setSaving] = useState(false);
@@ -160,6 +163,107 @@ export function SettingsDialog({ open, onClose }: Props) {
                 onChange={(e) => setForm({ ...form, anthropic_model: e.target.value })}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
+            </div>
+          </fieldset>
+
+          {/* Voice I/O Settings */}
+          <fieldset className="space-y-3 border border-zinc-800 rounded-lg p-3">
+            <legend className="text-sm font-medium text-zinc-400 px-2">Sprache / Voice</legend>
+
+            {/* Recognition Language */}
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Erkennungssprache</label>
+              <select
+                value={voiceSettings.recognitionLang}
+                onChange={(e) =>
+                  onVoiceSettingsChange({ ...voiceSettings, recognitionLang: e.target.value })
+                }
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="de-DE">Deutsch (de-DE)</option>
+                <option value="en-US">English (en-US)</option>
+                <option value="en-GB">English (en-GB)</option>
+                <option value="fr-FR">Francais (fr-FR)</option>
+                <option value="es-ES">Espanol (es-ES)</option>
+                <option value="it-IT">Italiano (it-IT)</option>
+                <option value="ja-JP">Japanese (ja-JP)</option>
+                <option value="zh-CN">Chinese (zh-CN)</option>
+              </select>
+            </div>
+
+            {/* TTS Voice */}
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">TTS Stimme</label>
+              <select
+                value={voiceSettings.voiceURI}
+                onChange={(e) =>
+                  onVoiceSettingsChange({ ...voiceSettings, voiceURI: e.target.value })
+                }
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              >
+                <option value="">Standard (Browser-Standard)</option>
+                {voices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Speed */}
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">
+                Geschwindigkeit: {voiceSettings.rate.toFixed(1)}x
+              </label>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={voiceSettings.rate}
+                onChange={(e) =>
+                  onVoiceSettingsChange({ ...voiceSettings, rate: parseFloat(e.target.value) })
+                }
+                className="w-full accent-blue-600"
+              />
+            </div>
+
+            {/* Pitch */}
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">
+                Tonhoehe: {voiceSettings.pitch.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.1"
+                value={voiceSettings.pitch}
+                onChange={(e) =>
+                  onVoiceSettingsChange({ ...voiceSettings, pitch: parseFloat(e.target.value) })
+                }
+                className="w-full accent-blue-600"
+              />
+            </div>
+
+            {/* Auto-Read toggle */}
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-zinc-500">Antworten automatisch vorlesen</label>
+              <button
+                type="button"
+                onClick={() =>
+                  onVoiceSettingsChange({ ...voiceSettings, autoRead: !voiceSettings.autoRead })
+                }
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  voiceSettings.autoRead ? "bg-blue-600" : "bg-zinc-700"
+                }`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+                    voiceSettings.autoRead ? "translate-x-4.5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
             </div>
           </fieldset>
 

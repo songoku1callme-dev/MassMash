@@ -6,7 +6,8 @@ import { ModeSelector } from "@/components/ModeSelector";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoadingDots } from "@/components/LoadingDots";
 import { sendChat } from "@/services/api";
-import type { ChatMessage, ChatMode, Conversation, MessageToolData } from "@/types";
+import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import type { ChatMessage, ChatMode, Conversation, MessageToolData, VoiceSettings } from "@/types";
 import { Bot } from "lucide-react";
 
 function generateId(): string {
@@ -37,13 +38,43 @@ function saveConversations(convs: Conversation[]) {
   localStorage.setItem("massmash_conversations", JSON.stringify(convs));
 }
 
+const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
+  rate: 1,
+  pitch: 1,
+  voiceURI: "",
+  autoRead: false,
+  recognitionLang: "de-DE",
+};
+
+function loadVoiceSettings(): VoiceSettings {
+  try {
+    const data = localStorage.getItem("massmash_voice_settings");
+    return data ? { ...DEFAULT_VOICE_SETTINGS, ...JSON.parse(data) } : DEFAULT_VOICE_SETTINGS;
+  } catch {
+    return DEFAULT_VOICE_SETTINGS;
+  }
+}
+
+function saveVoiceSettings(s: VoiceSettings) {
+  localStorage.setItem("massmash_voice_settings", JSON.stringify(s));
+}
+
 function App() {
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mode, setMode] = useState<ChatMode>("normal");
   const [loading, setLoading] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(loadVoiceSettings);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevMsgCountRef = useRef(0);
+
+  const tts = useSpeechSynthesis(voiceSettings);
+
+  const handleVoiceSettingsChange = useCallback((s: VoiceSettings) => {
+    setVoiceSettings(s);
+    saveVoiceSettings(s);
+  }, []);
 
   const activeConv = conversations.find((c) => c.id === activeId) || null;
 
@@ -56,6 +87,19 @@ function App() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeConv?.messages.length, loading]);
+
+  // Auto-read new assistant messages if enabled
+  useEffect(() => {
+    if (!activeConv || !voiceSettings.autoRead) return;
+    const msgCount = activeConv.messages.length;
+    if (msgCount > prevMsgCountRef.current) {
+      const lastMsg = activeConv.messages[msgCount - 1];
+      if (lastMsg.role === "assistant") {
+        tts.speak(lastMsg.content);
+      }
+    }
+    prevMsgCountRef.current = msgCount;
+  }, [activeConv?.messages.length, activeConv, voiceSettings.autoRead, tts]);
 
   const handleNewChat = useCallback(() => {
     const conv = createConversation(mode);
@@ -208,6 +252,9 @@ function App() {
                     message={msg}
                     toolCalls={toolData?.toolCalls}
                     toolResults={toolData?.toolResults}
+                    onSpeak={tts.speak}
+                    onStopSpeaking={tts.stop}
+                    isSpeaking={tts.speaking}
                   />
                 );
               })}
@@ -218,11 +265,17 @@ function App() {
         </div>
 
         {/* Input */}
-        <ChatInput onSend={handleSend} disabled={loading} />
+        <ChatInput onSend={handleSend} disabled={loading} recognitionLang={voiceSettings.recognitionLang} />
       </div>
 
       {/* Settings Dialog */}
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        voiceSettings={voiceSettings}
+        onVoiceSettingsChange={handleVoiceSettingsChange}
+        voices={tts.voices}
+      />
     </div>
   );
 }

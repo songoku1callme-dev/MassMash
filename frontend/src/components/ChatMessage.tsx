@@ -1,10 +1,16 @@
-import { Bot, User, Search, Code, FolderOpen, FileText, Wrench } from "lucide-react";
+import { Bot, User, Search, Code, FolderOpen, FileText, Wrench, Volume2, VolumeX } from "lucide-react";
 import type { ChatMessage as ChatMessageType, ToolCall, ToolResult } from "@/types";
 
 interface Props {
   message: ChatMessageType;
   toolCalls?: ToolCall[];
   toolResults?: ToolResult[];
+  /** Callback to speak this message aloud via TTS. */
+  onSpeak?: (text: string) => void;
+  /** Callback to stop current TTS playback. */
+  onStopSpeaking?: () => void;
+  /** Whether TTS is currently speaking (any message). */
+  isSpeaking?: boolean;
 }
 
 function formatContent(content: string): string {
@@ -65,8 +71,9 @@ function ToolResultBlock({ result }: { result: ToolResult }) {
   );
 }
 
-export function ChatMessageItem({ message, toolCalls, toolResults }: Props) {
+export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onStopSpeaking, isSpeaking }: Props) {
   const isUser = message.role === "user";
+  const isAssistant = message.role === "assistant";
   const hasTools = (toolCalls && toolCalls.length > 0) || (toolResults && toolResults.length > 0);
 
   return (
@@ -79,9 +86,24 @@ export function ChatMessageItem({ message, toolCalls, toolResults }: Props) {
         {isUser ? <User size={16} /> : <Bot size={16} />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-zinc-500 mb-1 font-medium">
-          {isUser ? "Du" : "Assistent"}
-        </p>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs text-zinc-500 font-medium">
+            {isUser ? "Du" : "Assistent"}
+          </p>
+
+          {/* TTS button for assistant messages */}
+          {isAssistant && onSpeak && (
+            <button
+              onClick={() =>
+                isSpeaking ? onStopSpeaking?.() : onSpeak(message.content)
+              }
+              className="text-zinc-600 hover:text-zinc-300 transition-colors"
+              title={isSpeaking ? "Vorlesen stoppen" : "Vorlesen"}
+            >
+              {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
+            </button>
+          )}
+        </div>
 
         {/* Tool call badges */}
         {hasTools && toolCalls && toolCalls.length > 0 && (

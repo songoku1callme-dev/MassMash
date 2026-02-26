@@ -85,3 +85,17 @@ export interface Conversation {
   /** Map from message index to tool data (only for assistant messages that used tools). */
   toolDataByIndex?: Record<number, MessageToolData>;
 }
+
+/** Voice I/O settings persisted in localStorage. */
+export interface VoiceSettings {
+  /** Speech synthesis rate (0.5 – 2.0, default 1). */
+  rate: number;
+  /** Speech synthesis pitch (0.0 – 2.0, default 1). */
+  pitch: number;
+  /** SpeechSynthesis voice URI (empty = browser default). */
+  voiceURI: string;
+  /** Auto-read assistant messages aloud. */
+  autoRead: boolean;
+  /** Speech recognition language (BCP-47, e.g. "de-DE"). */
+  recognitionLang: string;
+}
