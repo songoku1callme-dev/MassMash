@@ -1,18 +1,148 @@
 /**
  * MassMash AI Desktop Client - Electron Main Process
  *
- * This wraps the React frontend in a native desktop window.
- * The backend (FastAPI) should be started separately or via the start script.
+ * Single-command desktop launcher: starts the FastAPI backend automatically,
+ * waits for it to be healthy, then opens the UI window.
+ * If the backend crashes it is restarted automatically.
  */
 
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, shell, dialog } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
+const http = require("http");
 
 let mainWindow = null;
 let backendProcess = null;
+let isQuitting = false;
+let backendRestartCount = 0;
 
 const isDev = !app.isPackaged;
+
+const BACKEND_PORT = 8000;
+const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
+const HEALTH_URL = `${BACKEND_URL}/healthz`;
+const HEALTH_CHECK_INTERVAL_MS = 1000;
+const HEALTH_CHECK_MAX_RETRIES = 30;
+const MAX_BACKEND_RESTARTS = 5;
+
+// ---------------------------------------------------------------------------
+// Health check helper
+// ---------------------------------------------------------------------------
+
+function checkBackendHealth() {
+  return new Promise((resolve) => {
+    const req = http.get(HEALTH_URL, (res) => {
+      resolve(res.statusCode === 200);
+    });
+    req.on("error", () => resolve(false));
+    req.setTimeout(2000, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+/**
+ * Poll the backend health endpoint until it responds with 200 or we exceed
+ * the maximum number of retries.
+ */
+function waitForBackend(retries = HEALTH_CHECK_MAX_RETRIES) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const healthy = await checkBackendHealth();
+      if (healthy) {
+        clearInterval(interval);
+        resolve();
+      } else if (attempts >= retries) {
+        clearInterval(interval);
+        reject(new Error("Backend did not become healthy in time"));
+      }
+    }, HEALTH_CHECK_INTERVAL_MS);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Backend process management
+// ---------------------------------------------------------------------------
+
+function startBackend() {
+  if (backendProcess) return; // already running
+
+  const backendDir = path.join(__dirname, "..", "backend");
+
+  console.log("[Electron] Starting backend server...");
+
+  // Use `fastapi dev` in development, `fastapi run` in production
+  const fastapiCmd = isDev ? "dev" : "run";
+
+  backendProcess = spawn(
+    "poetry",
+    ["run", "fastapi", fastapiCmd, "app/main.py", "--port", String(BACKEND_PORT)],
+    {
+      cwd: backendDir,
+      shell: true,
+      stdio: "pipe",
+      env: { ...process.env },
+    }
+  );
+
+  backendProcess.stdout.on("data", (data) => {
+    console.log(`[Backend] ${data.toString().trim()}`);
+  });
+
+  backendProcess.stderr.on("data", (data) => {
+    console.error(`[Backend] ${data.toString().trim()}`);
+  });
+
+  backendProcess.on("error", (err) => {
+    console.error("[Electron] Failed to spawn backend:", err.message);
+    backendProcess = null;
+  });
+
+  backendProcess.on("close", (code) => {
+    console.log(`[Electron] Backend exited with code ${code}`);
+    backendProcess = null;
+
+    // Auto-restart unless we are quitting the app
+    if (!isQuitting && backendRestartCount < MAX_BACKEND_RESTARTS) {
+      backendRestartCount++;
+      console.log(
+        `[Electron] Restarting backend (attempt ${backendRestartCount}/${MAX_BACKEND_RESTARTS})...`
+      );
+      setTimeout(startBackend, 1500);
+    } else if (!isQuitting) {
+      console.error("[Electron] Backend restart limit reached.");
+      dialog.showErrorBox(
+        "Backend Error",
+        "The backend server crashed and could not be restarted.\n" +
+          "Please check the logs and restart the application."
+      );
+    }
+  });
+}
+
+function stopBackend() {
+  if (!backendProcess) return;
+
+  console.log("[Electron] Stopping backend...");
+
+  // On Windows, killing a shell-spawned process requires killing the tree
+  if (process.platform === "win32") {
+    spawn("taskkill", ["/pid", String(backendProcess.pid), "/f", "/t"], {
+      shell: true,
+    });
+  } else {
+    backendProcess.kill("SIGTERM");
+  }
+
+  backendProcess = null;
+}
+
+// ---------------------------------------------------------------------------
+// Window management
+// ---------------------------------------------------------------------------
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -23,6 +153,7 @@ function createWindow() {
     title: "MassMash AI",
     icon: path.join(__dirname, "icon.png"),
     backgroundColor: "#09090b", // zinc-950
+    show: false, // show after ready-to-show
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -33,13 +164,18 @@ function createWindow() {
   // Remove default menu bar
   mainWindow.setMenuBarVisibility(false);
 
+  // Show window only once content is ready (avoids white flash)
+  mainWindow.once("ready-to-show", () => {
+    mainWindow.show();
+  });
+
   if (isDev) {
-    // In development, load from Vite dev server
     mainWindow.loadURL("http://localhost:5173");
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    // In production, load the built frontend
-    mainWindow.loadFile(path.join(__dirname, "..", "frontend", "dist", "index.html"));
+    mainWindow.loadFile(
+      path.join(__dirname, "..", "frontend", "dist", "index.html")
+    );
   }
 
   // Open external links in browser
@@ -53,44 +189,27 @@ function createWindow() {
   });
 }
 
-function startBackend() {
-  const backendDir = path.join(__dirname, "..", "backend");
+// ---------------------------------------------------------------------------
+// App lifecycle
+// ---------------------------------------------------------------------------
 
-  // Try to start the backend using poetry
-  backendProcess = spawn(
-    "poetry",
-    ["run", "fastapi", "dev", "app/main.py", "--port", "8000"],
-    {
-      cwd: backendDir,
-      shell: true,
-      stdio: "pipe",
-    }
-  );
-
-  backendProcess.stdout.on("data", (data) => {
-    console.log(`[Backend] ${data}`);
-  });
-
-  backendProcess.stderr.on("data", (data) => {
-    console.error(`[Backend] ${data}`);
-  });
-
-  backendProcess.on("error", (err) => {
-    console.error("Failed to start backend:", err.message);
-  });
-
-  backendProcess.on("close", (code) => {
-    console.log(`Backend process exited with code ${code}`);
-    backendProcess = null;
-  });
-}
-
-app.whenReady().then(() => {
-  // Start backend automatically
+app.whenReady().then(async () => {
+  // 1. Start the backend
   startBackend();
 
-  // Wait a moment for the backend to start, then create the window
-  setTimeout(createWindow, 2000);
+  // 2. Wait until the backend is healthy
+  try {
+    console.log("[Electron] Waiting for backend to become healthy...");
+    await waitForBackend();
+    console.log("[Electron] Backend is healthy!");
+  } catch {
+    console.warn(
+      "[Electron] Backend health check timed out — opening window anyway."
+    );
+  }
+
+  // 3. Create the main window
+  createWindow();
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -100,17 +219,16 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => {
-  // Kill backend when app closes
-  if (backendProcess) {
-    backendProcess.kill();
-  }
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
 app.on("before-quit", () => {
-  if (backendProcess) {
-    backendProcess.kill();
-  }
+  isQuitting = true;
+  stopBackend();
+});
+
+app.on("quit", () => {
+  stopBackend();
 });

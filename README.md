@@ -122,9 +122,14 @@ cd electron
 # Install Electron
 npm install
 
-# Make sure backend and frontend are running, then:
+# Start desktop app (backend starts automatically!)
 npm start
 ```
+
+> **Note:** The Electron app automatically starts the FastAPI backend, waits for it to be healthy via `/healthz`, and opens the window. If the backend crashes, it auto-restarts (up to 5 times). No need to start the backend separately!
+>
+> In **development mode** (`npm run start:dev`), the frontend Vite dev server should still be started separately (`cd frontend && npm run dev`).
+> In **production mode** (packaged app), both backend and frontend are bundled.
 
 ### Quick Start Scripts
 
