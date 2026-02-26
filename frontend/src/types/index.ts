@@ -83,7 +83,10 @@ export interface OllamaStatus {
   models: OllamaModelInfo[];
 }
 
-export type ChatMode = "normal" | "programmer" | "document_analysis";
+export type ChatMode = "normal" | "programmer" | "document_analysis" | "gaming_optimizer" | "hardware_advisor";
+
+/** Theme preference. */
+export type Theme = "dark" | "light";
 
 /** Tool data attached to a specific message index in a conversation. */
 export interface MessageToolData {

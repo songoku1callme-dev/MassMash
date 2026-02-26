@@ -1,5 +1,5 @@
 import { Bot, User, Search, Code, FolderOpen, FileText, Wrench, Volume2, VolumeX } from "lucide-react";
-import type { ChatMessage as ChatMessageType, ToolCall, ToolResult } from "@/types";
+import type { ChatMessage as ChatMessageType, ToolCall, ToolResult, Theme } from "@/types";
 
 interface Props {
   message: ChatMessageType;
@@ -11,6 +11,7 @@ interface Props {
   onStopSpeaking?: () => void;
   /** Whether TTS is currently speaking (any message). */
   isSpeaking?: boolean;
+  theme?: Theme;
 }
 
 function formatContent(content: string): string {
@@ -71,15 +72,16 @@ function ToolResultBlock({ result }: { result: ToolResult }) {
   );
 }
 
-export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onStopSpeaking, isSpeaking }: Props) {
+export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onStopSpeaking, isSpeaking, theme = "dark" }: Props) {
   const isUser = message.role === "user";
   const isAssistant = message.role === "assistant";
   const hasTools = (toolCalls && toolCalls.length > 0) || (toolResults && toolResults.length > 0);
+  const isDark = theme === "dark";
 
   return (
-    <div className={`flex gap-3 px-4 py-4 ${isUser ? "bg-zinc-900/30" : "bg-zinc-900/60"}`}>
+    <div className={`flex gap-3 px-4 py-4 ${isUser ? (isDark ? "bg-zinc-900/30" : "bg-white") : (isDark ? "bg-zinc-900/60" : "bg-gray-50")}`}>
       <div
-        className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+        className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-white ${
           isUser ? "bg-blue-600" : "bg-emerald-600"
         }`}
       >
@@ -87,7 +89,7 @@ export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onSt
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <p className="text-xs text-zinc-500 font-medium">
+          <p className={`text-xs font-medium ${isDark ? "text-zinc-500" : "text-gray-500"}`}>
             {isUser ? "Du" : "Assistent"}
           </p>
 
@@ -97,7 +99,7 @@ export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onSt
               onClick={() =>
                 isSpeaking ? onStopSpeaking?.() : onSpeak(message.content)
               }
-              className="text-zinc-600 hover:text-zinc-300 transition-colors"
+              className={`transition-colors ${isDark ? "text-zinc-600 hover:text-zinc-300" : "text-gray-400 hover:text-gray-600"}`}
               title={isSpeaking ? "Vorlesen stoppen" : "Vorlesen"}
             >
               {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
@@ -125,7 +127,7 @@ export function ChatMessageItem({ message, toolCalls, toolResults, onSpeak, onSt
 
         {/* Message content */}
         <div
-          className="text-sm text-zinc-200 leading-relaxed prose prose-invert max-w-none"
+          className={`text-sm leading-relaxed prose max-w-none ${isDark ? "text-zinc-200 prose-invert" : "text-gray-800"}`}
           dangerouslySetInnerHTML={{ __html: formatContent(message.content) }}
         />
       </div>

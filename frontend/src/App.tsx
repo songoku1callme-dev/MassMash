@@ -7,6 +7,7 @@ import { SettingsDialog } from "@/components/SettingsDialog";
 import { LoadingDots } from "@/components/LoadingDots";
 import { sendChat } from "@/services/api";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { useTheme } from "@/contexts/ThemeContext";
 import type { ChatMessage, ChatMode, Conversation, MessageToolData, VoiceSettings } from "@/types";
 import { Bot } from "lucide-react";
 
@@ -69,11 +70,50 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMsgCountRef = useRef(0);
 
+  const { theme, toggleTheme } = useTheme();
   const tts = useSpeechSynthesis(voiceSettings);
 
   const handleVoiceSettingsChange = useCallback((s: VoiceSettings) => {
     setVoiceSettings(s);
     saveVoiceSettings(s);
+  }, []);
+
+  // --- Chat Export/Import ---
+  const handleExportChats = useCallback(() => {
+    const data = JSON.stringify(conversations, null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `massmash-chats-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [conversations]);
+
+  const handleImportChats = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target?.result as string) as Conversation[];
+          if (!Array.isArray(imported)) throw new Error("Invalid format");
+          setConversations((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id));
+            const newConvs = imported.filter((c) => !existingIds.has(c.id));
+            return [...newConvs, ...prev];
+          });
+        } catch {
+          alert("Import fehlgeschlagen: Ungueltige JSON-Datei.");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }, []);
 
   const activeConv = conversations.find((c) => c.id === activeId) || null;
@@ -204,8 +244,10 @@ function App() {
     [activeId, conversations, mode]
   );
 
+  const isDark = theme === "dark";
+
   return (
-    <div className="flex h-screen bg-zinc-950">
+    <div className={`flex h-screen ${isDark ? "bg-zinc-950" : "bg-gray-50"}`}>
       {/* Sidebar */}
       <Sidebar
         conversations={conversations}
@@ -214,14 +256,18 @@ function App() {
         onNew={handleNewChat}
         onDelete={handleDeleteConv}
         onOpenSettings={() => setSettingsOpen(true)}
+        onExport={handleExportChats}
+        onImport={handleImportChats}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800 bg-zinc-900/50">
-          <ModeSelector mode={mode} onChange={handleModeChange} />
-          <div className="text-xs text-zinc-600">
+        <div className={`flex items-center justify-between px-4 py-2.5 border-b ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-gray-200 bg-white"}`}>
+          <ModeSelector mode={mode} onChange={handleModeChange} theme={theme} />
+          <div className={`text-xs ${isDark ? "text-zinc-600" : "text-gray-400"}`}>
             {activeConv
               ? `${activeConv.messages.length} Nachrichten`
               : "Neuen Chat starten"}
@@ -229,11 +275,11 @@ function App() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto">
+        <div className={`flex-1 overflow-y-auto ${isDark ? "" : "bg-gray-50"}`}>
           {!activeConv || activeConv.messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-zinc-600">
-              <Bot size={48} className="mb-4 text-zinc-700" />
-              <h2 className="text-xl font-semibold text-zinc-400 mb-2">
+            <div className={`flex flex-col items-center justify-center h-full ${isDark ? "text-zinc-600" : "text-gray-400"}`}>
+              <Bot size={48} className={`mb-4 ${isDark ? "text-zinc-700" : "text-gray-300"}`} />
+              <h2 className={`text-xl font-semibold mb-2 ${isDark ? "text-zinc-400" : "text-gray-600"}`}>
                 MassMash AI
               </h2>
               <p className="text-sm text-center max-w-md">
@@ -255,6 +301,7 @@ function App() {
                     onSpeak={tts.speak}
                     onStopSpeaking={tts.stop}
                     isSpeaking={tts.speaking}
+                    theme={theme}
                   />
                 );
               })}
@@ -265,7 +312,7 @@ function App() {
         </div>
 
         {/* Input */}
-        <ChatInput onSend={handleSend} disabled={loading} recognitionLang={voiceSettings.recognitionLang} />
+        <ChatInput onSend={handleSend} disabled={loading} recognitionLang={voiceSettings.recognitionLang} theme={theme} />
       </div>
 
       {/* Settings Dialog */}

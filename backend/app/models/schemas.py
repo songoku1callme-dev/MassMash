@@ -27,7 +27,7 @@ class ToolResult(BaseModel):
 class ChatRequest(BaseModel):
     """Request body for chat endpoint."""
     messages: list[ChatMessage]
-    mode: str = "normal"  # "normal", "programmer", "document_analysis"
+    mode: str = "normal"  # "normal", "programmer", "document_analysis", "gaming_optimizer", "hardware_advisor"
     system_prompt: Optional[str] = None
     file_context: Optional[str] = None
     enable_tools: bool = True
