@@ -1,0 +1,47 @@
+{
+  "name": "evolveai",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/poppins": "^0.4.1",
+    "@react-native-async-storage/async-storage": "^3.0.1",
+    "@supabase/supabase-js": "^2.98.0",
+    "@tanstack/react-query": "^5.90.21",
+    "expo": "~55.0.4",
+    "expo-constants": "~55.0.7",
+    "expo-font": "~55.0.4",
+    "expo-haptics": "~55.0.8",
+    "expo-linking": "~55.0.7",
+    "expo-router": "~55.0.3",
+    "expo-splash-screen": "~55.0.10",
+    "expo-status-bar": "~55.0.4",
+    "nativewind": "^4.2.2",
+    "react": "^19.2.4",
+    "react-native": "0.83.2",
+    "react-native-chart-kit": "^6.12.0",
+    "react-native-css-interop": "^0.2.2",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-purchases": "^9.10.5",
+    "react-native-reanimated": "4.2.1",
+    "react-native-safe-area-context": "~5.6.2",
+    "react-native-screens": "~4.23.0",
+    "react-native-svg": "^15.15.3",
+    "react-native-url-polyfill": "^3.0.0",
+    "tailwindcss": "^3.3.2",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "@types/uuid": "^10.0.0",
+    "typescript": "~5.9.2"
+  },
+  "private": true
+}
