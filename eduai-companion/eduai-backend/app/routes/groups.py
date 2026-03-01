@@ -3,11 +3,13 @@
 Features:
 - Create/join/leave study groups
 - Real-time messaging via WebSocket
+- @EduAI mentions trigger KI responses via Groq
 - Subject-based groups
 - Max 10 members per group
 """
 import json
 import logging
+import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 import aiosqlite
@@ -252,12 +254,53 @@ async def send_group_message(
     return {"message": "Nachricht gesendet", "msg": new_msg}
 
 
+async def _get_eduai_response(text: str) -> str:
+    """Get KI response from Groq when @EduAI is mentioned."""
+    groq_key = os.getenv("GROQ_API_KEY", "")
+    if not groq_key:
+        return "Ich bin EduAI! Leider ist gerade kein API-Key konfiguriert."
+
+    try:
+        import httpx
+        # Remove @EduAI from the text
+        clean_text = text.replace("@EduAI", "").replace("@eduai", "").strip()
+        async with httpx.AsyncClient(timeout=20) as client:
+            resp = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {groq_key}"},
+                json={
+                    "model": "llama-3.3-70b-versatile",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": (
+                                "Du bist EduAI, ein freundlicher KI-Lernhelfer in einem Gruppen-Chat. "
+                                "Antworte kurz und hilfreich auf Deutsch. "
+                                "Erkläre Konzepte einfach und gib Beispiele."
+                            ),
+                        },
+                        {"role": "user", "content": clean_text},
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 500,
+                },
+            )
+            if resp.status_code == 200:
+                return resp.json()["choices"][0]["message"]["content"]
+    except Exception as e:
+        logger.warning("Groq call failed in group chat: %s", e)
+    return "Entschuldigung, ich konnte gerade nicht antworten. Versuche es nochmal!"
+
+
 @router.websocket("/ws/{group_id}")
 async def websocket_group_chat(
     websocket: WebSocket,
     group_id: int,
 ):
-    """WebSocket endpoint for real-time group chat."""
+    """WebSocket endpoint for real-time group chat.
+
+    Supports @EduAI mentions which trigger KI responses via Groq.
+    """
     await websocket.accept()
 
     # Add to active connections
@@ -265,23 +308,40 @@ async def websocket_group_chat(
         active_connections[group_id] = []
     active_connections[group_id].append(websocket)
 
+    async def _broadcast(msg: dict) -> None:
+        """Broadcast a message to all connections in this group."""
+        text = json.dumps(msg, ensure_ascii=False)
+        disconnected = []
+        for ws in active_connections.get(group_id, []):
+            try:
+                await ws.send_text(text)
+            except Exception:
+                disconnected.append(ws)
+        for ws in disconnected:
+            if ws in active_connections.get(group_id, []):
+                active_connections[group_id].remove(ws)
+
     try:
         while True:
             data = await websocket.receive_text()
-            # Broadcast to all connections in this group
             msg_data = json.loads(data)
             msg_data["timestamp"] = datetime.now().isoformat()
-            broadcast = json.dumps(msg_data, ensure_ascii=False)
 
-            disconnected = []
-            for ws in active_connections.get(group_id, []):
-                try:
-                    await ws.send_text(broadcast)
-                except Exception:
-                    disconnected.append(ws)
-            for ws in disconnected:
-                if ws in active_connections.get(group_id, []):
-                    active_connections[group_id].remove(ws)
+            # Broadcast user message
+            await _broadcast(msg_data)
+
+            # Check for @EduAI mention → trigger KI response
+            user_text = msg_data.get("content", "") or msg_data.get("text", "")
+            if "@EduAI" in user_text or "@eduai" in user_text.lower():
+                ki_response = await _get_eduai_response(user_text)
+                ki_msg = {
+                    "user_id": 0,
+                    "username": "EduAI",
+                    "content": ki_response,
+                    "timestamp": datetime.now().isoformat(),
+                    "is_ai": True,
+                }
+                await _broadcast(ki_msg)
 
     except WebSocketDisconnect:
         if group_id in active_connections and websocket in active_connections[group_id]:

@@ -34,6 +34,10 @@ PRO_PRICE_CENTS = 499
 PRO_PRICE_EUR = "4.99"
 MAX_PRICE_CENTS = 1999
 MAX_PRICE_EUR = "19.99"
+PRO_YEARLY_PRICE_CENTS = 3999
+PRO_YEARLY_PRICE_EUR = "39.99"
+MAX_YEARLY_PRICE_CENTS = 14999
+MAX_YEARLY_PRICE_EUR = "149.99"
 
 # Free tier limits
 FREE_OCR_LIMIT = 50  # per month
@@ -44,6 +48,7 @@ class CheckoutRequest(BaseModel):
     success_url: str = ""
     cancel_url: str = ""
     plan: str = "pro"  # "pro" or "max"
+    billing: str = "monthly"  # "monthly" or "yearly"
 
 
 class SubscriptionStatusResponse(BaseModel):
@@ -63,8 +68,14 @@ async def stripe_config():
         "pro_price_eur": PRO_PRICE_EUR,
         "max_price_eur": MAX_PRICE_EUR,
         "plans": {
-            "pro": {"price_eur": PRO_PRICE_EUR, "price_cents": PRO_PRICE_CENTS},
-            "max": {"price_eur": MAX_PRICE_EUR, "price_cents": MAX_PRICE_CENTS},
+            "pro": {
+                "monthly": {"price_eur": PRO_PRICE_EUR, "price_cents": PRO_PRICE_CENTS},
+                "yearly": {"price_eur": PRO_YEARLY_PRICE_EUR, "price_cents": PRO_YEARLY_PRICE_CENTS, "save_eur": "20.00"},
+            },
+            "max": {
+                "monthly": {"price_eur": MAX_PRICE_EUR, "price_cents": MAX_PRICE_CENTS},
+                "yearly": {"price_eur": MAX_YEARLY_PRICE_EUR, "price_cents": MAX_YEARLY_PRICE_CENTS, "save_eur": "90.00"},
+            },
         },
     }
 
@@ -89,14 +100,17 @@ async def create_checkout(
     user_email = current_user["email"]
 
     # Determine plan details
+    billing = req.billing if req.billing in ("monthly", "yearly") else "monthly"
+    is_yearly = billing == "yearly"
+
     if req.plan == "max":
-        price_cents = MAX_PRICE_CENTS
-        plan_name = "EduAI Max"
+        price_cents = MAX_YEARLY_PRICE_CENTS if is_yearly else MAX_PRICE_CENTS
+        plan_name = "EduAI Max" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "GPT-4o Priority, 20 KI-Stile, 300+ Quiz-Themen, Wochen-Coach, Abitur-Sim, Internet-Recherche"
         target_tier = "max"
     else:
-        price_cents = PRO_PRICE_CENTS
-        plan_name = "EduAI Pro"
+        price_cents = PRO_YEARLY_PRICE_CENTS if is_yearly else PRO_PRICE_CENTS
+        plan_name = "EduAI Pro" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "Unbegrenzt KI-Tutor, OCR, Spracheingabe, 8 KI-Stile, 25 Quiz-Themen"
         target_tier = "pro"
 
@@ -143,7 +157,7 @@ async def create_checkout(
                 "price_data": {
                     "currency": "eur",
                     "unit_amount": price_cents,
-                    "recurring": {"interval": "month"},
+                    "recurring": {"interval": "year" if is_yearly else "month"},
                     "product_data": {
                         "name": plan_name,
                         "description": plan_desc,
@@ -157,6 +171,7 @@ async def create_checkout(
         metadata={
             "eduai_user_id": str(user_id),
             "plan": target_tier,
+            "billing": billing,
         },
     )
 
@@ -233,20 +248,39 @@ async def stripe_webhook(request: Request, db: aiosqlite.Connection = Depends(ge
     if event_type == "checkout.session.completed":
         user_id = data.get("metadata", {}).get("eduai_user_id")
         plan = data.get("metadata", {}).get("plan", "pro")
+        billing = data.get("metadata", {}).get("billing", "monthly")
         customer_id = data.get("customer", "")
 
         if user_id:
+            # Check if this is an admin account (never downgrade)
+            admin_email = os.getenv("ADMIN_EMAIL", "")
+            uid = int(user_id)
+            cursor = await db.execute("SELECT username, email, is_admin FROM users WHERE id = ?", (uid,))
+            user_row = await cursor.fetchone()
+            user_dict = dict(user_row) if user_row else {}
+            is_admin_user = (
+                uid == 1
+                or user_dict.get("username") == "admin"
+                or "admin" in (user_dict.get("email", "") or "").lower()
+                or (admin_email and user_dict.get("email") == admin_email)
+                or user_dict.get("is_admin", 0)
+            )
+            # Don't downgrade admin
+            if is_admin_user:
+                plan = "max"
+
             is_pro = 1 if plan in ("pro", "max") else 0
             await db.execute(
                 """UPDATE users SET is_pro = ?, subscription_tier = ?,
-                   stripe_customer_id = ?, pro_since = datetime('now')
+                   stripe_customer_id = ?, pro_since = datetime('now'),
+                   billing_period = ?
                    WHERE id = ?""",
-                (is_pro, plan, customer_id, int(user_id)),
+                (is_pro, plan, customer_id, billing, uid),
             )
             await db.commit()
             logger.info(
-                "Subscription activated: user=%s tier=%s customer=%s",
-                user_id, plan, customer_id,
+                "Subscription activated: user=%s tier=%s billing=%s customer=%s",
+                user_id, plan, billing, customer_id,
             )
 
     elif event_type == "customer.subscription.updated":
@@ -266,11 +300,18 @@ async def stripe_webhook(request: Request, db: aiosqlite.Connection = Depends(ge
     elif event_type == "customer.subscription.deleted":
         customer_id = data.get("customer", "")
         if customer_id:
-            await db.execute(
-                "UPDATE users SET is_pro = 0, subscription_tier = 'free' WHERE stripe_customer_id = ?",
-                (customer_id,),
+            # Don't downgrade admin accounts
+            cursor = await db.execute(
+                "SELECT id, is_admin FROM users WHERE stripe_customer_id = ?", (customer_id,)
             )
-            await db.commit()
+            sub_row = await cursor.fetchone()
+            sub_dict = dict(sub_row) if sub_row else {}
+            if not sub_dict.get("is_admin", 0) and sub_dict.get("id", 0) != 1:
+                await db.execute(
+                    "UPDATE users SET is_pro = 0, subscription_tier = 'free' WHERE stripe_customer_id = ?",
+                    (customer_id,),
+                )
+                await db.commit()
             logger.info("Subscription cancelled: customer=%s", customer_id)
 
     return {"status": "ok"}

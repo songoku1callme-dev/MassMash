@@ -12,6 +12,8 @@ import AbiturPage from "./pages/AbiturPage";
 import ResearchPage from "./pages/ResearchPage";
 import GamificationPage from "./pages/GamificationPage";
 import GroupsPage from "./pages/GroupsPage";
+import AdminPage from "./pages/AdminPage";
+import TurnierPage from "./pages/TurnierPage";
 import PricingPage from "./pages/PricingPage";
 import SettingsPage from "./pages/SettingsPage";
 import Sidebar from "./components/Sidebar";
@@ -79,6 +81,10 @@ function App() {
         return <GamificationPage />;
       case "groups":
         return <GroupsPage />;
+      case "admin":
+        return <AdminPage />;
+      case "turnier":
+        return <TurnierPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

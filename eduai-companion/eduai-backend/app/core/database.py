@@ -1,4 +1,5 @@
 """SQLite database setup with aiosqlite."""
+import os
 import aiosqlite
 import json
 from datetime import datetime
@@ -208,6 +209,65 @@ async def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS coupons (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            tier TEXT NOT NULL DEFAULT 'pro',
+            duration_days INTEGER NOT NULL DEFAULT 30,
+            max_uses INTEGER DEFAULT 0,
+            current_uses INTEGER DEFAULT 0,
+            is_active INTEGER DEFAULT 1,
+            created_by INTEGER,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (created_by) REFERENCES users(id)
+        );
+
+        CREATE TABLE IF NOT EXISTS coupon_redemptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            coupon_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            redeemed_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (coupon_id) REFERENCES coupons(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(coupon_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS tournaments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject TEXT NOT NULL,
+            date TEXT NOT NULL,
+            status TEXT DEFAULT 'scheduled',
+            questions TEXT DEFAULT '[]',
+            num_questions INTEGER DEFAULT 20,
+            time_limit_seconds INTEGER DEFAULT 300,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS tournament_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tournament_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            score INTEGER DEFAULT 0,
+            correct_answers INTEGER DEFAULT 0,
+            time_taken_seconds INTEGER DEFAULT 0,
+            answers TEXT DEFAULT '[]',
+            submitted_at TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(tournament_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            admin_id INTEGER NOT NULL,
+            action TEXT NOT NULL,
+            target_user_id INTEGER,
+            details TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (admin_id) REFERENCES users(id)
+        );
     """)
 
     await db.commit()
@@ -224,6 +284,9 @@ async def init_db():
         ("users", "clerk_user_id", "TEXT DEFAULT ''"),
         ("users", "avatar_url", "TEXT DEFAULT ''"),
         ("users", "auth_provider", "TEXT DEFAULT 'local'"),
+        ("users", "pro_expires_at", "TEXT DEFAULT ''"),
+        ("users", "billing_period", "TEXT DEFAULT 'monthly'"),
+        ("users", "is_admin", "INTEGER DEFAULT 0"),
     ]
     for table, column, col_type in migrations:
         try:
@@ -240,5 +303,20 @@ async def init_db():
         await db.commit()
     except Exception:
         pass  # is_pro column may not exist in very old DBs
+
+    # Admin account: user_id=1 or username/email contains 'admin' → Max forever
+    admin_email = os.getenv("ADMIN_EMAIL", "")
+    try:
+        admin_conditions = ["id = 1", "username = 'admin'"]
+        if admin_email:
+            admin_conditions.append(f"email = '{admin_email}'")
+        admin_where = " OR ".join(admin_conditions)
+        await db.execute(
+            f"UPDATE users SET subscription_tier = 'max', is_pro = 1, is_admin = 1, "
+            f"pro_expires_at = '' WHERE {admin_where}"
+        )
+        await db.commit()
+    except Exception:
+        pass
 
     await db.close()

@@ -9,11 +9,13 @@ import {
 } from "lucide-react";
 
 type PlanKey = "pro" | "max";
+type BillingPeriod = "monthly" | "yearly";
 
 export default function PricingPage() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState<PlanKey | null>(null);
   const [error, setError] = useState("");
+  const [billing, setBilling] = useState<BillingPeriod>("yearly");
 
   const tier = user?.subscription_tier || "free";
 
@@ -26,6 +28,7 @@ export default function PricingPage() {
         success_url: `${currentUrl}?upgrade_success=${plan}`,
         cancel_url: currentUrl,
         plan,
+        billing,
       });
       if (result.checkout_url) {
         window.location.href = result.checkout_url;
@@ -79,6 +82,33 @@ export default function PricingPage() {
         <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
           Lerne besser mit EduAI - vom Einsteiger bis zum Abitur
         </p>
+      </div>
+
+      {/* Billing Toggle */}
+      <div className="flex items-center justify-center gap-4">
+        <span className={`text-sm font-medium ${billing === "monthly" ? "text-gray-900 dark:text-white" : "text-gray-400"}`}>
+          Monatlich
+        </span>
+        <button
+          onClick={() => setBilling(billing === "monthly" ? "yearly" : "monthly")}
+          className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
+            billing === "yearly" ? "bg-emerald-600" : "bg-gray-300 dark:bg-gray-600"
+          }`}
+        >
+          <span
+            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+              billing === "yearly" ? "translate-x-8" : "translate-x-1"
+            }`}
+          />
+        </button>
+        <span className={`text-sm font-medium ${billing === "yearly" ? "text-gray-900 dark:text-white" : "text-gray-400"}`}>
+          Jährlich
+        </span>
+        {billing === "yearly" && (
+          <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+            Spare bis zu 90€!
+          </span>
+        )}
       </div>
 
       {tier !== "free" && (
@@ -136,9 +166,12 @@ export default function PricingPage() {
             </CardTitle>
             <CardDescription>Für ambitionierte Schüler</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">4,99 EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/Monat</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "39,99" : "4,99"} EUR</span>
+              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
+            {billing === "yearly" && (
+              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 20€ vs. monatlich!</p>
+            )}
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
@@ -183,9 +216,12 @@ export default function PricingPage() {
             </CardTitle>
             <CardDescription>Für Abitur-Champions</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">19,99 EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/Monat</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "149,99" : "19,99"} EUR</span>
+              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
+            {billing === "yearly" && (
+              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 90€ vs. monatlich!</p>
+            )}
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">

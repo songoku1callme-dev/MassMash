@@ -531,7 +531,7 @@ export interface SubscriptionStatus {
 
 export const stripeApi = {
   config: () => request<StripeConfig>("/api/stripe/config"),
-  createCheckout: (data: { success_url: string; cancel_url: string; plan?: string }) =>
+  createCheckout: (data: { success_url: string; cancel_url: string; plan?: string; billing?: string }) =>
     request<{ checkout_url: string; session_id: string }>("/api/stripe/create-checkout", { method: "POST", body: data }),
   subscriptionStatus: () => request<SubscriptionStatus>("/api/stripe/subscription-status"),
 };
@@ -789,3 +789,43 @@ export interface LearningProfileFull {
   niveau_pro_fach: { subject: string; total: number; weak_count: number; avg_score: number; niveau: string }[];
   gamification: { xp?: number; level?: number; level_name?: string; streak_days?: number; quizzes_completed?: number };
 }
+
+// Admin API
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const adminApi = {
+  stats: () => request<any>("/api/admin/stats"),
+  searchUsers: (query: string) =>
+    request<{ users: any[] }>(`/api/admin/search-users?query=${encodeURIComponent(query)}`),
+  grantSubscription: (data: { user_id: number; tier: string; duration_days: number }) =>
+    request<{ message: string }>("/api/admin/grant-subscription", { method: "POST", body: data }),
+  createCoupon: (data: { code: string; tier: string; duration_days: number; max_uses: number }) =>
+    request<{ message: string }>("/api/admin/create-coupon", { method: "POST", body: data }),
+  coupons: () => request<{ coupons: any[] }>("/api/admin/coupons"),
+};
+
+// Coupon Redeem
+export const couponApi = {
+  redeem: (code: string) =>
+    request<{ message: string; tier: string; duration_days: number }>(
+      `/api/redeem-coupon?code=${encodeURIComponent(code)}`, { method: "POST" }
+    ),
+};
+
+// Tournament API
+export const tournamentApi = {
+  current: () => request<{ tournament: any }>("/api/turnier/aktuell"),
+  join: (tournamentId: number) =>
+    request<{ message: string; tournament_id: number }>(
+      `/api/turnier/teilnehmen?tournament_id=${tournamentId}`, { method: "POST" }
+    ),
+  submit: (tournamentId: number, answers: { question_id: number; answer: string }[], timeTaken: number) =>
+    request<{ score: number; correct_answers: number; total_questions: number }>(
+      `/api/turnier/abgeben?tournament_id=${tournamentId}&time_taken_seconds=${timeTaken}`,
+      { method: "POST", body: answers }
+    ),
+  rankings: (tournamentId: number) =>
+    request<{ rankings: any[]; tournament_id: number }>(`/api/turnier/rangliste?tournament_id=${tournamentId}`),
+  winners: () => request<{ winners: any[]; tournament: any }>("/api/turnier/gewinner"),
+  history: () => request<{ tournaments: any[] }>("/api/turnier/verlauf"),
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
