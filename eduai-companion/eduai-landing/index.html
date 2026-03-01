@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduAI Tutor - KI-Lernhilfe für Schüler in Deutschland</title>
+  <meta name="description" content="Dein persönlicher KI-Tutor für Mathe, Deutsch, Englisch, Geschichte und Naturwissenschaften. Abitur-Niveau, DSGVO-konform, kostenlos starten." />
+  <meta name="keywords" content="KI Tutor, Schule Deutschland, Nachhilfe, Mathe, Abitur, Gymnasium, Realschule, Lernhilfe" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="EduAI Tutor - KI-Lernhilfe für Schüler" />
+  <meta property="og:description" content="Dein persönlicher KI-Tutor für alle Fächer. Abitur-Niveau, DSGVO-konform." />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="de_DE" />
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "EduAI Tutor",
+    "description": "KI-gestützte Lernhilfe für deutsche Schüler",
+    "url": "https://eduai-tutor.com",
+    "areaServed": "DE",
+    "audience": {
+      "@type": "EducationalAudience",
+      "educationalRole": "student"
+    }
+  }
+  </script>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .gradient-hero { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #6366f1 100%); }
+    .feature-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+    .feature-card { transition: all 0.3s ease; }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .float-animation { animation: float 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm">E</div>
+          <span class="font-bold text-xl text-gray-900">EduAI <span class="text-blue-600">Tutor</span></span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-sm text-gray-600 hover:text-blue-600 transition-colors">Features</a>
+          <a href="#faecher" class="text-sm text-gray-600 hover:text-blue-600 transition-colors">Fächer</a>
+          <a href="#preise" class="text-sm text-gray-600 hover:text-blue-600 transition-colors">Preise</a>
+          <a href="#dsgvo" class="text-sm text-gray-600 hover:text-blue-600 transition-colors">DSGVO</a>
+        </div>
+        <a href="/app" class="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors">
+          Jetzt starten
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="gradient-hero pt-32 pb-20 px-4 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl"></div>
+      <div class="absolute bottom-10 right-10 w-96 h-96 bg-indigo-300 rounded-full blur-3xl"></div>
+    </div>
+    <div class="max-w-7xl mx-auto text-center relative z-10">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 text-white/90 text-sm mb-8 backdrop-blur-sm">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Kostenlos starten - Keine Kreditkarte nötig
+      </div>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 leading-tight">
+        Dein persönlicher<br />
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-indigo-200">KI-Tutor</span> für die Schule
+      </h1>
+      <p class="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10">
+        Mathe, Deutsch, Englisch, Geschichte, Naturwissenschaften -
+        erklärt auf deinem Niveau. Mit Schritt-für-Schritt Lösungen,
+        Übungen und Lehrplan-Bezug.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="/app" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-blue-700 font-semibold text-base hover:bg-blue-50 transition-colors shadow-lg">
+          Kostenlos registrieren
+        </a>
+        <a href="#features" class="w-full sm:w-auto px-8 py-3.5 rounded-xl border-2 border-white/30 text-white font-medium text-base hover:bg-white/10 transition-colors">
+          Features entdecken
+        </a>
+      </div>
+      <div class="mt-12 flex items-center justify-center gap-6 text-sm text-blue-200">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          DSGVO-konform
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          Abitur-Niveau
+        </span>
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          PWA (Offline-fähig)
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-4 bg-gray-50">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Alles was du zum Lernen brauchst</h2>
+        <p class="text-lg text-gray-500 max-w-2xl mx-auto">Modernste KI-Technologie, speziell für deutsche Schüler an Gymnasium und Realschule entwickelt.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1: KI-Chat -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">KI-Tutor Chat</h3>
+          <p class="text-gray-500 text-sm">Stelle Fragen zu jedem Thema und erhalte sofort strukturierte Antworten mit Schritt-für-Schritt Erklärungen, Beispielen und Übungen.</p>
+        </div>
+        <!-- Feature 2: OCR/Math -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Mathe-Foto Löser</h3>
+          <p class="text-gray-500 text-sm">Fotografiere eine Gleichung oder Aufgabe - die KI erkennt den Text (OCR) und löst sie mit SymPy Schritt für Schritt. LaTeX-gerendert!</p>
+        </div>
+        <!-- Feature 3: Speech -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center text-purple-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Spracheingabe & Vorlesen</h3>
+          <p class="text-gray-500 text-sm">Sprich deine Frage ein (Speech-to-Text) und lass dir die Antwort vorlesen (Text-to-Speech). Perfekt für unterwegs!</p>
+        </div>
+        <!-- Feature 4: Quiz -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Adaptive Quizze</h3>
+          <p class="text-gray-500 text-sm">Teste dein Wissen mit Quizzen die sich an dein Niveau anpassen. Automatische Schwierigkeitssteigerung bei guten Ergebnissen.</p>
+        </div>
+        <!-- Feature 5: RAG -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Lehrplan-Wissen (RAG)</h3>
+          <p class="text-gray-500 text-sm">Antworten basieren auf echten deutschen Lehrplänen (NRW, Bayern). FAISS-Vektordatenbank mit 13+ Curriculum-Dokumenten.</p>
+        </div>
+        <!-- Feature 6: PWA -->
+        <div class="feature-card bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+          <div class="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center text-cyan-600 mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2">PWA - Installierbar</h3>
+          <p class="text-gray-500 text-sm">Installiere die App auf deinem Handy wie eine native App. Offline-fähig dank Service Worker und Caching.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fächer Section -->
+  <section id="faecher" class="py-20 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">5 Fächer, ein Tutor</h2>
+        <p class="text-lg text-gray-500">Alle Kernfächer des deutschen Lehrplans abgedeckt - von Klasse 5 bis Abitur.</p>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="text-center p-6 rounded-2xl bg-blue-50 border border-blue-100">
+          <div class="text-4xl mb-3">📐</div>
+          <h3 class="font-semibold text-blue-900">Mathematik</h3>
+          <p class="text-xs text-blue-600 mt-1">Algebra, Geometrie, Analysis</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-emerald-50 border border-emerald-100">
+          <div class="text-4xl mb-3">🇬🇧</div>
+          <h3 class="font-semibold text-emerald-900">Englisch</h3>
+          <p class="text-xs text-emerald-600 mt-1">Grammatik, Vokabeln, Essays</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-amber-50 border border-amber-100">
+          <div class="text-4xl mb-3">📖</div>
+          <h3 class="font-semibold text-amber-900">Deutsch</h3>
+          <p class="text-xs text-amber-600 mt-1">Grammatik, Literatur, Aufsätze</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-purple-50 border border-purple-100">
+          <div class="text-4xl mb-3">🏛️</div>
+          <h3 class="font-semibold text-purple-900">Geschichte</h3>
+          <p class="text-xs text-purple-600 mt-1">Epochen, Quellenanalyse</p>
+        </div>
+        <div class="text-center p-6 rounded-2xl bg-rose-50 border border-rose-100 col-span-2 sm:col-span-1">
+          <div class="text-4xl mb-3">🔬</div>
+          <h3 class="font-semibold text-rose-900">Naturwiss.</h3>
+          <p class="text-xs text-rose-600 mt-1">Physik, Chemie, Biologie</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Preise Section -->
+  <section id="preise" class="py-20 px-4 bg-gray-50">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Einfache Preise</h2>
+        <p class="text-lg text-gray-500">Starte kostenlos - upgrade wenn du mehr brauchst.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <!-- Free Plan -->
+        <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-1">Kostenlos</h3>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-4xl font-bold">0 EUR</span>
+            <span class="text-gray-500 text-sm">/ Monat</span>
+          </div>
+          <ul class="space-y-3 text-sm text-gray-600 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              20 KI-Anfragen pro Tag
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              5 Fächer
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Quizze & Lernpfade
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              OCR Mathe-Foto Löser
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Spracheingabe & Vorlesen
+            </li>
+          </ul>
+          <a href="/app" class="block text-center w-full px-6 py-3 rounded-xl border-2 border-blue-600 text-blue-600 font-medium hover:bg-blue-50 transition-colors">
+            Kostenlos starten
+          </a>
+        </div>
+        <!-- Pro Plan -->
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-xl relative">
+          <div class="absolute -top-3 right-6 px-3 py-1 rounded-full bg-amber-400 text-amber-900 text-xs font-bold">BELIEBT</div>
+          <h3 class="text-lg font-semibold mb-1">Pro</h3>
+          <div class="flex items-baseline gap-1 mb-6">
+            <span class="text-4xl font-bold">4,99 EUR</span>
+            <span class="text-blue-200 text-sm">/ Monat</span>
+          </div>
+          <ul class="space-y-3 text-sm text-blue-100 mb-8">
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Unbegrenzte KI-Anfragen
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Llama 3.3 70B (bestes Modell)
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Prioritäts-Support
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Eigene Dokumente hochladen
+            </li>
+            <li class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-300 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              Detaillierte Lernstatistiken
+            </li>
+          </ul>
+          <a href="/app" class="block text-center w-full px-6 py-3 rounded-xl bg-white text-blue-700 font-semibold hover:bg-blue-50 transition-colors">
+            Pro starten
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DSGVO Section -->
+  <section id="dsgvo" class="py-20 px-4">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Datenschutz (DSGVO)</h2>
+        <p class="text-lg text-gray-500">Deine Daten gehören dir. Wir nehmen Datenschutz ernst.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-6 rounded-2xl bg-emerald-50 border border-emerald-100">
+          <h3 class="font-semibold text-emerald-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            Datenminimierung
+          </h3>
+          <p class="text-sm text-emerald-700">Wir speichern nur die Daten, die für dein Lernerlebnis nötig sind: Profil, Lernfortschritt und Chat-Verlauf. Keine Tracking-Cookies, kein Profiling.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-blue-50 border border-blue-100">
+          <h3 class="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+            Verschlüsselung
+          </h3>
+          <p class="text-sm text-blue-700">Alle Daten werden verschlüsselt übertragen (TLS/HTTPS). Passwörter werden mit bcrypt gehasht. Keine Klartextspeicherung.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-purple-50 border border-purple-100">
+          <h3 class="font-semibold text-purple-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/></svg>
+            Deine Rechte
+          </h3>
+          <p class="text-sm text-purple-700">Datenexport, Löschung und Widerspruch jederzeit möglich. Ein Klick in den Einstellungen genügt. Daten werden auf EU-Servern gespeichert.</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-amber-50 border border-amber-100">
+          <h3 class="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
+            Transparente KI
+          </h3>
+          <p class="text-sm text-amber-700">Unsere KI zeigt Lösungsschritte und Quellen. Keine "Black Box". Nur der aktuelle Prompt wird an die API gesendet - keine PII.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 px-4 gradient-hero">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mb-6">Bereit, besser zu lernen?</h2>
+      <p class="text-lg text-blue-100 mb-8">Tausende Schüler nutzen EduAI Tutor bereits. Starte jetzt kostenlos und erlebe den Unterschied.</p>
+      <a href="/app" class="inline-block px-10 py-4 rounded-xl bg-white text-blue-700 font-semibold text-lg hover:bg-blue-50 transition-colors shadow-lg">
+        Jetzt kostenlos starten
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-4 bg-gray-900 text-gray-400">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs">E</div>
+          <span class="font-bold text-white">EduAI Tutor</span>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+          <a href="#features" class="hover:text-white transition-colors">Features</a>
+          <a href="#preise" class="hover:text-white transition-colors">Preise</a>
+          <a href="#dsgvo" class="hover:text-white transition-colors">Datenschutz</a>
+          <a href="mailto:kontakt@eduai-tutor.com" class="hover:text-white transition-colors">Kontakt</a>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">
+        <p>&copy; 2025 EduAI Tutor. Alle Rechte vorbehalten. Made with KI in Deutschland.</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

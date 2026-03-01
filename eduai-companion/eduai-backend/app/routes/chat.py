@@ -89,12 +89,30 @@ async def send_message(
     except Exception as rag_err:
         logger.warning("RAG search failed (non-fatal): %s", rag_err)
 
+    # Get student profile for personalized prompts
+    school_grade = ""
+    school_type = ""
+    try:
+        cursor = await db.execute(
+            "SELECT school_grade, school_type FROM users WHERE id = ?",
+            (user_id,)
+        )
+        user_row = await cursor.fetchone()
+        if user_row:
+            user_data = dict(user_row)
+            school_grade = user_data.get("school_grade", "")
+            school_type = user_data.get("school_type", "")
+    except Exception:
+        pass  # Non-fatal — prompts still work without student context
+
     # Generate AI response via Groq LLM (falls back to template engine if no API key)
     system_prompt = build_system_prompt(
         subject=subject,
         level=level,
         language=request.language,
         detail_level=request.detail_level,
+        school_grade=school_grade,
+        school_type=school_type,
     )
     ai_response = call_groq_llm(
         prompt=request.message,

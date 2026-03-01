@@ -97,11 +97,12 @@ def call_groq_llm(
     # Inject RAG context into system prompt if available
     if rag_context:
         system_prompt += (
-            "\n\n--- Relevanter Kontext aus dem Lehrplan / Curriculum ---\n"
+            "\n\n--- RELEVANTER KONTEXT AUS DEM LEHRPLAN ---\n"
             f"{rag_context}\n"
-            "--- Ende Kontext ---\n"
-                        "Nutze diesen Kontext um die Frage des Schülers zu beantworten. "
-                        "Nenne die Quellen wenn möglich."
+            "--- ENDE KONTEXT ---\n\n"
+            "WICHTIG: Nutze den obigen Lehrplan-Kontext um die Frage des Schülers "
+            "präzise und lehrplankonform zu beantworten. "
+            "Zitiere die Quelle wenn möglich (z.B. 'Laut Lehrplan Klasse 10...')."
         )
 
     # Build messages list

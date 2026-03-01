@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Settings, User, Shield, Moon, Sun, Globe, Save, Loader2
+  Settings, User, Shield, Moon, Sun, Globe, Save, Loader2,
+  Key, CheckCircle2, XCircle, ExternalLink, Server
 } from "lucide-react";
 
 interface SettingsPageProps {
   darkMode: boolean;
   onDarkModeToggle: () => void;
 }
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPageProps) {
   const { user, updateUser, logout } = useAuthStore();
@@ -20,6 +23,54 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
   const [preferredLanguage, setPreferredLanguage] = useState(user?.preferred_language || "de");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Key Management state
+  const [groqKeyStatus, setGroqKeyStatus] = useState<"unknown" | "testing" | "valid" | "invalid">("unknown");
+  const [groqKeyMessage, setGroqKeyMessage] = useState("");
+  const [serverGroqConfigured, setServerGroqConfigured] = useState(false);
+
+  // Check server status on mount
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/admin/test-key`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key_type: "server-status" }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setServerGroqConfigured(data.groq_configured || false);
+        }
+      } catch {
+        // Non-fatal
+      }
+    };
+    checkServerStatus();
+  }, []);
+
+  const testGroqKey = async () => {
+    setGroqKeyStatus("testing");
+    setGroqKeyMessage("");
+    try {
+      const res = await fetch(`${API_URL}/api/admin/test-key`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key_type: "groq" }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setGroqKeyStatus("valid");
+        setGroqKeyMessage(data.message);
+      } else {
+        setGroqKeyStatus("invalid");
+        setGroqKeyMessage(data.message);
+      }
+    } catch (err) {
+      setGroqKeyStatus("invalid");
+      setGroqKeyMessage("Server nicht erreichbar.");
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -157,6 +208,115 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
                 }`}
               />
             </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Keys / Konfiguration */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Key className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-base">API-Konfiguration</CardTitle>
+          </div>
+          <CardDescription>Verwalte die API-Keys für KI-Funktionen</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Groq API Key */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Server className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Groq API (KI-Antworten)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {serverGroqConfigured ? (
+                  <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Konfiguriert
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
+                    <XCircle className="w-3.5 h-3.5" /> Nicht konfiguriert
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-sm text-gray-600 dark:text-gray-400 space-y-2">
+              <p>
+                {serverGroqConfigured
+                  ? "Der Groq API Key ist auf dem Server konfiguriert. KI-Antworten werden über Llama 3.3 generiert."
+                  : "Ohne Groq API Key werden Template-Antworten verwendet. Für echte KI-Antworten:"}
+              </p>
+              {!serverGroqConfigured && (
+                <ol className="list-decimal list-inside space-y-1 ml-1">
+                  <li>
+                    Erstelle einen Key auf{" "}
+                    <a
+                      href="https://console.groq.com/keys"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 dark:text-blue-400 underline inline-flex items-center gap-0.5"
+                    >
+                      console.groq.com <ExternalLink className="w-3 h-3" />
+                    </a>{" "}
+                    (kostenlos)
+                  </li>
+                  <li>Setze <code className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-xs font-mono">GROQ_API_KEY</code> in der Backend <code className="px-1.5 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-xs font-mono">.env</code></li>
+                  <li>Starte das Backend neu</li>
+                </ol>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={testGroqKey}
+              disabled={groqKeyStatus === "testing"}
+              className="gap-2"
+            >
+              {groqKeyStatus === "testing" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : groqKeyStatus === "valid" ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              ) : groqKeyStatus === "invalid" ? (
+                <XCircle className="w-4 h-4 text-red-500" />
+              ) : (
+                <Server className="w-4 h-4" />
+              )}
+              {groqKeyStatus === "testing" ? "Teste..." : "Verbindung testen"}
+            </Button>
+
+            {groqKeyMessage && (
+              <p className={`text-xs ${
+                groqKeyStatus === "valid"
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-600 dark:text-red-400"
+              }`}>
+                {groqKeyMessage}
+              </p>
+            )}
+          </div>
+
+          <hr className="border-gray-200 dark:border-gray-700" />
+
+          {/* Health Check */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Weitere Dienste</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <span>Clerk OAuth — Keys in .env setzen</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <span>PostHog Analytics — Optional</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" />
+                <span>Sentry Monitoring — Optional</span>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

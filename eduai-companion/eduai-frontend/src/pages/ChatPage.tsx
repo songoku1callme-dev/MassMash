@@ -10,10 +10,11 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { ocrApi } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
+import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
-  Camera, Mic, MicOff
+  Camera, Mic, MicOff, Volume2, VolumeX
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -38,6 +39,7 @@ export default function ChatPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening } = useSpeechRecognition(language);
+  const { isSpeaking, speakingMessageIdx, isSupported: ttsSupported, speak } = useTextToSpeech();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -216,6 +218,21 @@ export default function ChatPage() {
                       >
                         {copiedIdx === idx ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
+                      {ttsSupported && (
+                        <button
+                          onClick={() => speak(msg.content, language, idx)}
+                          className={`p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${
+                            isSpeaking && speakingMessageIdx === idx
+                              ? "text-blue-500 dark:text-blue-400"
+                              : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          }`}
+                          title={isSpeaking && speakingMessageIdx === idx ? "Stoppen" : "Laut vorlesen"}
+                        >
+                          {isSpeaking && speakingMessageIdx === idx
+                            ? <VolumeX className="w-3.5 h-3.5" />
+                            : <Volume2 className="w-3.5 h-3.5" />}
+                        </button>
+                      )}
                       {msg.subject && (
                         <Badge variant="secondary" className="ml-auto text-xs">
                           {SUBJECTS.find(s => s.id === msg.subject)?.name || msg.subject}
