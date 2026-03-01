@@ -13,7 +13,7 @@ interface ChatState {
 
   loadSessions: () => Promise<void>;
   loadSession: (id: number) => Promise<void>;
-  sendMessage: (message: string) => Promise<void>;
+  sendMessage: (message: string, personalityId?: number) => Promise<void>;
   newChat: () => void;
   setSubject: (subject: string) => void;
   setLanguage: (lang: string) => void;
@@ -58,7 +58,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  sendMessage: async (message) => {
+  sendMessage: async (message, personalityId) => {
     const { currentSessionId, messages, currentSubject, language, detailLevel } = get();
 
     const userMsg: ChatMessage = {
@@ -75,6 +75,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         subject: currentSubject !== "general" ? currentSubject : undefined,
         language,
         detail_level: detailLevel,
+        personality_id: personalityId,
       });
 
       const assistantMsg: ChatMessage = {

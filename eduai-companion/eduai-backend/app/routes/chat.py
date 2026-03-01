@@ -10,6 +10,7 @@ from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
 from app.services.ai_engine import detect_subject, build_system_prompt
 from app.services.groq_llm import call_groq_llm
 from app.services import rag_service
+from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +38,24 @@ async def send_message(
     profile = await cursor.fetchone()
     level = dict(profile)["proficiency_level"] if profile else "intermediate"
 
-    # Check if user has Pro subscription
-    cursor = await db.execute("SELECT is_pro FROM users WHERE id = ?", (user_id,))
+    # Check user subscription tier and personality
+    cursor = await db.execute(
+        "SELECT is_pro, subscription_tier, ki_personality_id FROM users WHERE id = ?",
+        (user_id,),
+    )
     pro_row = await cursor.fetchone()
-    is_pro = bool(dict(pro_row).get("is_pro", 0)) if pro_row else False
+    pro_dict = dict(pro_row) if pro_row else {}
+    is_pro = bool(pro_dict.get("is_pro", 0))
+    user_tier = pro_dict.get("subscription_tier", "free") or "free"
+
+    # Determine personality to use (from request or user profile)
+    personality_id = request.personality_id or pro_dict.get("ki_personality_id", 1) or 1
+    personality = get_personality_by_id(personality_id)
+    personality_prompt = ""
+    personality_temperature = None
+    if personality and is_personality_accessible(personality_id, user_tier):
+        personality_prompt = personality["system_prompt"]
+        personality_temperature = personality["temperature"]
 
     # Get or create session
     session_id = request.session_id
@@ -101,6 +116,11 @@ async def send_message(
         language=request.language,
         detail_level=request.detail_level,
     )
+
+    # Prepend personality prompt if available
+    if personality_prompt:
+        system_prompt = f"{personality_prompt}\n\n{system_prompt}"
+
     ai_response = call_groq_llm(
         prompt=request.message,
         system_prompt=system_prompt,
@@ -110,6 +130,7 @@ async def send_message(
         chat_history=messages,
         rag_context=rag_context,
         is_pro=is_pro,
+        temperature_override=personality_temperature,
     )
 
     # Append source references if RAG provided context

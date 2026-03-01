@@ -29,6 +29,9 @@ class UserResponse(BaseModel):
     school_type: str
     preferred_language: str
     is_pro: bool = False
+    subscription_tier: str = "free"
+    ki_personality_id: int = 1
+    ki_personality_name: str = "Freundlich"
     avatar_url: str = ""
     auth_provider: str = "local"
     created_at: str
@@ -71,6 +74,7 @@ class ChatRequest(BaseModel):
     subject: Optional[str] = None
     language: str = "de"
     detail_level: str = "normal"  # "simpler", "normal", "detailed"
+    personality_id: Optional[int] = None  # KI-Persönlichkeit ID (1-15)
 
 
 class ChatResponse(BaseModel):

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useChatStore } from "../stores/chatStore";
+import { useAuthStore } from "../stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +9,13 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ocrApi } from "../services/api";
+import { ocrApi, quizApi } from "../services/api";
+import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
-  Camera, Mic, MicOff
+  Camera, Mic, MicOff, Lock
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -30,9 +32,13 @@ export default function ChatPage() {
     messages, isSending, currentSubject, language,
     sendMessage, setSubject, setLanguage, setDetailLevel, addMessage
   } = useChatStore();
+  const { user } = useAuthStore();
   const [input, setInput] = useState("");
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
+  const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
+  const [showPersonalities, setShowPersonalities] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +53,26 @@ export default function ChatPage() {
     inputRef.current?.focus();
   }, []);
 
+  // Load KI personalities
+  useEffect(() => {
+    quizApi.personalities().then((res) => {
+      setPersonalities(res.personalities);
+      setSelectedPersonality(res.current_id);
+    }).catch(() => {});
+  }, []);
+
+  const handlePersonalityChange = useCallback(async (id: number) => {
+    setSelectedPersonality(id);
+    setShowPersonalities(false);
+    try {
+      await quizApi.setPersonality(id);
+    } catch {
+      // silently ignore if not saved
+    }
+  }, []);
+
+  const currentPersonality = personalities.find(p => p.id === selectedPersonality);
+
   // Update input with speech transcript as it comes in
   useEffect(() => {
     if (transcript) {
@@ -56,7 +82,7 @@ export default function ChatPage() {
 
   const handleSend = () => {
     if (!input.trim() || isSending) return;
-    sendMessage(input.trim());
+    sendMessage(input.trim(), selectedPersonality);
     setInput("");
   };
 
@@ -137,8 +163,57 @@ export default function ChatPage() {
             ))}
           </div>
 
-          {/* Language Toggle */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* KI Personality + Language Toggle */}
+          <div className="ml-auto flex items-center gap-2 relative">
+            {/* KI Personality Selector */}
+            <button
+              onClick={() => setShowPersonalities(!showPersonalities)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors border border-purple-200 dark:border-purple-700"
+              title="KI-Persönlichkeit wählen"
+            >
+              <span>{currentPersonality?.emoji || "😊"}</span>
+              <span className="hidden sm:inline">{currentPersonality?.name || "Freundlich"}</span>
+            </button>
+
+            {/* Personality Dropdown */}
+            {showPersonalities && (
+              <div className="absolute top-full right-12 mt-1 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
+                <div className="p-2 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2">KI-Persönlichkeit</p>
+                </div>
+                <div className="p-1">
+                  {personalities.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => p.accessible ? handlePersonalityChange(p.id) : undefined}
+                      className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
+                        selectedPersonality === p.id
+                          ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                          : p.accessible
+                            ? "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            : "opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-500"
+                      }`}
+                      disabled={!p.accessible}
+                    >
+                      <span className="text-lg">{p.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-xs">{p.name}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{p.preview}</p>
+                      </div>
+                      {!p.accessible && (
+                        <Lock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                      )}
+                      {!p.accessible && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 flex-shrink-0">
+                          {p.tier}
+                        </Badge>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => setLanguage(language === "de" ? "en" : "de")}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"

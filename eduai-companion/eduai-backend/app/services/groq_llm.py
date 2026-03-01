@@ -65,6 +65,7 @@ def call_groq_llm(
     model: Optional[str] = None,
     rag_context: str = "",
     is_pro: bool = False,
+    temperature_override: Optional[float] = None,
 ) -> str:
     """Call the Groq API to generate an AI tutoring response.
 
@@ -127,7 +128,7 @@ def call_groq_llm(
             model=chosen_model,
             messages=messages,
             max_tokens=MAX_TOKENS,
-            temperature=0.7 if is_pro else 0.3,
+            temperature=temperature_override if temperature_override is not None else (0.7 if is_pro else 0.3),
             top_p=0.9,
             stream=False,
         )

@@ -77,6 +77,9 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
             school_type=user.school_type,
             preferred_language=user.preferred_language,
             is_pro=False,
+            subscription_tier="free",
+            ki_personality_id=1,
+            ki_personality_name="Freundlich",
             created_at=datetime.now().isoformat()
         )
     )
@@ -112,6 +115,9 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
             school_type=user_dict["school_type"],
             preferred_language=user_dict["preferred_language"],
             is_pro=bool(user_dict.get("is_pro", 0)),
+            subscription_tier=user_dict.get("subscription_tier", "free") or "free",
+            ki_personality_id=user_dict.get("ki_personality_id", 1) or 1,
+            ki_personality_name=user_dict.get("ki_personality_name", "Freundlich") or "Freundlich",
             avatar_url=user_dict.get("avatar_url", "") or "",
             auth_provider=user_dict.get("auth_provider", "local") or "local",
             created_at=user_dict["created_at"]
@@ -119,22 +125,30 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
     )
 
 
+def _user_response_from_dict(d: dict) -> UserResponse:
+    """Build a UserResponse from a user row dict."""
+    return UserResponse(
+        id=d["id"],
+        email=d["email"],
+        username=d["username"],
+        full_name=d["full_name"],
+        school_grade=d["school_grade"],
+        school_type=d["school_type"],
+        preferred_language=d["preferred_language"],
+        is_pro=bool(d.get("is_pro", 0)),
+        subscription_tier=d.get("subscription_tier", "free") or "free",
+        ki_personality_id=d.get("ki_personality_id", 1) or 1,
+        ki_personality_name=d.get("ki_personality_name", "Freundlich") or "Freundlich",
+        avatar_url=d.get("avatar_url", "") or "",
+        auth_provider=d.get("auth_provider", "local") or "local",
+        created_at=d["created_at"],
+    )
+
+
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Get current user profile."""
-    return UserResponse(
-        id=current_user["id"],
-        email=current_user["email"],
-        username=current_user["username"],
-        full_name=current_user["full_name"],
-        school_grade=current_user["school_grade"],
-        school_type=current_user["school_type"],
-        preferred_language=current_user["preferred_language"],
-        is_pro=bool(current_user.get("is_pro", 0)),
-        avatar_url=current_user.get("avatar_url", "") or "",
-        auth_provider=current_user.get("auth_provider", "local") or "local",
-        created_at=current_user["created_at"]
-    )
+    return _user_response_from_dict(current_user)
 
 
 @router.put("/me", response_model=UserResponse)
@@ -170,19 +184,7 @@ async def update_me(
     cursor = await db.execute("SELECT * FROM users WHERE id = ?", (current_user["id"],))
     user = dict(await cursor.fetchone())
 
-    return UserResponse(
-        id=user["id"],
-        email=user["email"],
-        username=user["username"],
-        full_name=user["full_name"],
-        school_grade=user["school_grade"],
-        school_type=user["school_type"],
-        preferred_language=user["preferred_language"],
-        is_pro=bool(user.get("is_pro", 0)),
-        avatar_url=user.get("avatar_url", "") or "",
-        auth_provider=user.get("auth_provider", "local") or "local",
-        created_at=user["created_at"]
-    )
+    return _user_response_from_dict(user)
 
 
 @router.post("/refresh", response_model=RefreshTokenResponse)

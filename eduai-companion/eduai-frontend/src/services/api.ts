@@ -165,6 +165,7 @@ export const chatApi = {
     subject?: string;
     language?: string;
     detail_level?: string;
+    personality_id?: number;
   }) => request<ChatResponse>("/api/chat", { method: "POST", body: data }),
 
   sessions: () => request<ChatSession[]>("/api/chat/sessions"),
@@ -199,6 +200,14 @@ export const quizApi = {
   }) => request<AnswerCheckResult>("/api/quiz/check-answer", { method: "POST", body: data }),
 
   history: () => request<QuizHistoryItem[]>("/api/quiz/history"),
+
+  topics: (subject?: string) =>
+    request<QuizTopicsResponse>(subject ? `/api/quiz/topics?subject=${subject}` : "/api/quiz/topics"),
+
+  personalities: () => request<KIPersonalitiesResponse>("/api/quiz/personalities"),
+
+  setPersonality: (personalityId: number) =>
+    request<{ personality_id: number; name: string }>(`/api/quiz/personality?personality_id=${personalityId}`, { method: "PUT" }),
 };
 
 // Learning
@@ -314,6 +323,9 @@ export interface User {
   school_type: string;
   preferred_language: string;
   is_pro: boolean;
+  subscription_tier: string;
+  ki_personality_id: number;
+  ki_personality_name: string;
   avatar_url: string;
   auth_provider: string;
   created_at: string;
@@ -468,14 +480,47 @@ export interface RAGStats {
 }
 
 // Stripe
+export interface QuizTopic {
+  id: number;
+  name: string;
+  tier: string;
+  difficulty_range: number[];
+}
+
+export interface QuizTopicsResponse {
+  subjects?: Record<string, QuizTopic[]>;
+  subject?: string;
+  topics?: QuizTopic[];
+  tier: string;
+  total_topics?: number;
+}
+
+export interface KIPersonality {
+  id: number;
+  name: string;
+  emoji: string;
+  tier: string;
+  temperature: number;
+  preview: string;
+  system_prompt: string;
+  accessible: boolean;
+}
+
+export interface KIPersonalitiesResponse {
+  personalities: KIPersonality[];
+  current_id: number;
+  tier: string;
+}
+
 export interface StripeConfig {
   enabled: boolean;
   publishable_key: string;
   pro_price_eur: string;
 }
 
-export interface ProStatus {
+export interface SubscriptionStatus {
   is_pro: boolean;
+  subscription_tier: string;
   stripe_customer_id: string;
   pro_since: string;
   stripe_enabled: boolean;
@@ -483,9 +528,9 @@ export interface ProStatus {
 
 export const stripeApi = {
   config: () => request<StripeConfig>("/api/stripe/config"),
-  createCheckout: (data: { success_url: string; cancel_url: string }) =>
+  createCheckout: (data: { success_url: string; cancel_url: string; plan?: string }) =>
     request<{ checkout_url: string; session_id: string }>("/api/stripe/create-checkout", { method: "POST", body: data }),
-  proStatus: () => request<ProStatus>("/api/stripe/pro-status"),
+  subscriptionStatus: () => request<SubscriptionStatus>("/api/stripe/subscription-status"),
 };
 
 // Clerk config

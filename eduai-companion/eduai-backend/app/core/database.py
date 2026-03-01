@@ -36,6 +36,9 @@ async def init_db():
             school_type TEXT DEFAULT 'Gymnasium',
             preferred_language TEXT DEFAULT 'de',
             is_pro INTEGER DEFAULT 0,
+            subscription_tier TEXT DEFAULT 'free',
+            ki_personality_id INTEGER DEFAULT 1,
+            ki_personality_name TEXT DEFAULT 'Freundlich',
             stripe_customer_id TEXT DEFAULT '',
             pro_since TEXT DEFAULT '',
             clerk_user_id TEXT DEFAULT '',
@@ -120,4 +123,25 @@ async def init_db():
     """)
 
     await db.commit()
+
+    # --- Migrations for existing databases ---
+    # Add new columns if they don't exist (safe for fresh + existing DBs)
+    migrations = [
+        ("users", "subscription_tier", "TEXT DEFAULT 'free'"),
+        ("users", "ki_personality_id", "INTEGER DEFAULT 1"),
+        ("users", "ki_personality_name", "TEXT DEFAULT 'Freundlich'"),
+    ]
+    for table, column, col_type in migrations:
+        try:
+            await db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+            await db.commit()
+        except Exception:
+            pass  # Column already exists
+
+    # Sync subscription_tier with is_pro for existing users
+    await db.execute(
+        "UPDATE users SET subscription_tier = 'pro' WHERE is_pro = 1 AND subscription_tier = 'free'"
+    )
+    await db.commit()
+
     await db.close()

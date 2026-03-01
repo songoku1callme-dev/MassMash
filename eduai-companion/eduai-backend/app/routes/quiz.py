@@ -16,8 +16,94 @@ from app.models.schemas import (
     AnswerCheckRequest, AnswerCheckResponse,
 )
 from app.services.ai_engine import generate_quiz, update_proficiency
+from app.services.quiz_topics import get_topics_for_subject, get_all_topics, get_topic_count
+from app.services.ki_personalities import get_personalities, get_personality_by_id
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
+
+
+@router.get("/topics")
+async def quiz_topics(
+    subject: str = "",
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get available quiz topics, filtered by user's subscription tier."""
+    cursor = await db.execute(
+        "SELECT subscription_tier FROM users WHERE id = ?", (current_user["id"],)
+    )
+    row = await cursor.fetchone()
+    tier = dict(row).get("subscription_tier", "free") if row else "free"
+    tier = tier or "free"
+
+    if subject:
+        return {
+            "subject": subject,
+            "topics": get_topics_for_subject(subject, tier),
+            "tier": tier,
+        }
+    return {
+        "subjects": get_all_topics(tier),
+        "tier": tier,
+        "total_topics": get_topic_count(),
+    }
+
+
+@router.get("/personalities")
+async def ki_personalities(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get available KI personalities, filtered by user's subscription tier."""
+    cursor = await db.execute(
+        "SELECT subscription_tier, ki_personality_id FROM users WHERE id = ?",
+        (current_user["id"],),
+    )
+    row = await cursor.fetchone()
+    row_dict = dict(row) if row else {}
+    tier = row_dict.get("subscription_tier", "free") or "free"
+    current_id = row_dict.get("ki_personality_id", 1) or 1
+
+    return {
+        "personalities": get_personalities(tier),
+        "current_id": current_id,
+        "tier": tier,
+    }
+
+
+@router.put("/personality")
+async def set_ki_personality(
+    personality_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Set the user's preferred KI personality."""
+    cursor = await db.execute(
+        "SELECT subscription_tier FROM users WHERE id = ?", (current_user["id"],)
+    )
+    row = await cursor.fetchone()
+    tier = dict(row).get("subscription_tier", "free") if row else "free"
+    tier = tier or "free"
+
+    personality = get_personality_by_id(personality_id)
+    if not personality:
+        raise HTTPException(status_code=404, detail="Persönlichkeit nicht gefunden")
+
+    # Check tier access
+    from app.services.ki_personalities import is_personality_accessible
+    if not is_personality_accessible(personality_id, tier):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Diese Persönlichkeit erfordert ein {personality['tier'].capitalize()}-Abo",
+        )
+
+    await db.execute(
+        "UPDATE users SET ki_personality_id = ?, ki_personality_name = ? WHERE id = ?",
+        (personality_id, personality["name"], current_user["id"]),
+    )
+    await db.commit()
+
+    return {"personality_id": personality_id, "name": personality["name"]}
 
 
 @router.post("/generate", response_model=QuizResponse)

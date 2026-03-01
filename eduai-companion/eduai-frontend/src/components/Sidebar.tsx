@@ -35,7 +35,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "quiz", label: "Quiz", icon: <BrainCircuit className="w-5 h-5" /> },
     { id: "learning", label: "Lernpfad", icon: <BookOpen className="w-5 h-5" /> },
     { id: "rag", label: "Wissensdatenbank", icon: <Database className="w-5 h-5" /> },
-    { id: "pricing", label: "Pro Upgrade", icon: <CreditCard className="w-5 h-5" /> },
+    { id: "pricing", label: "Abo & Preise", icon: <CreditCard className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -133,10 +133,11 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex items-center gap-1">
               {user?.full_name || user?.username}
-              {user?.is_pro && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
+              {user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
+              {user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {user?.is_pro ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
+              {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
             </p>
           </div>
           <button
