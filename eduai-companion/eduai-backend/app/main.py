@@ -9,14 +9,18 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag, ocr
+from app.routes import auth, chat, quiz, learning, rag, ocr, admin
+from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize database on startup."""
+    """Initialize database and monitoring on startup."""
+    init_sentry()
+    init_posthog()
     await init_db()
     yield
+    shutdown_posthog()
 
 
 app = FastAPI(
@@ -47,6 +51,7 @@ app.include_router(quiz.router)
 app.include_router(learning.router)
 app.include_router(rag.router)
 app.include_router(ocr.router)
+app.include_router(admin.router)
 
 
 @app.get("/healthz")
