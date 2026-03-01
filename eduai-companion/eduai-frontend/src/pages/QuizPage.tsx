@@ -6,15 +6,27 @@ import { Input } from "@/components/ui/input";
 import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
 import {
   BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
-  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2
+  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2,
+  Atom, Leaf, Globe, Landmark, Brain, Palette, Music, Users, Code, BookOpen
 } from "lucide-react";
 
 const SUBJECTS = [
   { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
-  { id: "english", name: "Englisch", icon: <Languages className="w-5 h-5" />, color: "from-emerald-500 to-emerald-600" },
   { id: "german", name: "Deutsch", icon: <BookOpenCheck className="w-5 h-5" />, color: "from-amber-500 to-amber-600" },
+  { id: "english", name: "Englisch", icon: <Languages className="w-5 h-5" />, color: "from-emerald-500 to-emerald-600" },
+  { id: "physics", name: "Physik", icon: <Atom className="w-5 h-5" />, color: "from-cyan-500 to-cyan-600" },
+  { id: "chemistry", name: "Chemie", icon: <FlaskConical className="w-5 h-5" />, color: "from-rose-500 to-rose-600" },
+  { id: "biology", name: "Biologie", icon: <Leaf className="w-5 h-5" />, color: "from-green-500 to-green-600" },
   { id: "history", name: "Geschichte", icon: <Clock className="w-5 h-5" />, color: "from-purple-500 to-purple-600" },
-  { id: "science", name: "Naturwiss.", icon: <FlaskConical className="w-5 h-5" />, color: "from-rose-500 to-rose-600" },
+  { id: "geography", name: "Geografie", icon: <Globe className="w-5 h-5" />, color: "from-teal-500 to-teal-600" },
+  { id: "economics", name: "Wirtschaft", icon: <Landmark className="w-5 h-5" />, color: "from-orange-500 to-orange-600" },
+  { id: "ethics", name: "Ethik", icon: <Brain className="w-5 h-5" />, color: "from-indigo-500 to-indigo-600" },
+  { id: "computer_science", name: "Informatik", icon: <Code className="w-5 h-5" />, color: "from-gray-500 to-gray-600" },
+  { id: "art", name: "Kunst", icon: <Palette className="w-5 h-5" />, color: "from-pink-500 to-pink-600" },
+  { id: "music", name: "Musik", icon: <Music className="w-5 h-5" />, color: "from-violet-500 to-violet-600" },
+  { id: "social_studies", name: "Sozialkunde", icon: <Users className="w-5 h-5" />, color: "from-sky-500 to-sky-600" },
+  { id: "latin", name: "Latein", icon: <BookOpen className="w-5 h-5" />, color: "from-stone-500 to-stone-600" },
+  { id: "french", name: "Französisch", icon: <Languages className="w-5 h-5" />, color: "from-red-500 to-red-600" },
 ];
 
 const DIFFICULTIES = [
@@ -166,7 +178,7 @@ export default function QuizPage() {
             <CardTitle className="text-base">Fach wählen</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {SUBJECTS.map((s) => (
                 <button
                   key={s.id}

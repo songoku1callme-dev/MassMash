@@ -542,3 +542,166 @@ export interface ClerkConfig {
 export const clerkApi = {
   config: () => request<ClerkConfig>("/api/auth/clerk-config"),
 };
+
+// Memory (User Adaptive Learning)
+export interface MemoryFeedbackResponse {
+  topic_id: string;
+  feedback: number;
+  schwach: boolean;
+  message: string;
+}
+
+export interface WeakTopic {
+  topic_id: string;
+  subject: string;
+  topic_name: string;
+  feedback_score: number;
+  times_asked: number;
+  times_correct: number;
+  letzte_frage: string;
+}
+
+export interface MemoryStats {
+  total_topics_tracked: number;
+  weak_topics_count: number;
+  strong_topics_count: number;
+  by_subject: { subject: string; count: number; weak_count: number }[];
+}
+
+export const memoryApi = {
+  submitFeedback: (data: { topic_id: string; feedback: number; subject?: string; topic_name?: string }) =>
+    request<MemoryFeedbackResponse>(
+      `/api/memory/feedback?topic_id=${data.topic_id}&feedback=${data.feedback}&subject=${data.subject || ""}&topic_name=${encodeURIComponent(data.topic_name || "")}`,
+      { method: "POST" }
+    ),
+  weakTopics: (subject?: string) =>
+    request<{ weak_topics: WeakTopic[]; count: number }>(
+      subject ? `/api/memory/weak-topics?subject=${subject}` : "/api/memory/weak-topics"
+    ),
+  stats: () => request<MemoryStats>("/api/memory/stats"),
+  adaptivePrompt: (subject: string) =>
+    request<{ prompt: string; weak_topics: WeakTopic[] }>(`/api/memory/adaptive-prompt?subject=${subject}`),
+};
+
+// Abitur Simulation
+export interface AbiturSimulation {
+  simulation_id: number;
+  subject: string;
+  duration_minutes: number;
+  questions: { id: number; question: string; options: string[]; difficulty: string; topic: string }[];
+  status: string;
+  start_time: string;
+}
+
+export interface AbiturResult {
+  simulation_id: number;
+  subject: string;
+  total_questions: number;
+  correct_answers: number;
+  score_percent: number;
+  note_punkte: number;
+  note: string;
+  graded_answers: { question_id: number; user_answer: string; correct_answer: string; is_correct: boolean }[];
+  status: string;
+}
+
+export interface AbiturHistoryItem {
+  id: number;
+  subject: string;
+  duration_minutes: number;
+  score: number;
+  note_punkte: number;
+  note: string;
+  status: string;
+  created_at: string;
+}
+
+export interface StudyPlan {
+  plan_id: number;
+  subject: string;
+  weeks: number;
+  plan: { woche: number; thema: string; aufgaben: string[]; tage_pro_woche: number; stunden_pro_tag: number }[];
+  weak_topics_included: string[];
+}
+
+export interface StudyPlanListItem {
+  id: number;
+  subject: string;
+  week_count: number;
+  current_week: number;
+  status: string;
+  created_at: string;
+}
+
+export const abiturApi = {
+  start: (data: { subject: string; duration_minutes?: number; num_questions?: number }) =>
+    request<AbiturSimulation>(
+      `/api/abitur/start?subject=${data.subject}&duration_minutes=${data.duration_minutes || 180}&num_questions=${data.num_questions || 20}`,
+      { method: "POST" }
+    ),
+  pause: (data: { simulation_id: number; elapsed_seconds?: number }) =>
+    request<{ simulation_id: number; status: string; elapsed_seconds: number }>(
+      `/api/abitur/pause?simulation_id=${data.simulation_id}&elapsed_seconds=${data.elapsed_seconds || 0}`,
+      { method: "POST" }
+    ),
+  resume: (simulation_id: number) =>
+    request<{ simulation_id: number; status: string; elapsed_seconds: number; remaining_minutes: number }>(
+      `/api/abitur/resume?simulation_id=${simulation_id}`,
+      { method: "POST" }
+    ),
+  submit: (data: { simulation_id: number; answers: { question_id: number; user_answer: string }[] }) =>
+    request<AbiturResult>(
+      `/api/abitur/submit?simulation_id=${data.simulation_id}`,
+      { method: "POST", body: data.answers }
+    ),
+  history: () => request<{ simulations: AbiturHistoryItem[] }>("/api/abitur/history"),
+  createPlan: (data: { subject: string; weeks?: number }) =>
+    request<StudyPlan>(
+      `/api/abitur/coach/plan?subject=${data.subject}&weeks=${data.weeks || 8}`,
+      { method: "POST" }
+    ),
+  getPlans: () => request<{ plans: StudyPlanListItem[] }>("/api/abitur/coach/plans"),
+  getPlanDetail: (planId: number) => request<StudyPlan>(`/api/abitur/coach/plan/${planId}`),
+  updateProgress: (planId: number, currentWeek: number) =>
+    request<{ plan_id: number; current_week: number; status: string }>(
+      `/api/abitur/coach/plan/${planId}/progress?current_week=${currentWeek}`,
+      { method: "PUT" }
+    ),
+};
+
+// Research (Internet Search)
+export interface ResearchResult {
+  title: string;
+  url: string;
+  content: string;
+  score: number;
+}
+
+export interface ResearchResponse {
+  query: string;
+  enhanced_query: string;
+  results: ResearchResult[];
+  source_count: number;
+  tavily_enabled: boolean;
+}
+
+export interface AskWithSourcesResponse {
+  answer: string;
+  sources: ResearchResult[];
+  source_count: number;
+  tavily_enabled: boolean;
+}
+
+export const researchApi = {
+  search: (data: { query: string; subject?: string; max_results?: number }) =>
+    request<ResearchResponse>(
+      `/api/research/search?query=${encodeURIComponent(data.query)}&subject=${data.subject || ""}&max_results=${data.max_results || 10}`,
+      { method: "POST" }
+    ),
+  askWithSources: (data: { question: string; subject?: string }) =>
+    request<AskWithSourcesResponse>(
+      `/api/research/ask-with-sources?question=${encodeURIComponent(data.question)}&subject=${data.subject || ""}`,
+      { method: "POST" }
+    ),
+  history: () => request<{ results: { id: number; query: string; source_count: number; created_at: string }[] }>("/api/research/history"),
+};

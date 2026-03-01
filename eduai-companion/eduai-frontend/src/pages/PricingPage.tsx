@@ -41,17 +41,17 @@ export default function PricingPage() {
     "KI-Tutor Chat (begrenzt)",
     "50 OCR-Anfragen/Monat",
     "50 Spracheingaben/Monat",
-    "3 KI-Stile",
-    "10 Quiz-Themen/Fach",
-    "5 Fächer + Quiz & Lernpfade",
+    "5 KI-Stile",
+    "Basis Quiz-Themen (16 F\u00e4cher)",
+    "16 F\u00e4cher + Quiz & Lernpfade",
   ];
 
   const proPlan = [
     "Unbegrenzt KI-Tutor Chat",
     "Unbegrenzt OCR & Mathe-Fotos",
     "Unbegrenzt Spracheingabe & Vorlesen",
-    "8 KI-Stile (+ Humorvoll, Abi-Coach, ...)",
-    "25 Quiz-Themen/Fach",
+    "12 KI-Stile (+ Humorvoll, Abi-Coach, Mentor, ...)",
+    "300+ Quiz-Themen \u00fcber 16 F\u00e4cher",
     "Custom Quiz-Themen erstellen",
     "PDF-Export von Chats",
     "Priorisierte KI (schnellere Antworten)",
@@ -59,14 +59,14 @@ export default function PricingPage() {
 
   const maxPlan = [
     "Alles aus Pro +",
-    "15 KI-Stile (+ Kaiser-Lehrer, Superheld, ...)",
-    "50+ Quiz-Themen/Fach",
-    "Wochen-Coach (Lernplan-KI)",
+    "20 KI-Stile (+ Einstein, Zen-Meister, Cyber-Coach, ...)",
+    "300+ Quiz-Themen über 16 Fächer",
+    "Wochen-Coach (8-Wochen Abitur-Lernplan)",
+    "Abitur-Simulation (Timer, Notenpunkte)",
+    "Internet-Recherche (Live Quellen)",
+    "User Memory (Adaptive Schwachstellen)",
     "Gruppen-Chats mit Mitschülern",
-    "Abitur-Simulation (Prüfungsmodus)",
-    "GPT-4o Priority Antworten",
-    "Eltern-Share (Fortschritt teilen)",
-    "Video-Integration & PDF/Word Export",
+    "Eltern-Share & PDF/Word Export",
   ];
 
   return (
@@ -183,7 +183,7 @@ export default function PricingPage() {
             </CardTitle>
             <CardDescription>Für Abitur-Champions</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">14,99 EUR</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">19,99 EUR</span>
               <span className="text-gray-500 dark:text-gray-400 ml-1">/Monat</span>
             </div>
           </CardHeader>
@@ -229,15 +229,15 @@ export default function PricingPage() {
             <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
               <Palette className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">15 KI-Persönlichkeiten</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Von Freundlich bis Kaiser-Lehrer</p>
+                <p className="font-medium text-gray-900 dark:text-white text-sm">20 KI-Persönlichkeiten</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Von Freundlich bis Einstein, Zen-Meister, Cyber-Coach</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
               <Brain className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">50+ Quiz-Themen</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Pro Fach, alle Klassenstufen</p>
+                <p className="font-medium text-gray-900 dark:text-white text-sm">300+ Quiz-Themen</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">16 F\u00e4cher, alle Klassenstufen</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">

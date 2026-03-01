@@ -1,7 +1,7 @@
 """Stripe integration routes for Free/Pro/Max subscriptions.
 
 Handles:
-- Creating Checkout sessions for Pro (4.99 EUR/month) and Max (14.99 EUR/month)
+- Creating Checkout sessions for Pro (4.99 EUR/month) and Max (19.99 EUR/month)
 - Webhook handling with dual secrets for redundancy/failover
 - Subscription status checking with tier info
 
@@ -32,8 +32,8 @@ STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
 # Price tiers in cents
 PRO_PRICE_CENTS = 499
 PRO_PRICE_EUR = "4.99"
-MAX_PRICE_CENTS = 1499
-MAX_PRICE_EUR = "14.99"
+MAX_PRICE_CENTS = 1999
+MAX_PRICE_EUR = "19.99"
 
 # Free tier limits
 FREE_OCR_LIMIT = 50  # per month
@@ -92,7 +92,7 @@ async def create_checkout(
     if req.plan == "max":
         price_cents = MAX_PRICE_CENTS
         plan_name = "EduAI Max"
-        plan_desc = "GPT-4o Priority, 15 KI-Stile, 50+ Quiz-Themen, Wochen-Coach, Abitur-Sim"
+        plan_desc = "GPT-4o Priority, 20 KI-Stile, 300+ Quiz-Themen, Wochen-Coach, Abitur-Sim, Internet-Recherche"
         target_tier = "max"
     else:
         price_cents = PRO_PRICE_CENTS
@@ -198,7 +198,7 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
 
 def _tier_from_amount(amount_cents: int) -> str:
     """Determine subscription tier from price amount."""
-    if amount_cents >= MAX_PRICE_CENTS:
+    if amount_cents >= 1499:  # Max tier (19.99 or legacy 14.99)
         return "max"
     elif amount_cents >= PRO_PRICE_CENTS:
         return "pro"

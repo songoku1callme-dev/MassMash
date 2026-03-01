@@ -120,6 +120,63 @@ async def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS user_memories (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            topic_id TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            topic_name TEXT DEFAULT '',
+            schwach INTEGER DEFAULT 0,
+            feedback_score INTEGER DEFAULT 0,
+            times_asked INTEGER DEFAULT 0,
+            times_correct INTEGER DEFAULT 0,
+            letzte_frage TEXT DEFAULT (datetime('now')),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, topic_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS abitur_simulations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            duration_minutes INTEGER DEFAULT 180,
+            start_time TEXT DEFAULT (datetime('now')),
+            pause_time TEXT DEFAULT '',
+            paused_elapsed_seconds INTEGER DEFAULT 0,
+            score REAL DEFAULT 0.0,
+            note_punkte INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'active',
+            questions TEXT DEFAULT '[]',
+            answers TEXT DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS wochen_coach_plans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            plan_json TEXT DEFAULT '[]',
+            week_count INTEGER DEFAULT 8,
+            current_week INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'active',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS research_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            query TEXT NOT NULL,
+            results_json TEXT DEFAULT '[]',
+            source_count INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     """)
 
     await db.commit()

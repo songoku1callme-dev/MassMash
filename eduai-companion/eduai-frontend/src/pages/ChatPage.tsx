@@ -15,16 +15,28 @@ import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
-  Camera, Mic, MicOff, Lock
+  Camera, Mic, MicOff, Lock, Atom, Leaf, Globe, Landmark, Brain,
+  Palette, Music, Users, Code, BookOpen
 } from "lucide-react";
 
 const SUBJECTS = [
   { id: "general", name: "Alle Fächer", icon: <Sparkles className="w-4 h-4" /> },
   { id: "math", name: "Mathe", icon: <Calculator className="w-4 h-4" /> },
-  { id: "english", name: "Englisch", icon: <Languages className="w-4 h-4" /> },
   { id: "german", name: "Deutsch", icon: <BookOpenCheck className="w-4 h-4" /> },
+  { id: "english", name: "Englisch", icon: <Languages className="w-4 h-4" /> },
+  { id: "physics", name: "Physik", icon: <Atom className="w-4 h-4" /> },
+  { id: "chemistry", name: "Chemie", icon: <FlaskConical className="w-4 h-4" /> },
+  { id: "biology", name: "Biologie", icon: <Leaf className="w-4 h-4" /> },
   { id: "history", name: "Geschichte", icon: <Clock className="w-4 h-4" /> },
-  { id: "science", name: "Naturwiss.", icon: <FlaskConical className="w-4 h-4" /> },
+  { id: "geography", name: "Geografie", icon: <Globe className="w-4 h-4" /> },
+  { id: "economics", name: "Wirtschaft", icon: <Landmark className="w-4 h-4" /> },
+  { id: "ethics", name: "Ethik", icon: <Brain className="w-4 h-4" /> },
+  { id: "computer_science", name: "Informatik", icon: <Code className="w-4 h-4" /> },
+  { id: "art", name: "Kunst", icon: <Palette className="w-4 h-4" /> },
+  { id: "music", name: "Musik", icon: <Music className="w-4 h-4" /> },
+  { id: "social_studies", name: "Sozialkunde", icon: <Users className="w-4 h-4" /> },
+  { id: "latin", name: "Latein", icon: <BookOpen className="w-4 h-4" /> },
+  { id: "french", name: "Französisch", icon: <Languages className="w-4 h-4" /> },
 ];
 
 export default function ChatPage() {
