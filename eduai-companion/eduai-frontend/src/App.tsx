@@ -20,10 +20,14 @@ import SettingsPage from "./pages/SettingsPage";
 import FlashcardsPage from "./pages/FlashcardsPage";
 import NotesPage from "./pages/NotesPage";
 import CalendarPage from "./pages/CalendarPage";
+import MultiplayerPage from "./pages/MultiplayerPage";
+import DatenschutzPage from "./pages/DatenschutzPage";
+import SchoolPage from "./pages/SchoolPage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import CookieBanner from "./components/CookieBanner";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
@@ -115,6 +119,12 @@ function App() {
         return <NotesPage />;
       case "calendar":
         return <CalendarPage />;
+      case "multiplayer":
+        return <MultiplayerPage />;
+      case "datenschutz":
+        return <DatenschutzPage />;
+      case "school":
+        return <SchoolPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":
@@ -131,6 +141,7 @@ function App() {
         {renderPage()}
       </main>
       <PWAInstallBanner />
+      <CookieBanner />
     </div>
   );
 }

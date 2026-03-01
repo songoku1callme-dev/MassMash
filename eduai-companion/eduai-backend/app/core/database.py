@@ -298,6 +298,58 @@ async def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (test_id) REFERENCES iq_tests(id)
         );
+
+        CREATE TABLE IF NOT EXISTS chat_feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_id INTEGER NOT NULL,
+            message_index INTEGER NOT NULL,
+            rating TEXT NOT NULL DEFAULT 'positive',
+            reason TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS multiplayer_rooms (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            room_code TEXT UNIQUE NOT NULL,
+            host_id INTEGER NOT NULL,
+            subject TEXT DEFAULT 'general',
+            topic TEXT DEFAULT '',
+            status TEXT DEFAULT 'waiting',
+            max_players INTEGER DEFAULT 8,
+            num_questions INTEGER DEFAULT 10,
+            questions TEXT DEFAULT '[]',
+            players TEXT DEFAULT '[]',
+            scores TEXT DEFAULT '{}',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS school_licenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            school_name TEXT NOT NULL,
+            teacher_id INTEGER NOT NULL,
+            class_code TEXT UNIQUE NOT NULL,
+            tier TEXT DEFAULT 'max',
+            max_students INTEGER DEFAULT 30,
+            students TEXT DEFAULT '[]',
+            is_active INTEGER DEFAULT 1,
+            expires_at TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            endpoint TEXT NOT NULL,
+            p256dh TEXT DEFAULT '',
+            auth_key TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, endpoint)
+        );
     """)
 
     await db.commit()

@@ -28,8 +28,53 @@ logger = logging.getLogger(__name__)
 # - mixtral-8x7b-32768      : good multilingual, large context
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 FALLBACK_MODEL = "llama-3.1-8b-instant"
+FAST_MODEL = "llama-3.1-8b-instant"
 MAX_HISTORY_MESSAGES = 10  # Keep last N messages for context (GDPR: minimize data)
 MAX_TOKENS = 2048
+
+
+def route_model(task_type: str) -> str:
+    """Route to the best model based on task type (Model Routing).
+
+    Simple questions -> fast model (cheaper, faster)
+    Complex explanations, abitur -> quality model
+    """
+    fast_tasks = {"simple_question", "quiz_generation", "classification", "feedback"}
+    if task_type in fast_tasks:
+        return FAST_MODEL
+    return DEFAULT_MODEL
+
+
+def classify_needs_search(message: str) -> bool:
+    """Quick heuristic to decide if a message needs web search.
+
+    Avoids an extra LLM call -- uses keyword matching instead.
+    """
+    search_indicators = [
+        "aktuell", "2024", "2025", "2026", "neuest", "letztes jahr",
+        "reform", "gesetz", "statistik", "studie", "quelle", "forschung",
+        "lehrplan", "curriculum", "abitur 20", "klausur 20",
+        "was passiert", "warum ist", "wer hat", "wann wurde",
+        "ereignis", "nachrichten", "politik",
+    ]
+    msg_lower = message.lower()
+    return any(indicator in msg_lower for indicator in search_indicators)
+
+
+def compress_history(chat_history: list) -> str:
+    """Compress long chat history into a summary for context window optimization."""
+    if not chat_history or len(chat_history) <= MAX_HISTORY_MESSAGES:
+        return ""
+    older = chat_history[:-MAX_HISTORY_MESSAGES]
+    summary_parts = []
+    for msg in older[-6:]:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")[:100]
+        if content:
+            summary_parts.append(f"{role}: {content}")
+    if summary_parts:
+        return "BISHERIGER GESPRAECHSVERLAUF (Zusammenfassung):\n" + "\n".join(summary_parts) + "\n---\n"
+    return ""
 
 
 def _get_client() -> Optional[Groq]:
@@ -66,6 +111,8 @@ def call_groq_llm(
     rag_context: str = "",
     is_pro: bool = False,
     temperature_override: Optional[float] = None,
+    web_context: str = "",
+    task_type: str = "explanation",
 ) -> str:
     """Call the Groq API to generate an AI tutoring response.
 
@@ -103,9 +150,24 @@ def call_groq_llm(
             "\n\n--- Relevanter Kontext aus dem Lehrplan / Curriculum ---\n"
             f"{rag_context}\n"
             "--- Ende Kontext ---\n"
-                        "Nutze diesen Kontext um die Frage des Schülers zu beantworten. "
-                        "Nenne die Quellen wenn möglich."
+            "Nutze diesen Kontext um die Frage des Schuelers zu beantworten. "
+            "Nenne die Quellen wenn moeglich."
         )
+
+    # Inject web search context (Auto-Web-Search)
+    if web_context:
+        system_prompt += (
+            "\n\n--- AKTUELLE INTERNET-QUELLEN (heute recherchiert) ---\n"
+            f"{web_context}\n"
+            "--- Ende Quellen ---\n"
+            "Nutze diese aktuellen Quellen in deiner Antwort. "
+            "Zitiere sie mit [1], [2], etc."
+        )
+
+    # Add compressed history summary for long conversations
+    history_summary = compress_history(chat_history or [])
+    if history_summary:
+        system_prompt += f"\n{history_summary}"
 
     # Build messages list
     messages = [{"role": "system", "content": system_prompt}]
@@ -121,7 +183,8 @@ def call_groq_llm(
     # Add current user message
     messages.append({"role": "user", "content": prompt})
 
-    chosen_model = model or DEFAULT_MODEL
+    # Model routing based on task type
+    chosen_model = model or route_model(task_type)
 
     try:
         completion = client.chat.completions.create(

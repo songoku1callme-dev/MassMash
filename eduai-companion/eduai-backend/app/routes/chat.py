@@ -1,6 +1,7 @@
 """Chat routes - AI-powered tutoring conversations."""
 import json
 import logging
+import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
@@ -8,7 +9,7 @@ from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
 from app.services.ai_engine import detect_subject, build_system_prompt
-from app.services.groq_llm import call_groq_llm
+from app.services.groq_llm import call_groq_llm, classify_needs_search
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
 
@@ -129,18 +130,45 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
+    # Auto-Web-Search for Pro/Max users (Phase 2.1)
+    web_context = ""
+    web_sources: list[str] = []
+    tavily_key = os.getenv("TAVILY_API_KEY", "")
+    if tavily_key and user_tier in ("pro", "max") and classify_needs_search(request.message):
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0) as http_client:
+                search_query = f"{request.message} Deutschland Gymnasium Lehrplan"
+                resp = await http_client.post(
+                    "https://api.tavily.com/search",
+                    json={
+                        "api_key": tavily_key,
+                        "query": search_query,
+                        "search_depth": "basic",
+                        "max_results": 3,
+                    },
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    for idx, r in enumerate(data.get("results", [])[:3], 1):
+                        web_context += f"[{idx}] {r.get('title', '')}: {r.get('content', '')[:300]}\n"
+                        web_sources.append(f"[{idx}] [{r.get('title', '')}]({r.get('url', '')})")
+        except Exception as web_err:
+            logger.warning("Auto web search failed (non-fatal): %s", web_err)
+
     # Master KI-Tutor System Prompt
     master_prompt = (
         "Du bist EduAI, der intelligenteste KI-Tutor Deutschlands. "
-        "Du unterrichtest Sch\u00fcler der Klassen 5-13 auf Abitur-Niveau.\n"
+        "Du unterrichtest Schueler der Klassen 5-13 auf Abitur-Niveau.\n"
         "REGELN:\n"
-        "1. Erkl\u00e4re Schritt f\u00fcr Schritt mit konkreten Beispielen\n"
-        "2. Verwende LaTeX f\u00fcr Mathematik: $F = m \\cdot a$\n"
-        "3. Strukturiere Antworten mit \u00dcberschriften und Aufz\u00e4hlungen\n"
-        "4. Gib am Ende immer 1-2 \u00dcbungsaufgaben\n"
-        "5. Passe dich dem Niveau des Sch\u00fclers an\n"
+        "1. Erklaere Schritt fuer Schritt mit konkreten Beispielen\n"
+        "2. Verwende LaTeX fuer Mathematik: $F = m \\cdot a$\n"
+        "3. Strukturiere Antworten mit Ueberschriften und Aufzaehlungen\n"
+        "4. Gib am Ende immer 1-2 Uebungsaufgaben\n"
+        "5. Passe dich dem Niveau des Schuelers an\n"
         "6. Sei motivierend und ermutigend\n"
         "7. Wenn du Quellen hast, zitiere sie\n"
+        "8. Ende immer mit: 'Moechtest du eine Uebungsaufgabe dazu?'\n"
     )
 
     # Generate AI response via Groq LLM (falls back to template engine if no API key)
@@ -159,6 +187,19 @@ async def send_message(
         combined_prompt += memory_hint
     combined_prompt += f"\n{system_prompt}"
 
+    # Detect "explain differently" requests (Phase 2.5)
+    explain_methods = [
+        ("verstehe ich nicht", "Erklaere es anders, mit einer Analogie. Beginne mit 'Stell dir vor...'"),
+        ("zu kompliziert", "Erklaere es viel einfacher, als wuerdest du es einem Freund erklaeren."),
+        ("noch mal", "Erklaere es visuell mit Schritt-fuer-Schritt Auflistung und Beispielen."),
+        ("anders erklaeren", "Nutze eine komplett andere Erklaermethode als vorher."),
+    ]
+    msg_lower = request.message.lower()
+    for trigger, extra_instruction in explain_methods:
+        if trigger in msg_lower:
+            combined_prompt += f"\nWICHTIG: {extra_instruction}\n"
+            break
+
     ai_response = call_groq_llm(
         prompt=request.message,
         system_prompt=combined_prompt,
@@ -169,6 +210,7 @@ async def send_message(
         rag_context=rag_context,
         is_pro=is_pro,
         temperature_override=personality_temperature,
+        web_context=web_context,
     )
 
     # Award gamification XP for chat
@@ -178,9 +220,14 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
-    # Append source references if RAG provided context
+    # Append source references if RAG or web search provided context
+    all_sources = []
     if rag_sources and rag_context:
-        sources_text = "\n".join(f"- {s}" for s in rag_sources)
+        all_sources.extend([f"- {s}" for s in rag_sources])
+    if web_sources:
+        all_sources.extend(web_sources)
+    if all_sources:
+        sources_text = "\n".join(all_sources)
         if request.language == "de":
             ai_response += f"\n\n---\n**Quellen:**\n{sources_text}"
         else:
@@ -297,3 +344,47 @@ async def delete_session(
     await db.execute("DELETE FROM chat_sessions WHERE id = ?", (session_id,))
     await db.commit()
     return {"message": "Session deleted"}
+
+
+@router.post("/feedback")
+async def chat_feedback(
+    message_index: int,
+    session_id: int,
+    rating: str,
+    reason: str = "",
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Submit feedback on a KI response (Phase 2.2 Feedback Loop).
+
+    rating: 'positive' or 'negative'
+    reason: optional text (zu kompliziert / falsch / zu kurz / sonstiges)
+    """
+    user_id = current_user["id"]
+
+    # Store feedback
+    await db.execute(
+        """INSERT INTO chat_feedback (user_id, session_id, message_index, rating, reason)
+        VALUES (?, ?, ?, ?, ?)""",
+        (user_id, session_id, message_index, rating, reason),
+    )
+    await db.commit()
+
+    return {"message": "Feedback gespeichert", "rating": rating}
+
+
+@router.get("/feedback-stats")
+async def feedback_stats(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get feedback statistics (admin only)."""
+    cursor = await db.execute(
+        "SELECT rating, COUNT(*) as cnt FROM chat_feedback GROUP BY rating"
+    )
+    rows = await cursor.fetchall()
+    stats = {dict(r)["rating"]: dict(r)["cnt"] for r in rows}
+    total = sum(stats.values())
+    positive = stats.get("positive", 0)
+    rate = round(positive / total * 100, 1) if total > 0 else 0
+    return {"total": total, "positive": positive, "negative": stats.get("negative", 0), "positive_rate": rate}

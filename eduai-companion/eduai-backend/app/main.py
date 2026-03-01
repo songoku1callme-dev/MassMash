@@ -9,7 +9,7 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar
+from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school
 from app.routes import stripe_routes
 from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
 
@@ -66,6 +66,10 @@ app.include_router(notes.router)
 app.include_router(referral.router)
 app.include_router(password_reset.router)
 app.include_router(calendar.router)
+app.include_router(multiplayer.router)
+app.include_router(legal.router)
+app.include_router(adaptive.router)
+app.include_router(school.router)
 
 
 @app.get("/healthz")
