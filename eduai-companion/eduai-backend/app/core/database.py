@@ -551,9 +551,6 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_spaced_repetition_review ON spaced_repetition(user_id, next_review);
         CREATE INDEX IF NOT EXISTS idx_flashcards_review ON flashcards(user_id, next_review);
         CREATE INDEX IF NOT EXISTS idx_ki_relationship_user ON ki_relationship(user_id);
-        CREATE INDEX IF NOT EXISTS idx_battle_pass_user ON battle_pass(user_id);
-        CREATE INDEX IF NOT EXISTS idx_xp_log_user ON xp_log(user_id, created_at);
-
         -- Supreme 13.0 Phase 10: Noten-Prognose table
         CREATE TABLE IF NOT EXISTS noten_prognose (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -567,7 +564,6 @@ async def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
-        CREATE INDEX IF NOT EXISTS idx_noten_prognose_user ON noten_prognose(user_id, fach);
 
         CREATE TABLE IF NOT EXISTS battle_pass (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -581,6 +577,11 @@ async def init_db():
             updated_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        -- Supreme 13.0 Phase 5-6: Performance indexes (after all tables created)
+        CREATE INDEX IF NOT EXISTS idx_battle_pass_user ON battle_pass(user_id);
+        CREATE INDEX IF NOT EXISTS idx_xp_log_user ON xp_log(user_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_noten_prognose_user ON noten_prognose(user_id, fach);
 
         CREATE TABLE IF NOT EXISTS parent_link_requests (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
