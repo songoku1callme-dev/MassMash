@@ -48,13 +48,38 @@ export default function VoicePage() {
   const processAudio = async (audioBlob: Blob) => {
     setIsProcessing(true);
     try {
-      // Step 1: Transcribe
+      // Step 1: Transcribe via server-side Whisper
       const result = await voiceApi.transcribe(audioBlob);
       setTranscript(result.text);
 
-      // Step 2: Get TTS response (we send the transcript to chat API separately)
-      // For now, just show the transcript
-      setResponse("Transkription erfolgreich! Sende die Nachricht im Chat fuer eine KI-Antwort.");
+      // Step 2: Auto-send transcript to chat API and get AI response
+      if (result.text) {
+        try {
+          const chatResult = await voiceApi.voiceChat(audioBlob);
+          if (chatResult.response) {
+            setResponse(chatResult.response);
+            // Step 3: Auto-play TTS of the AI response
+            try {
+              const audioResult = await voiceApi.tts(chatResult.response);
+              const url = URL.createObjectURL(audioResult);
+              const audio = new Audio(url);
+              audioRef.current = audio;
+              setIsPlaying(true);
+              audio.onended = () => {
+                setIsPlaying(false);
+                URL.revokeObjectURL(url);
+              };
+              audio.play();
+            } catch {
+              // TTS failed, but we still have the text response
+            }
+          } else {
+            setResponse(chatResult.transcript ? `KI konnte nicht antworten. Deine Frage: "${chatResult.transcript}"` : "Verarbeitung fehlgeschlagen");
+          }
+        } catch {
+          setResponse("Transkription erfolgreich! Sende die Nachricht im Chat fuer eine KI-Antwort.");
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Fehler bei der Verarbeitung");
     } finally {

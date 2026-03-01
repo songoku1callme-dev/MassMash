@@ -997,6 +997,25 @@ export const voiceApi = {
     if (!res.ok) throw new Error("TTS failed");
     return res.blob();
   },
+  /** Supreme 11.0: Full voice chat — transcribe + AI respond + TTS in one call */
+  voiceChat: async (audioBlob: Blob): Promise<{ transcript: string; response: string }> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.webm");
+    const res = await fetch(`${API_URL}/api/voice/chat`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Voice chat failed" }));
+      throw new Error(err.detail || "Voice chat failed");
+    }
+    // The response is audio, but we also need the text from headers
+    const transcript = res.headers.get("X-Transcript") || "";
+    const responseText = res.headers.get("X-Response") || "";
+    return { transcript, response: responseText };
+  },
 };
 
 // Supreme 10.0: Push Notifications API

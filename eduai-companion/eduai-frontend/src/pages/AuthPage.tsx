@@ -3,7 +3,7 @@ import { useAuthStore } from "../stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BookOpen, GraduationCap } from "lucide-react";
+import { BookOpen, GraduationCap, Chrome } from "lucide-react";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -89,6 +89,28 @@ export default function AuthPage() {
                 {error}
               </div>
             )}
+
+            {/* Supreme 11.0: Google OAuth Button */}
+            <Button
+              variant="outline"
+              className="w-full mb-4 flex items-center gap-2"
+              size="lg"
+              onClick={() => {
+                setError("Google OAuth erfordert Clerk-Konfiguration. Bitte richte Clerk Social Connections ein.");
+              }}
+            >
+              <Chrome className="w-5 h-5 text-blue-500" />
+              Mit Google anmelden
+            </Button>
+
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-gray-300 dark:border-gray-600" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white dark:bg-gray-900 px-2 text-gray-500">oder</span>
+              </div>
+            </div>
 
             {isLogin ? (
               <form onSubmit={handleLogin} className="space-y-4">

@@ -23,21 +23,27 @@ const FEATURES = [
 const PRICING = [
   {
     tier: "Free", price: "0", period: "", features: [
-      "5 KI-Persönlichkeiten", "3 Quizzes/Tag", "IQ-Test (1x/Woche)",
-      "Basis-Fächer", "Gruppen-Chats",
+      "5 KI-Persoenlichkeiten", "3 Quizzes/Tag", "IQ-Test (1x/Woche)",
+      "Basis-Faecher", "Gruppen-Chats",
     ],
   },
   {
     tier: "Pro", price: "4,99", period: "/Monat", features: [
-      "12 KI-Persönlichkeiten", "Unbegrenzte Quizzes", "Abitur-Simulation",
-      "Karteikarten + Notizen", "Prüfungs-Kalender", "Internet-Recherche",
+      "12 KI-Persoenlichkeiten", "Unbegrenzte Quizzes", "Abitur-Simulation",
+      "Karteikarten + Notizen", "Pruefungs-Kalender", "Internet-Recherche",
     ], popular: true, yearPrice: "39,99",
   },
   {
     tier: "Max", price: "9,99", period: "/Monat", features: [
-      "Alle 20 KI-Persönlichkeiten", "Alles in Pro", "Prioritäts-Support",
+      "Alle 20 KI-Persoenlichkeiten", "Alles in Pro", "Prioritaets-Support",
       "Erweiterte Statistiken", "PDF/Word Export", "Multiplayer-Quiz",
     ], yearPrice: "79,99",
+  },
+  {
+    tier: "Eltern", price: "2,99", period: "/Monat", features: [
+      "Lernfortschritt in Echtzeit", "Woechentliche E-Mail Berichte",
+      "Streak-Alerts", "Schwaechen-Analyse", "Pruefungs-Kalender Einblick",
+    ], yearPrice: "23,99",
   },
 ];
 

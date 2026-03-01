@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import {
   Star, Check, Zap, Camera, Mic, FileText, BarChart3, Crown, Loader2,
-  Users, GraduationCap, Palette, Brain, Shield, Rocket
+  Users, GraduationCap, Palette, Brain, Shield, Rocket, Heart
 } from "lucide-react";
 
-type PlanKey = "pro" | "max";
+type PlanKey = "pro" | "max" | "eltern";
 type BillingPeriod = "monthly" | "yearly";
 
 export default function PricingPage() {
@@ -127,8 +127,8 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Pricing Cards - 3 Tiers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Pricing Cards - 4 Tiers */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Free Plan */}
         <Card className="relative">
           <CardHeader>
@@ -214,13 +214,13 @@ export default function PricingPage() {
               Max
               <Crown className="w-5 h-5 text-purple-500" />
             </CardTitle>
-            <CardDescription>Für Abitur-Champions</CardDescription>
+            <CardDescription>Fuer Abitur-Champions</CardDescription>
             <div className="mt-4">
               <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "79,99" : "9,99"} EUR</span>
               <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
             {billing === "yearly" && (
-              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 40€ vs. monatlich! (2 Monate GRATIS)</p>
+              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 40 EUR vs. monatlich! (2 Monate GRATIS)</p>
             )}
           </CardHeader>
           <CardContent>
@@ -251,6 +251,56 @@ export default function PricingPage() {
                 {loading === "max" ? "Wird geladen..." : "Max holen"}
               </Button>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Eltern-Abo Plan - Supreme 11.0 Phase 10 */}
+        <Card className="relative border-2 border-pink-400 dark:border-pink-500 shadow-lg bg-gradient-to-b from-pink-50/50 to-white dark:from-pink-900/10 dark:to-gray-900">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-pink-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+            Fuer Eltern
+          </div>
+          <CardHeader>
+            <CardTitle className="text-xl flex items-center gap-2">
+              Eltern
+              <Heart className="w-5 h-5 text-pink-500" />
+            </CardTitle>
+            <CardDescription>Lernfortschritt deines Kindes verfolgen</CardDescription>
+            <div className="mt-4">
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "23,99" : "2,99"} EUR</span>
+              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
+            </div>
+            {billing === "yearly" && (
+              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 12 EUR vs. monatlich!</p>
+            )}
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {[
+                "Lernfortschritt in Echtzeit",
+                "Woechentliche E-Mail Berichte",
+                "Streak-Alerts (wenn Kind nicht lernt)",
+                "Schwaechen-Analyse pro Fach",
+                "Pruefungs-Kalender Einblick",
+                "Aktivitaets-Statistiken",
+              ].map((feature, i) => (
+                <li key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <Heart className="w-4 h-4 text-pink-500 flex-shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Button
+              className="w-full mt-6 bg-pink-500 hover:bg-pink-600"
+              onClick={() => handleUpgrade("eltern")}
+              disabled={loading !== null}
+            >
+              {loading === "eltern" ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Heart className="w-4 h-4 mr-2" />
+              )}
+              {loading === "eltern" ? "Wird geladen..." : "Eltern-Abo holen"}
+            </Button>
           </CardContent>
         </Card>
       </div>

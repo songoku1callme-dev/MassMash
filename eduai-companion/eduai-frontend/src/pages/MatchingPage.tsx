@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { matchingApi } from "../services/api";
-import { Users, Star, Flame, Trophy, Loader2, RefreshCw } from "lucide-react";
+import { Users, Star, Flame, Trophy, Loader2, RefreshCw, MessageCircle } from "lucide-react";
 
 export default function MatchingPage() {
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -88,7 +88,7 @@ export default function MatchingPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold text-gray-900 dark:text-white">{partner.username}</h3>
                     <span className="text-sm font-medium text-cyan-600 bg-cyan-50 dark:bg-cyan-900/30 px-3 py-1 rounded-full">
-                      {partner.match_score}% Match
+                      {partner.match_prozent || partner.match_score}% Match
                     </span>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -116,6 +116,15 @@ export default function MatchingPage() {
                       <Flame className="w-3 h-3" /> {partner.stats?.streak_days || 0} Tage Streak
                     </span>
                   </div>
+
+                  {/* Gemeinsam lernen Button */}
+                  <button
+                    className="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
+                    onClick={() => alert(`Lerngruppe mit ${partner.username} wird erstellt! (Coming soon)`)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Gemeinsam lernen
+                  </button>
                 </div>
               </div>
             </div>

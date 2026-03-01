@@ -421,6 +421,35 @@ async def submit_quiz(
     except Exception:
         pass  # Non-fatal
 
+    # Supreme 11.0: Award Battle Pass XP (50 for quiz, 100 if score >= 80%)
+    try:
+        bp_xp = 50 if score < 0.8 else 100
+        bp_cursor = await db.execute(
+            "SELECT current_level, current_xp FROM battle_pass WHERE user_id = ?",
+            (user_id,),
+        )
+        bp_row = await bp_cursor.fetchone()
+        if not bp_row:
+            await db.execute("INSERT OR IGNORE INTO battle_pass (user_id) VALUES (?)", (user_id,))
+            await db.commit()
+            bp_current_xp = 0
+        else:
+            bp_current_xp = dict(bp_row)["current_xp"]
+        bp_new_xp = bp_current_xp + bp_xp
+        # Calculate new level from rewards table
+        from app.routes.battle_pass import BATTLE_PASS_REWARDS
+        bp_new_level = 1
+        for reward in BATTLE_PASS_REWARDS:
+            if bp_new_xp >= reward["xp_required"]:
+                bp_new_level = reward["level"]
+        await db.execute(
+            "UPDATE battle_pass SET current_xp = ?, current_level = ?, updated_at = datetime('now') WHERE user_id = ?",
+            (bp_new_xp, bp_new_level, user_id),
+        )
+        await db.commit()
+    except Exception:
+        pass  # Non-fatal
+
     return QuizResultResponse(
         total_questions=total,
         correct_answers=correct,
