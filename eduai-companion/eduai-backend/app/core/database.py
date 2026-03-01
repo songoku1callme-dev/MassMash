@@ -350,6 +350,138 @@ async def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(user_id, endpoint)
         );
+
+        CREATE TABLE IF NOT EXISTS pomodoro_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT DEFAULT 'general',
+            duration_minutes INTEGER DEFAULT 25,
+            xp_earned INTEGER DEFAULT 25,
+            completed_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS shop_purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            item_id TEXT NOT NULL,
+            item_name TEXT DEFAULT '',
+            category TEXT DEFAULT '',
+            price_xp INTEGER DEFAULT 0,
+            purchased_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS challenges_db (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge_id TEXT UNIQUE NOT NULL,
+            creator_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            subject TEXT DEFAULT 'general',
+            target_score INTEGER DEFAULT 80,
+            xp_reward INTEGER DEFAULT 100,
+            deadline TEXT DEFAULT '',
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS challenge_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge_id TEXT NOT NULL,
+            user_id INTEGER NOT NULL,
+            status TEXT DEFAULT 'joined',
+            score INTEGER DEFAULT 0,
+            completed_at TEXT DEFAULT '',
+            joined_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(challenge_id, user_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS spaced_repetition (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            topic TEXT NOT NULL,
+            next_review TEXT DEFAULT (datetime('now')),
+            interval_days INTEGER DEFAULT 1,
+            ease_factor REAL DEFAULT 2.5,
+            repetitions INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, subject, topic)
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_quests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            quest_id TEXT NOT NULL,
+            quest_date TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            xp_reward INTEGER DEFAULT 50,
+            target INTEGER DEFAULT 1,
+            progress INTEGER DEFAULT 0,
+            completed INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, quest_id, quest_date)
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            parent_id INTEGER NOT NULL,
+            child_id INTEGER NOT NULL,
+            verified INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (child_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(parent_id, child_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS seasonal_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            event_type TEXT DEFAULT 'challenge',
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            rewards_json TEXT DEFAULT '{}',
+            challenges_json TEXT DEFAULT '[]',
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS ki_relationship (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            trust_level REAL DEFAULT 1.0,
+            known_name TEXT DEFAULT '',
+            known_hobbies TEXT DEFAULT '[]',
+            preferred_explanation TEXT DEFAULT 'Analogien',
+            difficult_topics TEXT DEFAULT '[]',
+            interaction_count INTEGER DEFAULT 0,
+            last_interaction TEXT DEFAULT (datetime('now')),
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS marketplace_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            creator_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            price_cents INTEGER DEFAULT 0,
+            item_type TEXT DEFAULT 'quiz_set',
+            content_json TEXT DEFAULT '[]',
+            downloads INTEGER DEFAULT 0,
+            rating REAL DEFAULT 0.0,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+        );
     """)
 
     await db.commit()

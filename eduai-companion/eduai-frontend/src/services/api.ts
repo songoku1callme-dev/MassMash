@@ -970,4 +970,96 @@ export const challengesApi = {
   complete: (challengeId: string, score: number) =>
     request<{ message: string; xp_earned: number }>(`/api/challenges/complete/${challengeId}?score=${score}`, { method: "POST" }),
 };
+
+// Supreme 10.0: Voice Mode API
+export const voiceApi = {
+  transcribe: async (audioBlob: Blob): Promise<{ text: string; language: string }> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.webm");
+    const res = await fetch(`${API_URL}/api/voice/transcribe`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Transcription failed" }));
+      throw new Error(err.detail || "Transcription failed");
+    }
+    return res.json();
+  },
+  tts: async (text: string): Promise<Blob> => {
+    const token = getAccessToken();
+    const res = await fetch(`${API_URL}/api/voice/tts?text=${encodeURIComponent(text)}&lang=de`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("TTS failed");
+    return res.blob();
+  },
+};
+
+// Supreme 10.0: Push Notifications API
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const notificationsApi = {
+  subscribe: (endpoint: string, p256dh: string, authKey: string) =>
+    request<{ message: string }>(`/api/notifications/subscribe?endpoint=${encodeURIComponent(endpoint)}&p256dh=${p256dh}&auth_key=${authKey}`, { method: "POST" }),
+  unsubscribe: (endpoint: string) =>
+    request<{ message: string }>(`/api/notifications/unsubscribe?endpoint=${encodeURIComponent(endpoint)}`, { method: "DELETE" }),
+  vapidKey: () => request<{ public_key: string }>("/api/notifications/vapid-key"),
+  sendTest: () => request<{ message: string; sent: number }>("/api/notifications/send-test", { method: "POST" }),
+  weeklyStats: () => request<any>("/api/notifications/weekly-stats"),
+  sendWeeklyReport: () => request<{ message: string; stats: any }>("/api/notifications/send-weekly-report", { method: "POST" }),
+};
+
+// Supreme 10.0: Parents Dashboard API
+export const parentsApi = {
+  linkChild: (childEmail: string) =>
+    request<{ message: string; child_id: number; child_username: string }>(`/api/parents/link-child?child_email=${encodeURIComponent(childEmail)}`, { method: "POST" }),
+  children: () => request<{ children: any[] }>("/api/parents/children"),
+  unlinkChild: (childId: number) =>
+    request<{ message: string }>(`/api/parents/unlink/${childId}`, { method: "DELETE" }),
+};
+
+// Supreme 10.0: Daily Quests API
+export const questsApi = {
+  today: () => request<{ quests: any[]; date: string }>("/api/quests/today"),
+  updateProgress: (questId: string, progress: number = 1) =>
+    request<{ quest_id: string; progress: number; target: number; completed: boolean; xp_earned: number }>(
+      `/api/quests/progress/${questId}?progress=${progress}`, { method: "POST" }
+    ),
+};
+
+// Supreme 10.0: Events API
+export const eventsApi = {
+  active: () => request<{ events: any[]; total: number }>("/api/events/active"),
+  all: () => request<{ events: any[] }>("/api/events/all"),
+  progress: (eventId: string) => request<any>(`/api/events/progress/${eventId}`),
+};
+
+// Supreme 10.0: Learning Partner Matching API
+export const matchingApi = {
+  findPartners: () => request<{ partners: any[]; my_weak_subjects?: string[] }>("/api/matching/lernpartner"),
+};
+
+// Supreme 10.0: Marketplace API
+export const marketplaceApi = {
+  items: (category?: string) =>
+    request<{ items: any[] }>(category ? `/api/marketplace/items?category=${category}` : "/api/marketplace/items"),
+  create: (data: { title: string; description?: string; price_cents?: number; item_type?: string }) =>
+    request<{ id: number; title: string; message: string }>(
+      `/api/marketplace/create?title=${encodeURIComponent(data.title)}&description=${encodeURIComponent(data.description || "")}&price_cents=${data.price_cents || 499}&item_type=${data.item_type || "quiz_set"}`,
+      { method: "POST" }
+    ),
+  download: (itemId: number) =>
+    request<{ title: string; content: any[]; message: string }>(`/api/marketplace/download/${itemId}`, { method: "POST" }),
+  rate: (itemId: number, rating: number) =>
+    request<{ message: string; new_rating: number }>(`/api/marketplace/rate/${itemId}?rating=${rating}`, { method: "POST" }),
+};
+
+// Supreme 10.0: PDF Export API
+export const exportApi = {
+  notePdfUrl: (noteId: number) => `${API_URL}/api/export/notizen/${noteId}/pdf`,
+  lernplanPdfUrl: () => `${API_URL}/api/export/lernplan/pdf`,
+};
 /* eslint-enable @typescript-eslint/no-explicit-any */

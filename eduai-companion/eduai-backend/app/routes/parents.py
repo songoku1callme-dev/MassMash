@@ -1,0 +1,204 @@
+"""Eltern-Dashboard routes.
+
+Supreme 10.0 Phase 4: Parents can link to children and view their progress.
+"""
+import json
+import logging
+import os
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+import aiosqlite
+from app.core.database import get_db
+from app.core.auth import get_current_user
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/parents", tags=["parents"])
+
+
+@router.post("/link-child")
+async def link_child(
+    child_email: str,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Link parent to child account via email."""
+    parent_id = current_user["id"]
+
+    # Find child by email
+    cursor = await db.execute("SELECT id, email, username FROM users WHERE email = ?", (child_email,))
+    child = await cursor.fetchone()
+    if not child:
+        raise HTTPException(status_code=404, detail="Kein Schueler mit dieser Email gefunden")
+
+    child_dict = dict(child)
+    child_id = child_dict["id"]
+
+    if child_id == parent_id:
+        raise HTTPException(status_code=400, detail="Du kannst dich nicht mit dir selbst verknuepfen")
+
+    # Check if already linked
+    cursor = await db.execute(
+        "SELECT id FROM parent_links WHERE parent_id = ? AND child_id = ?",
+        (parent_id, child_id),
+    )
+    if await cursor.fetchone():
+        raise HTTPException(status_code=400, detail="Bereits verknuepft")
+
+    # Create link (auto-verified for now)
+    await db.execute(
+        "INSERT INTO parent_links (parent_id, child_id, verified) VALUES (?, ?, 1)",
+        (parent_id, child_id),
+    )
+    await db.commit()
+
+    # Send notification email via Resend
+    resend_key = os.getenv("RESEND_API_KEY", "")
+    if resend_key:
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {resend_key}"},
+                    json={
+                        "from": "EduAI <noreply@eduai.de>",
+                        "to": [child_email],
+                        "subject": "Eltern-Verknuepfung bei EduAI",
+                        "html": f"<p>Hallo {child_dict['username']}!</p>"
+                                f"<p>Ein Elternteil hat sich mit deinem EduAI-Account verknuepft. "
+                                f"Sie koennen jetzt deinen Lernfortschritt sehen.</p>"
+                                f"<p>Dein EduAI Team</p>",
+                    },
+                )
+        except Exception as e:
+            logger.warning("Failed to send parent link email: %s", e)
+
+    return {
+        "message": f"Verknuepfung mit {child_dict['username']} erstellt!",
+        "child_id": child_id,
+        "child_username": child_dict["username"],
+    }
+
+
+@router.get("/children")
+async def get_children(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get list of linked children with their stats."""
+    parent_id = current_user["id"]
+
+    cursor = await db.execute(
+        """SELECT u.id, u.username, u.email, u.school_grade, u.school_type,
+           pl.verified, pl.created_at as linked_at
+           FROM parent_links pl
+           JOIN users u ON u.id = pl.child_id
+           WHERE pl.parent_id = ?""",
+        (parent_id,),
+    )
+    children = await cursor.fetchall()
+
+    result = []
+    for child in children:
+        cd = dict(child)
+        child_id = cd["id"]
+
+        # Get gamification stats
+        g_cursor = await db.execute(
+            "SELECT xp, level, level_name, streak_days, quizzes_completed FROM gamification WHERE user_id = ?",
+            (child_id,),
+        )
+        g_row = await g_cursor.fetchone()
+        gd = dict(g_row) if g_row else {"xp": 0, "level": 1, "level_name": "Neuling", "streak_days": 0, "quizzes_completed": 0}
+
+        # Get this week's activity
+        act_cursor = await db.execute(
+            """SELECT COUNT(*) as cnt FROM activity_log
+            WHERE user_id = ? AND created_at >= datetime('now', '-7 days')""",
+            (child_id,),
+        )
+        act_row = await act_cursor.fetchone()
+        week_activities = dict(act_row)["cnt"] if act_row else 0
+
+        # Get this week's learning time (pomodoro minutes)
+        pom_cursor = await db.execute(
+            """SELECT COUNT(*) as cnt FROM activity_log
+            WHERE user_id = ? AND activity_type = 'pomodoro'
+            AND created_at >= datetime('now', '-7 days')""",
+            (child_id,),
+        )
+        pom_row = await pom_cursor.fetchone()
+        week_pomodoros = dict(pom_row)["cnt"] if pom_row else 0
+
+        # Get recent quiz scores
+        quiz_cursor = await db.execute(
+            """SELECT score FROM quiz_results
+            WHERE user_id = ? AND completed_at >= datetime('now', '-7 days')
+            ORDER BY completed_at DESC LIMIT 10""",
+            (child_id,),
+        )
+        quiz_rows = await quiz_cursor.fetchall()
+        avg_score = 0.0
+        if quiz_rows:
+            scores = [dict(r)["score"] for r in quiz_rows]
+            avg_score = round(sum(scores) / len(scores), 1)
+
+        # Get upcoming exams from calendar
+        exam_cursor = await db.execute(
+            """SELECT description, created_at FROM activity_log
+            WHERE user_id = ? AND activity_type = 'exam_created'
+            ORDER BY created_at DESC LIMIT 3""",
+            (child_id,),
+        )
+        exam_rows = await exam_cursor.fetchall()
+        exams = [dict(r)["description"] for r in exam_rows]
+
+        # Get weak subjects from user_memories
+        weak_cursor = await db.execute(
+            """SELECT DISTINCT subject FROM user_memories
+            WHERE user_id = ? AND schwach = 1 LIMIT 5""",
+            (child_id,),
+        )
+        weak_rows = await weak_cursor.fetchall()
+        weak_subjects = [dict(r)["subject"] for r in weak_rows]
+
+        result.append({
+            "id": child_id,
+            "username": cd["username"],
+            "email": cd["email"],
+            "school_grade": cd["school_grade"],
+            "school_type": cd["school_type"],
+            "verified": bool(cd["verified"]),
+            "linked_at": cd["linked_at"],
+            "stats": {
+                "xp": gd["xp"],
+                "level": gd["level"],
+                "level_name": gd["level_name"],
+                "streak_days": gd["streak_days"],
+                "quizzes_completed": gd["quizzes_completed"],
+                "week_activities": week_activities,
+                "week_learning_minutes": week_pomodoros * 25,
+                "avg_quiz_score": avg_score,
+                "upcoming_exams": exams,
+                "weak_subjects": weak_subjects,
+            },
+        })
+
+    return {"children": result}
+
+
+@router.delete("/unlink/{child_id}")
+async def unlink_child(
+    child_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Remove parent-child link."""
+    parent_id = current_user["id"]
+    await db.execute(
+        "DELETE FROM parent_links WHERE parent_id = ? AND child_id = ?",
+        (parent_id, child_id),
+    )
+    await db.commit()
+    return {"message": "Verknuepfung entfernt"}

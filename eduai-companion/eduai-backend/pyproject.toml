@@ -25,6 +25,10 @@ sympy = "^1.14.0"
 stripe = "^14.4.0"
 httpx = "^0.28.1"
 tavily-python = "^0.7.22"
+gtts = "^2.5.0"
+pywebpush = "^2.0.0"
+py-vapid = "^1.9.0"
+apscheduler = "^3.10.0"
 
 
 [tool.poetry.group.dev.dependencies]

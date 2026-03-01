@@ -27,6 +27,12 @@ import IntelligencePage from "./pages/IntelligencePage";
 import PomodoroPage from "./pages/PomodoroPage";
 import ShopPage from "./pages/ShopPage";
 import ChallengesPage from "./pages/ChallengesPage";
+import VoicePage from "./pages/VoicePage";
+import ParentsPage from "./pages/ParentsPage";
+import QuestsPage from "./pages/QuestsPage";
+import EventsPage from "./pages/EventsPage";
+import MatchingPage from "./pages/MatchingPage";
+import MarketplacePage from "./pages/MarketplacePage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
@@ -137,6 +143,18 @@ function App() {
         return <ShopPage />;
       case "challenges":
         return <ChallengesPage />;
+      case "voice":
+        return <VoicePage />;
+      case "parents":
+        return <ParentsPage />;
+      case "quests":
+        return <QuestsPage />;
+      case "events":
+        return <EventsPage />;
+      case "matching":
+        return <MatchingPage />;
+      case "marketplace":
+        return <MarketplacePage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

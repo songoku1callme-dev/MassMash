@@ -1,0 +1,170 @@
+"""Saisonale Events routes.
+
+Supreme 10.0 Phase 7: Seasonal events and challenges.
+"""
+import json
+import logging
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException
+import aiosqlite
+from app.core.database import get_db
+from app.core.auth import get_current_user
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/api/events", tags=["events"])
+
+# Pre-defined seasonal events
+SEASONAL_EVENTS = [
+    {
+        "id": "abitur_season_2026",
+        "name": "Abitur-Season 2026",
+        "description": "Bereite dich auf das Abitur 2026 vor! Spezielle Challenges und Ranglisten.",
+        "event_type": "abitur",
+        "start_date": "2026-03-01",
+        "end_date": "2026-05-31",
+        "rewards": {"badge": "abi_ready", "xp_bonus": 500},
+        "challenges": [
+            {"title": "50 Abitur-Quizze", "target": 50, "xp": 200},
+            {"title": "Alle Faecher mindestens 1x", "target": 16, "xp": 300},
+            {"title": "5 Abitur-Simulationen", "target": 5, "xp": 500},
+        ],
+    },
+    {
+        "id": "winter_challenge_2026",
+        "name": "Winter-Lern-Challenge 2026",
+        "description": "24 Tage Adventskalender: Jeden Tag eine Aufgabe loesen!",
+        "event_type": "advent",
+        "start_date": "2026-12-01",
+        "end_date": "2026-12-24",
+        "rewards": {"badge": "winter_learner", "xp_bonus": 300},
+        "challenges": [
+            {"title": "24 Tage am Stueck lernen", "target": 24, "xp": 500},
+            {"title": "12 verschiedene Faecher", "target": 12, "xp": 200},
+        ],
+    },
+    {
+        "id": "neues_schuljahr_2026",
+        "name": "Neues Schuljahr 2026",
+        "description": "Neues Jahr, neue Noten! Setze Ziele und starte durch.",
+        "event_type": "schulstart",
+        "start_date": "2026-08-15",
+        "end_date": "2026-09-30",
+        "rewards": {"badge": "fresh_start", "xp_bonus": 200},
+        "challenges": [
+            {"title": "Profil aktualisieren", "target": 1, "xp": 50},
+            {"title": "10 Quizze in der ersten Woche", "target": 10, "xp": 150},
+            {"title": "Lernplan erstellen", "target": 1, "xp": 100},
+        ],
+    },
+]
+
+
+@router.get("/active")
+async def get_active_events(
+    current_user: dict = Depends(get_current_user),
+):
+    """Get currently active seasonal events."""
+    now = datetime.now().strftime("%Y-%m-%d")
+
+    active = []
+    for event in SEASONAL_EVENTS:
+        if event["start_date"] <= now <= event["end_date"]:
+            days_left = (datetime.strptime(event["end_date"], "%Y-%m-%d") - datetime.now()).days
+            active.append({
+                **event,
+                "days_left": max(0, days_left),
+                "is_active": True,
+            })
+
+    return {"events": active, "total": len(active)}
+
+
+@router.get("/all")
+async def get_all_events(
+    current_user: dict = Depends(get_current_user),
+):
+    """Get all seasonal events (past, active, future)."""
+    now = datetime.now().strftime("%Y-%m-%d")
+
+    events = []
+    for event in SEASONAL_EVENTS:
+        status = "active" if event["start_date"] <= now <= event["end_date"] else (
+            "upcoming" if now < event["start_date"] else "ended"
+        )
+        events.append({**event, "status": status})
+
+    return {"events": events}
+
+
+@router.get("/progress/{event_id}")
+async def get_event_progress(
+    event_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get user's progress in a seasonal event."""
+    user_id = current_user["id"]
+
+    event = next((e for e in SEASONAL_EVENTS if e["id"] == event_id), None)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event nicht gefunden")
+
+    # Calculate progress based on activity within event period
+    challenges_progress = []
+    for challenge in event["challenges"]:
+        # Count relevant activities in the event period
+        if "Quiz" in challenge["title"] or "Quizze" in challenge["title"]:
+            cursor = await db.execute(
+                """SELECT COUNT(*) as cnt FROM quiz_results
+                WHERE user_id = ? AND completed_at BETWEEN ? AND ?""",
+                (user_id, event["start_date"], event["end_date"]),
+            )
+        elif "Simulation" in challenge["title"]:
+            cursor = await db.execute(
+                """SELECT COUNT(*) as cnt FROM abitur_simulations
+                WHERE user_id = ? AND status = 'completed'
+                AND created_at BETWEEN ? AND ?""",
+                (user_id, event["start_date"], event["end_date"]),
+            )
+        elif "Faecher" in challenge["title"] or "Faecher" in challenge["title"]:
+            cursor = await db.execute(
+                """SELECT COUNT(DISTINCT subject) as cnt FROM quiz_results
+                WHERE user_id = ? AND completed_at BETWEEN ? AND ?""",
+                (user_id, event["start_date"], event["end_date"]),
+            )
+        elif "Tage" in challenge["title"]:
+            cursor = await db.execute(
+                """SELECT COUNT(DISTINCT date(created_at)) as cnt FROM activity_log
+                WHERE user_id = ? AND created_at BETWEEN ? AND ?""",
+                (user_id, event["start_date"], event["end_date"]),
+            )
+        else:
+            cursor = await db.execute(
+                """SELECT COUNT(*) as cnt FROM activity_log
+                WHERE user_id = ? AND created_at BETWEEN ? AND ?""",
+                (user_id, event["start_date"], event["end_date"]),
+            )
+
+        row = await cursor.fetchone()
+        current = dict(row)["cnt"] if row else 0
+
+        challenges_progress.append({
+            "title": challenge["title"],
+            "target": challenge["target"],
+            "progress": min(current, challenge["target"]),
+            "completed": current >= challenge["target"],
+            "xp": challenge["xp"],
+        })
+
+    total_completed = sum(1 for c in challenges_progress if c["completed"])
+    total_challenges = len(challenges_progress)
+
+    return {
+        "event_id": event_id,
+        "event_name": event["name"],
+        "challenges": challenges_progress,
+        "total_completed": total_completed,
+        "total_challenges": total_challenges,
+        "all_completed": total_completed == total_challenges,
+    }
