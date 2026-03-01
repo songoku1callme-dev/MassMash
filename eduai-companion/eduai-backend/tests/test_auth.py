@@ -17,7 +17,11 @@ async def client():
 async def test_healthz(client: AsyncClient):
     resp = await client.get("/healthz")
     assert resp.status_code == 200
-    assert resp.json() == {"status": "ok"}
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert data["version"] == "1.0.0"
+    assert data["checks"]["database"] == "ok"
+    assert "timestamp" in data
 
 
 @pytest.mark.asyncio

@@ -51,4 +51,25 @@ app.include_router(ocr.router)
 
 @app.get("/healthz")
 async def healthz():
-    return {"status": "ok"}
+    """Production health check used by Fly.io and monitoring."""
+    import time
+
+    checks: dict[str, str] = {}
+    # DB connectivity
+    try:
+        import aiosqlite
+
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            await db.execute("SELECT 1")
+        checks["database"] = "ok"
+    except Exception as exc:
+        checks["database"] = f"error: {exc}"
+
+    overall = "ok" if all(v == "ok" for v in checks.values()) else "degraded"
+    return {
+        "status": overall,
+        "version": app.version,
+        "checks": checks,
+        "timestamp": int(time.time()),
+    }

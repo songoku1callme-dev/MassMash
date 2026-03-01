@@ -1,0 +1,42 @@
+# Fly.io configuration for eduai-backend
+#
+# Notes:
+# - App name should match your Fly app (current prod backend: https://app-kbhrgvhm.fly.dev)
+# - This config expects a volume mounted at /data for persistent SQLite storage
+
+app = "app-kbhrgvhm"
+primary_region = "fra"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+
+[[mounts]]
+  source = "eduai_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 50
+    hard_limit = 100
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "20s"
+    method = "GET"
+    path = "/healthz"
+
+[[vm]]
+  memory = "2048mb"
+  cpu_kind = "shared"
+  cpus = 1
