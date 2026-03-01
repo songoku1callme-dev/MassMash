@@ -33,11 +33,13 @@ import QuestsPage from "./pages/QuestsPage";
 import EventsPage from "./pages/EventsPage";
 import MatchingPage from "./pages/MatchingPage";
 import MarketplacePage from "./pages/MarketplacePage";
+import BattlePassPage from "./pages/BattlePassPage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
+import OfflineBanner from "./components/OfflineBanner";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
@@ -155,6 +157,8 @@ function App() {
         return <MatchingPage />;
       case "marketplace":
         return <MarketplacePage />;
+      case "battle-pass":
+        return <BattlePassPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":
@@ -172,6 +176,7 @@ function App() {
       </main>
       <PWAInstallBanner />
       <CookieBanner />
+      <OfflineBanner />
     </div>
   );
 }

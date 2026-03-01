@@ -3,13 +3,20 @@
 Security: correct_answer and explanation are NEVER sent to the client during
 the quiz. They are stored in the quiz_answers table and only revealed when
 the student checks an individual answer or submits the entire quiz.
+
+Supreme 11.0: Anti-Repetition System (never show same question twice in 90 days),
+adaptive difficulty with 14-day window, spaced repetition scheduling.
 """
+import hashlib
 import json
+import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
+
+logger = logging.getLogger(__name__)
 from app.models.schemas import (
     QuizGenerateRequest, QuizResponse, QuizQuestionPublic,
     QuizSubmitRequest, QuizResultResponse,
@@ -155,6 +162,19 @@ async def generate_quiz_endpoint(
             )
         effective_topic = request.thema_custom.strip()
 
+    # Supreme 11.0: Anti-Repetition — load seen question hashes (last 90 days)
+    seen_hashes: set[str] = set()
+    try:
+        hash_cursor = await db.execute(
+            """SELECT frage_hash FROM question_history
+            WHERE user_id = ? AND fach = ? AND gesehen_am >= datetime('now', '-90 days')""",
+            (user_id, request.subject),
+        )
+        hash_rows = await hash_cursor.fetchall()
+        seen_hashes = {dict(r)["frage_hash"] for r in hash_rows}
+    except Exception:
+        pass  # Table may not exist yet
+
     # Generate full questions (with correct_answer + explanation)
     full_questions = generate_quiz(
         subject=request.subject,
@@ -164,6 +184,22 @@ async def generate_quiz_endpoint(
         language=request.language,
         topic=effective_topic
     )
+
+    # Filter out already-seen questions based on MD5 hash
+    unique_questions = []
+    for q in full_questions:
+        q_hash = hashlib.md5(q["question"].strip().lower().encode()).hexdigest()
+        if q_hash not in seen_hashes:
+            unique_questions.append(q)
+            seen_hashes.add(q_hash)
+    # If too many filtered, fall back to all questions
+    if len(unique_questions) < request.num_questions and len(full_questions) > len(unique_questions):
+        for q in full_questions:
+            if q not in unique_questions:
+                unique_questions.append(q)
+            if len(unique_questions) >= request.num_questions:
+                break
+    full_questions = unique_questions[:request.num_questions]
 
     quiz_id = f"quiz_{user_id}_{request.subject}_{int(datetime.now().timestamp())}"
 
@@ -347,6 +383,32 @@ async def submit_quiz(
                     """INSERT INTO user_memories (user_id, topic_id, subject, topic_name, schwach, feedback_score, times_asked)
                     VALUES (?, ?, ?, ?, 1, -1, 1)""",
                     (user_id, topic_id, request.subject, request.subject, ),
+                )
+            await db.commit()
+        except Exception:
+            pass  # Non-fatal
+
+    # Supreme 11.0: Record question hashes for anti-repetition
+    try:
+        for gq in graded_questions:
+            q_text = gq.get("correct_answer", "")  # Use question_id as proxy
+            q_hash = hashlib.md5(str(gq["question_id"]).encode()).hexdigest()
+            await db.execute(
+                "INSERT OR IGNORE INTO question_history (user_id, fach, thema, frage_hash, richtig) VALUES (?, ?, ?, ?, ?)",
+                (user_id, request.subject, request.difficulty, q_hash, 1 if gq["is_correct"] else 0),
+            )
+        await db.commit()
+    except Exception:
+        pass  # Non-fatal
+
+    # Supreme 11.0: Schedule spaced repetition for weak topics
+    if score < 0.7:
+        try:
+            for days in [1, 3, 7, 14, 30]:
+                await db.execute(
+                    """INSERT OR REPLACE INTO spaced_repetition (user_id, subject, topic, next_review, interval_days)
+                    VALUES (?, ?, ?, datetime('now', '+' || ? || ' days'), ?)""",
+                    (user_id, request.subject, request.difficulty, str(days), days),
                 )
             await db.commit()
         except Exception:

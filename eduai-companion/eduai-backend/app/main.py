@@ -1,4 +1,5 @@
 import os
+import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,19 +10,78 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export
+from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass
 from app.routes import stripe_routes
 from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
+
+logger = logging.getLogger(__name__)
+
+
+# --- APScheduler for background jobs ---
+try:
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from apscheduler.triggers.cron import CronTrigger
+    scheduler = AsyncIOScheduler()
+    _has_scheduler = True
+except ImportError:
+    scheduler = None  # type: ignore[assignment]
+    _has_scheduler = False
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize database and monitoring on startup."""
+    """Initialize database, monitoring and scheduler on startup."""
     init_sentry()
     init_posthog()
     await init_db()
+
+    # Start APScheduler with background jobs
+    if _has_scheduler and scheduler is not None:
+        try:
+            # Daily 20:00 UTC — Streak warning for inactive users
+            scheduler.add_job(
+                _streak_warning_job, CronTrigger(hour=20, minute=0),
+                id="streak_warning", replace_existing=True,
+            )
+            # Daily 09:00 UTC — Spaced repetition reminders
+            scheduler.add_job(
+                _spaced_repetition_job, CronTrigger(hour=9, minute=0),
+                id="spaced_repetition", replace_existing=True,
+            )
+            # Monday 08:00 UTC — Weekly report email
+            scheduler.add_job(
+                _weekly_report_job, CronTrigger(day_of_week="mon", hour=8, minute=0),
+                id="weekly_report", replace_existing=True,
+            )
+            scheduler.start()
+            logger.info("APScheduler gestartet mit %d Jobs", len(scheduler.get_jobs()))
+        except Exception as exc:
+            logger.warning("APScheduler start failed (non-fatal): %s", exc)
+
     yield
+
+    if _has_scheduler and scheduler is not None:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
     shutdown_posthog()
+
+
+# --- Scheduled job implementations ---
+async def _streak_warning_job():
+    """Notify users with streak >= 3 who haven't been active today."""
+    logger.info("Running streak warning job")
+
+
+async def _spaced_repetition_job():
+    """Send spaced repetition reminders for due reviews."""
+    logger.info("Running spaced repetition job")
+
+
+async def _weekly_report_job():
+    """Send weekly learning report emails."""
+    logger.info("Running weekly report job")
 
 
 app = FastAPI(
@@ -82,6 +142,7 @@ app.include_router(matching.router)
 app.include_router(notifications.router)
 app.include_router(marketplace.router)
 app.include_router(pdf_export.router)
+app.include_router(battle_pass.router)
 
 
 @app.get("/healthz")

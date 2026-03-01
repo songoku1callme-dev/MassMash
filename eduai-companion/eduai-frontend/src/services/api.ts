@@ -1062,4 +1062,61 @@ export const exportApi = {
   notePdfUrl: (noteId: number) => `${API_URL}/api/export/notizen/${noteId}/pdf`,
   lernplanPdfUrl: () => `${API_URL}/api/export/lernplan/pdf`,
 };
+
+// Supreme 11.0: Battle Pass API
+export const battlePassApi = {
+  status: () => request<any>("/api/battle-pass/status"),
+  claim: (level: number) => request<any>(`/api/battle-pass/claim/${level}`, { method: "POST" }),
+  addXp: (amount: number, source: string) =>
+    request<any>(`/api/battle-pass/add-xp?xp_amount=${amount}&source=${source}`, { method: "POST" }),
+};
+
+// Supreme 11.0: Offline-Modus helpers
+export const offlineApi = {
+  /** Cache key data to localStorage for offline access */
+  cacheForOffline: async () => {
+    try {
+      const token = getAccessToken();
+      if (!token) return;
+
+      // Cache flashcards
+      try {
+        const fc = await request<any>("/api/flashcards");
+        localStorage.setItem("eduai_offline_flashcards", JSON.stringify(fc));
+      } catch { /* ignore */ }
+
+      // Cache quiz history
+      try {
+        const qh = await request<any>("/api/quiz/history");
+        localStorage.setItem("eduai_offline_quiz_history", JSON.stringify(qh));
+      } catch { /* ignore */ }
+
+      // Cache notes
+      try {
+        const notes = await request<any>("/api/notes");
+        localStorage.setItem("eduai_offline_notes", JSON.stringify(notes));
+      } catch { /* ignore */ }
+
+      localStorage.setItem("eduai_offline_cached_at", new Date().toISOString());
+    } catch { /* ignore */ }
+  },
+
+  getOfflineFlashcards: () => {
+    try {
+      const data = localStorage.getItem("eduai_offline_flashcards");
+      return data ? JSON.parse(data) : null;
+    } catch { return null; }
+  },
+
+  getOfflineNotes: () => {
+    try {
+      const data = localStorage.getItem("eduai_offline_notes");
+      return data ? JSON.parse(data) : null;
+    } catch { return null; }
+  },
+
+  isOffline: () => !navigator.onLine,
+
+  getCachedAt: () => localStorage.getItem("eduai_offline_cached_at"),
+};
 /* eslint-enable @typescript-eslint/no-explicit-any */

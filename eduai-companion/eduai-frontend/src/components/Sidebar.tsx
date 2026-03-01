@@ -58,6 +58,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "events", label: "Saisonale Events", icon: <Calendar className="w-5 h-5" /> },
     { id: "matching", label: "Lernpartner", icon: <Handshake className="w-5 h-5" /> },
     { id: "marketplace", label: "Marketplace", icon: <Store className="w-5 h-5" /> },
+    { id: "battle-pass", label: "Battle Pass", icon: <Trophy className="w-5 h-5" /> },
     { id: "parents", label: "Eltern-Dashboard", icon: <Heart className="w-5 h-5" /> },
     { id: "school", label: "Schul-Lizenzen", icon: <School className="w-5 h-5" /> },
     ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),

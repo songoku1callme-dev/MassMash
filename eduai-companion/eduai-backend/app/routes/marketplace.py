@@ -1,9 +1,10 @@
 """Lehrer-Marketplace routes.
 
-Supreme 10.0 Phase 11: Teachers sell quiz sets and flashcard decks.
+Supreme 11.0: Teachers sell quiz sets and flashcard decks. Payment required for paid items.
 """
 import json
 import logging
+import os
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
 from app.core.database import get_db
@@ -91,13 +92,15 @@ async def create_marketplace_item(
     }
 
 
-@router.post("/download/{item_id}")
-async def download_marketplace_item(
+@router.post("/buy/{item_id}")
+async def buy_marketplace_item(
     item_id: int,
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Download/purchase a marketplace item."""
+    """Purchase a paid marketplace item via Stripe."""
+    user_id = current_user["id"]
+
     cursor = await db.execute(
         "SELECT * FROM marketplace_items WHERE id = ? AND is_active = 1",
         (item_id,),
@@ -107,6 +110,86 @@ async def download_marketplace_item(
         raise HTTPException(status_code=404, detail="Item nicht gefunden")
 
     item_dict = dict(item)
+
+    if item_dict["price_cents"] == 0:
+        raise HTTPException(status_code=400, detail="Dieses Item ist kostenlos, nutze /download")
+
+    # Check if already purchased
+    cursor = await db.execute(
+        "SELECT id FROM marketplace_purchases WHERE user_id = ? AND item_id = ?",
+        (user_id, item_id),
+    )
+    if await cursor.fetchone():
+        raise HTTPException(status_code=400, detail="Bereits gekauft")
+
+    # Create Stripe Payment Intent
+    stripe_key = os.getenv("STRIPE_SECRET_KEY", "")
+    client_secret = ""
+    payment_intent_id = ""
+    if stripe_key:
+        try:
+            import stripe
+            stripe.api_key = stripe_key
+            intent = stripe.PaymentIntent.create(
+                amount=item_dict["price_cents"],
+                currency="eur",
+                metadata={"item_id": str(item_id), "user_id": str(user_id)},
+            )
+            client_secret = intent.client_secret
+            payment_intent_id = intent.id
+        except Exception as e:
+            logger.error("Stripe PaymentIntent failed: %s", e)
+            raise HTTPException(status_code=500, detail="Zahlung konnte nicht erstellt werden")
+    else:
+        # Dev mode: auto-complete purchase
+        payment_intent_id = f"dev_{user_id}_{item_id}"
+
+    # Record purchase
+    await db.execute(
+        "INSERT INTO marketplace_purchases (user_id, item_id, payment_intent_id, amount_cents) VALUES (?, ?, ?, ?)",
+        (user_id, item_id, payment_intent_id, item_dict["price_cents"]),
+    )
+    await db.commit()
+
+    return {
+        "message": "Kauf erfolgreich!",
+        "client_secret": client_secret,
+        "payment_intent_id": payment_intent_id,
+        "item": {"id": item_id, "title": item_dict["title"], "price_cents": item_dict["price_cents"]},
+    }
+
+
+@router.post("/download/{item_id}")
+async def download_marketplace_item(
+    item_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Download a marketplace item. Free items can be downloaded directly.
+    Paid items require a purchase first."""
+    user_id = current_user["id"]
+
+    cursor = await db.execute(
+        "SELECT * FROM marketplace_items WHERE id = ? AND is_active = 1",
+        (item_id,),
+    )
+    item = await cursor.fetchone()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item nicht gefunden")
+
+    item_dict = dict(item)
+
+    # Payment check: if item costs money, verify purchase exists
+    if item_dict["price_cents"] > 0:
+        cursor = await db.execute(
+            "SELECT id FROM marketplace_purchases WHERE user_id = ? AND item_id = ?",
+            (user_id, item_id),
+        )
+        if not await cursor.fetchone():
+            raise HTTPException(
+                status_code=402,
+                detail=f"Dieses Item kostet {item_dict['price_cents'] / 100:.2f} EUR. Bitte zuerst kaufen.",
+            )
 
     # Increment downloads
     await db.execute(

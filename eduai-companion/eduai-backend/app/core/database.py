@@ -482,6 +482,56 @@ async def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
         );
+
+        CREATE TABLE IF NOT EXISTS question_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            fach TEXT NOT NULL,
+            thema TEXT DEFAULT '',
+            frage_hash TEXT NOT NULL,
+            gesehen_am TEXT DEFAULT (datetime('now')),
+            richtig INTEGER DEFAULT 0,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_question_history_user_fach
+            ON question_history(user_id, fach, gesehen_am);
+
+        CREATE TABLE IF NOT EXISTS battle_pass (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            saison TEXT DEFAULT 'Fruehling 2026',
+            current_level INTEGER DEFAULT 1,
+            current_xp INTEGER DEFAULT 0,
+            xp_per_level INTEGER DEFAULT 200,
+            claimed_rewards TEXT DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS parent_link_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            parent_id INTEGER NOT NULL,
+            child_email TEXT NOT NULL,
+            token TEXT UNIQUE NOT NULL,
+            status TEXT DEFAULT 'pending',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS marketplace_purchases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            item_id INTEGER NOT NULL,
+            payment_intent_id TEXT DEFAULT '',
+            amount_cents INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'completed',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (item_id) REFERENCES marketplace_items(id),
+            UNIQUE(user_id, item_id)
+        );
     """)
 
     await db.commit()
@@ -501,6 +551,12 @@ async def init_db():
         ("users", "pro_expires_at", "TEXT DEFAULT ''"),
         ("users", "billing_period", "TEXT DEFAULT 'monthly'"),
         ("users", "is_admin", "INTEGER DEFAULT 0"),
+        # Supreme 11.0: KI-Memory extended columns
+        ("ki_relationship", "last_emotion", "TEXT DEFAULT ''"),
+        ("ki_relationship", "erfolge_erwaehnt", "TEXT DEFAULT '[]'"),
+        ("ki_relationship", "lieblingserklaerung", "TEXT DEFAULT 'Analogien'"),
+        # Supreme 11.0: Parent link verification
+        ("parent_links", "verification_token", "TEXT DEFAULT ''"),
     ]
     for table, column, col_type in migrations:
         try:

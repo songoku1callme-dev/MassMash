@@ -21,9 +21,11 @@ async def get_adaptive_difficulty(user_id: int, subject: str, db: aiosqlite.Conn
 
     Returns difficulty level and stats.
     """
+    # Supreme 11.0: Use 14-day window for adaptive difficulty
     cursor = await db.execute(
         """SELECT COUNT(*) as total, SUM(correct_answers) as correct, SUM(total_questions) as questions
-        FROM quiz_results WHERE user_id = ? AND subject = ?""",
+        FROM quiz_results WHERE user_id = ? AND subject = ?
+        AND completed_at >= datetime('now', '-14 days')""",
         (user_id, subject),
     )
     row = await cursor.fetchone()

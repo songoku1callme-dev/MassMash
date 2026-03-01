@@ -1,10 +1,11 @@
 """Eltern-Dashboard routes.
 
-Supreme 10.0 Phase 4: Parents can link to children and view their progress.
+Supreme 11.0: Parents can link to children with email verification.
 """
 import json
 import logging
 import os
+import secrets
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
@@ -22,7 +23,7 @@ async def link_child(
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Link parent to child account via email."""
+    """Request parent-child link. Sends verification email to child."""
     parent_id = current_user["id"]
 
     # Find child by email
@@ -45,15 +46,19 @@ async def link_child(
     if await cursor.fetchone():
         raise HTTPException(status_code=400, detail="Bereits verknuepft")
 
-    # Create link (auto-verified for now)
+    # Generate verification token
+    token = secrets.token_urlsafe(32)
+
+    # Create pending link request
     await db.execute(
-        "INSERT INTO parent_links (parent_id, child_id, verified) VALUES (?, ?, 1)",
-        (parent_id, child_id),
+        "INSERT INTO parent_link_requests (parent_id, child_email, token) VALUES (?, ?, ?)",
+        (parent_id, child_email, token),
     )
     await db.commit()
 
-    # Send notification email via Resend
+    # Send verification email to child via Resend
     resend_key = os.getenv("RESEND_API_KEY", "")
+    frontend_url = os.getenv("FRONTEND_URL", "https://mass-mash.vercel.app")
     if resend_key:
         try:
             import httpx
@@ -64,21 +69,86 @@ async def link_child(
                     json={
                         "from": "EduAI <noreply@eduai.de>",
                         "to": [child_email],
-                        "subject": "Eltern-Verknuepfung bei EduAI",
-                        "html": f"<p>Hallo {child_dict['username']}!</p>"
-                                f"<p>Ein Elternteil hat sich mit deinem EduAI-Account verknuepft. "
-                                f"Sie koennen jetzt deinen Lernfortschritt sehen.</p>"
-                                f"<p>Dein EduAI Team</p>",
+                        "subject": "Eltern-Verknuepfung bestaetigen - EduAI",
+                        "html": (
+                            f"<p>Hallo {child_dict['username']}!</p>"
+                            f"<p>Ein Elternteil moechte sich mit deinem EduAI-Account verknuepfen, "
+                            f"um deinen Lernfortschritt zu sehen.</p>"
+                            f'<p><a href="{frontend_url}/parent-verify/{token}">Verknuepfung bestaetigen</a></p>'
+                            f'<p>Oder: <a href="{frontend_url}/parent-reject/{token}">Ablehnen</a></p>'
+                            f"<p>Dein EduAI Team</p>"
+                        ),
                     },
                 )
         except Exception as e:
-            logger.warning("Failed to send parent link email: %s", e)
+            logger.warning("Failed to send parent verification email: %s", e)
 
     return {
-        "message": f"Verknuepfung mit {child_dict['username']} erstellt!",
-        "child_id": child_id,
-        "child_username": child_dict["username"],
+        "message": f"Verifizierungsmail an {child_email} gesendet! Der Schueler muss bestaetigen.",
+        "status": "pending",
     }
+
+
+@router.get("/verify/{token}")
+async def verify_parent_link(
+    token: str,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Child confirms the parent-child link (public endpoint via email link)."""
+    cursor = await db.execute(
+        "SELECT * FROM parent_link_requests WHERE token = ? AND status = 'pending'",
+        (token,),
+    )
+    req = await cursor.fetchone()
+    if not req:
+        raise HTTPException(status_code=404, detail="Ungueltiger oder abgelaufener Link")
+
+    req_dict = dict(req)
+    parent_id = req_dict["parent_id"]
+    child_email = req_dict["child_email"]
+
+    # Find child
+    cursor = await db.execute("SELECT id FROM users WHERE email = ?", (child_email,))
+    child = await cursor.fetchone()
+    if not child:
+        raise HTTPException(status_code=404, detail="Schueler nicht gefunden")
+
+    child_id = dict(child)["id"]
+
+    # Create verified link
+    await db.execute(
+        "INSERT OR IGNORE INTO parent_links (parent_id, child_id, verified) VALUES (?, ?, 1)",
+        (parent_id, child_id),
+    )
+    await db.execute(
+        "UPDATE parent_link_requests SET status = 'verified' WHERE token = ?",
+        (token,),
+    )
+    await db.commit()
+
+    return {"message": "Eltern-Verknuepfung bestaetigt! Dein Elternteil kann jetzt deinen Fortschritt sehen."}
+
+
+@router.get("/reject/{token}")
+async def reject_parent_link(
+    token: str,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Child rejects the parent-child link."""
+    cursor = await db.execute(
+        "SELECT id FROM parent_link_requests WHERE token = ? AND status = 'pending'",
+        (token,),
+    )
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=404, detail="Ungueltiger oder abgelaufener Link")
+
+    await db.execute(
+        "UPDATE parent_link_requests SET status = 'rejected' WHERE token = ?",
+        (token,),
+    )
+    await db.commit()
+
+    return {"message": "Verknuepfung abgelehnt."}
 
 
 @router.get("/children")

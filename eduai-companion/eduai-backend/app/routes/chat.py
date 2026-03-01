@@ -157,6 +157,70 @@ async def send_message(
         except Exception as web_err:
             logger.warning("Auto web search failed (non-fatal): %s", web_err)
 
+    # Supreme 11.0: KI-Memory — load and update relationship data
+    ki_memory_prompt = ""
+    try:
+        mem_cursor = await db.execute(
+            "SELECT * FROM ki_relationship WHERE user_id = ?", (user_id,)
+        )
+        mem_row = await mem_cursor.fetchone()
+        if mem_row:
+            md = dict(mem_row)
+            trust = md.get("trust_level", 1.0)
+            known_name = md.get("known_name", "")
+            hobbies = md.get("known_hobbies", "[]")
+            pref_expl = md.get("preferred_explanation", "Analogien")
+            difficult = md.get("difficult_topics", "[]")
+            interaction_count = md.get("interaction_count", 0)
+
+            # Build memory context for system prompt
+            parts = []
+            if known_name:
+                parts.append(f"Der Schueler heisst {known_name}. Sprich ihn mit Namen an.")
+            if hobbies and hobbies != "[]":
+                parts.append(f"Hobbys: {hobbies}. Nutze Analogien aus diesen Bereichen.")
+            if difficult and difficult != "[]":
+                parts.append(f"Schwierige Themen: {difficult}. Erklaere diese besonders gruendlich.")
+            if trust >= 7:
+                parts.append("Ihr habt eine vertrauensvolle Beziehung. Sei persoenlich und motivierend.")
+            elif trust >= 4:
+                parts.append("Der Schueler kennt dich schon. Sei freundlich aber professionell.")
+            parts.append(f"Bevorzugte Erklaerweise: {pref_expl}")
+            if parts:
+                ki_memory_prompt = "\nKI-MEMORY:\n" + "\n".join(parts) + "\n"
+
+            # Update interaction count and extract info from message
+            new_count = interaction_count + 1
+            new_trust = min(10.0, trust + (0.1 if new_count % 10 == 0 else 0))
+
+            # Simple name detection from message
+            msg_lower = request.message.lower()
+            detected_name = known_name
+            for prefix in ["ich bin ", "mein name ist ", "ich heisse ", "ich heiße "]:
+                if prefix in msg_lower:
+                    idx = msg_lower.index(prefix) + len(prefix)
+                    name_candidate = request.message[idx:idx+20].split()[0].strip(".,!?")
+                    if len(name_candidate) >= 2:
+                        detected_name = name_candidate
+
+            await db.execute(
+                """UPDATE ki_relationship SET
+                    interaction_count = ?, trust_level = ?, known_name = ?,
+                    last_interaction = datetime('now'), updated_at = datetime('now')
+                WHERE user_id = ?""",
+                (new_count, new_trust, detected_name, user_id),
+            )
+            await db.commit()
+        else:
+            # Create initial relationship record
+            await db.execute(
+                "INSERT OR IGNORE INTO ki_relationship (user_id) VALUES (?)",
+                (user_id,),
+            )
+            await db.commit()
+    except Exception:
+        pass  # Non-fatal
+
     # Master KI-Tutor System Prompt
     master_prompt = (
         "Du bist EduAI, der intelligenteste KI-Tutor Deutschlands. "
@@ -180,10 +244,12 @@ async def send_message(
         detail_level=request.detail_level,
     )
 
-    # Combine: Master prompt + Personality + Memory + Subject-specific prompt
+    # Combine: Master prompt + Personality + KI-Memory + Memory + Subject-specific prompt
     combined_prompt = master_prompt
     if personality_prompt:
         combined_prompt += f"\nPERS\u00d6NLICHKEIT: {personality_prompt}\n"
+    if ki_memory_prompt:
+        combined_prompt += ki_memory_prompt
     if memory_hint:
         combined_prompt += memory_hint
     combined_prompt += f"\n{system_prompt}"
