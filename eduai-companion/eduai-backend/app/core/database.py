@@ -483,6 +483,43 @@ async def init_db():
             FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            message TEXT NOT NULL DEFAULT '',
+            type TEXT DEFAULT 'info',
+            is_read INTEGER DEFAULT 0,
+            link TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS flashcards (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            subject TEXT DEFAULT 'general',
+            front TEXT NOT NULL DEFAULT '',
+            back TEXT NOT NULL DEFAULT '',
+            difficulty INTEGER DEFAULT 0,
+            next_review TEXT DEFAULT (datetime('now')),
+            interval_days INTEGER DEFAULT 1,
+            ease_factor REAL DEFAULT 2.5,
+            repetitions INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS xp_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            amount INTEGER NOT NULL DEFAULT 0,
+            source TEXT DEFAULT '',
+            description TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS question_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
