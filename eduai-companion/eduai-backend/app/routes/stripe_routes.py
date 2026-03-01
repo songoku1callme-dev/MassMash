@@ -1,7 +1,7 @@
 """Stripe integration routes for Free/Pro/Max subscriptions.
 
 Handles:
-- Creating Checkout sessions for Pro (4.99 EUR/month) and Max (19.99 EUR/month)
+- Creating Checkout sessions for Pro (4.99 EUR/month, 39.99 EUR/year) and Max (9.99 EUR/month, 79.99 EUR/year)
 - Webhook handling with dual secrets for redundancy/failover
 - Subscription status checking with tier info
 
@@ -32,12 +32,12 @@ STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
 # Price tiers in cents
 PRO_PRICE_CENTS = 499
 PRO_PRICE_EUR = "4.99"
-MAX_PRICE_CENTS = 1999
-MAX_PRICE_EUR = "19.99"
+MAX_PRICE_CENTS = 999
+MAX_PRICE_EUR = "9.99"
 PRO_YEARLY_PRICE_CENTS = 3999
 PRO_YEARLY_PRICE_EUR = "39.99"
-MAX_YEARLY_PRICE_CENTS = 14999
-MAX_YEARLY_PRICE_EUR = "149.99"
+MAX_YEARLY_PRICE_CENTS = 7999
+MAX_YEARLY_PRICE_EUR = "79.99"
 
 # Free tier limits
 FREE_OCR_LIMIT = 50  # per month
@@ -74,7 +74,7 @@ async def stripe_config():
             },
             "max": {
                 "monthly": {"price_eur": MAX_PRICE_EUR, "price_cents": MAX_PRICE_CENTS},
-                "yearly": {"price_eur": MAX_YEARLY_PRICE_EUR, "price_cents": MAX_YEARLY_PRICE_CENTS, "save_eur": "90.00"},
+                "yearly": {"price_eur": MAX_YEARLY_PRICE_EUR, "price_cents": MAX_YEARLY_PRICE_CENTS, "save_eur": "40.00"},
             },
         },
     }
@@ -213,7 +213,7 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
 
 def _tier_from_amount(amount_cents: int) -> str:
     """Determine subscription tier from price amount."""
-    if amount_cents >= 1499:  # Max tier (19.99 or legacy 14.99)
+    if amount_cents >= 999:  # Max tier (9.99/month or 79.99/year)
         return "max"
     elif amount_cents >= PRO_PRICE_CENTS:
         return "pro"

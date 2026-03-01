@@ -829,3 +829,54 @@ export const tournamentApi = {
   history: () => request<{ tournaments: any[] }>("/api/turnier/verlauf"),
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+// IQ-Test Types
+export interface IQTestQuestion {
+  id: number;
+  kategorie: string;
+  frage: string;
+  optionen: string[];
+  zeit_sekunden: number;
+  schwierigkeit: number;
+}
+
+export interface IQTestData {
+  test_id: number;
+  questions: IQTestQuestion[];
+  num_questions: number;
+  time_limit_seconds: number;
+  kategorien: string[];
+}
+
+export interface IQTestResult {
+  iq: number;
+  iq_range: string;
+  percentile: number;
+  klassifikation: string;
+  kategorien: Record<string, number>;
+  staerken: string[];
+  schwaechen: string[];
+  vergleich: string;
+  raw_score: number;
+  max_score: number;
+}
+
+export interface IQCooldownResponse {
+  can_take_test: boolean;
+  days_remaining: number;
+}
+
+export interface IQResultResponse extends IQTestResult {
+  has_result: boolean;
+  test_date?: string;
+}
+
+export const iqApi = {
+  generate: () => request<IQTestData>("/api/iq/generieren", { method: "POST" }),
+  submit: (data: {
+    test_id: number;
+    answers: { question_id: number; answer: number; time_seconds: number }[];
+  }) => request<IQTestResult>("/api/iq/berechnen", { method: "POST", body: data }),
+  result: () => request<IQResultResponse>("/api/iq/ergebnis"),
+  cooldown: () => request<IQCooldownResponse>("/api/iq/cooldown"),
+};

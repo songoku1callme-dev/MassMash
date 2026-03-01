@@ -268,7 +268,37 @@ async def init_db():
             created_at TEXT DEFAULT (datetime('now')),
             FOREIGN KEY (admin_id) REFERENCES users(id)
         );
-    """)
+
+        CREATE TABLE IF NOT EXISTS iq_tests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            questions TEXT DEFAULT '[]',
+            num_questions INTEGER DEFAULT 40,
+            time_limit_seconds INTEGER DEFAULT 2700,
+            status TEXT DEFAULT 'active',
+            submitted_at TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS iq_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            test_id INTEGER NOT NULL,
+            iq_score INTEGER DEFAULT 100,
+            iq_range TEXT DEFAULT '',
+            percentile INTEGER DEFAULT 50,
+            klassifikation TEXT DEFAULT '',
+            kategorien TEXT DEFAULT '{}',
+            staerken TEXT DEFAULT '[]',
+            schwaechen TEXT DEFAULT '[]',
+            raw_score REAL DEFAULT 0.0,
+            max_score REAL DEFAULT 0.0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (test_id) REFERENCES iq_tests(id)
+        );
+    "")
 
     await db.commit()
 

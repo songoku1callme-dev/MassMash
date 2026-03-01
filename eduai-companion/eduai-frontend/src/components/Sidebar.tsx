@@ -7,7 +7,7 @@ import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database,
-  CreditCard, Star, Globe, Trophy, Users, Shield, Swords
+  CreditCard, Star, Globe, Trophy, Users, Shield, Swords, Brain
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -29,10 +29,13 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isAdmin = user?.username === "admin" || user?.is_admin || user?.subscription_tier === "max";
+
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
     { id: "chat", label: "KI-Tutor", icon: <MessageCircle className="w-5 h-5" /> },
     { id: "quiz", label: "Quiz", icon: <BrainCircuit className="w-5 h-5" /> },
+    { id: "iq-test", label: "IQ-Test", icon: <Brain className="w-5 h-5" /> },
     { id: "learning", label: "Lernpfad", icon: <BookOpen className="w-5 h-5" /> },
     { id: "rag", label: "Wissensdatenbank", icon: <Database className="w-5 h-5" /> },
     { id: "abitur", label: "Abitur-Simulation", icon: <GraduationCap className="w-5 h-5" /> },
@@ -40,7 +43,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "gamification", label: "Gamification", icon: <Trophy className="w-5 h-5" /> },
     { id: "groups", label: "Gruppen-Chats", icon: <Users className="w-5 h-5" /> },
     { id: "turnier", label: "Turniere", icon: <Swords className="w-5 h-5" /> },
-    { id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> },
+    ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),
     { id: "pricing", label: "Abo & Preise", icon: <CreditCard className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },
   ];

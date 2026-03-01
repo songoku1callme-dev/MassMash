@@ -14,6 +14,7 @@ import GamificationPage from "./pages/GamificationPage";
 import GroupsPage from "./pages/GroupsPage";
 import AdminPage from "./pages/AdminPage";
 import TurnierPage from "./pages/TurnierPage";
+import IQTestPage from "./pages/IQTestPage";
 import PricingPage from "./pages/PricingPage";
 import SettingsPage from "./pages/SettingsPage";
 import Sidebar from "./components/Sidebar";
@@ -85,6 +86,8 @@ function App() {
         return <AdminPage />;
       case "turnier":
         return <TurnierPage />;
+      case "iq-test":
+        return <IQTestPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

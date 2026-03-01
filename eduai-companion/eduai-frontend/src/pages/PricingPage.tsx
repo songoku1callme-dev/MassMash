@@ -106,7 +106,7 @@ export default function PricingPage() {
         </span>
         {billing === "yearly" && (
           <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-            Spare bis zu 90€!
+            2 Monate GRATIS!
           </span>
         )}
       </div>
@@ -216,11 +216,11 @@ export default function PricingPage() {
             </CardTitle>
             <CardDescription>Für Abitur-Champions</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "149,99" : "19,99"} EUR</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "79,99" : "9,99"} EUR</span>
               <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
             {billing === "yearly" && (
-              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 90€ vs. monatlich!</p>
+              <p className="text-sm text-emerald-600 font-medium mt-1">Spare 40€ vs. monatlich! (2 Monate GRATIS)</p>
             )}
           </CardHeader>
           <CardContent>
