@@ -1,8 +1,15 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.database import init_db
-from app.routes import auth, chat, quiz, learning
+from app.core.security import (
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    ALLOWED_ORIGINS,
+)
+from app.routes import auth, chat, quiz, learning, rag
 
 
 @asynccontextmanager
@@ -19,13 +26,18 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Disable CORS. Do not remove this for full-stack development.
+# --- Security middleware (outermost first) ---
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
+
+# CORS — restrict to known frontend origins in production, allow all in dev
+_cors_origins: list[str] = ["*"] if os.getenv("EDUAI_DEV_MODE") else ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=_cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
@@ -33,6 +45,7 @@ app.include_router(auth.router)
 app.include_router(chat.router)
 app.include_router(quiz.router)
 app.include_router(learning.router)
+app.include_router(rag.router)
 
 
 @app.get("/healthz")

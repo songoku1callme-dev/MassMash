@@ -1,26 +1,130 @@
+import { jwtDecode } from "jwt-decode";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface RequestOptions {
   method?: string;
   body?: unknown;
   headers?: Record<string, string>;
+  skipAuth?: boolean;
 }
 
+interface JwtPayload {
+  sub: string;
+  exp: number;
+  type: string;
+}
+
+// --- Token helpers ---
+
+export function getAccessToken(): string | null {
+  return localStorage.getItem("eduai_token");
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem("eduai_refresh_token");
+}
+
+export function setTokens(access: string, refresh?: string): void {
+  localStorage.setItem("eduai_token", access);
+  if (refresh) {
+    localStorage.setItem("eduai_refresh_token", refresh);
+  }
+}
+
+export function clearTokens(): void {
+  localStorage.removeItem("eduai_token");
+  localStorage.removeItem("eduai_refresh_token");
+}
+
+/** Returns true if the access token expires within `bufferSec` seconds. */
+export function isTokenExpiringSoon(bufferSec: number = 120): boolean {
+  const token = getAccessToken();
+  if (!token) return true;
+  try {
+    const { exp } = jwtDecode<JwtPayload>(token);
+    return Date.now() / 1000 > exp - bufferSec;
+  } catch {
+    return true;
+  }
+}
+
+// --- Token refresh logic ---
+
+let refreshPromise: Promise<string> | null = null;
+
+/** Calls /api/auth/refresh and stores the new access token. */
+export async function refreshAccessToken(): Promise<string> {
+  // Deduplicate concurrent refresh calls
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) throw new Error("No refresh token");
+
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!res.ok) throw new Error("Refresh failed");
+    const data: { access_token: string } = await res.json();
+    setTokens(data.access_token);
+    return data.access_token;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
+  }
+}
+
+// --- Core request function with auto-refresh on 401 ---
+
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const token = localStorage.getItem("eduai_token");
+  let token = getAccessToken();
+
+  // Proactively refresh if token is expiring soon (within 2 min)
+  if (!options.skipAuth && token && isTokenExpiringSoon(120)) {
+    try {
+      token = await refreshAccessToken();
+    } catch {
+      // Will try with current token; 401 handler below is the safety net
+    }
+  }
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...options.headers,
   };
-  if (token) {
+  if (token && !options.skipAuth) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  let response = await fetch(`${API_URL}${endpoint}`, {
     method: options.method || "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+
+  // On 401, try refreshing once and retry the original request
+  if (response.status === 401 && !options.skipAuth) {
+    try {
+      const newToken = await refreshAccessToken();
+      headers["Authorization"] = `Bearer ${newToken}`;
+      response = await fetch(`${API_URL}${endpoint}`, {
+        method: options.method || "GET",
+        headers,
+        body: options.body ? JSON.stringify(options.body) : undefined,
+      });
+    } catch {
+      // Refresh failed — clear tokens and let the error propagate
+      clearTokens();
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: "Request failed" }));
@@ -40,15 +144,17 @@ export const authApi = {
     school_grade: string;
     school_type: string;
     preferred_language: string;
-  }) => request<{ access_token: string; user: User }>("/api/auth/register", { method: "POST", body: data }),
+  }) => request<{ access_token: string; refresh_token: string; user: User }>("/api/auth/register", { method: "POST", body: data }),
 
   login: (data: { username: string; password: string }) =>
-    request<{ access_token: string; user: User }>("/api/auth/login", { method: "POST", body: data }),
+    request<{ access_token: string; refresh_token: string; user: User }>("/api/auth/login", { method: "POST", body: data }),
 
   me: () => request<User>("/api/auth/me"),
 
   update: (data: { full_name?: string; school_grade?: string; school_type?: string; preferred_language?: string }) =>
     request<User>("/api/auth/me", { method: "PUT", body: data }),
+
+  refresh: () => refreshAccessToken(),
 };
 
 // Chat
@@ -101,6 +207,44 @@ export const learningApi = {
   profile: () => request<LearningProfile[]>("/api/profile"),
   progress: () => request<Progress>("/api/progress"),
   learningPath: (subject: string) => request<LearningPath>(`/api/learning-path/${subject}`),
+};
+
+// RAG
+export const ragApi = {
+  query: (data: { query: string; top_k?: number; filter_metadata?: Record<string, string> }) =>
+    request<RAGQueryResponse>("/api/rag/query", { method: "POST", body: data }),
+
+  indexDocument: (data: { content: string; doc_id?: string; metadata?: Record<string, string> }) =>
+    request<{ doc_id: string; chunks_created: number }>("/api/rag/index", { method: "POST", body: data }),
+
+  uploadFile: async (file: File, subject: string = "general", language: string = "de", source: string = ""): Promise<{ doc_id: string; chunks_created: number }> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("subject", subject);
+    formData.append("language", language);
+    formData.append("source", source);
+
+    const res = await fetch(`${API_URL}/api/rag/upload`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Upload failed" }));
+      throw new Error(err.detail || "Upload failed");
+    }
+    return res.json();
+  },
+
+  listDocuments: () => request<RAGDocument[]>("/api/rag/documents"),
+
+  deleteDocument: (docId: string) =>
+    request<{ message: string }>(`/api/rag/documents/${docId}`, { method: "DELETE" }),
+
+  stats: () => request<RAGStats>("/api/rag/stats"),
+
+  seed: () => request<{ message: string; documents_indexed: number }>("/api/rag/seed", { method: "POST" }),
 };
 
 // Types
@@ -234,4 +378,31 @@ export interface LearningPathTopic {
   mastered: boolean;
   recommended: boolean;
   description: string;
+}
+
+export interface RAGSearchResult {
+  doc_id: string;
+  chunk_text: string;
+  score: number;
+  metadata: Record<string, string>;
+  source: string;
+}
+
+export interface RAGQueryResponse {
+  results: RAGSearchResult[];
+  query: string;
+}
+
+export interface RAGDocument {
+  doc_id: string;
+  metadata: Record<string, string>;
+  created_at: string;
+}
+
+export interface RAGStats {
+  total_documents: number;
+  total_chunks: number;
+  embedding_model: string;
+  embedding_dim: number;
+  chunk_size: number;
 }

@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
+import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ChatPage from "./pages/ChatPage";
 import QuizPage from "./pages/QuizPage";
 import LearningPathPage from "./pages/LearningPathPage";
+import RAGPage from "./pages/RAGPage";
 import SettingsPage from "./pages/SettingsPage";
 import Sidebar from "./components/Sidebar";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
   const { loadSessions } = useChatStore();
+  useAuthRefresh();
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -61,6 +64,8 @@ function App() {
         return <QuizPage />;
       case "learning":
         return <LearningPathPage onNavigate={setCurrentPage} />;
+      case "rag":
+        return <RAGPage />;
       case "settings":
         return <SettingsPage darkMode={darkMode} onDarkModeToggle={() => setDarkMode(!darkMode)} />;
       default:

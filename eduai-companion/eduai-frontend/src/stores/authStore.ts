@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { authApi, type User } from "../services/api";
+import { authApi, type User, setTokens, clearTokens, getAccessToken, isTokenExpiringSoon, refreshAccessToken } from "../services/api";
 
 interface AuthState {
   user: User | null;
@@ -29,32 +29,44 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (username, password) => {
     const response = await authApi.login({ username, password });
-    localStorage.setItem("eduai_token", response.access_token);
+    setTokens(response.access_token, response.refresh_token);
     set({ user: response.user, token: response.access_token, isAuthenticated: true });
   },
 
   register: async (data) => {
     const response = await authApi.register(data);
-    localStorage.setItem("eduai_token", response.access_token);
+    setTokens(response.access_token, response.refresh_token);
     set({ user: response.user, token: response.access_token, isAuthenticated: true });
   },
 
   logout: () => {
-    localStorage.removeItem("eduai_token");
+    clearTokens();
     set({ user: null, token: null, isAuthenticated: false });
   },
 
   loadUser: async () => {
-    const token = localStorage.getItem("eduai_token");
+    const token = getAccessToken();
     if (!token) {
       set({ isLoading: false, isAuthenticated: false });
       return;
     }
     try {
+      // Proactively refresh if token is close to expiry
+      if (isTokenExpiringSoon(120)) {
+        try {
+          const newToken = await refreshAccessToken();
+          set({ token: newToken });
+        } catch {
+          // Refresh failed — clear and redirect to login
+          clearTokens();
+          set({ user: null, token: null, isLoading: false, isAuthenticated: false });
+          return;
+        }
+      }
       const user = await authApi.me();
       set({ user, isLoading: false, isAuthenticated: true });
     } catch {
-      localStorage.removeItem("eduai_token");
+      clearTokens();
       set({ user: null, token: null, isLoading: false, isAuthenticated: false });
     }
   },

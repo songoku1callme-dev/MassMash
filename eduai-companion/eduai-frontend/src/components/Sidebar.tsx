@@ -6,7 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
-  Calculator, Languages, BookOpenCheck, Clock, FlaskConical
+  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -33,6 +33,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "chat", label: "KI-Tutor", icon: <MessageCircle className="w-5 h-5" /> },
     { id: "quiz", label: "Quiz", icon: <BrainCircuit className="w-5 h-5" /> },
     { id: "learning", label: "Lernpfad", icon: <BookOpen className="w-5 h-5" /> },
+    { id: "rag", label: "Wissensdatenbank", icon: <Database className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },
   ];
 

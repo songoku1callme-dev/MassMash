@@ -63,6 +63,7 @@ def call_groq_llm(
     language: str = "de",
     chat_history: Optional[list] = None,
     model: Optional[str] = None,
+    rag_context: str = "",
 ) -> str:
     """Call the Groq API to generate an AI tutoring response.
 
@@ -74,6 +75,7 @@ def call_groq_llm(
         language: Response language ("de" or "en").
         chat_history: Previous messages in the session (trimmed for context).
         model: Override the default model.
+        rag_context: Optional RAG-retrieved context to inject into the prompt.
 
     Returns:
         The AI-generated response string.
@@ -90,6 +92,16 @@ def call_groq_llm(
             level=level,
             language=language,
             chat_history=chat_history,
+        )
+
+    # Inject RAG context into system prompt if available
+    if rag_context:
+        system_prompt += (
+            "\n\n--- Relevanter Kontext aus dem Lehrplan / Curriculum ---\n"
+            f"{rag_context}\n"
+            "--- Ende Kontext ---\n"
+            "Nutze diesen Kontext um die Frage des Schuelers zu beantworten. "
+            "Nenne die Quellen wenn moeglich."
         )
 
     # Build messages list

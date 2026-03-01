@@ -1,5 +1,6 @@
 """Chat routes - AI-powered tutoring conversations."""
 import json
+import logging
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
@@ -8,6 +9,9 @@ from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
 from app.services.ai_engine import detect_subject, build_system_prompt
 from app.services.groq_llm import call_groq_llm
+from app.services import rag_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -65,6 +69,26 @@ async def send_message(
     }
     messages.append(user_msg)
 
+    # Search RAG index for relevant curriculum context
+    rag_context = ""
+    rag_sources: list[str] = []
+    try:
+        rag_results = await rag_service.search_similar(
+            query=request.message,
+            top_k=3,
+            filter_metadata={"subject": subject} if subject != "general" else None,
+        )
+        if rag_results:
+            context_parts = []
+            for r in rag_results:
+                context_parts.append(r["chunk_text"])
+                source = r.get("source", r["doc_id"])
+                if source not in rag_sources:
+                    rag_sources.append(source)
+            rag_context = "\n---\n".join(context_parts)
+    except Exception as rag_err:
+        logger.warning("RAG search failed (non-fatal): %s", rag_err)
+
     # Generate AI response via Groq LLM (falls back to template engine if no API key)
     system_prompt = build_system_prompt(
         subject=subject,
@@ -79,7 +103,16 @@ async def send_message(
         level=level,
         language=request.language,
         chat_history=messages,
+        rag_context=rag_context,
     )
+
+    # Append source references if RAG provided context
+    if rag_sources and rag_context:
+        sources_text = "\n".join(f"- {s}" for s in rag_sources)
+        if request.language == "de":
+            ai_response += f"\n\n---\n**Quellen:**\n{sources_text}"
+        else:
+            ai_response += f"\n\n---\n**Sources:**\n{sources_text}"
 
     # Add assistant message
     assistant_msg = {
