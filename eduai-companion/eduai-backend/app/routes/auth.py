@@ -13,6 +13,8 @@ from app.models.schemas import (
     RefreshTokenRequest, RefreshTokenResponse,
 )
 
+from app.core.clerk import get_clerk_frontend_config
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SUBJECTS = ["math", "english", "german", "history", "science"]
@@ -194,3 +196,13 @@ async def refresh_access_token(
 
     new_access_token = create_access_token(data={"sub": user_id})
     return RefreshTokenResponse(access_token=new_access_token)
+
+
+@router.get("/clerk-config")
+async def clerk_config():
+    """Return Clerk OAuth configuration for the frontend.
+
+    Returns whether Clerk is enabled and the publishable key (safe to expose).
+    The frontend uses this to decide between Clerk login and built-in JWT login.
+    """
+    return get_clerk_frontend_config()
