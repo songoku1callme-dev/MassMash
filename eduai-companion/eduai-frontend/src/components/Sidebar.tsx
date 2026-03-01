@@ -8,7 +8,8 @@ import {
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database,
   CreditCard, Star, Globe, Trophy, Users, Shield, Swords, Brain,
-  Layers, FileText, CalendarDays, Lock, School
+  Layers, FileText, CalendarDays, Lock, School, Sparkles, Timer,
+  ShoppingBag, Target
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -48,6 +49,10 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "notes", label: "Notizen", icon: <FileText className="w-5 h-5" /> },
     { id: "calendar", label: "Prüfungs-Kalender", icon: <CalendarDays className="w-5 h-5" /> },
     { id: "multiplayer", label: "Multiplayer-Quiz", icon: <Swords className="w-5 h-5" /> },
+    { id: "intelligence", label: "KI-Intelligenz", icon: <Sparkles className="w-5 h-5" /> },
+    { id: "pomodoro", label: "Pomodoro-Timer", icon: <Timer className="w-5 h-5" /> },
+    { id: "shop", label: "Belohnungs-Shop", icon: <ShoppingBag className="w-5 h-5" /> },
+    { id: "challenges", label: "Challenges", icon: <Target className="w-5 h-5" /> },
     { id: "school", label: "Schul-Lizenzen", icon: <School className="w-5 h-5" /> },
     ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),
     { id: "datenschutz", label: "Datenschutz", icon: <Lock className="w-5 h-5" /> },

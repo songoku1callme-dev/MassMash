@@ -886,3 +886,88 @@ export const iqApi = {
   result: () => request<IQResultResponse>("/api/iq/ergebnis"),
   cooldown: () => request<IQCooldownResponse>("/api/iq/cooldown"),
 };
+
+// Supreme 9.0: KI Intelligence API
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export const intelligenceApi = {
+  lernstil: () => request<{ lernstil: string; beschreibung: string; tipps: string[] }>("/api/intelligence/lernstil"),
+  feynman: (thema: string, erklaerung: string) =>
+    request<{ bewertung: string; thema: string }>(
+      `/api/intelligence/feynman?thema=${encodeURIComponent(thema)}&erklaerung=${encodeURIComponent(erklaerung)}`,
+      { method: "POST" }
+    ),
+  sokrates: (frage: string) =>
+    request<{ antwort: string; methode: string }>(
+      `/api/intelligence/sokrates?frage=${encodeURIComponent(frage)}`,
+      { method: "POST" }
+    ),
+  wissensscanStart: (subject: string) =>
+    request<{ subject: string; grade: string; questions: any[] }>(
+      `/api/intelligence/wissensscan/start?subject=${subject}`
+    ),
+  wissensscanResult: (subject: string, answers: number[]) =>
+    request<{ score: number; correct: number; total: number; gaps: string[]; strengths: string[]; recommendation: string }>(
+      `/api/intelligence/wissensscan/result?subject=${subject}&answers=${encodeURIComponent(JSON.stringify(answers))}`,
+      { method: "POST" }
+    ),
+  weeklyPlan: () => request<{ plan: string; weak_topics: string[]; upcoming_exams: string[] }>("/api/intelligence/weekly-plan"),
+};
+
+// Supreme 9.0: Pomodoro Timer API
+export const pomodoroApi = {
+  complete: (subject: string = "general", duration: number = 25) =>
+    request<{ message: string; xp_earned: number; duration: number }>(
+      `/api/pomodoro/complete?subject=${subject}&duration_minutes=${duration}`,
+      { method: "POST" }
+    ),
+  stats: () => request<{ today: number; today_minutes: number; week: number; week_minutes: number; total: number; total_minutes: number }>("/api/pomodoro/stats"),
+};
+
+// Supreme 9.0: Shop API
+export interface ShopItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  icon: string;
+  unlocked: boolean;
+  can_afford: boolean;
+}
+
+export const shopApi = {
+  items: () => request<{ items: ShopItem[]; user_xp: number }>("/api/shop/items"),
+  buy: (itemId: string) =>
+    request<{ message: string; item: ShopItem; remaining_xp: number }>(
+      `/api/shop/buy?item_id=${itemId}`,
+      { method: "POST" }
+    ),
+};
+
+// Supreme 9.0: Challenges API
+export interface Challenge {
+  challenge_id: string;
+  title: string;
+  description: string;
+  subject: string;
+  target_score: number;
+  xp_reward: number;
+  deadline_days: number;
+  creator_id: number;
+  created_at: string;
+  participants: number;
+  completions: number;
+}
+
+export const challengesApi = {
+  list: () => request<{ challenges: Challenge[] }>("/api/challenges/list"),
+  create: (data: { title: string; description: string; subject?: string; target_score?: number; xp_reward?: number; deadline_days?: number }) =>
+    request<Challenge>(
+      `/api/challenges/create?title=${encodeURIComponent(data.title)}&description=${encodeURIComponent(data.description)}&subject=${data.subject || "math"}&target_score=${data.target_score || 80}&xp_reward=${data.xp_reward || 100}&deadline_days=${data.deadline_days || 7}`,
+      { method: "POST" }
+    ),
+  join: (challengeId: string) =>
+    request<{ message: string; challenge_id: string }>(`/api/challenges/join/${challengeId}`, { method: "POST" }),
+  complete: (challengeId: string, score: number) =>
+    request<{ message: string; xp_earned: number }>(`/api/challenges/complete/${challengeId}?score=${score}`, { method: "POST" }),
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */

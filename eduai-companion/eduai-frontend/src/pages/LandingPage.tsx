@@ -203,6 +203,78 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
         </div>
       </section>
 
+      {/* Comparison Table */}
+      <section className="py-20 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">EduAI vs. Andere Lern-Apps</h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">Warum EduAI die beste Wahl ist</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b dark:border-gray-700">
+                  <th className="text-left p-3 text-gray-500 dark:text-gray-400">Feature</th>
+                  <th className="p-3 text-indigo-600 dark:text-indigo-400 font-bold">EduAI</th>
+                  <th className="p-3 text-gray-500 dark:text-gray-400">Knowunity</th>
+                  <th className="p-3 text-gray-500 dark:text-gray-400">Studyflix</th>
+                </tr>
+              </thead>
+              <tbody className="text-center">
+                {[
+                  ["KI-Tutor (20 Stile)", "check", "cross", "cross"],
+                  ["IQ-Test", "check", "cross", "cross"],
+                  ["Abitur-Simulation", "check", "cross", "partial"],
+                  ["Taegliche Turniere", "check", "cross", "cross"],
+                  ["Pomodoro-Timer", "check", "cross", "cross"],
+                  ["Wissensluecken-Scanner", "check", "cross", "cross"],
+                  ["Belohnungs-Shop", "check", "cross", "cross"],
+                  ["Klassen-Challenges", "check", "partial", "cross"],
+                  ["16 Faecher", "check", "check", "partial"],
+                  ["Kostenloser Plan", "check", "partial", "check"],
+                ].map(([feature, eduai, knowunity, studyflix], i) => (
+                  <tr key={i} className="border-b dark:border-gray-700/50">
+                    <td className="text-left p-3 text-gray-700 dark:text-gray-300">{feature}</td>
+                    {[eduai, knowunity, studyflix].map((val, j) => (
+                      <td key={j} className="p-3">
+                        {val === "check" ? <span className="text-green-500 font-bold">Ja</span> :
+                         val === "partial" ? <span className="text-yellow-500">Teilweise</span> :
+                         <span className="text-red-400">Nein</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 bg-gray-50 dark:bg-gray-800/50 px-4">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Haeufige Fragen</h2>
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: "Ist EduAI wirklich kostenlos?", a: "Ja! Der Free-Plan ist dauerhaft kostenlos und beinhaltet 5 KI-Persoenlichkeiten, 3 Quizzes pro Tag und den IQ-Test." },
+              { q: "Fuer welche Klassenstufen ist EduAI geeignet?", a: "EduAI ist fuer Schueler der Klassen 5-13 an Gymnasium, Realschule und Gesamtschule geeignet. Die KI passt sich automatisch an dein Niveau an." },
+              { q: "Wie funktioniert der KI-Tutor?", a: "Der KI-Tutor nutzt modernste Sprachmodelle, um dir Themen Schritt fuer Schritt zu erklaeren. Du kannst aus 20 verschiedenen KI-Persoenlichkeiten waehlen." },
+              { q: "Sind meine Daten sicher?", a: "Absolut. EduAI ist DSGVO-konform. Deine Daten werden in Europa gespeichert und niemals an Dritte weitergegeben." },
+              { q: "Kann ich EduAI auf dem Handy nutzen?", a: "Ja! EduAI ist eine Progressive Web App (PWA) und funktioniert auf jedem Geraet mit Browser - auch offline fuer Karteikarten und Quizzes." },
+            ].map((faq, i) => (
+              <details key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <summary className="p-4 font-medium text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+                  {faq.q}
+                </summary>
+                <p className="px-4 pb-4 text-gray-600 dark:text-gray-400 text-sm">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">

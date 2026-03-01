@@ -127,6 +127,18 @@ async def generate_quiz_endpoint(
         if request.difficulty == "auto":
             difficulty = level
 
+    # Phase 1 Supreme 9.0: Adaptive Schwierigkeit Integration
+    # Override difficulty with adaptive recommendation based on quiz history
+    if request.difficulty == "auto":
+        try:
+            from app.routes.adaptive import get_adaptive_difficulty
+            adaptive_data = await get_adaptive_difficulty(user_id, request.subject, db)
+            adaptive_diff = adaptive_data.get("difficulty", "mittel")
+            diff_map = {"leicht": "beginner", "mittel": "intermediate", "schwer": "advanced"}
+            difficulty = diff_map.get(adaptive_diff, difficulty)
+        except Exception:
+            pass  # Non-fatal, use existing difficulty
+
     # Determine topic: custom topic has priority over preset (Pro+ only)
     effective_topic = request.topic
     if request.thema_custom and request.thema_custom.strip():

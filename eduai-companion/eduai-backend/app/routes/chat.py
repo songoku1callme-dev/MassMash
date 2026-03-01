@@ -12,6 +12,7 @@ from app.services.ai_engine import detect_subject, build_system_prompt
 from app.services.groq_llm import call_groq_llm, classify_needs_search
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
+from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, detect_emotion, get_emotion_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -186,6 +187,23 @@ async def send_message(
     if memory_hint:
         combined_prompt += memory_hint
     combined_prompt += f"\n{system_prompt}"
+
+    # Phase 3 Supreme 9.0: Lernstil-Erkennung + Emotionale Intelligenz
+    # Detect emotion from current message
+    emotion = detect_emotion(request.message)
+    emotion_prompt = get_emotion_prompt(emotion)
+    if emotion_prompt:
+        combined_prompt += f"\n{emotion_prompt}"
+
+    # Detect learning style from chat history (after 5+ messages)
+    if len(messages) >= 5:
+        try:
+            lernstil = await detect_lernstil(messages)
+            lernstil_prompt = get_lernstil_prompt(lernstil)
+            if lernstil_prompt:
+                combined_prompt += lernstil_prompt
+        except Exception:
+            pass  # Non-fatal
 
     # Detect "explain differently" requests (Phase 2.5)
     explain_methods = [

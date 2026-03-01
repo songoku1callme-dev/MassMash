@@ -23,6 +23,10 @@ import CalendarPage from "./pages/CalendarPage";
 import MultiplayerPage from "./pages/MultiplayerPage";
 import DatenschutzPage from "./pages/DatenschutzPage";
 import SchoolPage from "./pages/SchoolPage";
+import IntelligencePage from "./pages/IntelligencePage";
+import PomodoroPage from "./pages/PomodoroPage";
+import ShopPage from "./pages/ShopPage";
+import ChallengesPage from "./pages/ChallengesPage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
@@ -125,6 +129,14 @@ function App() {
         return <DatenschutzPage />;
       case "school":
         return <SchoolPage />;
+      case "intelligence":
+        return <IntelligencePage />;
+      case "pomodoro":
+        return <PomodoroPage />;
+      case "shop":
+        return <ShopPage />;
+      case "challenges":
+        return <ChallengesPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":
