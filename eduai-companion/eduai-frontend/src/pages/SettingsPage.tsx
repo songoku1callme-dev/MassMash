@@ -59,7 +59,7 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
             <User className="w-5 h-5 text-blue-600" />
             <CardTitle className="text-base">Profil</CardTitle>
           </div>
-          <CardDescription>Deine persoenlichen Informationen</CardDescription>
+          <CardDescription>Deine persönlichen Informationen</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -181,11 +181,11 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
             </div>
           </div>
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <p>Wir speichern nur die Daten, die fuer dein Lernerlebnis notwendig sind:</p>
+            <p>Wir speichern nur die Daten, die für dein Lernerlebnis notwendig sind:</p>
             <ul className="list-disc list-inside space-y-1 ml-2">
               <li>Profildaten (Name, Schule, Klasse)</li>
               <li>Lernfortschritt und Quiz-Ergebnisse</li>
-              <li>Chat-Verlauf fuer personalisierte Hilfe</li>
+              <li>Chat-Verlauf für personalisierte Hilfe</li>
             </ul>
           </div>
           <div className="flex gap-3 pt-2">
@@ -194,7 +194,7 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
               Daten exportieren
             </Button>
             <Button variant="destructive" size="sm" onClick={logout}>
-              Konto loeschen
+              Konto löschen
             </Button>
           </div>
         </CardContent>

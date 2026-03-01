@@ -100,8 +100,8 @@ def call_groq_llm(
             "\n\n--- Relevanter Kontext aus dem Lehrplan / Curriculum ---\n"
             f"{rag_context}\n"
             "--- Ende Kontext ---\n"
-            "Nutze diesen Kontext um die Frage des Schuelers zu beantworten. "
-            "Nenne die Quellen wenn moeglich."
+                        "Nutze diesen Kontext um die Frage des Schülers zu beantworten. "
+                        "Nenne die Quellen wenn möglich."
         )
 
     # Build messages list

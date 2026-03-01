@@ -70,7 +70,7 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">EduAI Companion</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center justify-center gap-1">
             <BookOpen className="w-4 h-4" />
-            Dein persoenlicher KI-Tutor
+            Dein persönlicher KI-Tutor
           </p>
         </div>
 

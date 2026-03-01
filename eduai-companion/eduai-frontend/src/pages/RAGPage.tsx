@@ -73,10 +73,10 @@ export default function RAGPage() {
   const handleDelete = async (docId: string) => {
     try {
       await ragApi.deleteDocument(docId);
-      setSuccess(`Dokument ${docId} geloescht`);
+      setSuccess(`Dokument ${docId} gelöscht`);
       loadData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Loeschen fehlgeschlagen");
+      setError(err instanceof Error ? err.message : "Löschen fehlgeschlagen");
     }
   };
 
@@ -86,7 +86,7 @@ export default function RAGPage() {
         Wissensdatenbank (RAG)
       </h1>
       <p className="text-gray-500 dark:text-gray-400 mb-6">
-        Lade Lehrplaene, Arbeitsblatter oder Texte hoch, damit der KI-Tutor darauf zugreifen kann.
+        Lade Lehrpläne, Arbeitsblätter oder Texte hoch, damit der KI-Tutor darauf zugreifen kann.
       </p>
 
       {/* Stats */}
@@ -179,7 +179,7 @@ export default function RAGPage() {
             <p className="text-gray-600 dark:text-gray-400">
               {uploading
                 ? "Wird hochgeladen und indexiert..."
-                : "Datei hierher ziehen oder klicken zum Auswaehlen"}
+                : "Datei hierher ziehen oder klicken zum Auswählen"}
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               PDF, TXT, MD, CSV
@@ -194,7 +194,7 @@ export default function RAGPage() {
           Beispiel-Lehrplan laden
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-          Lade vorgefertigte deutsche Lehrplaninhalte fuer Mathe, Physik, Chemie, Deutsch, Englisch und Geschichte.
+          Lade vorgefertigte deutsche Lehrplaninhalte für Mathe, Physik, Chemie, Deutsch, Englisch und Geschichte.
         </p>
         <button
           onClick={handleSeed}
@@ -244,7 +244,7 @@ export default function RAGPage() {
                 <button
                   onClick={() => handleDelete(doc.doc_id)}
                   className="ml-2 p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
-                  title="Loeschen"
+                  title="Löschen"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

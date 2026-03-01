@@ -22,13 +22,13 @@ CURRICULUM_DATA: list[dict] = [
         "doc_id": "math-quadratische-gleichungen",
         "content": (
             "Quadratische Gleichungen: Eine quadratische Gleichung hat die Form "
-            "ax^2 + bx + c = 0, wobei a != 0. Die Loesungen werden mit der "
+            "ax^2 + bx + c = 0, wobei a != 0. Die Lösungen werden mit der "
             "Mitternachtsformel (abc-Formel) berechnet: x = (-b +/- sqrt(b^2 - 4ac)) / (2a). "
-            "Die Diskriminante D = b^2 - 4ac bestimmt die Anzahl der Loesungen: "
-            "D > 0: zwei reelle Loesungen, D = 0: eine doppelte Loesung, D < 0: keine reelle Loesung. "
+            "Die Diskriminante D = b^2 - 4ac bestimmt die Anzahl der Lösungen: "
+            "D > 0: zwei reelle Lösungen, D = 0: eine doppelte Lösung, D < 0: keine reelle Lösung. "
             "Beispiel: x^2 - 5x + 6 = 0. Hier ist a=1, b=-5, c=6. "
             "D = 25 - 24 = 1 > 0. x1 = (5+1)/2 = 3, x2 = (5-1)/2 = 2. "
-            "Alternativ kann man quadratische Gleichungen durch Faktorisierung loesen: "
+            "Alternativ kann man quadratische Gleichungen durch Faktorisierung lösen: "
             "x^2 - 5x + 6 = (x-2)(x-3) = 0. Der Satz von Vieta besagt: "
             "x1 + x2 = -b/a und x1 * x2 = c/a."
         ),
@@ -39,11 +39,11 @@ CURRICULUM_DATA: list[dict] = [
         "doc_id": "math-satz-des-pythagoras",
         "content": (
             "Der Satz des Pythagoras: In einem rechtwinkligen Dreieck gilt: "
-            "a^2 + b^2 = c^2, wobei c die Hypotenuse (gegenueber dem rechten Winkel) ist "
-            "und a, b die Katheten sind. Anwendung: Berechne die Laenge der Hypotenuse "
+            "a^2 + b^2 = c^2, wobei c die Hypotenuse (gegenüber dem rechten Winkel) ist "
+            "und a, b die Katheten sind. Anwendung: Berechne die Länge der Hypotenuse "
             "eines rechtwinkligen Dreiecks mit Katheten a=3 und b=4: c = sqrt(9+16) = sqrt(25) = 5. "
             "Umkehrung: Wenn a^2 + b^2 = c^2 gilt, ist das Dreieck rechtwinklig. "
-            "Pythagoraeische Tripel: (3,4,5), (5,12,13), (8,15,17), (7,24,25). "
+            "Pythagoräische Tripel: (3,4,5), (5,12,13), (8,15,17), (7,24,25). "
             "Anwendungen: Abstandsberechnungen, Dachneigung, Navigation."
         ),
         "metadata": {"subject": "math", "topic": "Satz des Pythagoras", "level": "beginner",
@@ -57,7 +57,7 @@ CURRICULUM_DATA: list[dict] = [
             "cos(alpha) = Ankathete / Hypotenuse, "
             "tan(alpha) = Gegenkathete / Ankathete. "
             "Wichtige Werte: sin(30) = 0.5, cos(30) = sqrt(3)/2, tan(45) = 1. "
-            "Einheitskreis: sin^2(x) + cos^2(x) = 1 fuer alle x. "
+            "Einheitskreis: sin^2(x) + cos^2(x) = 1 für alle x. "
             "Bogenmas: 180 Grad = pi Radiant. "
             "Sinussatz: a/sin(A) = b/sin(B) = c/sin(C). "
             "Kosinussatz: c^2 = a^2 + b^2 - 2ab*cos(C)."
@@ -85,14 +85,14 @@ CURRICULUM_DATA: list[dict] = [
         "doc_id": "science-newton-gesetze",
         "content": (
             "Newtons drei Gesetze der Mechanik: "
-            "1. Gesetz (Traegheitsgesetz): Ein Koerper verharrt im Zustand der Ruhe oder "
-            "der gleichfoermigen Bewegung, solange keine aeussere Kraft auf ihn wirkt. "
+            "1. Gesetz (Trägheitsgesetz): Ein Körper verharrt im Zustand der Ruhe oder "
+            "der gleichförmigen Bewegung, solange keine äußere Kraft auf ihn wirkt. "
             "2. Gesetz (Aktionsprinzip): Kraft = Masse * Beschleunigung, F = m * a. "
             "Die Einheit der Kraft ist Newton (N): 1 N = 1 kg * m/s^2. "
-            "3. Gesetz (Wechselwirkungsprinzip): Actio = Reactio. Wenn Koerper A auf "
-            "Koerper B eine Kraft ausuebt, uebt B auf A eine gleichgrosse, entgegengesetzte Kraft aus. "
+            "3. Gesetz (Wechselwirkungsprinzip): Actio = Reactio. Wenn Körper A auf "
+            "Körper B eine Kraft ausübt, übt B auf A eine gleichgroße, entgegengesetzte Kraft aus. "
             "Beispiel: Ein Auto (1000 kg) beschleunigt mit 2 m/s^2. "
-            "Die benoetigte Kraft ist F = 1000 * 2 = 2000 N."
+            "Die benötigte Kraft ist F = 1000 * 2 = 2000 N."
         ),
         "metadata": {"subject": "science", "topic": "Newtonsche Gesetze", "level": "intermediate",
                       "source": "Lehrplan Physik, Klasse 9", "language": "de"},
@@ -121,7 +121,7 @@ CURRICULUM_DATA: list[dict] = [
             "Elektronenschalen an. Gruppen (Spalten) bestimmen die chemischen Eigenschaften. "
             "Hauptgruppen: I (Alkalimetalle, z.B. Na, K), VII (Halogene, z.B. Cl, Br), "
             "VIII (Edelgase, z.B. He, Ne, Ar). "
-            "Elektronenkonfiguration bestimmt die Reaktivitaet. "
+            "Elektronenkonfiguration bestimmt die Reaktivität. "
             "Oktettregel: Atome streben 8 Valenzelektronen an. "
             "Ionenbindung: Metall gibt Elektronen ab, Nichtmetall nimmt auf (z.B. NaCl). "
             "Kovalente Bindung: Atome teilen Elektronenpaare (z.B. H2O, CO2)."
@@ -134,15 +134,15 @@ CURRICULUM_DATA: list[dict] = [
     {
         "doc_id": "german-grammatik-kasus",
         "content": (
-            "Die vier Faelle (Kasus) im Deutschen: "
+            "Die vier Fälle (Kasus) im Deutschen: "
             "1. Nominativ (Wer/Was?): Der Hund bellt. "
             "2. Genitiv (Wessen?): Das Buch des Lehrers. "
             "3. Dativ (Wem?): Ich gebe dem Kind ein Geschenk. "
             "4. Akkusativ (Wen/Was?): Ich sehe den Baum. "
-            "Praepositionen mit Dativ: aus, bei, mit, nach, seit, von, zu. "
-            "Praepositionen mit Akkusativ: durch, fuer, gegen, ohne, um. "
-            "Wechselpraepositionen (Dativ bei Ort, Akkusativ bei Richtung): "
-            "an, auf, hinter, in, neben, ueber, unter, vor, zwischen. "
+            "Präpositionen mit Dativ: aus, bei, mit, nach, seit, von, zu. "
+            "Präpositionen mit Akkusativ: durch, für, gegen, ohne, um. "
+            "Wechselpräpositionen (Dativ bei Ort, Akkusativ bei Richtung): "
+            "an, auf, hinter, in, neben, über, unter, vor, zwischen. "
             "Beispiel: 'Das Buch liegt auf dem Tisch' (Dativ, Ort) vs. "
             "'Ich lege das Buch auf den Tisch' (Akkusativ, Richtung)."
         ),
@@ -152,14 +152,14 @@ CURRICULUM_DATA: list[dict] = [
     {
         "doc_id": "german-erörterung",
         "content": (
-            "Die Eroerterung (Argumentation): Eine schriftliche Auseinandersetzung mit einem Thema. "
-            "Aufbau einer linearen Eroerterung: Einleitung (Thema vorstellen, Aktualitaet), "
-            "Hauptteil (Argumente vom schwaechsten zum staerksten, jeweils mit Begruendung und Beispiel), "
+            "Die Erörterung (Argumentation): Eine schriftliche Auseinandersetzung mit einem Thema. "
+            "Aufbau einer linearen Erörterung: Einleitung (Thema vorstellen, Aktualität), "
+            "Hauptteil (Argumente vom schwächsten zum stärksten, jeweils mit Begründung und Beispiel), "
             "Schluss (Zusammenfassung, eigene Meinung, Ausblick). "
-            "Dialektische Eroerterung: Pro- und Contra-Argumente abwaegen. "
+            "Dialektische Erörterung: Pro- und Contra-Argumente abwägen. "
             "Aufbau: Einleitung, These, Antithese, Synthese, Schluss. "
             "Tipps: Sachlich bleiben, Konjunktionen verwenden (deshalb, darum, obwohl, dennoch), "
-            "Beispiele aus dem Alltag einbringen, verschiedene Perspektiven beruecksichtigen."
+            "Beispiele aus dem Alltag einbringen, verschiedene Perspektiven berücksichtigen."
         ),
         "metadata": {"subject": "german", "topic": "Erörterung", "level": "intermediate",
                       "source": "Lehrplan Deutsch, Aufsatz Klasse 9-10", "language": "de"},
@@ -205,14 +205,14 @@ CURRICULUM_DATA: list[dict] = [
             "Die Weimarer Republik (1918-1933): Nach dem Ende des Ersten Weltkriegs "
             "wurde am 9. November 1918 die Republik ausgerufen. Die Weimarer Verfassung "
             "vom 11. August 1919 etablierte eine parlamentarische Demokratie mit "
-            "Reichspraesident, Reichskanzler und Reichstag. "
+            "Reichspräsident, Reichskanzler und Reichstag. "
             "Herausforderungen: Versailler Vertrag (Reparationen, Gebietsabtretungen), "
-            "Hyperinflation 1923, politische Instabilitaet (haeufige Regierungswechsel), "
+            "Hyperinflation 1923, politische Instabilität (häufige Regierungswechsel), "
             "Weltwirtschaftskrise ab 1929. "
             "Die 'Goldenen Zwanziger' (1924-1929): wirtschaftliche Erholung durch den Dawes-Plan, "
-            "kulturelle Bluete (Bauhaus, Expressionismus, Film). "
+            "kulturelle Blüte (Bauhaus, Expressionismus, Film). "
             "Ende: Ernennung Hitlers zum Reichskanzler am 30. Januar 1933, "
-            "Ermaechtigungsgesetz vom 24. Maerz 1933 beendete die Demokratie."
+            "Ermächtigungsgesetz vom 24. März 1933 beendete die Demokratie."
         ),
         "metadata": {"subject": "history", "topic": "Weimarer Republik", "level": "intermediate",
                       "source": "Lehrplan Geschichte, Klasse 9-10", "language": "de"},
@@ -221,11 +221,11 @@ CURRICULUM_DATA: list[dict] = [
         "doc_id": "history-industrialisierung",
         "content": (
             "Die Industrialisierung in Deutschland (ca. 1830-1900): "
-            "Beginn spaeter als in England. Wichtige Faktoren: Eisenbahnbau (erste Eisenbahn "
-            "Nuernberg-Fuerth 1835), Zollverein (1834), Kohle- und Stahlproduktion im Ruhrgebiet. "
+            "Beginn später als in England. Wichtige Faktoren: Eisenbahnbau (erste Eisenbahn "
+            "Nürnberg-Fürth 1835), Zollverein (1834), Kohle- und Stahlproduktion im Ruhrgebiet. "
             "Soziale Folgen: Urbanisierung, Entstehung der Arbeiterklasse, Kinderarbeit, "
             "schlechte Arbeitsbedingungen, Wohnungsnot. "
-            "Politische Reaktionen: Arbeiterbewegung, Gruendung der SPD (1875), "
+            "Politische Reaktionen: Arbeiterbewegung, Gründung der SPD (1875), "
             "Bismarcks Sozialgesetzgebung (Krankenversicherung 1883, Unfallversicherung 1884, "
             "Rentenversicherung 1889). "
             "Zweite Industrielle Revolution: Elektrotechnik (Siemens), Chemie (BASF, Bayer), "

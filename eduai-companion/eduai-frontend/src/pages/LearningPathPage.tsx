@@ -109,7 +109,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
               <div className="mt-4 pt-4 border-t border-white/20">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4" />
-                  <span className="text-sm">Naechstes Ziel: {learningPath.next_milestone}</span>
+                  <span className="text-sm">Nächstes Ziel: {learningPath.next_milestone}</span>
                 </div>
               </div>
             )}
@@ -192,7 +192,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
       {profiles.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Gesamtuebersicht</CardTitle>
+            <CardTitle className="text-base">Gesamtübersicht</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">

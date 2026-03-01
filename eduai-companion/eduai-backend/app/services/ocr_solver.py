@@ -155,7 +155,7 @@ class MathSolver:
                 "equation": eq_str,
                 "variable": None,
                 "solution": None,
-                "steps": [f"Konnte nicht geloest werden: {e}"],
+                "steps": [f"Konnte nicht gelöst werden: {e}"],
                 "latex": None,
                 "error": str(e),
             }
@@ -188,14 +188,14 @@ class MathSolver:
         if solutions:
             if len(solutions) == 1:
                 steps.append(
-                    f"Loesung: ${sympy.latex(var)} = {sympy.latex(solutions[0])}$"
+                    f"Lösung: ${sympy.latex(var)} = {sympy.latex(solutions[0])}$"
                 )
             else:
                 sol_parts = [
                     f"${sympy.latex(var)}_{{{i + 1}}} = {sympy.latex(s)}$"
                     for i, s in enumerate(solutions)
                 ]
-                steps.append(f"Loesungen: {', '.join(sol_parts)}")
+                steps.append(f"Lösungen: {', '.join(sol_parts)}")
 
             # Verification step
             for s in solutions[:2]:
@@ -206,7 +206,7 @@ class MathSolver:
                     f"${sympy.latex(lhs)}$ = ${sympy.latex(check_simplified)}$ = ${sympy.latex(rhs)}$ ✓"
                 )
         else:
-            steps.append("Keine reelle Loesung gefunden.")
+            steps.append("Keine reelle Lösung gefunden.")
 
         return steps
 
@@ -237,7 +237,7 @@ class MathSolver:
                 parts.append(f"$${ result['latex'] }$$\n")
 
             if result.get("steps"):
-                parts.append("**Loesungsweg:**\n")
+                parts.append("**Lösungsweg:**\n")
                 for j, step in enumerate(result["steps"], 1):
                     parts.append(f"{j}. {step}")
                 parts.append("")

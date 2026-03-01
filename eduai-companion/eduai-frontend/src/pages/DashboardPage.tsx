@@ -38,7 +38,7 @@ const SUBJECT_NAMES: Record<string, string> = {
 };
 
 const LEVEL_BADGES: Record<string, { variant: "default" | "success" | "warning"; label: string }> = {
-  beginner: { variant: "warning", label: "Anfaenger" },
+  beginner: { variant: "warning", label: "Anfänger" },
   intermediate: { variant: "default", label: "Mittel" },
   advanced: { variant: "success", label: "Fortgeschritten" },
 };
@@ -104,7 +104,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
             {greeting()}, {user?.full_name?.split(" ")[0] || user?.username}!
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Bereit zu lernen? Waehle ein Fach oder stelle eine Frage.
+            Bereit zu lernen? Wähle ein Fach oder stelle eine Frage.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -171,7 +171,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
 
       {/* Subject Cards */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Faecher</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Fächer</h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {profiles.map((p) => {
             const badge = LEVEL_BADGES[p.proficiency_level] || LEVEL_BADGES.beginner;
@@ -254,7 +254,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
         {/* Recent Activity */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Letzte Aktivitaeten</CardTitle>
+            <CardTitle className="text-base">Letzte Aktivitäten</CardTitle>
           </CardHeader>
           <CardContent>
             {progress?.recent_activity && progress.recent_activity.length > 0 ? (
@@ -278,7 +278,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
               </div>
             ) : (
               <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
-                Noch keine Aktivitaeten. Starte deinen ersten Chat!
+                Noch keine Aktivitäten. Starte deinen ersten Chat!
               </p>
             )}
           </CardContent>
@@ -320,7 +320,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
               <BookOpenCheck className="w-5 h-5 text-purple-500" />
               <div className="text-left">
                 <p className="font-medium">Lernpfad ansehen</p>
-                <p className="text-xs text-gray-500">Deine empfohlenen naechsten Schritte</p>
+                <p className="text-xs text-gray-500">Deine empfohlenen nächsten Schritte</p>
               </div>
             </Button>
           </CardContent>

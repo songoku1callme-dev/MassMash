@@ -51,7 +51,7 @@ def test_generate_steps():
     assert len(steps) >= 2
     # Should contain "Gegeben" and solution
     assert any("Gegeben" in s for s in steps)
-    assert any("Loesung" in s or "Loesungen" in s for s in steps)
+    assert any("Lösung" in s or "Lösungen" in s for s in steps)
 
 
 def test_format_response():
@@ -59,7 +59,7 @@ def test_format_response():
     results = [MathSolver.solve_equation(eq) for eq in equations]
     formatted = MathSolver.format_response("2x + 3 = 7", equations, results)
     assert "OCR Ergebnis" in formatted
-    assert "Loesungsweg" in formatted
+    assert "Lösungsweg" in formatted
     assert "Ergebnis" in formatted
 
 

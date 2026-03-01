@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 const SUBJECTS = [
-  { id: "general", name: "Alle Faecher", icon: <Sparkles className="w-4 h-4" /> },
+  { id: "general", name: "Alle Fächer", icon: <Sparkles className="w-4 h-4" /> },
   { id: "math", name: "Mathe", icon: <Calculator className="w-4 h-4" /> },
   { id: "english", name: "Englisch", icon: <Languages className="w-4 h-4" /> },
   { id: "german", name: "Deutsch", icon: <BookOpenCheck className="w-4 h-4" /> },
@@ -166,9 +166,9 @@ export default function ChatPage() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
               {[
-                { text: "Erklaere den Satz des Pythagoras", subject: "math" },
+                { text: "Erkläre den Satz des Pythagoras", subject: "math" },
                 { text: "What are conditional sentences?", subject: "english" },
-                { text: "Erklaere die Weimarer Republik", subject: "history" },
+                { text: "Erkläre die Weimarer Republik", subject: "history" },
                 { text: "Was ist Photosynthese?", subject: "science" },
               ].map((suggestion, i) => (
                 <button
@@ -256,7 +256,7 @@ export default function ChatPage() {
             className="text-xs gap-1"
           >
             <ChevronDown className="w-3 h-3" />
-            {language === "de" ? "Einfacher erklaeren" : "Explain simpler"}
+            {language === "de" ? "Einfacher erklären" : "Explain simpler"}
           </Button>
           <Button
             variant="outline"

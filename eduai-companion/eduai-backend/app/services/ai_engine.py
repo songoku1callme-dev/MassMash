@@ -41,7 +41,7 @@ SUBJECTS = {
             "Passive Voice", "Reported Speech", "Phrasal Verbs", "Idioms"
         ],
         "keywords": ["english", "englisch", "grammar", "grammatik", "essay",
-                     "vocabulary", "vokabel", "translate", "ubersetze", "tense",
+                     "vocabulary", "vokabel", "translate", "übersetze", "ubersetze", "tense",
                      "verb", "noun", "adjective", "sentence", "writing", "reading",
                      "comprehension", "passive", "active", "conditional"]
     },
@@ -51,7 +51,7 @@ SUBJECTS = {
         "name_de": "Deutsch",
         "icon": "BookOpen",
         "description": "Grammar exercises, essay help, Goethe prep",
-        "description_de": "Grammatik-Ubungen, Aufsatzhilfe, Goethe-Zertifikat",
+        "description_de": "Grammatik-Übungen, Aufsatzhilfe, Goethe-Zertifikat",
         "topics": [
             "Grammatik", "Rechtschreibung", "Aufsatz schreiben",
             "Gedichtanalyse", "Erörterung", "Konjunktiv",

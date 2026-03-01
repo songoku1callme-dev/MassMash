@@ -49,7 +49,7 @@ export function useSpeechRecognition(language: string = "de") {
   const startListening = useCallback(
     (onResult?: (text: string) => void) => {
       if (!isSupported) {
-        setError("Spracherkennung wird in diesem Browser nicht unterstuetzt.");
+        setError("Spracherkennung wird in diesem Browser nicht unterstützt.");
         return;
       }
 

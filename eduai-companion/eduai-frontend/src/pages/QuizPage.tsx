@@ -18,7 +18,7 @@ const SUBJECTS = [
 ];
 
 const DIFFICULTIES = [
-  { id: "beginner", name: "Anfaenger", desc: "Grundlagen" },
+  { id: "beginner", name: "Anfänger", desc: "Grundlagen" },
   { id: "intermediate", name: "Mittel", desc: "Fortgeschritten" },
   { id: "advanced", name: "Schwer", desc: "Experte" },
 ];
@@ -156,14 +156,14 @@ export default function QuizPage() {
             Quiz-Modus
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Teste dein Wissen und verbessere deine Faehigkeiten!
+            Teste dein Wissen und verbessere deine Fähigkeiten!
           </p>
         </div>
 
         {/* Subject Selection */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Fach waehlen</CardTitle>
+            <CardTitle className="text-base">Fach wählen</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -331,7 +331,7 @@ export default function QuizPage() {
                       className="flex-1"
                     />
                     <Button onClick={submitFillAnswer} disabled={!fillAnswer.trim()}>
-                      Pruefen
+                      Prüfen
                     </Button>
                   </div>
                 ) : (
@@ -356,7 +356,7 @@ export default function QuizPage() {
             {/* Explanation */}
             {isAnswered && answerResult?.explanation && (
               <div className="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Erklaerung:</p>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Erklärung:</p>
                 <p className="text-sm text-blue-700 dark:text-blue-400">{answerResult.explanation}</p>
               </div>
             )}
@@ -367,7 +367,7 @@ export default function QuizPage() {
         {isAnswered && (
           <Button onClick={nextQuestion} size="lg" className="w-full gap-2">
             {currentQ < quiz.questions.length - 1 ? (
-              <>Naechste Frage <ArrowRight className="w-4 h-4" /></>
+              <>Nächste Frage <ArrowRight className="w-4 h-4" /></>
             ) : (
               <>Quiz beenden <Trophy className="w-4 h-4" /></>
             )}
