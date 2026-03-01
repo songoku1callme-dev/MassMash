@@ -184,9 +184,15 @@ async def init_db():
     # --- Migrations for existing databases ---
     # Add new columns if they don't exist (safe for fresh + existing DBs)
     migrations = [
+        ("users", "is_pro", "INTEGER DEFAULT 0"),
         ("users", "subscription_tier", "TEXT DEFAULT 'free'"),
         ("users", "ki_personality_id", "INTEGER DEFAULT 1"),
         ("users", "ki_personality_name", "TEXT DEFAULT 'Freundlich'"),
+        ("users", "stripe_customer_id", "TEXT DEFAULT ''"),
+        ("users", "pro_since", "TEXT DEFAULT ''"),
+        ("users", "clerk_user_id", "TEXT DEFAULT ''"),
+        ("users", "avatar_url", "TEXT DEFAULT ''"),
+        ("users", "auth_provider", "TEXT DEFAULT 'local'"),
     ]
     for table, column, col_type in migrations:
         try:
@@ -196,9 +202,12 @@ async def init_db():
             pass  # Column already exists
 
     # Sync subscription_tier with is_pro for existing users
-    await db.execute(
-        "UPDATE users SET subscription_tier = 'pro' WHERE is_pro = 1 AND subscription_tier = 'free'"
-    )
-    await db.commit()
+    try:
+        await db.execute(
+            "UPDATE users SET subscription_tier = 'pro' WHERE is_pro = 1 AND subscription_tier = 'free'"
+        )
+        await db.commit()
+    except Exception:
+        pass  # is_pro column may not exist in very old DBs
 
     await db.close()
