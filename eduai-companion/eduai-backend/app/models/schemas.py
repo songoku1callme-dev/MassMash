@@ -28,6 +28,9 @@ class UserResponse(BaseModel):
     school_grade: str
     school_type: str
     preferred_language: str
+    is_pro: bool = False
+    avatar_url: str = ""
+    auth_provider: str = "local"
     created_at: str
 
 

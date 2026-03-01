@@ -6,7 +6,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
-  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database
+  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database,
+  CreditCard, Star
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -34,6 +35,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "quiz", label: "Quiz", icon: <BrainCircuit className="w-5 h-5" /> },
     { id: "learning", label: "Lernpfad", icon: <BookOpen className="w-5 h-5" /> },
     { id: "rag", label: "Wissensdatenbank", icon: <Database className="w-5 h-5" /> },
+    { id: "pricing", label: "Pro Upgrade", icon: <CreditCard className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },
   ];
 
@@ -129,11 +131,12 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             {user?.full_name?.[0] || user?.username?.[0] || "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex items-center gap-1">
               {user?.full_name || user?.username}
+              {user?.is_pro && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {user?.school_type} {user?.school_grade}. Klasse
+              {user?.is_pro ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
             </p>
           </div>
           <button

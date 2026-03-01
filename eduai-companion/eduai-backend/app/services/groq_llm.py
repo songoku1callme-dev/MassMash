@@ -64,6 +64,7 @@ def call_groq_llm(
     chat_history: Optional[list] = None,
     model: Optional[str] = None,
     rag_context: str = "",
+    is_pro: bool = False,
 ) -> str:
     """Call the Groq API to generate an AI tutoring response.
 
@@ -76,6 +77,7 @@ def call_groq_llm(
         chat_history: Previous messages in the session (trimmed for context).
         model: Override the default model.
         rag_context: Optional RAG-retrieved context to inject into the prompt.
+        is_pro: Whether the user has a Pro subscription (affects temperature).
 
     Returns:
         The AI-generated response string.
@@ -125,7 +127,7 @@ def call_groq_llm(
             model=chosen_model,
             messages=messages,
             max_tokens=MAX_TOKENS,
-            temperature=0.7,
+            temperature=0.7 if is_pro else 0.3,
             top_p=0.9,
             stream=False,
         )

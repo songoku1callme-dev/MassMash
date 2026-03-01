@@ -1,10 +1,7 @@
-"""Clerk OAuth integration scaffolding.
+"""Clerk OAuth integration.
 
-This module provides Clerk JWT verification for the backend.
-Activate by setting CLERK_SECRET_KEY in environment variables.
-
-When active, the frontend uses @clerk/clerk-react for login/signup,
-and this module verifies the Clerk-issued JWT on protected routes.
+Verifies Clerk-issued JWTs using the JWKS endpoint (RS256).
+Activate by setting CLERK_SECRET_KEY and CLERK_PUBLISHABLE_KEY in environment.
 
 Docs: https://clerk.com/docs/backend-requests/handling/manual-jwt
 """
@@ -12,6 +9,9 @@ Docs: https://clerk.com/docs/backend-requests/handling/manual-jwt
 import os
 import logging
 from typing import Optional
+
+from jose import jwt, JWTError
+import httpx
 
 logger = logging.getLogger(__name__)
 
@@ -26,62 +26,92 @@ if CLERK_ENABLED:
 else:
     logger.info("Clerk OAuth is DISABLED (keys not set). Using built-in JWT auth.")
 
+# Cache the JWKS keys to avoid fetching on every request
+_jwks_cache: Optional[dict] = None
+
+
+async def _get_jwks() -> dict:
+    """Fetch JWKS from Clerk's API (cached after first call)."""
+    global _jwks_cache
+    if _jwks_cache is not None:
+        return _jwks_cache
+
+    jwks_url = "https://api.clerk.com/v1/jwks"
+    headers = {"Authorization": f"Bearer {CLERK_SECRET_KEY}"}
+
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(jwks_url, headers=headers)
+        if resp.status_code == 200:
+            _jwks_cache = resp.json()
+            return _jwks_cache
+        else:
+            logger.error("Failed to fetch Clerk JWKS: %s %s", resp.status_code, resp.text)
+            return {"keys": []}
+
 
 async def verify_clerk_token(token: str) -> Optional[dict]:
     """Verify a Clerk-issued session JWT and return user claims.
 
     Returns None if verification fails or Clerk is not configured.
 
-    The returned dict contains at minimum:
+    The returned dict contains:
         - sub: Clerk user ID (e.g. "user_2abc...")
         - email: user email
         - name: full name (if available)
-
-    Usage:
-        from app.core.clerk import verify_clerk_token, CLERK_ENABLED
-
-        if CLERK_ENABLED:
-            claims = await verify_clerk_token(bearer_token)
-            if claims is None:
-                raise HTTPException(401)
-            user_id = claims["sub"]
+        - image_url: profile photo URL
     """
     if not CLERK_ENABLED:
         return None
 
-    # NOTE: Full implementation requires the `pyjwt` or `jose` library
-    # to verify the RS256 JWT against Clerk's JWKS endpoint.
-    # The JWKS URL is: https://<your-clerk-domain>/.well-known/jwks.json
-    #
-    # Skeleton implementation below — uncomment and complete when keys are set.
-    #
-    # from jose import jwt, JWTError
-    # import httpx
-    #
-    # CLERK_JWKS_URL = f"https://api.clerk.com/v1/jwks"
-    # headers = {"Authorization": f"Bearer {CLERK_SECRET_KEY}"}
-    #
-    # async with httpx.AsyncClient() as client:
-    #     resp = await client.get(CLERK_JWKS_URL, headers=headers)
-    #     jwks = resp.json()
-    #
-    # try:
-    #     payload = jwt.decode(
-    #         token,
-    #         jwks,
-    #         algorithms=["RS256"],
-    #         options={"verify_aud": False},
-    #     )
-    #     return {
-    #         "sub": payload.get("sub"),
-    #         "email": payload.get("email", ""),
-    #         "name": payload.get("name", ""),
-    #     }
-    # except JWTError:
-    #     return None
+    try:
+        jwks_data = await _get_jwks()
+        keys = jwks_data.get("keys", [])
+        if not keys:
+            logger.error("No JWKS keys available from Clerk")
+            return None
 
-    logger.warning("Clerk token verification called but not fully implemented yet.")
-    return None
+        # Find the matching key by kid
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+
+        rsa_key = None
+        for key in keys:
+            if key.get("kid") == kid:
+                rsa_key = key
+                break
+
+        if rsa_key is None and keys:
+            rsa_key = keys[0]
+
+        if rsa_key is None:
+            return None
+
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=["RS256"],
+            options={"verify_aud": False},
+        )
+
+        return {
+            "sub": payload.get("sub", ""),
+            "email": payload.get("email", payload.get("primary_email", "")),
+            "name": payload.get("name", payload.get("full_name", "")),
+            "image_url": payload.get("image_url", ""),
+        }
+
+    except JWTError as e:
+        logger.warning("Clerk JWT verification failed: %s", e)
+        return None
+    except Exception as e:
+        logger.error("Unexpected error verifying Clerk token: %s", e)
+        return None
+
+
+def invalidate_jwks_cache():
+    """Clear the JWKS cache (useful if keys are rotated)."""
+    global _jwks_cache
+    _jwks_cache = None
 
 
 def get_clerk_frontend_config() -> dict:

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Settings, User, Shield, Moon, Sun, Globe, Save, Loader2
+  Settings, User, Shield, Moon, Sun, Globe, Save, Loader2, Star, Crown, CreditCard
 } from "lucide-react";
 
 interface SettingsPageProps {
@@ -51,6 +51,44 @@ export default function SettingsPage({ darkMode, onDarkModeToggle }: SettingsPag
           Verwalte dein Profil und Einstellungen
         </p>
       </div>
+
+      {/* Pro Status */}
+      {user?.is_pro ? (
+        <Card className="border-yellow-200 dark:border-yellow-800">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+              <Crown className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                Pro-Mitglied
+                <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Unbegrenzt OCR, Spracheingabe & priorisierte KI-Antworten
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+              <CreditCard className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900 dark:text-white">Kostenloser Plan</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                50 OCR & 50 Spracheingaben pro Monat
+              </p>
+            </div>
+            <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Star className="w-4 h-4 mr-1" />
+              Pro Upgrade
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Profile Settings */}
       <Card>

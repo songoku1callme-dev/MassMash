@@ -35,6 +35,12 @@ async def init_db():
             school_grade TEXT DEFAULT '10',
             school_type TEXT DEFAULT 'Gymnasium',
             preferred_language TEXT DEFAULT 'de',
+            is_pro INTEGER DEFAULT 0,
+            stripe_customer_id TEXT DEFAULT '',
+            pro_since TEXT DEFAULT '',
+            clerk_user_id TEXT DEFAULT '',
+            avatar_url TEXT DEFAULT '',
+            auth_provider TEXT DEFAULT 'local',
             created_at TEXT DEFAULT (datetime('now')),
             updated_at TEXT DEFAULT (datetime('now'))
         );

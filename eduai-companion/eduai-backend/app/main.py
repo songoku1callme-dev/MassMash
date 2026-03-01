@@ -10,6 +10,7 @@ from app.core.security import (
     ALLOWED_ORIGINS,
 )
 from app.routes import auth, chat, quiz, learning, rag, ocr, admin
+from app.routes import stripe_routes
 from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
 
 
@@ -52,6 +53,7 @@ app.include_router(learning.router)
 app.include_router(rag.router)
 app.include_router(ocr.router)
 app.include_router(admin.router)
+app.include_router(stripe_routes.router)
 
 
 @app.get("/healthz")

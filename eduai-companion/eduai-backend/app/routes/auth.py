@@ -1,7 +1,7 @@
 """Authentication routes."""
 import json
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import (
@@ -76,6 +76,7 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
             school_grade=user.school_grade,
             school_type=user.school_type,
             preferred_language=user.preferred_language,
+            is_pro=False,
             created_at=datetime.now().isoformat()
         )
     )
@@ -110,6 +111,9 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
             school_grade=user_dict["school_grade"],
             school_type=user_dict["school_type"],
             preferred_language=user_dict["preferred_language"],
+            is_pro=bool(user_dict.get("is_pro", 0)),
+            avatar_url=user_dict.get("avatar_url", "") or "",
+            auth_provider=user_dict.get("auth_provider", "local") or "local",
             created_at=user_dict["created_at"]
         )
     )
@@ -126,6 +130,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         school_grade=current_user["school_grade"],
         school_type=current_user["school_type"],
         preferred_language=current_user["preferred_language"],
+        is_pro=bool(current_user.get("is_pro", 0)),
+        avatar_url=current_user.get("avatar_url", "") or "",
+        auth_provider=current_user.get("auth_provider", "local") or "local",
         created_at=current_user["created_at"]
     )
 
@@ -171,6 +178,9 @@ async def update_me(
         school_grade=user["school_grade"],
         school_type=user["school_type"],
         preferred_language=user["preferred_language"],
+        is_pro=bool(user.get("is_pro", 0)),
+        avatar_url=user.get("avatar_url", "") or "",
+        auth_provider=user.get("auth_provider", "local") or "local",
         created_at=user["created_at"]
     )
 
@@ -206,3 +216,74 @@ async def clerk_config():
     The frontend uses this to decide between Clerk login and built-in JWT login.
     """
     return get_clerk_frontend_config()
+
+
+@router.post("/clerk/webhook")
+async def clerk_webhook(request: Request, db: aiosqlite.Connection = Depends(get_db)):
+    """Handle Clerk webhook events to sync users to local DB.
+
+    Events handled:
+    - user.created → Create local user from Clerk profile
+    - user.updated → Update local user profile
+    """
+    body = await request.json()
+    event_type = body.get("type", "")
+    data = body.get("data", {})
+
+    if event_type in ("user.created", "user.updated"):
+        clerk_user_id = data.get("id", "")
+        email = ""
+        emails = data.get("email_addresses", [])
+        if emails:
+            email = emails[0].get("email_address", "")
+        first_name = data.get("first_name", "") or ""
+        last_name = data.get("last_name", "") or ""
+        full_name = f"{first_name} {last_name}".strip() or email.split("@")[0]
+        avatar_url = data.get("image_url", "") or ""
+        username = data.get("username", "") or email.split("@")[0] or clerk_user_id
+
+        # Check if user already exists with this clerk_user_id
+        cursor = await db.execute(
+            "SELECT id FROM users WHERE clerk_user_id = ?", (clerk_user_id,)
+        )
+        existing = await cursor.fetchone()
+
+        if existing:
+            # Update existing user
+            await db.execute(
+                "UPDATE users SET full_name = ?, avatar_url = ?, email = ? WHERE clerk_user_id = ?",
+                (full_name, avatar_url, email, clerk_user_id),
+            )
+        else:
+            # Check if email already exists (link accounts)
+            cursor = await db.execute("SELECT id FROM users WHERE email = ?", (email,))
+            email_user = await cursor.fetchone()
+            if email_user:
+                await db.execute(
+                    "UPDATE users SET clerk_user_id = ?, avatar_url = ?, auth_provider = 'clerk' WHERE email = ?",
+                    (clerk_user_id, avatar_url, email),
+                )
+            else:
+                # Create new user
+                import secrets
+                dummy_password = get_password_hash(secrets.token_urlsafe(32))
+                await db.execute(
+                    """INSERT INTO users (email, username, hashed_password, full_name, school_grade, school_type,
+                    preferred_language, clerk_user_id, avatar_url, auth_provider)
+                    VALUES (?, ?, ?, ?, '10', 'Gymnasium', 'de', ?, ?, 'clerk')""",
+                    (email, username, dummy_password, full_name, clerk_user_id, avatar_url),
+                )
+                # Create learning profiles
+                user_id = (await db.execute("SELECT last_insert_rowid()")).fetchone()
+                if user_id:
+                    uid = dict(user_id)[list(dict(user_id).keys())[0]] if user_id else None
+                    if uid:
+                        for subject in SUBJECTS:
+                            await db.execute(
+                                """INSERT INTO learning_profiles (user_id, subject, proficiency_level, mastery_score)
+                                VALUES (?, ?, 'beginner', 0.0)""",
+                                (uid, subject),
+                            )
+        await db.commit()
+
+    return {"status": "ok"}

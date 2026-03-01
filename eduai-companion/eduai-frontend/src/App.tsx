@@ -8,6 +8,7 @@ import ChatPage from "./pages/ChatPage";
 import QuizPage from "./pages/QuizPage";
 import LearningPathPage from "./pages/LearningPathPage";
 import RAGPage from "./pages/RAGPage";
+import PricingPage from "./pages/PricingPage";
 import SettingsPage from "./pages/SettingsPage";
 import Sidebar from "./components/Sidebar";
 
@@ -66,6 +67,8 @@ function App() {
         return <LearningPathPage onNavigate={setCurrentPage} />;
       case "rag":
         return <RAGPage />;
+      case "pricing":
+        return <PricingPage />;
       case "settings":
         return <SettingsPage darkMode={darkMode} onDarkModeToggle={() => setDarkMode(!darkMode)} />;
       default:

@@ -313,6 +313,9 @@ export interface User {
   school_grade: string;
   school_type: string;
   preferred_language: string;
+  is_pro: boolean;
+  avatar_url: string;
+  auth_provider: string;
   created_at: string;
 }
 
@@ -463,3 +466,34 @@ export interface RAGStats {
   embedding_dim: number;
   chunk_size: number;
 }
+
+// Stripe
+export interface StripeConfig {
+  enabled: boolean;
+  publishable_key: string;
+  pro_price_eur: string;
+}
+
+export interface ProStatus {
+  is_pro: boolean;
+  stripe_customer_id: string;
+  pro_since: string;
+  stripe_enabled: boolean;
+}
+
+export const stripeApi = {
+  config: () => request<StripeConfig>("/api/stripe/config"),
+  createCheckout: (data: { success_url: string; cancel_url: string }) =>
+    request<{ checkout_url: string; session_id: string }>("/api/stripe/create-checkout", { method: "POST", body: data }),
+  proStatus: () => request<ProStatus>("/api/stripe/pro-status"),
+};
+
+// Clerk config
+export interface ClerkConfig {
+  enabled: boolean;
+  publishable_key: string;
+}
+
+export const clerkApi = {
+  config: () => request<ClerkConfig>("/api/auth/clerk-config"),
+};

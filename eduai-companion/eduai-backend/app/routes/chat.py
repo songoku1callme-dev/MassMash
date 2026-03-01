@@ -37,6 +37,11 @@ async def send_message(
     profile = await cursor.fetchone()
     level = dict(profile)["proficiency_level"] if profile else "intermediate"
 
+    # Check if user has Pro subscription
+    cursor = await db.execute("SELECT is_pro FROM users WHERE id = ?", (user_id,))
+    pro_row = await cursor.fetchone()
+    is_pro = bool(dict(pro_row).get("is_pro", 0)) if pro_row else False
+
     # Get or create session
     session_id = request.session_id
     if session_id:
@@ -104,6 +109,7 @@ async def send_message(
         language=request.language,
         chat_history=messages,
         rag_context=rag_context,
+        is_pro=is_pro,
     )
 
     # Append source references if RAG provided context
