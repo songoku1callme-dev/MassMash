@@ -81,8 +81,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "connect-src 'self' https:; "
             "frame-ancestors 'none'"
         )
+        # Allow camera (OCR) and microphone (Speech-to-Text) from same origin
         response.headers["Permissions-Policy"] = (
-            "camera=(), microphone=(), geolocation=()"
+            "camera=(self), microphone=(self), geolocation=()"
         )
         return response
 
