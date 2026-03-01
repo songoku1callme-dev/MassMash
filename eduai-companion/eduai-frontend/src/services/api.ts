@@ -247,7 +247,64 @@ export const ragApi = {
   seed: () => request<{ message: string; documents_indexed: number }>("/api/rag/seed", { method: "POST" }),
 };
 
+// OCR
+export const ocrApi = {
+  solveImage: async (file: File): Promise<OCRResult> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${API_URL}/api/ocr/solve-image`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "OCR failed" }));
+      throw new Error(err.detail || "OCR failed");
+    }
+    return res.json();
+  },
+
+  solveText: async (equation: string): Promise<OCRResult> => {
+    const token = getAccessToken();
+    const formData = new URLSearchParams();
+    formData.append("equation", equation);
+
+    const res = await fetch(`${API_URL}/api/ocr/solve-text`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData.toString(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Solve failed" }));
+      throw new Error(err.detail || "Solve failed");
+    }
+    return res.json();
+  },
+};
+
 // Types
+export interface OCRResult {
+  ocr_text: string;
+  equations: string[];
+  results: OCREquationResult[];
+  formatted_response: string;
+}
+
+export interface OCREquationResult {
+  equation: string;
+  variable: string | null;
+  solution: string[] | string | null;
+  steps: string[];
+  latex: string | null;
+  solution_latex?: string[];
+  error?: string;
+}
+
 export interface User {
   id: number;
   email: string;

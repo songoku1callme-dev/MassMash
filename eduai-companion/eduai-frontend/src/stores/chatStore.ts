@@ -19,6 +19,7 @@ interface ChatState {
   setLanguage: (lang: string) => void;
   setDetailLevel: (level: string) => void;
   deleteSession: (id: number) => Promise<void>;
+  addMessage: (msg: ChatMessage) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -105,6 +106,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
   setSubject: (subject) => set({ currentSubject: subject }),
   setLanguage: (language) => set({ language }),
   setDetailLevel: (detailLevel) => set({ detailLevel }),
+
+  addMessage: (msg) => {
+    set((state) => ({ messages: [...state.messages, msg] }));
+  },
 
   deleteSession: async (id) => {
     try {

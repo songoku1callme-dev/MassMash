@@ -9,7 +9,7 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag
+from app.routes import auth, chat, quiz, learning, rag, ocr
 
 
 @asynccontextmanager
@@ -46,6 +46,7 @@ app.include_router(chat.router)
 app.include_router(quiz.router)
 app.include_router(learning.router)
 app.include_router(rag.router)
+app.include_router(ocr.router)
 
 
 @app.get("/healthz")

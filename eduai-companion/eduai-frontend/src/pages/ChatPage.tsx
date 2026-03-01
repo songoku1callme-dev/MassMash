@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useChatStore } from "../stores/chatStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,12 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import { ocrApi } from "../services/api";
+import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
-  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles
+  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
+  Camera, Mic, MicOff
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -25,12 +28,16 @@ const SUBJECTS = [
 export default function ChatPage() {
   const {
     messages, isSending, currentSubject, language,
-    sendMessage, setSubject, setLanguage, setDetailLevel
+    sendMessage, setSubject, setLanguage, setDetailLevel, addMessage
   } = useChatStore();
   const [input, setInput] = useState("");
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening } = useSpeechRecognition(language);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,6 +46,13 @@ export default function ChatPage() {
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // Update input with speech transcript as it comes in
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
 
   const handleSend = () => {
     if (!input.trim() || isSending) return;
@@ -67,6 +81,38 @@ export default function ChatPage() {
       sendMessage(lastUserMsg.content);
     }
   };
+
+  const handleOcrUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Reset the file input so the same file can be selected again
+    e.target.value = "";
+
+    setIsOcrLoading(true);
+    // Add a user message showing the upload
+    addMessage({ role: "user", content: `[Bild hochgeladen: ${file.name}]` });
+
+    try {
+      const result = await ocrApi.solveImage(file);
+      addMessage({ role: "assistant", content: result.formatted_response, subject: "math" });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "OCR fehlgeschlagen";
+      addMessage({ role: "assistant", content: `OCR-Fehler: ${errorMsg}. Bitte versuche es mit einem klareren Bild.` });
+    } finally {
+      setIsOcrLoading(false);
+    }
+  }, [addMessage]);
+
+  const handleMicToggle = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening((text: string) => {
+        setInput(text);
+        inputRef.current?.focus();
+      });
+    }
+  }, [isListening, startListening, stopListening]);
 
   return (
     <div className="flex flex-col h-full">
@@ -225,15 +271,72 @@ export default function ChatPage() {
         </div>
       )}
 
+      {/* Speech error / listening indicator */}
+      {(speechError || isListening) && (
+        <div className={`px-4 py-1.5 text-center text-xs ${
+          speechError
+            ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400"
+            : "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+        }`}>
+          {speechError || (language === "de" ? "Spracherkennung aktiv... Sprich jetzt!" : "Listening... Speak now!")}
+        </div>
+      )}
+
+      {/* OCR loading indicator */}
+      {isOcrLoading && (
+        <div className="px-4 py-1.5 text-center text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center gap-2">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          {language === "de" ? "Bild wird analysiert..." : "Analyzing image..."}
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 lg:p-4">
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
+          {/* Camera/OCR Button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleOcrUpload}
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSending || isOcrLoading}
+            title={language === "de" ? "Mathe-Foto hochladen" : "Upload math photo"}
+          >
+            {isOcrLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+          </Button>
+
+          {/* Mic Button */}
+          {speechSupported && (
+            <Button
+              variant={isListening ? "default" : "outline"}
+              size="icon"
+              className={`shrink-0 ${isListening ? "bg-red-500 hover:bg-red-600 text-white" : ""}`}
+              onClick={handleMicToggle}
+              disabled={isSending}
+              title={language === "de" ? "Spracheingabe" : "Voice input"}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </Button>
+          )}
+
           <Input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={language === "de" ? "Stelle eine Frage..." : "Ask a question..."}
+            placeholder={
+              isListening
+                ? (language === "de" ? "Sprich jetzt..." : "Speak now...")
+                : (language === "de" ? "Stelle eine Frage..." : "Ask a question...")
+            }
             disabled={isSending}
             className="flex-1"
           />
