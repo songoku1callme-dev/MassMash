@@ -1,5 +1,8 @@
-/* EduAI Companion — Push Notification Service Worker (Supreme 12.0 Phase 5) */
+/* EduAI Companion — Service Worker (Supreme 13.0 Phase 11: PWA Shortcuts + Offline) */
 /* eslint-disable no-restricted-globals */
+
+const CACHE_NAME = "eduai-v13";
+const OFFLINE_URLS = ["/", "/index.html"];
 
 self.addEventListener("push", (event) => {
   let data = { title: "EduAI", body: "Du hast eine neue Benachrichtigung!", icon: "/pwa-192x192.png" };

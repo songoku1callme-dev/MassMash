@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen } from "lucide-react";
+import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen, ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -21,6 +21,16 @@ interface SubjectStat {
   best_score: number;
 }
 
+interface NotenPrognose {
+  fach: string;
+  aktuelle_note: number;
+  prognose_note: number;
+  trend: string;
+  confidence: number;
+  avg_score: number;
+  total_quizzes: number;
+}
+
 export default function StatsPage() {
   const [overview, setOverview] = useState<StatsOverview | null>(null);
   const [subjects, setSubjects] = useState<SubjectStat[]>([]);
@@ -29,6 +39,10 @@ export default function StatsPage() {
   const [analysis, setAnalysis] = useState("");
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [prognosen, setPrognosen] = useState<NotenPrognose[]>([]);
+  const [prognoseLoading, setPrognoseLoading] = useState(false);
+  const [prognoseEmpfehlung, setPrognoseEmpfehlung] = useState("");
+  const [prognoseTrend, setPrognoseTrend] = useState("");
 
   const token = localStorage.getItem("eduai_access_token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -52,6 +66,23 @@ export default function StatsPage() {
     };
     load();
   }, []);
+
+  const runNotenPrognose = async () => {
+    setPrognoseLoading(true);
+    try {
+      const resp = await fetch(`${API_URL}/api/stats/noten-prognose`, {
+        method: "POST",
+        headers,
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setPrognosen(data.prognosen || []);
+        setPrognoseEmpfehlung(data.empfehlung || "");
+        setPrognoseTrend(data.gesamt_trend || "");
+      }
+    } catch { /* ignore */ }
+    setPrognoseLoading(false);
+  };
 
   const runKIAnalyse = async () => {
     setAnalysisLoading(true);
@@ -119,6 +150,74 @@ export default function StatsPage() {
           <p className="text-4xl font-bold">{ov.iq_score}</p>
         </div>
       )}
+
+      {/* Supreme 13.0 Phase 10: Noten-Prognose */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-indigo-600" />
+            Noten-Prognose
+          </h3>
+          <button
+            onClick={runNotenPrognose}
+            disabled={prognoseLoading}
+            className="px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {prognoseLoading ? "Berechne..." : "Prognose erstellen"}
+          </button>
+        </div>
+
+        {prognosen.length === 0 ? (
+          <p className="text-gray-400 text-sm">Klicke auf &quot;Prognose erstellen&quot; fuer deine Noten-Vorhersage</p>
+        ) : (
+          <>
+            {prognoseTrend && (
+              <div className={`mb-3 px-3 py-2 rounded-lg text-sm font-medium ${
+                prognoseTrend === "steigend" ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400" :
+                prognoseTrend === "fallend" ? "bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400" :
+                "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+              }`}>
+                Gesamt-Trend: {prognoseTrend === "steigend" ? "Aufwaerts" : prognoseTrend === "fallend" ? "Abwaerts" : "Stabil"}
+              </div>
+            )}
+            <div className="space-y-2">
+              {prognosen.map((p) => (
+                <div key={p.fach} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                  <div className="flex-1">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{p.fach}</span>
+                    <span className="text-xs text-gray-400 ml-2">({p.total_quizzes} Quizze)</span>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-xs text-gray-400">Aktuell</span>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{p.aktuelle_note}</p>
+                  </div>
+                  <div className="flex items-center">
+                    {p.trend === "steigend" ? <ArrowUp className="w-4 h-4 text-green-500" /> :
+                     p.trend === "fallend" ? <ArrowDown className="w-4 h-4 text-red-500" /> :
+                     <Minus className="w-4 h-4 text-gray-400" />}
+                  </div>
+                  <div className="text-center">
+                    <span className="text-xs text-gray-400">Prognose</span>
+                    <p className={`text-lg font-bold ${
+                      p.prognose_note < p.aktuelle_note ? "text-green-600" :
+                      p.prognose_note > p.aktuelle_note ? "text-red-600" :
+                      "text-gray-900 dark:text-white"
+                    }`}>{p.prognose_note}</p>
+                  </div>
+                  <div className="w-12 text-right">
+                    <span className="text-xs text-gray-400">{Math.round(p.confidence * 100)}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {prognoseEmpfehlung && (
+              <div className="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                {prognoseEmpfehlung}
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* KI Analysis */}
       {analysis && (

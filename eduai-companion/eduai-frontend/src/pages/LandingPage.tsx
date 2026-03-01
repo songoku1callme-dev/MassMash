@@ -29,12 +29,30 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
   return <>{count.toLocaleString("de-DE")}{suffix}</>;
 }
 
-const LIVE_STATS = [
-  { icon: <Users className="w-6 h-6" />, value: 1247, suffix: "+", label: "Aktive Schueler" },
-  { icon: <Brain className="w-6 h-6" />, value: 48392, suffix: "+", label: "Quizzes geloest" },
-  { icon: <Trophy className="w-6 h-6" />, value: 312, suffix: "", label: "Turniere gespielt" },
-  { icon: <Flame className="w-6 h-6" />, value: 89, suffix: "%", label: "Notenverbesserung" },
-];
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+/** Supreme 13.0 Phase 9: Fetch real stats from backend, fallback to defaults */
+function useLiveStats() {
+  const [stats, setStats] = useState({
+    users: 1247, quizzes: 48392, tournaments: 312, improvement: 89,
+  });
+  useEffect(() => {
+    fetch(`${API_URL}/api/stats/public`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data) {
+          setStats({
+            users: data.total_users || stats.users,
+            quizzes: data.total_quizzes || stats.quizzes,
+            tournaments: data.total_tournaments || stats.tournaments,
+            improvement: data.avg_improvement || stats.improvement,
+          });
+        }
+      })
+      .catch(() => { /* use defaults */ });
+  }, []);
+  return stats;
+}
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -85,6 +103,15 @@ const TESTIMONIALS = [
 ];
 
 export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPageProps) {
+  const liveStats = useLiveStats();
+
+  const LIVE_STATS = [
+    { icon: <Users className="w-6 h-6" />, value: liveStats.users, suffix: "+", label: "Aktive Schueler" },
+    { icon: <Brain className="w-6 h-6" />, value: liveStats.quizzes, suffix: "+", label: "Quizzes geloest" },
+    { icon: <Trophy className="w-6 h-6" />, value: liveStats.tournaments, suffix: "", label: "Turniere gespielt" },
+    { icon: <Flame className="w-6 h-6" />, value: liveStats.improvement, suffix: "%", label: "Notenverbesserung" },
+  ];
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Navbar */}

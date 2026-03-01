@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -17,8 +17,9 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const fetchBell = async () => {
+  const fetchBell = useCallback(async () => {
     try {
       const token = localStorage.getItem("eduai_access_token");
       if (!token) return;
@@ -33,7 +34,7 @@ export default function NotificationBell() {
     } catch {
       /* ignore */
     }
-  };
+  }, []);
 
   const markAllRead = async () => {
     try {
@@ -50,12 +51,63 @@ export default function NotificationBell() {
     }
   };
 
-  // Poll every 30s
+  // Supreme 13.0 Phase 7: WebSocket with fallback to polling
   useEffect(() => {
     fetchBell();
-    const interval = setInterval(fetchBell, 30000);
-    return () => clearInterval(interval);
-  }, []);
+
+    const token = localStorage.getItem("eduai_access_token");
+    if (!token) {
+      const interval = setInterval(fetchBell, 30000);
+      return () => clearInterval(interval);
+    }
+
+    // Try WebSocket connection
+    const wsUrl = API_URL.replace(/^http/, "ws") + "/api/notifications/ws/" + token;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let fallbackInterval: ReturnType<typeof setInterval> | null = null;
+
+    const connectWS = () => {
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (fallbackInterval) { clearInterval(fallbackInterval); fallbackInterval = null; }
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "init") setUnread(data.unread_count || 0);
+            else if (data.type === "new_notification") { setUnread((p) => p + 1); fetchBell(); }
+          } catch { /* ignore */ }
+        };
+
+        ws.onclose = () => {
+          wsRef.current = null;
+          if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
+          reconnectTimer = setTimeout(connectWS, 5000);
+        };
+
+        ws.onerror = () => ws.close();
+
+        const pingInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) ws.send("ping");
+        }, 25000);
+        ws.addEventListener("close", () => clearInterval(pingInterval));
+      } catch {
+        if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
+      }
+    };
+
+    connectWS();
+
+    return () => {
+      if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (fallbackInterval) clearInterval(fallbackInterval);
+    };
+  }, [fetchBell]);
 
   // Close on click outside
   useEffect(() => {

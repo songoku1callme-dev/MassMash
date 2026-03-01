@@ -1,12 +1,14 @@
 """Push Notifications + Weekly Report routes.
 
 Supreme 10.0 Phase 2: VAPID push + APScheduler triggers + Resend email.
+Supreme 13.0 Phase 7: WebSocket real-time notifications (replaces polling).
 """
 import json
 import logging
 import os
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
@@ -321,3 +323,92 @@ async def send_weekly_report(
         raise HTTPException(status_code=500, detail=f"Email fehlgeschlagen: {str(e)}")
 
     return {"message": f"Wochen-Report an {ud['email']} gesendet!", "stats": stats_response}
+
+
+# --- Supreme 13.0 Phase 7: WebSocket real-time notifications ---
+# Connection manager for active WebSocket clients
+class _WSConnectionManager:
+    """Manages active WebSocket connections per user."""
+
+    def __init__(self):
+        self.active: dict[int, list[WebSocket]] = {}
+
+    async def connect(self, user_id: int, ws: WebSocket):
+        await ws.accept()
+        if user_id not in self.active:
+            self.active[user_id] = []
+        self.active[user_id].append(ws)
+
+    def disconnect(self, user_id: int, ws: WebSocket):
+        if user_id in self.active:
+            self.active[user_id] = [w for w in self.active[user_id] if w is not ws]
+            if not self.active[user_id]:
+                del self.active[user_id]
+
+    async def send_to_user(self, user_id: int, data: dict):
+        """Push a JSON message to all active sockets for a user."""
+        if user_id not in self.active:
+            return
+        dead: list[WebSocket] = []
+        for ws in self.active[user_id]:
+            try:
+                await ws.send_json(data)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect(user_id, ws)
+
+
+ws_manager = _WSConnectionManager()
+
+
+@router.websocket("/ws/{token}")
+async def websocket_notifications(websocket: WebSocket, token: str):
+    """WebSocket endpoint for real-time notifications (Supreme 13.0 Phase 7).
+
+    Clients connect with their JWT token in the URL path.
+    The server pushes new notifications in real-time instead of polling.
+    """
+    from app.core.auth import decode_token
+    from jose import JWTError
+
+    # Authenticate via token
+    try:
+        payload = decode_token(token)
+        user_id = int(payload.get("sub", 0))
+        if not user_id:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
+    except (JWTError, ValueError, TypeError):
+        await websocket.close(code=4001, reason="Authentication failed")
+        return
+
+    await ws_manager.connect(user_id, websocket)
+    logger.info("WebSocket connected for user %d", user_id)
+
+    try:
+        # Send initial unread count
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        import aiosqlite as _aiosqlite
+        async with _aiosqlite.connect(db_path) as db:
+            db.row_factory = _aiosqlite.Row
+            cursor = await db.execute(
+                "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0",
+                (user_id,),
+            )
+            row = await cursor.fetchone()
+            unread = dict(row)["cnt"] if row else 0
+        await websocket.send_json({"type": "init", "unread_count": unread})
+
+        # Keep connection alive; listen for client pings
+        while True:
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        ws_manager.disconnect(user_id, websocket)
+        logger.info("WebSocket disconnected for user %d", user_id)

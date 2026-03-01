@@ -497,6 +497,41 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_question_history_user_fach
             ON question_history(user_id, fach, gesehen_am);
 
+        -- Supreme 13.0 Phase 5-6: Performance indexes for production scale
+        CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+        CREATE INDEX IF NOT EXISTS idx_users_clerk_id ON users(clerk_user_id);
+        CREATE INDEX IF NOT EXISTS idx_users_tier ON users(subscription_tier);
+        CREATE INDEX IF NOT EXISTS idx_quiz_results_user ON quiz_results(user_id, completed_at);
+        CREATE INDEX IF NOT EXISTS idx_quiz_results_subject ON quiz_results(user_id, subject);
+        CREATE INDEX IF NOT EXISTS idx_activity_log_user ON activity_log(user_id, created_at);
+        CREATE INDEX IF NOT EXISTS idx_activity_log_type ON activity_log(user_id, activity_type, created_at);
+        CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id, updated_at);
+        CREATE INDEX IF NOT EXISTS idx_gamification_user ON gamification(user_id);
+        CREATE INDEX IF NOT EXISTS idx_tournaments_date ON tournaments(date, status);
+        CREATE INDEX IF NOT EXISTS idx_tournament_entries_user ON tournament_entries(user_id, tournament_id);
+        CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests(user_id, quest_date);
+        CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, is_read, created_at);
+        CREATE INDEX IF NOT EXISTS idx_spaced_repetition_review ON spaced_repetition(user_id, next_review);
+        CREATE INDEX IF NOT EXISTS idx_flashcards_review ON flashcards(user_id, next_review);
+        CREATE INDEX IF NOT EXISTS idx_ki_relationship_user ON ki_relationship(user_id);
+        CREATE INDEX IF NOT EXISTS idx_battle_pass_user ON battle_pass(user_id);
+        CREATE INDEX IF NOT EXISTS idx_xp_log_user ON xp_log(user_id, created_at);
+
+        -- Supreme 13.0 Phase 10: Noten-Prognose table
+        CREATE TABLE IF NOT EXISTS noten_prognose (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            fach TEXT NOT NULL,
+            aktuelle_note REAL,
+            prognose_note REAL,
+            trend TEXT DEFAULT 'stabil',
+            confidence REAL DEFAULT 0.5,
+            analyse TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        CREATE INDEX IF NOT EXISTS idx_noten_prognose_user ON noten_prognose(user_id, fach);
+
         CREATE TABLE IF NOT EXISTS battle_pass (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL UNIQUE,
@@ -557,6 +592,10 @@ async def init_db():
         ("ki_relationship", "lieblingserklaerung", "TEXT DEFAULT 'Analogien'"),
         # Supreme 11.0: Parent link verification
         ("parent_links", "verification_token", "TEXT DEFAULT ''"),
+        # Supreme 13.0: User streak tracking
+        ("users", "streak_days", "INTEGER DEFAULT 0"),
+        ("users", "longest_streak", "INTEGER DEFAULT 0"),
+        ("users", "last_active", "TEXT DEFAULT ''"),
     ]
     for table, column, col_type in migrations:
         try:

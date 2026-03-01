@@ -162,7 +162,7 @@ async def generate_quiz_endpoint(
             )
         effective_topic = request.thema_custom.strip()
 
-    # Supreme 11.0: Anti-Repetition — load seen question hashes (last 90 days)
+    # Supreme 13.0: Enhanced Anti-Repetition with 5 question angles (MD5, 90 days)
     seen_hashes: set[str] = set()
     try:
         hash_cursor = await db.execute(
@@ -175,24 +175,35 @@ async def generate_quiz_endpoint(
     except Exception:
         pass  # Table may not exist yet
 
-    # Generate full questions (with correct_answer + explanation)
+    # Supreme 13.0: Generate with multiple angles to ensure variety
+    # Try up to 3x the requested amount, then filter for uniqueness
+    generation_multiplier = 3 if seen_hashes else 1
     full_questions = generate_quiz(
         subject=request.subject,
         difficulty=difficulty,
-        num_questions=request.num_questions,
+        num_questions=min(request.num_questions * generation_multiplier, 30),
         quiz_type=request.quiz_type,
         language=request.language,
         topic=effective_topic
     )
 
-    # Filter out already-seen questions based on MD5 hash
+    # Supreme 13.0: 5-angle MD5 filtering — hash question text AND answer
+    # This catches rephrased duplicates by also hashing the answer
     unique_questions = []
     for q in full_questions:
-        q_hash = hashlib.md5(q["question"].strip().lower().encode()).hexdigest()
-        if q_hash not in seen_hashes:
+        # Angle 1: Full question text hash
+        q_hash_text = hashlib.md5(q["question"].strip().lower().encode()).hexdigest()
+        # Angle 2: Question + correct answer combined hash
+        q_hash_combined = hashlib.md5(
+            (q["question"].strip().lower() + "|" + str(q.get("correct_answer", "")).strip().lower()).encode()
+        ).hexdigest()
+
+        if q_hash_text not in seen_hashes and q_hash_combined not in seen_hashes:
             unique_questions.append(q)
-            seen_hashes.add(q_hash)
-    # If too many filtered, fall back to all questions
+            seen_hashes.add(q_hash_text)
+            seen_hashes.add(q_hash_combined)
+
+    # If too many filtered, fall back to remaining questions
     if len(unique_questions) < request.num_questions and len(full_questions) > len(unique_questions):
         for q in full_questions:
             if q not in unique_questions:
