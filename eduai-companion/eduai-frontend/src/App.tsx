@@ -23,6 +23,7 @@ import CalendarPage from "./pages/CalendarPage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
@@ -129,6 +130,7 @@ function App() {
       <main className="flex-1 overflow-auto">
         {renderPage()}
       </main>
+      <PWAInstallBanner />
     </div>
   );
 }

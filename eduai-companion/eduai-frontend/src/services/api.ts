@@ -794,6 +794,7 @@ export interface LearningProfileFull {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const adminApi = {
   stats: () => request<any>("/api/admin/stats"),
+  analytics: (days: number = 7) => request<any>(`/api/admin/analytics?days=${days}`),
   searchUsers: (query: string) =>
     request<{ users: any[] }>(`/api/admin/search-users?query=${encodeURIComponent(query)}`),
   grantSubscription: (data: { user_id: number; tier: string; duration_days: number }) =>

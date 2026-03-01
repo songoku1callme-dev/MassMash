@@ -18,7 +18,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+ADMIN_EMAILS = ",".join(filter(None, [
+    os.getenv("ADMIN_EMAIL", ""),
+    os.getenv("ADMIN_EMAIL_2", ""),
+    os.getenv("ADMIN_EMAIL_3", ""),
+    os.getenv("ADMIN_EMAIL_4", ""),
+]))
+
+
+def is_admin_email(email: str) -> bool:
+    """Check if email is in the admin list."""
+    return email in [e.strip() for e in ADMIN_EMAILS.split(",") if e.strip()]
 
 
 async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
@@ -27,9 +37,8 @@ async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
         return True
     if user.get("username", "") == "admin":
         return True
-    if "admin" in user.get("email", "").lower():
-        return True
-    if ADMIN_EMAIL and user.get("email", "") == ADMIN_EMAIL:
+    user_email = user.get("email", "")
+    if is_admin_email(user_email):
         return True
     try:
         cursor = await db.execute(
@@ -322,6 +331,84 @@ async def redeem_coupon(
         "tier": coupon["tier"],
         "duration_days": coupon["duration_days"],
         "expires_at": expires_at,
+    }
+
+
+@router.get("/analytics")
+async def get_analytics(
+    days: int = 7,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Return analytics data for admin dashboard (daily signups, revenue, popular subjects)."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    # Daily new users for the last N days
+    cursor = await db.execute(
+        """SELECT date(created_at) as day, COUNT(*) as count
+        FROM users WHERE created_at > datetime('now', ?)
+        GROUP BY day ORDER BY day""",
+        (f"-{days} days",),
+    )
+    rows = await cursor.fetchall()
+    daily_signups = [{"day": r[0], "count": r[1]} for r in rows]
+
+    # Revenue estimate (count of paid users)
+    cursor = await db.execute(
+        """SELECT subscription_tier, billing_period, COUNT(*) as cnt
+        FROM users WHERE subscription_tier != 'free'
+        GROUP BY subscription_tier, billing_period"""
+    )
+    rows = await cursor.fetchall()
+    revenue_breakdown = []
+    total_mrr = 0.0
+    for r in rows:
+        tier, period, cnt = r[0], r[1] or "monthly", r[2]
+        if tier == "pro":
+            price = 4.99 if period == "monthly" else 39.99 / 12
+        elif tier == "max":
+            price = 9.99 if period == "monthly" else 79.99 / 12
+        else:
+            price = 0
+        mrr = price * cnt
+        total_mrr += mrr
+        revenue_breakdown.append({"tier": tier, "period": period, "users": cnt, "mrr": round(mrr, 2)})
+
+    # Popular subjects (from chat sessions)
+    cursor = await db.execute(
+        """SELECT subject, COUNT(*) as cnt FROM chat_sessions
+        GROUP BY subject ORDER BY cnt DESC LIMIT 10"""
+    )
+    rows = await cursor.fetchall()
+    popular_subjects = [{"subject": r[0], "count": r[1]} for r in rows]
+
+    # Tournament participants
+    try:
+        cursor = await db.execute(
+            "SELECT COUNT(DISTINCT user_id) FROM tournament_participants"
+        )
+        row = await cursor.fetchone()
+        tournament_participants = row[0] if row else 0
+    except Exception:
+        tournament_participants = 0
+
+    # IQ test stats
+    try:
+        cursor = await db.execute(
+            "SELECT COUNT(*), AVG(iq_score) FROM iq_results"
+        )
+        row = await cursor.fetchone()
+        iq_tests = {"total": row[0] if row else 0, "avg_iq": round(row[1], 1) if row and row[1] else 0}
+    except Exception:
+        iq_tests = {"total": 0, "avg_iq": 0}
+
+    return {
+        "daily_signups": daily_signups,
+        "revenue": {"breakdown": revenue_breakdown, "total_mrr": round(total_mrr, 2)},
+        "popular_subjects": popular_subjects,
+        "tournament_participants": tournament_participants,
+        "iq_tests": iq_tests,
     }
 
 

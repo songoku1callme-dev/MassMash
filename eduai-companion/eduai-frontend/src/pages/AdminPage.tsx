@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Shield, Users, BarChart3, Ticket, Search, Gift, Loader2, Crown, Star
+  Shield, Users, BarChart3, Ticket, Search, Gift, Loader2, Crown, Star,
+  TrendingUp, DollarSign, Brain
 } from "lucide-react";
 
 interface AdminStats {
@@ -40,8 +41,17 @@ interface Coupon {
   created_at: string;
 }
 
+interface AnalyticsData {
+  daily_signups: { day: string; count: number }[];
+  revenue: { breakdown: { tier: string; period: string; users: number; mrr: number }[]; total_mrr: number };
+  popular_subjects: { subject: string; count: number }[];
+  tournament_participants: number;
+  iq_tests: { total: number; avg_iq: number };
+}
+
 export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [users, setUsers] = useState<SearchUser[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,12 +73,14 @@ export default function AdminPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statsData, couponsData] = await Promise.all([
+      const [statsData, couponsData, analytics] = await Promise.all([
         adminApi.stats(),
         adminApi.coupons(),
+        adminApi.analytics(30).catch(() => null),
       ]);
       setStats(statsData);
       setCoupons(couponsData.coupons || []);
+      if (analytics) setAnalyticsData(analytics);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Fehler beim Laden");
     } finally {
@@ -297,6 +309,118 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       </div>
+      {/* Analytics Dashboard */}
+      {analyticsData && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                Neue User (30 Tage)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analyticsData.daily_signups.length === 0 ? (
+                <p className="text-sm text-gray-400">Keine Daten</p>
+              ) : (
+                <div className="flex items-end gap-1 h-32">
+                  {analyticsData.daily_signups.slice(-14).map((d, i) => {
+                    const max = Math.max(...analyticsData.daily_signups.slice(-14).map(x => x.count), 1);
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[10px] text-gray-400">{d.count}</span>
+                        <div
+                          className="w-full bg-blue-500 rounded-t"
+                          style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? 4 : 1 }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-emerald-600" />
+                Revenue (MRR)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-emerald-600">{analyticsData.revenue.total_mrr.toFixed(2)}€</p>
+              <p className="text-xs text-gray-400 mt-1">Monatlich wiederkehrend</p>
+              <div className="mt-3 space-y-1">
+                {analyticsData.revenue.breakdown.map((b, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-gray-600 dark:text-gray-400">{b.tier} ({b.period})</span>
+                    <span className="font-medium">{b.users} User = {b.mrr}€</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-indigo-600" />
+                Beliebteste Faecher
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {analyticsData.popular_subjects.length === 0 ? (
+                <p className="text-sm text-gray-400">Keine Daten</p>
+              ) : (
+                <div className="space-y-2">
+                  {analyticsData.popular_subjects.slice(0, 5).map((s, i) => {
+                    const max = analyticsData.popular_subjects[0]?.count || 1;
+                    return (
+                      <div key={i}>
+                        <div className="flex justify-between text-sm mb-0.5">
+                          <span className="text-gray-700 dark:text-gray-300">{s.subject}</span>
+                          <span className="text-gray-400">{s.count}</span>
+                        </div>
+                        <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                          <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(s.count / max) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Brain className="w-5 h-5 text-purple-600" />
+                IQ-Test Statistiken
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">{analyticsData.iq_tests.total}</p>
+                  <p className="text-xs text-gray-400">Tests absolviert</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-purple-600">{analyticsData.iq_tests.avg_iq || "—"}</p>
+                  <p className="text-xs text-gray-400">Durchschnitt-IQ</p>
+                </div>
+              </div>
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Turnier-Teilnehmer</span>
+                  <span className="font-medium">{analyticsData.tournament_participants}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
