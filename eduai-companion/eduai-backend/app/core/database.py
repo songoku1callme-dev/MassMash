@@ -298,7 +298,7 @@ async def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             FOREIGN KEY (test_id) REFERENCES iq_tests(id)
         );
-    "")
+    """)
 
     await db.commit()
 
