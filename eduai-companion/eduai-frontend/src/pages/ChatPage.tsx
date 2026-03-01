@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles
@@ -148,7 +151,10 @@ export default function ChatPage() {
                 >
                   {msg.role === "assistant" ? (
                     <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-code:text-blue-600 dark:prose-code:text-blue-400">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown
+                        remarkPlugins={[remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                      >{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>

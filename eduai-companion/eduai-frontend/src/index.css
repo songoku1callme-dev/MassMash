@@ -58,6 +58,28 @@
   @apply text-gray-100;
 }
 
+/* KaTeX dark mode */
+.dark .katex {
+  color: #e5e7eb;
+}
+
+.dark .katex .mord,
+.dark .katex .mbin,
+.dark .katex .mrel,
+.dark .katex .mopen,
+.dark .katex .mclose,
+.dark .katex .mpunct,
+.dark .katex .minner {
+  color: #e5e7eb;
+}
+
+/* KaTeX overflow handling */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem 0;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
