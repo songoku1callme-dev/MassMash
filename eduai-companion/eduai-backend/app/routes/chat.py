@@ -6,7 +6,8 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, generate_ai_response, build_system_prompt
+from app.services.ai_engine import detect_subject, build_system_prompt
+from app.services.groq_llm import call_groq_llm
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -64,14 +65,20 @@ async def send_message(
     }
     messages.append(user_msg)
 
-    # Generate AI response
-    ai_response = generate_ai_response(
-        message=request.message,
+    # Generate AI response via Groq LLM (falls back to template engine if no API key)
+    system_prompt = build_system_prompt(
         subject=subject,
         level=level,
         language=request.language,
         detail_level=request.detail_level,
-        chat_history=messages
+    )
+    ai_response = call_groq_llm(
+        prompt=request.message,
+        system_prompt=system_prompt,
+        subject=subject,
+        level=level,
+        language=request.language,
+        chat_history=messages,
     )
 
     # Add assistant message

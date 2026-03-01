@@ -33,6 +33,7 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: str = ""
     token_type: str = "bearer"
     user: UserResponse
 
@@ -42,6 +43,15 @@ class UserUpdate(BaseModel):
     school_grade: Optional[str] = None
     school_type: Optional[str] = None
     preferred_language: Optional[str] = None
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class RefreshTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 # Chat schemas
@@ -89,6 +99,7 @@ class QuizGenerateRequest(BaseModel):
 
 
 class QuizQuestion(BaseModel):
+    """Full quiz question (internal use only — includes correct_answer)."""
     id: int
     question: str
     options: Optional[List[str]] = None  # For MCQ
@@ -98,16 +109,38 @@ class QuizQuestion(BaseModel):
     topic: str
 
 
+class QuizQuestionPublic(BaseModel):
+    """Quiz question sent to the client — no correct_answer or explanation."""
+    id: int
+    question: str
+    options: Optional[List[str]] = None
+    difficulty: str
+    topic: str
+
+
 class QuizResponse(BaseModel):
     quiz_id: str
     subject: str
     difficulty: str
-    questions: List[QuizQuestion]
+    questions: List[QuizQuestionPublic]
+
+
+class AnswerCheckRequest(BaseModel):
+    quiz_id: str
+    question_id: int
+    user_answer: str
+
+
+class AnswerCheckResponse(BaseModel):
+    correct: bool
+    correct_answer: str
+    explanation: str
 
 
 class QuizSubmitRequest(BaseModel):
+    quiz_id: str
     subject: str
-    questions: List[dict]  # [{question_id, user_answer, correct_answer}]
+    answers: List[dict]  # [{question_id, user_answer}]
     difficulty: str = "intermediate"
 
 

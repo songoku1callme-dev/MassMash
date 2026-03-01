@@ -4,8 +4,14 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 import aiosqlite
 from app.core.database import get_db
-from app.core.auth import get_password_hash, verify_password, create_access_token, get_current_user
-from app.models.schemas import UserRegister, UserLogin, TokenResponse, UserResponse, UserUpdate
+from app.core.auth import (
+    get_password_hash, verify_password, create_access_token,
+    create_refresh_token, decode_token, get_current_user,
+)
+from app.models.schemas import (
+    UserRegister, UserLogin, TokenResponse, UserResponse, UserUpdate,
+    RefreshTokenRequest, RefreshTokenResponse,
+)
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -54,10 +60,12 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
     )
     await db.commit()
 
-    token = create_access_token(data={"sub": user_id})
+    access_token = create_access_token(data={"sub": user_id})
+    refresh_token = create_refresh_token(data={"sub": user_id})
 
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         user=UserResponse(
             id=user_id,
             email=user.email,
@@ -86,10 +94,12 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
         )
 
     user_dict = dict(user)
-    token = create_access_token(data={"sub": user_dict["id"]})
+    access_token = create_access_token(data={"sub": user_dict["id"]})
+    refresh_token = create_refresh_token(data={"sub": user_dict["id"]})
 
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         user=UserResponse(
             id=user_dict["id"],
             email=user_dict["email"],
@@ -161,3 +171,26 @@ async def update_me(
         preferred_language=user["preferred_language"],
         created_at=user["created_at"]
     )
+
+
+@router.post("/refresh", response_model=RefreshTokenResponse)
+async def refresh_access_token(
+    request: RefreshTokenRequest,
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    """Exchange a valid refresh token for a new access token."""
+    from jose import JWTError
+    try:
+        payload = decode_token(request.refresh_token)
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Invalid token type")
+        user_id = int(payload.get("sub"))
+    except (JWTError, ValueError, TypeError):
+        raise HTTPException(status_code=401, detail="Invalid or expired refresh token")
+
+    cursor = await db.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+    if not await cursor.fetchone():
+        raise HTTPException(status_code=401, detail="User not found")
+
+    new_access_token = create_access_token(data={"sub": user_id})
+    return RefreshTokenResponse(access_token=new_access_token)

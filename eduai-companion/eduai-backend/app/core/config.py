@@ -1,14 +1,26 @@
-"""Application configuration."""
+"""Application configuration.
+
+SECRET_KEY must be set via environment variable in production.
+Generate one with: python -c "import secrets; print(secrets.token_urlsafe(64))"
+"""
 import os
+import secrets
+import logging
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
+
+# Marker value — if SECRET_KEY equals this, we know it was never overridden
+_INSECURE_DEFAULT = "__CHANGE_ME_IN_PRODUCTION__"
 
 
 class Settings(BaseSettings):
     """App settings loaded from environment variables."""
     APP_NAME: str = "EduAI Companion"
-    SECRET_KEY: str = "eduai-secret-key-change-in-production-2024"
+    SECRET_KEY: str = _INSECURE_DEFAULT
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Short-lived access token (30 min)
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7     # Refresh token valid for 7 days
     DATABASE_URL: str = ""
     GROQ_API_KEY: str = ""
 
@@ -28,3 +40,12 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# If no SECRET_KEY was provided, generate a random one and warn
+if settings.SECRET_KEY == _INSECURE_DEFAULT:
+    settings.SECRET_KEY = secrets.token_urlsafe(64)
+    logger.warning(
+        "SECRET_KEY not set — using auto-generated random key. "
+        "Sessions will NOT survive restarts. "
+        "Set SECRET_KEY in .env or environment for production."
+    )

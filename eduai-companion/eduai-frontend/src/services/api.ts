@@ -80,10 +80,17 @@ export const quizApi = {
   }) => request<QuizData>("/api/quiz/generate", { method: "POST", body: data }),
 
   submit: (data: {
+    quiz_id: string;
     subject: string;
-    questions: { question_id: number; user_answer: string; correct_answer: string }[];
+    answers: { question_id: number; user_answer: string }[];
     difficulty?: string;
   }) => request<QuizResult>("/api/quiz/submit", { method: "POST", body: data }),
+
+  checkAnswer: (data: {
+    quiz_id: string;
+    question_id: number;
+    user_answer: string;
+  }) => request<AnswerCheckResult>("/api/quiz/check-answer", { method: "POST", body: data }),
 
   history: () => request<QuizHistoryItem[]>("/api/quiz/history"),
 };
@@ -158,10 +165,14 @@ export interface QuizQuestion {
   id: number;
   question: string;
   options: string[] | null;
-  correct_answer: string;
-  explanation: string;
   difficulty: string;
   topic: string;
+}
+
+export interface AnswerCheckResult {
+  correct: boolean;
+  correct_answer: string;
+  explanation: string;
 }
 
 export interface QuizResult {

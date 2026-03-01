@@ -1,4 +1,9 @@
-"""Authentication utilities."""
+"""Authentication utilities.
+
+Supports short-lived access tokens and long-lived refresh tokens.
+Access tokens expire after ACCESS_TOKEN_EXPIRE_MINUTES (default 30 min).
+Refresh tokens expire after REFRESH_TOKEN_EXPIRE_DAYS (default 7 days).
+"""
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
@@ -21,20 +26,37 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """Create a short-lived access token (default 30 min)."""
     to_encode = data.copy()
-    # Ensure sub is a string for JWT compliance
     if "sub" in to_encode:
         to_encode["sub"] = str(to_encode["sub"])
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
+    expire = datetime.now(timezone.utc) + (
+        expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_refresh_token(data: dict) -> str:
+    """Create a long-lived refresh token (default 7 days)."""
+    to_encode = data.copy()
+    if "sub" in to_encode:
+        to_encode["sub"] = str(to_encode["sub"])
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def decode_token(token: str) -> dict:
+    """Decode and validate a JWT token. Raises JWTError on failure."""
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: aiosqlite.Connection = Depends(get_db),
 ) -> dict:
-    """Extract and validate user from JWT token."""
+    """Extract and validate user from JWT access token."""
     token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -42,11 +64,15 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = decode_token(token)
+        # Accept both access tokens and legacy tokens (without type field)
+        token_type = payload.get("type", "access")
+        if token_type not in ("access",):
+            raise credentials_exception
         user_id = int(payload.get("sub"))
         if user_id is None:
             raise credentials_exception
-    except JWTError:
+    except (JWTError, ValueError, TypeError):
         raise credentials_exception
 
     cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))

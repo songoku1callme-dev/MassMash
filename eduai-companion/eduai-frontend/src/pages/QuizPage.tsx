@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem } from "../services/api";
+import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
 import {
   BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2
@@ -33,6 +33,7 @@ export default function QuizPage() {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [showAnswer, setShowAnswer] = useState(false);
+  const [answerResult, setAnswerResult] = useState<AnswerCheckResult | null>(null);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<QuizHistoryItem[]>([]);
@@ -75,10 +76,22 @@ export default function QuizPage() {
     }
   };
 
-  const selectAnswer = (questionId: number, answer: string) => {
-    if (showAnswer) return;
+  const selectAnswer = async (questionId: number, answer: string) => {
+    if (showAnswer || !quiz) return;
     setAnswers({ ...answers, [questionId]: answer });
     setShowAnswer(true);
+    // Check answer against server
+    try {
+      const checkResult = await quizApi.checkAnswer({
+        quiz_id: quiz.quiz_id,
+        question_id: questionId,
+        user_answer: answer,
+      });
+      setAnswerResult(checkResult);
+    } catch (err) {
+      console.error("Failed to check answer:", err);
+      setAnswerResult(null);
+    }
   };
 
   const submitFillAnswer = () => {
@@ -93,6 +106,7 @@ export default function QuizPage() {
     if (currentQ < quiz.questions.length - 1) {
       setCurrentQ(currentQ + 1);
       setShowAnswer(false);
+      setAnswerResult(null);
     } else {
       submitQuiz();
     }
@@ -102,14 +116,14 @@ export default function QuizPage() {
     if (!quiz) return;
     setLoading(true);
     try {
-      const questions = quiz.questions.map((q) => ({
+      const answersList = quiz.questions.map((q) => ({
         question_id: q.id,
         user_answer: answers[q.id] || "",
-        correct_answer: q.correct_answer,
       }));
       const res = await quizApi.submit({
+        quiz_id: quiz.quiz_id,
         subject: quiz.subject,
-        questions,
+        answers: answersList,
         difficulty: quiz.difficulty,
       });
       setResult(res);
@@ -129,6 +143,7 @@ export default function QuizPage() {
     setAnswers({});
     setCurrentQ(0);
     setShowAnswer(false);
+    setAnswerResult(null);
   };
 
   // Setup screen
@@ -243,7 +258,7 @@ export default function QuizPage() {
     const question = quiz.questions[currentQ];
     const isAnswered = showAnswer;
     const userAnswer = answers[question.id];
-    const isCorrect = userAnswer?.toLowerCase() === question.correct_answer.toLowerCase();
+    const isCorrect = answerResult?.correct ?? false;
     const hasOptions = question.options && question.options.length > 0;
 
     return (
@@ -276,7 +291,7 @@ export default function QuizPage() {
               <div className="space-y-3">
                 {question.options!.map((opt, idx) => {
                   const isSelected = userAnswer === opt;
-                  const isRight = opt === question.correct_answer;
+                  const isRight = answerResult ? opt === answerResult.correct_answer : false;
                   let optionStyle = "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600";
                   if (isAnswered) {
                     if (isRight) optionStyle = "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20";
@@ -328,9 +343,9 @@ export default function QuizPage() {
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Deine Antwort: <strong>{userAnswer}</strong>
                     </p>
-                    {!isCorrect && (
+                    {!isCorrect && answerResult && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Richtige Antwort: <strong>{question.correct_answer}</strong>
+                        Richtige Antwort: <strong>{answerResult.correct_answer}</strong>
                       </p>
                     )}
                   </div>
@@ -339,10 +354,10 @@ export default function QuizPage() {
             )}
 
             {/* Explanation */}
-            {isAnswered && question.explanation && (
+            {isAnswered && answerResult?.explanation && (
               <div className="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
                 <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Erklaerung:</p>
-                <p className="text-sm text-blue-700 dark:text-blue-400">{question.explanation}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-400">{answerResult.explanation}</p>
               </div>
             )}
           </CardContent>
