@@ -145,6 +145,88 @@ async def get_memory_stats(
     }
 
 
+@router.get("/profile")
+async def get_learning_profile(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get full User Memory 2.0 learning profile.
+
+    Returns: schwache_themen, starke_themen, letzte_fehler, niveau_pro_fach, quiz_streak etc.
+    """
+    user_id = current_user["id"]
+
+    # Weak topics
+    cursor = await db.execute(
+        """SELECT topic_id, subject, topic_name, feedback_score, times_asked, times_correct
+        FROM user_memories WHERE user_id = ? AND schwach = 1
+        ORDER BY feedback_score ASC LIMIT 20""",
+        (user_id,),
+    )
+    weak = [dict(r) for r in await cursor.fetchall()]
+
+    # Strong topics (feedback_score > 2)
+    cursor = await db.execute(
+        """SELECT topic_id, subject, topic_name, feedback_score, times_asked, times_correct
+        FROM user_memories WHERE user_id = ? AND schwach = 0 AND feedback_score > 2
+        ORDER BY feedback_score DESC LIMIT 20""",
+        (user_id,),
+    )
+    strong = [dict(r) for r in await cursor.fetchall()]
+
+    # Last errors (most recent weak entries)
+    cursor = await db.execute(
+        """SELECT topic_id, subject, topic_name, letzte_frage
+        FROM user_memories WHERE user_id = ? AND schwach = 1
+        ORDER BY letzte_frage DESC LIMIT 10""",
+        (user_id,),
+    )
+    last_errors = [dict(r) for r in await cursor.fetchall()]
+
+    # Niveau pro Fach
+    cursor = await db.execute(
+        """SELECT subject,
+            COUNT(*) as total,
+            SUM(CASE WHEN schwach = 1 THEN 1 ELSE 0 END) as weak_count,
+            AVG(feedback_score) as avg_score
+        FROM user_memories WHERE user_id = ?
+        GROUP BY subject""",
+        (user_id,),
+    )
+    niveau = []
+    for r in await cursor.fetchall():
+        d = dict(r)
+        avg = d.get("avg_score", 0) or 0
+        if avg >= 3:
+            level = "fortgeschritten"
+        elif avg >= 0:
+            level = "mittel"
+        else:
+            level = "anfaenger"
+        niveau.append({**d, "niveau": level})
+
+    # Gamification stats
+    gam_data = {}
+    try:
+        cursor = await db.execute(
+            "SELECT xp, level, level_name, streak_days, quizzes_completed FROM gamification WHERE user_id = ?",
+            (user_id,),
+        )
+        gam_row = await cursor.fetchone()
+        if gam_row:
+            gam_data = dict(gam_row)
+    except Exception:
+        pass
+
+    return {
+        "schwache_themen": weak,
+        "starke_themen": strong,
+        "letzte_fehler": last_errors,
+        "niveau_pro_fach": niveau,
+        "gamification": gam_data,
+    }
+
+
 @router.get("/adaptive-prompt")
 async def get_adaptive_prompt(
     subject: str,

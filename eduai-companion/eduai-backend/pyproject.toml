@@ -23,6 +23,8 @@ pytesseract = "^0.3.13"
 pillow = "^12.1.1"
 sympy = "^1.14.0"
 stripe = "^14.4.0"
+httpx = "^0.28.1"
+tavily-python = "^0.7.22"
 
 
 [tool.poetry.group.dev.dependencies]

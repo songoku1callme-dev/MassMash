@@ -92,6 +92,7 @@ async def start_simulation(
     subject: str,
     duration_minutes: int = 180,
     num_questions: int = 20,
+    thema_custom: str = "",
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
@@ -101,6 +102,7 @@ async def start_simulation(
         subject: Subject for the exam (e.g. 'math', 'german')
         duration_minutes: Exam duration (180 or 240 minutes)
         num_questions: Number of questions (default 20)
+        thema_custom: Optional free text topic for the exam
     """
     user_id = current_user["id"]
     tier = await _get_user_tier(user_id, db)
@@ -109,6 +111,20 @@ async def start_simulation(
     # Clamp duration
     duration_minutes = max(60, min(300, duration_minutes))
 
+    # Use custom topic if provided, otherwise default
+    topic_label = thema_custom.strip() if thema_custom and thema_custom.strip() else f"Abitur {subject}"
+
+    # If custom topic provided, try Tavily search for context
+    tavily_context = ""
+    if thema_custom and thema_custom.strip():
+        try:
+            from app.routes.research import _search_tavily
+            results = await _search_tavily(f"Abitur {subject} {thema_custom} Aufgaben 2024 2025 2026", max_results=3)
+            for r in results:
+                tavily_context += f"\nQuelle: {r.get('title', '')}\n{r.get('content', '')}\n"
+        except Exception as e:
+            logger.warning("Tavily search failed for Abitur topic: %s", e)
+
     # Generate Abitur-level questions
     questions = generate_quiz(
         subject=subject,
@@ -116,7 +132,7 @@ async def start_simulation(
         num_questions=num_questions,
         quiz_type="mcq",
         language="de",
-        topic=f"Abitur {subject}",
+        topic=topic_label,
     )
 
     # Store simulation
@@ -278,6 +294,13 @@ async def submit_simulation(
         (score_percent, note_punkte, json.dumps(graded, ensure_ascii=False), simulation_id),
     )
     await db.commit()
+
+    # Award gamification XP for Abitur completion
+    try:
+        from app.routes.gamification import add_xp
+        await add_xp(user_id, 50, "abitur", db)
+    except Exception:
+        pass  # Non-fatal
 
     return {
         "simulation_id": simulation_id,

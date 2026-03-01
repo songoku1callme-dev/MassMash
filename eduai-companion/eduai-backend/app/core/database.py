@@ -168,6 +168,37 @@ async def init_db():
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS gamification (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL UNIQUE,
+            xp INTEGER DEFAULT 0,
+            level INTEGER DEFAULT 1,
+            level_name TEXT DEFAULT 'Neuling',
+            streak_days INTEGER DEFAULT 0,
+            streak_last_date TEXT DEFAULT '',
+            quizzes_completed INTEGER DEFAULT 0,
+            chats_sent INTEGER DEFAULT 0,
+            abitur_completed INTEGER DEFAULT 0,
+            achievements TEXT DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS group_chats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            subject TEXT DEFAULT 'general',
+            created_by INTEGER NOT NULL,
+            members TEXT DEFAULT '[]',
+            messages TEXT DEFAULT '[]',
+            max_members INTEGER DEFAULT 10,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS research_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,

@@ -99,9 +99,10 @@ class ChatSessionResponse(BaseModel):
 class QuizGenerateRequest(BaseModel):
     subject: str
     topic: Optional[str] = None
+    thema_custom: Optional[str] = None  # Free text topic input (Pro+)
     difficulty: str = "intermediate"
-    num_questions: int = 5
-    quiz_type: str = "mcq"  # "mcq" or "fill_blank"
+    num_questions: int = 5  # 5, 10, 20, 50
+    quiz_type: str = "mixed"  # "mcq", "true_false", "fill_blank", "free_text", "mixed"
     language: str = "de"
 
 
@@ -157,6 +158,8 @@ class QuizResultResponse(BaseModel):
     score: float
     feedback: str
     new_proficiency: str
+    weak_topic_detected: Optional[str] = None
+    weak_topic_suggestion: Optional[str] = None
 
 
 # Profile schemas

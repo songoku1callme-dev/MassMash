@@ -184,6 +184,7 @@ export const quizApi = {
     quiz_type?: string;
     language?: string;
     topic?: string;
+    thema_custom?: string;
   }) => request<QuizData>("/api/quiz/generate", { method: "POST", body: data }),
 
   submit: (data: {
@@ -397,6 +398,8 @@ export interface QuizResult {
   score: number;
   feedback: string;
   new_proficiency: string;
+  weak_topic_detected?: string;
+  weak_topic_suggestion?: string;
 }
 
 export interface QuizHistoryItem {
@@ -634,9 +637,9 @@ export interface StudyPlanListItem {
 }
 
 export const abiturApi = {
-  start: (data: { subject: string; duration_minutes?: number; num_questions?: number }) =>
+  start: (data: { subject: string; duration_minutes?: number; num_questions?: number; thema_custom?: string }) =>
     request<AbiturSimulation>(
-      `/api/abitur/start?subject=${data.subject}&duration_minutes=${data.duration_minutes || 180}&num_questions=${data.num_questions || 20}`,
+      `/api/abitur/start?subject=${data.subject}&duration_minutes=${data.duration_minutes || 180}&num_questions=${data.num_questions || 20}${data.thema_custom ? `&thema_custom=${encodeURIComponent(data.thema_custom)}` : ""}`,
       { method: "POST" }
     ),
   pause: (data: { simulation_id: number; elapsed_seconds?: number }) =>
@@ -705,3 +708,84 @@ export const researchApi = {
     ),
   history: () => request<{ results: { id: number; query: string; source_count: number; created_at: string }[] }>("/api/research/history"),
 };
+
+// Gamification
+export interface GamificationProfile {
+  xp: number;
+  level: number;
+  level_name: string;
+  level_emoji: string;
+  xp_to_next_level: number;
+  next_level_name: string;
+  streak_days: number;
+  quizzes_completed: number;
+  chats_sent: number;
+  abitur_completed: number;
+  achievements: { id: string; earned_at: string }[];
+  all_achievements: { id: string; name: string; desc: string; emoji: string; xp_reward: number }[];
+  all_levels: { level: number; name: string; min_xp: number; emoji: string }[];
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  xp: number;
+  level: number;
+  level_name: string;
+  streak_days: number;
+  is_you: boolean;
+}
+
+export const gamificationApi = {
+  profile: () => request<GamificationProfile>("/api/gamification/profile"),
+  leaderboard: () => request<{ leaderboard: LeaderboardEntry[] }>("/api/gamification/leaderboard"),
+  addXp: (xp: number, activity: string) =>
+    request<{ xp_gained: number; total_xp: number; level: number; level_name: string }>(
+      `/api/gamification/add-xp?xp=${xp}&activity=${activity}`, { method: "POST" }
+    ),
+};
+
+// Group Chats
+export interface GroupChat {
+  id: number;
+  name: string;
+  subject: string;
+  member_count: number;
+  max_members: number;
+  is_member: boolean;
+  created_at: string;
+}
+
+export interface GroupMessage {
+  user_id: number;
+  username: string;
+  content: string;
+  timestamp: string;
+}
+
+export const groupsApi = {
+  list: () => request<{ groups: GroupChat[] }>("/api/groups/list"),
+  create: (name: string, subject: string) =>
+    request<{ group_id: number; name: string; subject: string }>(
+      `/api/groups/create?name=${encodeURIComponent(name)}&subject=${subject}`, { method: "POST" }
+    ),
+  join: (groupId: number) =>
+    request<{ message: string; group_id: number }>(`/api/groups/${groupId}/join`, { method: "POST" }),
+  leave: (groupId: number) =>
+    request<{ message: string; group_id: number }>(`/api/groups/${groupId}/leave`, { method: "POST" }),
+  messages: (groupId: number) =>
+    request<{ messages: GroupMessage[]; group_id: number }>(`/api/groups/${groupId}/messages`),
+  send: (groupId: number, message: string) =>
+    request<{ message: string; msg: GroupMessage }>(
+      `/api/groups/${groupId}/send?message=${encodeURIComponent(message)}`, { method: "POST" }
+    ),
+};
+
+// Learning Profile (Memory 2.0)
+export interface LearningProfileFull {
+  schwache_themen: WeakTopic[];
+  starke_themen: WeakTopic[];
+  letzte_fehler: { topic_id: string; subject: string; topic_name: string; letzte_frage: string }[];
+  niveau_pro_fach: { subject: string; total: number; weak_count: number; avg_score: number; niveau: string }[];
+  gamification: { xp?: number; level?: number; level_name?: string; streak_days?: number; quizzes_completed?: number };
+}

@@ -332,9 +332,11 @@ def get_personalities(tier: str = "free") -> list[dict]:
 
     result = []
     for p in KI_PERSONALITIES:
+        is_accessible = p["tier"] in allowed_tiers
         result.append({
             **p,
-            "locked": p["tier"] not in allowed_tiers,
+            "locked": not is_accessible,
+            "accessible": is_accessible,
         })
     return result
 

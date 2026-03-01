@@ -109,6 +109,40 @@ async def send_message(
     except Exception as rag_err:
         logger.warning("RAG search failed (non-fatal): %s", rag_err)
 
+    # Fetch adaptive memory prompt for weak topics
+    memory_hint = ""
+    try:
+        mem_cursor = await db.execute(
+            """SELECT topic_name, feedback_score FROM user_memories
+            WHERE user_id = ? AND subject = ? AND schwach = 1
+            ORDER BY feedback_score ASC LIMIT 5""",
+            (user_id, subject),
+        )
+        mem_rows = await mem_cursor.fetchall()
+        if mem_rows:
+            weak_names = [dict(r)["topic_name"] for r in mem_rows if dict(r)["topic_name"]]
+            if weak_names:
+                memory_hint = (
+                    f"\nERINNERUNG: Der Sch\u00fcler hat Schwierigkeiten mit: {', '.join(weak_names)}. "
+                    "Erkl\u00e4re diese Themen besonders gr\u00fcndlich und gib zus\u00e4tzliche Beispiele.\n"
+                )
+    except Exception:
+        pass  # Non-fatal
+
+    # Master KI-Tutor System Prompt
+    master_prompt = (
+        "Du bist EduAI, der intelligenteste KI-Tutor Deutschlands. "
+        "Du unterrichtest Sch\u00fcler der Klassen 5-13 auf Abitur-Niveau.\n"
+        "REGELN:\n"
+        "1. Erkl\u00e4re Schritt f\u00fcr Schritt mit konkreten Beispielen\n"
+        "2. Verwende LaTeX f\u00fcr Mathematik: $F = m \\cdot a$\n"
+        "3. Strukturiere Antworten mit \u00dcberschriften und Aufz\u00e4hlungen\n"
+        "4. Gib am Ende immer 1-2 \u00dcbungsaufgaben\n"
+        "5. Passe dich dem Niveau des Sch\u00fclers an\n"
+        "6. Sei motivierend und ermutigend\n"
+        "7. Wenn du Quellen hast, zitiere sie\n"
+    )
+
     # Generate AI response via Groq LLM (falls back to template engine if no API key)
     system_prompt = build_system_prompt(
         subject=subject,
@@ -117,13 +151,17 @@ async def send_message(
         detail_level=request.detail_level,
     )
 
-    # Prepend personality prompt if available
+    # Combine: Master prompt + Personality + Memory + Subject-specific prompt
+    combined_prompt = master_prompt
     if personality_prompt:
-        system_prompt = f"{personality_prompt}\n\n{system_prompt}"
+        combined_prompt += f"\nPERS\u00d6NLICHKEIT: {personality_prompt}\n"
+    if memory_hint:
+        combined_prompt += memory_hint
+    combined_prompt += f"\n{system_prompt}"
 
     ai_response = call_groq_llm(
         prompt=request.message,
-        system_prompt=system_prompt,
+        system_prompt=combined_prompt,
         subject=subject,
         level=level,
         language=request.language,
@@ -132,6 +170,13 @@ async def send_message(
         is_pro=is_pro,
         temperature_override=personality_temperature,
     )
+
+    # Award gamification XP for chat
+    try:
+        from app.routes.gamification import add_xp
+        await add_xp(user_id, 5, "chat", db)
+    except Exception:
+        pass  # Non-fatal
 
     # Append source references if RAG provided context
     if rag_sources and rag_context:

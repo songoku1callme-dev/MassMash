@@ -7,7 +7,8 @@ import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem, type Ans
 import {
   BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2,
-  Atom, Leaf, Globe, Landmark, Brain, Palette, Music, Users, Code, BookOpen
+  Atom, Leaf, Globe, Landmark, Brain, Palette, Music, Users, Code, BookOpen,
+  AlertTriangle, Lightbulb, Lock
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -35,12 +36,26 @@ const DIFFICULTIES = [
   { id: "advanced", name: "Schwer", desc: "Experte" },
 ];
 
+const QUIZ_TYPES = [
+  { id: "mixed", name: "Gemischt", desc: "Alle Fragetypen" },
+  { id: "mcq", name: "Multiple Choice", desc: "A/B/C/D" },
+  { id: "true_false", name: "Wahr/Falsch", desc: "Richtig oder Falsch" },
+  { id: "fill_blank", name: "Lückentext", desc: "Antwort eingeben" },
+  { id: "free_text", name: "Freitext", desc: "Eigene Antwort" },
+];
+
+const QUESTION_COUNTS = [5, 10, 20, 50];
+
 type QuizState = "setup" | "playing" | "results";
 
 export default function QuizPage() {
   const [state, setState] = useState<QuizState>("setup");
   const [subject, setSubject] = useState("math");
   const [difficulty, setDifficulty] = useState("beginner");
+  const [quizType, setQuizType] = useState("mixed");
+  const [numQuestions, setNumQuestions] = useState(5);
+  const [customTopic, setCustomTopic] = useState("");
+  const [selectedPresetTopic, setSelectedPresetTopic] = useState("");
   const [quiz, setQuiz] = useState<QuizData | null>(null);
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -50,42 +65,34 @@ export default function QuizPage() {
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<QuizHistoryItem[]>([]);
   const [fillAnswer, setFillAnswer] = useState("");
+  const [presetTopics, setPresetTopics] = useState<{ id: number; name: string; tier: string }[]>([]);
 
-  useEffect(() => {
-    loadHistory();
-  }, []);
+  useEffect(() => { loadHistory(); }, []);
+  useEffect(() => { loadTopics(); }, [subject]);
 
   const loadHistory = async () => {
+    try { const data = await quizApi.history(); setHistory(data); } catch { /* ignore */ }
+  };
+
+  const loadTopics = async () => {
     try {
-      const data = await quizApi.history();
-      setHistory(data);
-    } catch (err) {
-      console.error("Failed to load quiz history:", err);
-    }
+      const data = await quizApi.topics(subject);
+      if (data.topics) setPresetTopics(data.topics);
+    } catch { setPresetTopics([]); }
   };
 
   const startQuiz = async () => {
     setLoading(true);
     try {
       const data = await quizApi.generate({
-        subject,
-        difficulty,
-        num_questions: 5,
-        quiz_type: "mixed",
-        language: "de",
+        subject, difficulty, num_questions: numQuestions, quiz_type: quizType, language: "de",
+        topic: selectedPresetTopic || undefined,
+        thema_custom: customTopic.trim() || undefined,
       });
-      setQuiz(data);
-      setCurrentQ(0);
-      setAnswers({});
-      setShowAnswer(false);
-      setResult(null);
-      setFillAnswer("");
-      setState("playing");
-    } catch (err) {
-      console.error("Failed to generate quiz:", err);
-    } finally {
-      setLoading(false);
-    }
+      setQuiz(data); setCurrentQ(0); setAnswers({}); setShowAnswer(false);
+      setResult(null); setFillAnswer(""); setState("playing");
+    } catch (err) { console.error("Failed to generate quiz:", err); }
+    finally { setLoading(false); }
   };
 
   const selectAnswer = async (questionId: number, answer: string) => {
@@ -149,49 +156,31 @@ export default function QuizPage() {
   };
 
   const resetQuiz = () => {
-    setState("setup");
-    setQuiz(null);
-    setResult(null);
-    setAnswers({});
-    setCurrentQ(0);
-    setShowAnswer(false);
-    setAnswerResult(null);
+    setState("setup"); setQuiz(null); setResult(null); setAnswers({});
+    setCurrentQ(0); setShowAnswer(false); setAnswerResult(null);
+    setCustomTopic(""); setSelectedPresetTopic("");
   };
 
   // Setup screen
   if (state === "setup") {
     return (
-      <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
+      <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <BrainCircuit className="w-7 h-7 text-blue-600" />
-            Quiz-Modus
+            <BrainCircuit className="w-7 h-7 text-blue-600" /> Quiz 3.0
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Teste dein Wissen und verbessere deine Fähigkeiten!
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Teste dein Wissen mit eigenen Themen oder vordefinierten Fragen!</p>
         </div>
 
         {/* Subject Selection */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Fach wählen</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Fach wählen</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
               {SUBJECTS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSubject(s.id)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                    subject === s.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
-                >
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center text-white`}>
-                    {s.icon}
-                  </div>
+                <button key={s.id} onClick={() => { setSubject(s.id); setSelectedPresetTopic(""); }}
+                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${subject === s.id ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400" : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"}`}>
+                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center text-white`}>{s.icon}</div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{s.name}</span>
                 </button>
               ))}
@@ -199,42 +188,90 @@ export default function QuizPage() {
           </CardContent>
         </Card>
 
-        {/* Difficulty Selection */}
+        {/* Topic Selection: 2-Column Layout */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Schwierigkeitsgrad</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Thema wählen</CardTitle></CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              {DIFFICULTIES.map((d) => (
-                <button
-                  key={d.id}
-                  onClick={() => setDifficulty(d.id)}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${
-                    difficulty === d.id
-                      ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400"
-                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 dark:text-white">{d.name}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{d.desc}</p>
-                </button>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vordefinierte Themen</label>
+                <select value={selectedPresetTopic}
+                  onChange={(e) => { setSelectedPresetTopic(e.target.value); if (e.target.value) setCustomTopic(""); }}
+                  className="w-full p-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                  <option value="">-- Thema wählen --</option>
+                  {presetTopics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">{presetTopics.length} Themen verfügbar</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1">
+                  Eigenes Thema eingeben <Badge variant="secondary" className="text-xs ml-1">Pro+</Badge>
+                </label>
+                <Input value={customTopic}
+                  onChange={(e) => { setCustomTopic(e.target.value); if (e.target.value) setSelectedPresetTopic(""); }}
+                  placeholder="z.B. Integralrechnung, Sturm und Drang, Napoleonische Kriege..." className="p-3" />
+                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Eigenes Thema hat Priorität (Pro/Max)</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Quiz Type & Question Count */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Fragetyp</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-2">
+                {QUIZ_TYPES.map((t) => (
+                  <button key={t.id} onClick={() => setQuizType(t.id)}
+                    className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left ${quizType === t.id ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}>
+                    <span className="font-medium text-sm text-gray-900 dark:text-white">{t.name}</span>
+                    <span className="text-xs text-gray-500">{t.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader><CardTitle className="text-base">Schwierigkeitsgrad</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-2">
+                  {DIFFICULTIES.map((d) => (
+                    <button key={d.id} onClick={() => setDifficulty(d.id)}
+                      className={`p-3 rounded-lg border-2 text-center transition-all ${difficulty === d.id ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}>
+                      <p className="font-medium text-sm text-gray-900 dark:text-white">{d.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{d.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-base">Anzahl Fragen</CardTitle></CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-4 gap-2">
+                  {QUESTION_COUNTS.map((n) => (
+                    <button key={n} onClick={() => setNumQuestions(n)}
+                      className={`p-3 rounded-lg border-2 text-center transition-all ${numQuestions === n ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}>
+                      <p className="font-bold text-lg text-gray-900 dark:text-white">{n}</p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         <Button onClick={startQuiz} size="lg" className="w-full gap-2" disabled={loading}>
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BrainCircuit className="w-5 h-5" />}
-          {loading ? "Quiz wird erstellt..." : "Quiz starten"}
+          {loading ? "Quiz wird erstellt..." : `Quiz starten (${numQuestions} Fragen)`}
         </Button>
 
         {/* Quiz History */}
         {history.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Letzte Quizzes</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="text-base">Letzte Quizzes</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {history.slice(0, 5).map((h, i) => (
@@ -244,12 +281,8 @@ export default function QuizPage() {
                         {SUBJECTS.find(s => s.id === h.subject)?.icon}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {SUBJECTS.find(s => s.id === h.subject)?.name || h.subject}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(h.completed_at).toLocaleDateString("de-DE")} - {h.difficulty}
-                        </p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{SUBJECTS.find(s => s.id === h.subject)?.name || h.subject}</p>
+                        <p className="text-xs text-gray-500">{new Date(h.completed_at).toLocaleDateString("de-DE")} - {h.difficulty}</p>
                       </div>
                     </div>
                     <Badge variant={h.score >= 80 ? "success" : h.score >= 50 ? "warning" : "destructive"}>
@@ -368,7 +401,7 @@ export default function QuizPage() {
             {/* Explanation */}
             {isAnswered && answerResult?.explanation && (
               <div className="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Erklärung:</p>
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-1"><Lightbulb className="w-4 h-4" /> KI-Erklärung:</p>
                 <p className="text-sm text-blue-700 dark:text-blue-400">{answerResult.explanation}</p>
               </div>
             )}
@@ -412,6 +445,20 @@ export default function QuizPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-4 max-w-md mx-auto">
               {result.feedback}
             </p>
+
+            {result.weak_topic_detected && (
+              <div className="mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                  <span className="font-medium text-amber-800 dark:text-amber-300">Schwaches Thema erkannt</span>
+                </div>
+                <p className="text-sm text-amber-700 dark:text-amber-400">{result.weak_topic_suggestion}</p>
+              </div>
+            )}
+
+            <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 inline-block">
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">+10 XP verdient!</span>
+            </div>
           </CardContent>
         </Card>
 

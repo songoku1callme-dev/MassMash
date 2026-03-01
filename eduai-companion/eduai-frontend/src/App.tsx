@@ -10,6 +10,8 @@ import LearningPathPage from "./pages/LearningPathPage";
 import RAGPage from "./pages/RAGPage";
 import AbiturPage from "./pages/AbiturPage";
 import ResearchPage from "./pages/ResearchPage";
+import GamificationPage from "./pages/GamificationPage";
+import GroupsPage from "./pages/GroupsPage";
 import PricingPage from "./pages/PricingPage";
 import SettingsPage from "./pages/SettingsPage";
 import Sidebar from "./components/Sidebar";
@@ -73,6 +75,10 @@ function App() {
         return <AbiturPage />;
       case "research":
         return <ResearchPage />;
+      case "gamification":
+        return <GamificationPage />;
+      case "groups":
+        return <GroupsPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

@@ -127,6 +127,22 @@ async def generate_quiz_endpoint(
         if request.difficulty == "auto":
             difficulty = level
 
+    # Determine topic: custom topic has priority over preset (Pro+ only)
+    effective_topic = request.topic
+    if request.thema_custom and request.thema_custom.strip():
+        # Check tier for custom topics (Pro+ feature)
+        cursor2 = await db.execute(
+            "SELECT subscription_tier FROM users WHERE id = ?", (user_id,)
+        )
+        tier_row = await cursor2.fetchone()
+        user_tier = (dict(tier_row).get("subscription_tier", "free") or "free") if tier_row else "free"
+        if user_tier == "free":
+            raise HTTPException(
+                status_code=403,
+                detail="Eigene Themen sind nur für Pro/Max-Abonnenten verfügbar.",
+            )
+        effective_topic = request.thema_custom.strip()
+
     # Generate full questions (with correct_answer + explanation)
     full_questions = generate_quiz(
         subject=request.subject,
@@ -134,7 +150,7 @@ async def generate_quiz_endpoint(
         num_questions=request.num_questions,
         quiz_type=request.quiz_type,
         language=request.language,
-        topic=request.topic
+        topic=effective_topic
     )
 
     quiz_id = f"quiz_{user_id}_{request.subject}_{int(datetime.now().timestamp())}"
@@ -293,12 +309,52 @@ async def submit_quiz(
     else:
         feedback = "Das Thema braucht noch etwas \u00dcbung. Keine Sorge, wir schaffen das zusammen! \U0001f91d" if lang == "de" else "This topic needs more practice. Don't worry, we'll get there together! \U0001f91d"
 
+    # Detect weak topic if score < 70%
+    weak_topic_detected = None
+    weak_topic_suggestion = None
+    if score < 0.7:
+        weak_topic_detected = request.subject
+        weak_topic_suggestion = f"Du solltest '{request.subject}' noch einmal üben. Versuche ein Quiz mit weniger Fragen."
+        # Auto-track in user_memories
+        topic_id = f"{request.subject}_{request.difficulty}"
+        try:
+            cursor_mem = await db.execute(
+                "SELECT id FROM user_memories WHERE user_id = ? AND topic_id = ?",
+                (user_id, topic_id),
+            )
+            mem_row = await cursor_mem.fetchone()
+            if mem_row:
+                await db.execute(
+                    """UPDATE user_memories SET schwach = 1, feedback_score = feedback_score - 1,
+                        times_asked = times_asked + 1, updated_at = datetime('now')
+                    WHERE user_id = ? AND topic_id = ?""",
+                    (user_id, topic_id),
+                )
+            else:
+                await db.execute(
+                    """INSERT INTO user_memories (user_id, topic_id, subject, topic_name, schwach, feedback_score, times_asked)
+                    VALUES (?, ?, ?, ?, 1, -1, 1)""",
+                    (user_id, topic_id, request.subject, request.subject, ),
+                )
+            await db.commit()
+        except Exception:
+            pass  # Non-fatal
+
+    # Award gamification XP for quiz completion
+    try:
+        from app.routes.gamification import add_xp
+        await add_xp(user_id, 10, "quiz", db)
+    except Exception:
+        pass  # Non-fatal
+
     return QuizResultResponse(
         total_questions=total,
         correct_answers=correct,
         score=round(score * 100, 1),
         feedback=feedback,
         new_proficiency=new_level,
+        weak_topic_detected=weak_topic_detected,
+        weak_topic_suggestion=weak_topic_suggestion,
     )
 
 

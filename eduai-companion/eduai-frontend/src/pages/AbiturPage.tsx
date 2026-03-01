@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { abiturApi, type AbiturSimulation, type AbiturResult, type AbiturHistoryItem, type StudyPlanListItem } from "../services/api";
+import { Input } from "@/components/ui/input";
 import {
   GraduationCap, Play, Pause, Send, Clock, Trophy, Calendar,
   Loader2, Lock, CheckCircle2, XCircle, BarChart3,
-  Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf
+  Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -23,6 +24,7 @@ type AbiturState = "setup" | "exam" | "results";
 export default function AbiturPage() {
   const [state, setState] = useState<AbiturState>("setup");
   const [subject, setSubject] = useState("math");
+  const [customTopic, setCustomTopic] = useState("");
   const [duration, setDuration] = useState(180);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -74,7 +76,7 @@ export default function AbiturPage() {
     setLoading(true);
     setError("");
     try {
-      const sim = await abiturApi.start({ subject, duration_minutes: duration, num_questions: 20 });
+      const sim = await abiturApi.start({ subject, duration_minutes: duration, num_questions: 20, thema_custom: customTopic.trim() || undefined });
       setSimulation(sim);
       setAnswers({});
       setCurrentQ(0);
@@ -192,9 +194,21 @@ export default function AbiturPage() {
           </CardContent>
         </Card>
 
+        {/* Free Topic Input */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Thema (optional)</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Input value={customTopic} onChange={(e) => setCustomTopic(e.target.value)}
+                placeholder="z.B. Analysis, Expressionismus, Genetik..." className="p-3" />
+              <p className="text-xs text-gray-500 flex items-center gap-1"><Lightbulb className="w-3 h-3" /> Gib ein Thema ein für gezielte Abitur-Aufgaben. Tavily sucht echte Prüfungsaufgaben 2024-2026.</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Duration Selection */}
         <Card>
-          <CardHeader><CardTitle className="text-base">Pr&uuml;fungsdauer</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base">Prüfungsdauer</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3">
               {[180, 210, 240].map((d) => (
