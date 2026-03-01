@@ -16,6 +16,76 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
 
+@router.get("/bell")
+async def get_notification_bell(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get unread notifications for the bell icon (Supreme 12.0 Phase 7)."""
+    user_id = current_user["id"]
+
+    # Get unread count
+    cursor = await db.execute(
+        "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0",
+        (user_id,),
+    )
+    row = await cursor.fetchone()
+    unread_count = dict(row)["cnt"] if row else 0
+
+    # Get last 20 notifications
+    cursor = await db.execute(
+        """SELECT id, title, message, notification_type, is_read, created_at
+        FROM notifications WHERE user_id = ?
+        ORDER BY created_at DESC LIMIT 20""",
+        (user_id,),
+    )
+    rows = await cursor.fetchall()
+    items = []
+    for r in rows:
+        rd = dict(r)
+        items.append({
+            "id": rd["id"],
+            "title": rd.get("title", ""),
+            "message": rd.get("message", ""),
+            "type": rd.get("notification_type", "info"),
+            "is_read": bool(rd.get("is_read", 0)),
+            "created_at": rd.get("created_at", ""),
+        })
+
+    return {"unread_count": unread_count, "notifications": items}
+
+
+@router.post("/mark-read/{notification_id}")
+async def mark_notification_read(
+    notification_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Mark a single notification as read."""
+    user_id = current_user["id"]
+    await db.execute(
+        "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
+        (notification_id, user_id),
+    )
+    await db.commit()
+    return {"message": "Gelesen"}
+
+
+@router.post("/mark-all-read")
+async def mark_all_read(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Mark all notifications as read."""
+    user_id = current_user["id"]
+    await db.execute(
+        "UPDATE notifications SET is_read = 1 WHERE user_id = ?",
+        (user_id,),
+    )
+    await db.commit()
+    return {"message": "Alle gelesen"}
+
+
 @router.post("/subscribe")
 async def subscribe_push(
     endpoint: str,

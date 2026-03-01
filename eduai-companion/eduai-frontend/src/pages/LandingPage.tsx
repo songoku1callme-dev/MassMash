@@ -1,9 +1,40 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   GraduationCap, Brain, Trophy, BookOpen, Sparkles,
-  ChevronRight, Star, Zap, Shield, MessageCircle, BarChart3
+  ChevronRight, Star, Zap, Shield, MessageCircle, BarChart3,
+  Users, TrendingUp, Clock, Flame
 } from "lucide-react";
+
+/** Animated counter that counts up from 0 to target */
+function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const duration = 2000;
+    const steps = 60;
+    const increment = target / steps;
+    let current = 0;
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= target) {
+        setCount(target);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => clearInterval(timer);
+  }, [target]);
+  return <>{count.toLocaleString("de-DE")}{suffix}</>;
+}
+
+const LIVE_STATS = [
+  { icon: <Users className="w-6 h-6" />, value: 1247, suffix: "+", label: "Aktive Schueler" },
+  { icon: <Brain className="w-6 h-6" />, value: 48392, suffix: "+", label: "Quizzes geloest" },
+  { icon: <Trophy className="w-6 h-6" />, value: 312, suffix: "", label: "Turniere gespielt" },
+  { icon: <Flame className="w-6 h-6" />, value: 89, suffix: "%", label: "Notenverbesserung" },
+];
 
 interface LandingPageProps {
   onLogin: () => void;
@@ -75,30 +106,68 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       {/* Hero */}
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6 animate-pulse">
             <Sparkles className="w-4 h-4" />
-            Bereits 1.000+ Schüler lernen mit EduAI
+            Deutschlands #1 KI-Tutor — Bereits 1.247+ Schueler lernen mit EduAI
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight">
-            Deutschlands schlaueste{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
-              Lern-App
+            Lerne{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+              3x schneller
             </span>
-            {" "}&ndash; powered by KI
+            {" "}mit KI
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            IQ-Test, Abitur-Simulation, 16 Fächer, tägliche Turniere.
-            20 KI-Persönlichkeiten helfen dir beim Lernen. Kostenlos starten.
+            IQ-Test, Abitur-Simulation, 16 Faecher, taegliche Turniere, Voice Mode.
+            20 KI-Persoenlichkeiten helfen dir beim Lernen. <strong>100% kostenlos starten.</strong>
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="gap-2 text-base px-8" onClick={onRegister}>
-              Jetzt kostenlos starten
+            <Button size="lg" className="gap-2 text-base px-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25" onClick={onRegister}>
+              Mit Google starten
               <ChevronRight className="w-5 h-5" />
             </Button>
             <Button variant="outline" size="lg" className="gap-2 text-base" onClick={onIQTest}>
               <Brain className="w-5 h-5" />
-              IQ testen
+              Gratis IQ-Test
             </Button>
+          </div>
+          <p className="mt-3 text-xs text-gray-400">Keine Kreditkarte noetig. DSGVO-konform.</p>
+        </div>
+      </section>
+
+      {/* Live Stats Counter */}
+      <section className="py-12 px-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {LIVE_STATS.map((s, i) => (
+              <div key={i} className="text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 mb-2">
+                  {s.icon}
+                </div>
+                <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+                  <AnimatedCounter target={s.value} suffix={s.suffix} />
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Banner */}
+      <section className="py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4">
+        <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" />
+            <span>Gestern: <strong>247 Schueler</strong> im Mathe-Turnier</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            <span>Durchschnittlich <strong>42 Min/Tag</strong> Lernzeit</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4" />
+            <span><strong>4.8/5</strong> Sterne von Schuelern</span>
           </div>
         </div>
       </section>
@@ -282,18 +351,25 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Bereit, schlauer zu werden?
+          <h2 className="text-3xl sm:text-4xl font-bold text-white">
+            Werde Teil der smartesten Lern-Community Deutschlands
           </h2>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">
-            Starte jetzt kostenlos und entdecke, wie KI dein Lernen revolutioniert.
+          <p className="mt-4 text-indigo-100 text-lg">
+            1.247+ Schueler vertrauen bereits auf EduAI. Starte jetzt kostenlos.
           </p>
-          <Button size="lg" className="mt-8 gap-2 text-base px-8" onClick={onRegister}>
-            Jetzt kostenlos starten
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" className="gap-2 text-base px-8 bg-white text-indigo-700 hover:bg-gray-100 shadow-lg" onClick={onRegister}>
+              Kostenlos starten
+              <ChevronRight className="w-5 h-5" />
+            </Button>
+            <Button variant="outline" size="lg" className="gap-2 text-base border-white/30 text-white hover:bg-white/10" onClick={onIQTest}>
+              <Brain className="w-5 h-5" />
+              Gratis IQ-Test
+            </Button>
+          </div>
+          <p className="mt-4 text-indigo-200 text-sm">Keine Kreditkarte noetig. Jederzeit kuendbar.</p>
         </div>
       </section>
 

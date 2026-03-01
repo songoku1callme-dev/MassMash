@@ -34,12 +34,14 @@ import EventsPage from "./pages/EventsPage";
 import MatchingPage from "./pages/MatchingPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import BattlePassPage from "./pages/BattlePassPage";
+import StatsPage from "./pages/StatsPage";
 import LandingPage from "./pages/LandingPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
 import OfflineBanner from "./components/OfflineBanner";
+import NotificationBell from "./components/NotificationBell";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
@@ -159,6 +161,8 @@ function App() {
         return <MarketplacePage />;
       case "battle-pass":
         return <BattlePassPage />;
+      case "meine-stats":
+        return <StatsPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":
@@ -171,7 +175,10 @@ function App() {
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto relative">
+        <div className="absolute top-4 right-4 z-30">
+          <NotificationBell />
+        </div>
         {renderPage()}
       </main>
       <PWAInstallBanner />

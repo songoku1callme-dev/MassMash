@@ -15,39 +15,86 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/quests", tags=["quests"])
 
 
-def _generate_daily_quests(user_stats: dict) -> list[dict]:
-    """Generate 3 daily quests based on user profile."""
+import random
+import hashlib
+
+# Supreme 12.0 Phase 9: 4 quest types with seed-based personalization
+_ALL_SUBJECTS = [
+    "Mathematik", "Deutsch", "Physik", "Englisch", "Geschichte",
+    "Biologie", "Chemie", "Informatik", "Geographie", "Kunst",
+    "Musik", "Philosophie", "Wirtschaft", "Politik", "Franzoesisch", "Sport",
+]
+
+_SOCIAL_QUESTS = [
+    ("Duell gewinnen", "Gewinne ein Multiplayer-Quiz gegen einen anderen Schueler"),
+    ("Lernpartner finden", "Finde einen Lernpartner ueber die Matching-Seite"),
+    ("Gruppen-Chat", "Schreibe eine Nachricht in einem Gruppen-Chat"),
+    ("Turnier-Teilnahme", "Nimm am taeglichen Turnier teil"),
+    ("Hilf einem Mitschueler", "Beantworte eine Frage in der Community"),
+]
+
+
+def _generate_daily_quests(user_id: int, user_stats: dict) -> list[dict]:
+    """Generate 4 daily quests — deterministic per user per day (seed-based)."""
     today = date.today().isoformat()
+
+    # Seed = hash(user_id + today) → deterministic but different per user/day
+    seed_str = f"{user_id}_{today}"
+    seed_val = int(hashlib.md5(seed_str.encode()).hexdigest(), 16) % (2**31)
+    rng = random.Random(seed_val)
+
     quests = []
 
-    # Quest 1: Practice weak subject
+    # Quest 1: Practice weakest subject (personalized)
     weak = user_stats.get("weak_subject", "Mathematik")
     quests.append({
         "quest_id": f"weak_{today}",
-        "title": f"Uebe {weak}",
-        "description": f"Mache ein Quiz ueber {weak}",
+        "title": f"Schwaeche ueben: {weak}",
+        "description": f"Mache ein Quiz ueber {weak} um deine Schwaeche zu verbessern",
         "xp_reward": 50,
         "target": 1,
         "icon": "target",
         "type": "quiz",
     })
 
-    # Quest 2: Maintain streak
+    # Quest 2: Subject not used today (seed-based variety)
+    used = user_stats.get("today_subjects", [])
+    unused = [s for s in _ALL_SUBJECTS if s not in used and s != weak]
+    if not unused:
+        unused = _ALL_SUBJECTS
+    pick = rng.choice(unused)
+    quests.append({
+        "quest_id": f"explore_{today}",
+        "title": f"Neues Fach: {pick}",
+        "description": f"Lerne heute etwas in {pick} — erweitere deinen Horizont!",
+        "xp_reward": 40,
+        "target": 1,
+        "icon": "compass",
+        "type": "explore",
+    })
+
+    # Quest 3: Streak (always, but with personal context)
+    streak = user_stats.get("current_streak", 0)
+    streak_desc = (
+        f"Halte deinen {streak}-Tage Streak am Leben!" if streak > 0
+        else "Starte heute einen neuen Streak!"
+    )
     quests.append({
         "quest_id": f"streak_{today}",
-        "title": "Streak am Leben halten",
-        "description": "Lerne heute mindestens 15 Minuten",
+        "title": "Streak halten",
+        "description": streak_desc,
         "xp_reward": 30,
         "target": 1,
         "icon": "flame",
         "type": "time",
     })
 
-    # Quest 3: Social / multiplayer
+    # Quest 4: Social quest (seed-based variety)
+    social = rng.choice(_SOCIAL_QUESTS)
     quests.append({
         "quest_id": f"social_{today}",
-        "title": "Duell gewinnen",
-        "description": "Gewinne ein Multiplayer-Quiz oder chatte in einer Gruppe",
+        "title": social[0],
+        "description": social[1],
         "xp_reward": 75,
         "target": 1,
         "icon": "swords",
@@ -99,7 +146,25 @@ async def get_daily_quests(
     weak_row = await weak_cursor.fetchone()
     weak_subject = dict(weak_row)["subject"] if weak_row else "Mathematik"
 
-    quest_templates = _generate_daily_quests({"weak_subject": weak_subject})
+    # Get today's used subjects and streak for seed-based quest generation
+    today_subj_cursor = await db.execute(
+        """SELECT DISTINCT subject FROM activity_log
+        WHERE user_id = ? AND DATE(created_at) = ?""",
+        (user_id, today),
+    )
+    today_subjects = [dict(r)["subject"] for r in await today_subj_cursor.fetchall()]
+
+    streak_cursor = await db.execute(
+        "SELECT streak_days FROM users WHERE id = ?", (user_id,)
+    )
+    streak_row = await streak_cursor.fetchone()
+    current_streak = dict(streak_row).get("streak_days", 0) if streak_row else 0
+
+    quest_templates = _generate_daily_quests(user_id, {
+        "weak_subject": weak_subject,
+        "today_subjects": today_subjects,
+        "current_streak": current_streak,
+    })
 
     quests = []
     for qt in quest_templates:

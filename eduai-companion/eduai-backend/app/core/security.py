@@ -16,10 +16,24 @@ logger = logging.getLogger(__name__)
 # Stores: ip -> list of request timestamps
 _rate_limit_store: dict[str, list[float]] = defaultdict(list)
 
-# Config
+# Config — Supreme 12.0 Phase 12: endpoint-specific rate limits
 RATE_LIMIT_MAX_REQUESTS = 5   # max requests per window
 RATE_LIMIT_WINDOW_SEC = 60    # window size in seconds
 RATE_LIMIT_PATHS = ("/api/auth/login", "/api/auth/register", "/api/auth/refresh")
+
+# Endpoint-specific limits (path_prefix -> max_per_minute)
+ENDPOINT_RATE_LIMITS: dict[str, int] = {
+    "/api/auth/login": 5,
+    "/api/auth/register": 5,
+    "/api/auth/refresh": 10,
+    "/api/chat": 30,
+    "/api/quiz/generate": 10,
+    "/api/quiz/check": 20,
+    "/api/iq-test": 10,
+    "/api/ocr": 15,
+    "/api/voice": 15,
+    "/api/research": 10,
+}
 
 
 def _client_ip(request: Request) -> str:
@@ -43,13 +57,42 @@ def _is_rate_limited(ip: str) -> bool:
     return False
 
 
+# Per-endpoint rate limit stores
+_endpoint_stores: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
+
+
+def _is_endpoint_rate_limited(ip: str, path: str) -> bool:
+    """Check endpoint-specific rate limit."""
+    for prefix, max_req in ENDPOINT_RATE_LIMITS.items():
+        if path.startswith(prefix):
+            now = time.monotonic()
+            store = _endpoint_stores[prefix]
+            window_start = now - RATE_LIMIT_WINDOW_SEC
+            store[ip] = [t for t in store[ip] if t > window_start]
+            if len(store[ip]) >= max_req:
+                return True
+            store[ip].append(now)
+            return False
+    return False
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Rate-limit auth endpoints: max 5 requests per minute per IP."""
+    """Rate-limit endpoints per IP with endpoint-specific limits (Phase 12)."""
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         path = request.url.path
+        ip = _client_ip(request)
+
+        # Check endpoint-specific limits first
+        if _is_endpoint_rate_limited(ip, path):
+            logger.warning("Rate limit exceeded for IP %s on %s", ip, path)
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Zu viele Anfragen. Bitte warte einen Moment."},
+            )
+
+        # Legacy fallback for auth endpoints
         if any(path.startswith(p) for p in RATE_LIMIT_PATHS):
-            ip = _client_ip(request)
             if _is_rate_limited(ip):
                 logger.warning("Rate limit exceeded for IP %s on %s", ip, path)
                 return JSONResponse(

@@ -1138,4 +1138,20 @@ export const offlineApi = {
 
   getCachedAt: () => localStorage.getItem("eduai_offline_cached_at"),
 };
+
+// Supreme 12.0: Stats Dashboard API
+export const statsApi = {
+  overview: () => request<any>("/api/stats/overview"),
+  perSubject: () => request<any>("/api/stats/per-subject"),
+  weekly: () => request<any>("/api/stats/weekly"),
+  xpHistory: () => request<any>("/api/stats/xp-history"),
+  kiAnalyse: () => request<any>("/api/stats/ki-analyse", { method: "POST" }),
+};
+
+// Supreme 12.0: Notification Bell API
+export const notificationBellApi = {
+  bell: () => request<any>("/api/notifications/bell"),
+  markRead: (id: number) => request<any>(`/api/notifications/mark-read/${id}`, { method: "POST" }),
+  markAllRead: () => request<any>("/api/notifications/mark-all-read", { method: "POST" }),
+};
 /* eslint-enable @typescript-eslint/no-explicit-any */

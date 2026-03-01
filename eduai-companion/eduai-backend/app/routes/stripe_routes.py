@@ -38,6 +38,11 @@ PRO_YEARLY_PRICE_CENTS = 3999
 PRO_YEARLY_PRICE_EUR = "39.99"
 MAX_YEARLY_PRICE_CENTS = 7999
 MAX_YEARLY_PRICE_EUR = "79.99"
+# Eltern-Abo prices
+ELTERN_PRICE_CENTS = 299
+ELTERN_PRICE_EUR = "2.99"
+ELTERN_YEARLY_PRICE_CENTS = 2399
+ELTERN_YEARLY_PRICE_EUR = "23.99"
 
 # Free tier limits
 FREE_OCR_LIMIT = 50  # per month
@@ -76,6 +81,10 @@ async def stripe_config():
                 "monthly": {"price_eur": MAX_PRICE_EUR, "price_cents": MAX_PRICE_CENTS},
                 "yearly": {"price_eur": MAX_YEARLY_PRICE_EUR, "price_cents": MAX_YEARLY_PRICE_CENTS, "save_eur": "40.00"},
             },
+            "eltern": {
+                "monthly": {"price_eur": ELTERN_PRICE_EUR, "price_cents": ELTERN_PRICE_CENTS},
+                "yearly": {"price_eur": ELTERN_YEARLY_PRICE_EUR, "price_cents": ELTERN_YEARLY_PRICE_CENTS, "save_eur": "12.00"},
+            },
         },
     }
 
@@ -108,6 +117,11 @@ async def create_checkout(
         plan_name = "EduAI Max" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "GPT-4o Priority, 20 KI-Stile, 300+ Quiz-Themen, Wochen-Coach, Abitur-Sim, Internet-Recherche"
         target_tier = "max"
+    elif req.plan == "eltern":
+        price_cents = ELTERN_YEARLY_PRICE_CENTS if is_yearly else ELTERN_PRICE_CENTS
+        plan_name = "EduAI Eltern-Abo" + (" (Jahresabo)" if is_yearly else "")
+        plan_desc = "Lernfortschritt in Echtzeit, Woechentliche Reports, Streak-Alerts, Schwaechen-Analyse"
+        target_tier = "eltern"
     else:
         price_cents = PRO_YEARLY_PRICE_CENTS if is_yearly else PRO_PRICE_CENTS
         plan_name = "EduAI Pro" + (" (Jahresabo)" if is_yearly else "")
@@ -217,6 +231,8 @@ def _tier_from_amount(amount_cents: int) -> str:
         return "max"
     elif amount_cents >= PRO_PRICE_CENTS:
         return "pro"
+    elif amount_cents >= ELTERN_PRICE_CENTS:
+        return "eltern"
     return "free"
 
 

@@ -10,7 +10,7 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass
+from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass, stats
 from app.routes import stripe_routes
 from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
 
@@ -53,6 +53,16 @@ async def lifespan(app: FastAPI):
                 _weekly_report_job, CronTrigger(day_of_week="mon", hour=8, minute=0),
                 id="weekly_report", replace_existing=True,
             )
+            # Daily 18:00 UTC — Auto-create tournament (Phase 8)
+            scheduler.add_job(
+                _daily_tournament_job, CronTrigger(hour=18, minute=0),
+                id="daily_tournament", replace_existing=True,
+            )
+            # Daily 16:00 UTC — Proactive learning tips (Phase 6)
+            scheduler.add_job(
+                _proactive_tips_job, CronTrigger(hour=16, minute=0),
+                id="proactive_tips", replace_existing=True,
+            )
             scheduler.start()
             logger.info("APScheduler gestartet mit %d Jobs", len(scheduler.get_jobs()))
         except Exception as exc:
@@ -68,20 +78,150 @@ async def lifespan(app: FastAPI):
     shutdown_posthog()
 
 
-# --- Scheduled job implementations ---
+# --- Scheduled job implementations (Supreme 12.0) ---
 async def _streak_warning_job():
     """Notify users with streak >= 3 who haven't been active today."""
     logger.info("Running streak warning job")
+    try:
+        import aiosqlite
+        from app.services.email_service import send_streak_loss_email
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                """SELECT id, username, email, streak_days FROM users
+                WHERE streak_days >= 3
+                AND DATE(last_active) < DATE('now')
+                AND email IS NOT NULL AND email != ''"""
+            )
+            users = await cursor.fetchall()
+            for u in users:
+                ud = dict(u)
+                await send_streak_loss_email(
+                    ud["email"], ud["username"], ud["streak_days"]
+                )
+                # Reset streak
+                await db.execute(
+                    "UPDATE users SET streak_days = 0 WHERE id = ?", (ud["id"],)
+                )
+            await db.commit()
+            logger.info("Streak warnings sent to %d users", len(users))
+    except Exception as exc:
+        logger.error("Streak warning job failed: %s", exc)
 
 
 async def _spaced_repetition_job():
     """Send spaced repetition reminders for due reviews."""
     logger.info("Running spaced repetition job")
+    try:
+        import aiosqlite
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            # Create notifications for users with due flashcards
+            cursor = await db.execute(
+                """SELECT DISTINCT user_id FROM flashcards
+                WHERE next_review <= datetime('now')"""
+            )
+            users = await cursor.fetchall()
+            for u in users:
+                uid = dict(u)["user_id"]
+                await db.execute(
+                    """INSERT INTO notifications (user_id, title, message, notification_type)
+                    VALUES (?, 'Wiederholung faellig', 'Du hast Karteikarten die wiederholt werden muessen!', 'reminder')""",
+                    (uid,),
+                )
+            await db.commit()
+            logger.info("Spaced repetition reminders for %d users", len(users))
+    except Exception as exc:
+        logger.error("Spaced repetition job failed: %s", exc)
 
 
 async def _weekly_report_job():
-    """Send weekly learning report emails."""
+    """Send weekly learning report emails (Monday 08:00 UTC)."""
     logger.info("Running weekly report job")
+    try:
+        import aiosqlite
+        from app.services.email_service import send_weekly_report_email
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(
+                "SELECT id, username, email, streak_days FROM users WHERE email IS NOT NULL AND email != ''"
+            )
+            users = await cursor.fetchall()
+            for u in users:
+                ud = dict(u)
+                # Get weekly stats
+                qc = await db.execute(
+                    """SELECT COUNT(*) as cnt, AVG(score) as avg FROM quiz_results
+                    WHERE user_id = ? AND created_at >= date('now', '-7 days')""",
+                    (ud["id"],),
+                )
+                qr = await qc.fetchone()
+                qd = dict(qr) if qr else {}
+                stats = {
+                    "total_xp": 0,
+                    "streak_days": ud.get("streak_days", 0),
+                    "week_quizzes": qd.get("cnt", 0) or 0,
+                    "avg_quiz_score": round(qd.get("avg", 0) or 0),
+                    "week_learning_minutes": 0,
+                }
+                await send_weekly_report_email(ud["email"], ud["username"], stats)
+            logger.info("Weekly reports sent to %d users", len(users))
+    except Exception as exc:
+        logger.error("Weekly report job failed: %s", exc)
+
+
+async def _daily_tournament_job():
+    """Create daily tournament at 18:00 UTC (Supreme 12.0 Phase 8)."""
+    logger.info("Running daily tournament creation job")
+    try:
+        import aiosqlite
+        from app.routes.tournaments import create_daily_tournament
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            result = await create_daily_tournament(db)
+            logger.info("Daily tournament created: %s", result.get("subject", "unknown"))
+    except Exception as exc:
+        logger.error("Daily tournament job failed: %s", exc)
+
+
+async def _proactive_tips_job():
+    """Send proactive learning tips at 16:00 UTC (Supreme 12.0 Phase 6)."""
+    logger.info("Running proactive tips job")
+    try:
+        import aiosqlite
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+            # Get active users from last 3 days
+            cursor = await db.execute(
+                """SELECT DISTINCT user_id FROM activity_log
+                WHERE created_at >= date('now', '-3 days')"""
+            )
+            users = await cursor.fetchall()
+            tips = [
+                "Tipp: Wiederhole heute dein schwaecstes Fach!",
+                "Tipp: Ein kurzes Quiz hilft beim Merken!",
+                "Tipp: Probiere den IQ-Test fuer neue Herausforderungen!",
+                "Tipp: Nimm am Turnier teil und gewinne XP!",
+                "Tipp: Erstelle Karteikarten fuer effektives Lernen!",
+            ]
+            import random
+            for u in users:
+                uid = dict(u)["user_id"]
+                tip = random.choice(tips)
+                await db.execute(
+                    """INSERT INTO notifications (user_id, title, message, notification_type)
+                    VALUES (?, 'Lern-Tipp', ?, 'tip')""",
+                    (uid, tip),
+                )
+            await db.commit()
+            logger.info("Proactive tips sent to %d users", len(users))
+    except Exception as exc:
+        logger.error("Proactive tips job failed: %s", exc)
 
 
 app = FastAPI(
@@ -143,6 +283,7 @@ app.include_router(notifications.router)
 app.include_router(marketplace.router)
 app.include_router(pdf_export.router)
 app.include_router(battle_pass.router)
+app.include_router(stats.router)
 
 
 @app.get("/healthz")

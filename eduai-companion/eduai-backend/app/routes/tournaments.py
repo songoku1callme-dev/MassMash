@@ -18,7 +18,27 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/turnier", tags=["tournaments"])
 
-# Subject rotation: Mo=Mathe, Di=Deutsch, Mi=Physik, Do=Englisch, Fr=Geschichte, Sa=Biologie, So=Chemie
+# Supreme 12.0 Phase 8: Anti-Repetition — 16 subjects rotate, no subject repeats in 16 days
+ALL_TOURNAMENT_SUBJECTS = [
+    "Mathematik", "Deutsch", "Physik", "Englisch", "Geschichte",
+    "Biologie", "Chemie", "Informatik", "Geographie", "Kunst",
+    "Musik", "Sport", "Philosophie", "Wirtschaft", "Politik", "Franzoesisch",
+]
+
+# Themed topics per subject — ensures unique themes (no repeat in 60 days)
+THEMED_TOPICS: dict[str, list[str]] = {
+    "Mathematik": ["Analysis", "Stochastik", "Lineare Algebra", "Geometrie", "Trigonometrie", "Integralrechnung"],
+    "Deutsch": ["Lyrik-Analyse", "Erörterung", "Expressionismus", "Faust", "Sprachwandel", "Rhetorik"],
+    "Physik": ["Mechanik", "Elektrodynamik", "Quantenphysik", "Thermodynamik", "Optik", "Kernphysik"],
+    "Englisch": ["Shakespeare", "American Dream", "Globalisation", "Dystopia", "Civil Rights", "Media"],
+    "Geschichte": ["Weimarer Republik", "Kalter Krieg", "Industrialisierung", "Imperialismus", "NS-Zeit", "Deutsche Einheit"],
+    "Biologie": ["Genetik", "Evolution", "Oekologie", "Neurobiologie", "Zellbiologie", "Immunbiologie"],
+    "Chemie": ["Organische Chemie", "Elektrochemie", "Saeuren & Basen", "Redoxreaktionen", "Thermochemie", "Kunststoffe"],
+    "Informatik": ["Algorithmen", "Datenstrukturen", "Netzwerke", "Kryptographie", "Datenbanken", "KI-Grundlagen"],
+    "Geographie": ["Klimawandel", "Stadtentwicklung", "Plattentektonik", "Bevoelkerung", "Globalisierung", "Nachhaltigkeit"],
+}
+
+# Legacy weekday mapping as fallback
 WEEKDAY_SUBJECTS = {
     0: "Mathematik",
     1: "Deutsch",
@@ -33,11 +53,50 @@ TOURNAMENT_QUESTIONS = 20
 TOURNAMENT_TIME_LIMIT = 300  # 5 minutes in seconds
 
 
+async def _pick_anti_repetition_subject(db: aiosqlite.Connection) -> str:
+    """Pick a subject that hasn't been used in the last 16 tournament days."""
+    cursor = await db.execute(
+        "SELECT subject FROM tournaments ORDER BY date DESC LIMIT 16"
+    )
+    recent = await cursor.fetchall()
+    recent_subjects = {dict(r)["subject"] for r in recent}
+    available = [s for s in ALL_TOURNAMENT_SUBJECTS if s not in recent_subjects]
+    if not available:
+        available = ALL_TOURNAMENT_SUBJECTS
+    import random
+    return random.choice(available)
+
+
+async def _pick_anti_repetition_theme(db: aiosqlite.Connection, subject: str) -> str:
+    """Pick a theme for the subject that hasn't been used in the last 60 days."""
+    themes = THEMED_TOPICS.get(subject, [subject])
+    cursor = await db.execute(
+        """SELECT questions FROM tournaments
+        WHERE subject = ? AND date >= date('now', '-60 days')
+        ORDER BY date DESC""",
+        (subject,),
+    )
+    recent_rows = await cursor.fetchall()
+    used_themes: set[str] = set()
+    for r in recent_rows:
+        try:
+            qs = json.loads(dict(r).get("questions", "[]"))
+            for q in qs:
+                topic = q.get("topic", "")
+                if topic:
+                    used_themes.add(topic)
+        except Exception:
+            pass
+    available = [t for t in themes if t not in used_themes]
+    if not available:
+        available = themes
+    import random
+    return random.choice(available)
+
+
 async def create_daily_tournament(db: aiosqlite.Connection) -> dict:
-    """Create today's tournament if it doesn't exist yet."""
+    """Create today's tournament if it doesn't exist yet (anti-repetition)."""
     today = datetime.now().strftime("%Y-%m-%d")
-    weekday = datetime.now().weekday()
-    subject = WEEKDAY_SUBJECTS.get(weekday, "Mathematik")
 
     # Check if today's tournament already exists
     cursor = await db.execute(
@@ -46,6 +105,10 @@ async def create_daily_tournament(db: aiosqlite.Connection) -> dict:
     existing = await cursor.fetchone()
     if existing:
         return dict(existing)
+
+    # Supreme 12.0: Anti-repetition subject + theme selection
+    subject = await _pick_anti_repetition_subject(db)
+    theme = await _pick_anti_repetition_theme(db, subject)
 
     # Generate tournament questions using Groq if available
     questions = []
