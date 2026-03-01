@@ -7,7 +7,8 @@ import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database,
-  CreditCard, Star, Globe, Trophy, Users, Shield, Swords, Brain
+  CreditCard, Star, Globe, Trophy, Users, Shield, Swords, Brain,
+  Layers, FileText, CalendarDays
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -43,6 +44,9 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "gamification", label: "Gamification", icon: <Trophy className="w-5 h-5" /> },
     { id: "groups", label: "Gruppen-Chats", icon: <Users className="w-5 h-5" /> },
     { id: "turnier", label: "Turniere", icon: <Swords className="w-5 h-5" /> },
+    { id: "flashcards", label: "Karteikarten", icon: <Layers className="w-5 h-5" /> },
+    { id: "notes", label: "Notizen", icon: <FileText className="w-5 h-5" /> },
+    { id: "calendar", label: "Prüfungs-Kalender", icon: <CalendarDays className="w-5 h-5" /> },
     ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),
     { id: "pricing", label: "Abo & Preise", icon: <CreditCard className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },

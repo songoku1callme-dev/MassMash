@@ -1,5 +1,6 @@
 """Authentication routes."""
 import json
+import os
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 import aiosqlite
@@ -18,6 +19,29 @@ from app.core.clerk import get_clerk_frontend_config
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SUBJECTS = ["math", "english", "german", "history", "science"]
+
+# Admin emails — these users ALWAYS get permanent Max tier and can NEVER be downgraded
+_ADMIN_EMAILS_RAW = ",".join([
+    os.getenv("ADMIN_EMAIL", ""),
+    os.getenv("ADMIN_EMAIL_2", ""),
+    os.getenv("ADMIN_EMAIL_3", ""),
+    os.getenv("ADMIN_EMAIL_4", ""),
+])
+ADMIN_EMAILS = [e.strip() for e in _ADMIN_EMAILS_RAW.split(",") if e.strip()]
+
+
+def is_admin(email: str) -> bool:
+    """Check if an email belongs to a permanent admin."""
+    return email in ADMIN_EMAILS
+
+
+async def _ensure_admin_max_tier(db: aiosqlite.Connection, user_id: int) -> None:
+    """Upgrade an admin user to Max tier. Called at login/register."""
+    await db.execute(
+        "UPDATE users SET subscription_tier = 'max', is_pro = 1, is_admin = 1 WHERE id = ?",
+        (user_id,),
+    )
+    await db.commit()
 
 
 @router.post("/register", response_model=TokenResponse)
@@ -62,6 +86,13 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
     )
     await db.commit()
 
+    # Admin emails: always enforce Max tier at registration
+    _is_admin = is_admin(user.email)
+    _tier = "max" if _is_admin else "free"
+    _is_pro = _is_admin
+    if _is_admin:
+        await _ensure_admin_max_tier(db, user_id)
+
     access_token = create_access_token(data={"sub": user_id})
     refresh_token = create_refresh_token(data={"sub": user_id})
 
@@ -76,8 +107,8 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
             school_grade=user.school_grade,
             school_type=user.school_type,
             preferred_language=user.preferred_language,
-            is_pro=False,
-            subscription_tier="free",
+            is_pro=_is_pro,
+            subscription_tier=_tier,
             ki_personality_id=1,
             ki_personality_name="Freundlich",
             created_at=datetime.now().isoformat()
@@ -100,6 +131,14 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
         )
 
     user_dict = dict(user)
+
+    # Admin emails: always enforce Max tier at login
+    if is_admin(user_dict.get("email", "")):
+        await _ensure_admin_max_tier(db, user_dict["id"])
+        user_dict["subscription_tier"] = "max"
+        user_dict["is_pro"] = 1
+        user_dict["is_admin"] = 1
+
     access_token = create_access_token(data={"sub": user_dict["id"]})
     refresh_token = create_refresh_token(data={"sub": user_dict["id"]})
 

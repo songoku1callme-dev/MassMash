@@ -17,6 +17,11 @@ import TurnierPage from "./pages/TurnierPage";
 import IQTestPage from "./pages/IQTestPage";
 import PricingPage from "./pages/PricingPage";
 import SettingsPage from "./pages/SettingsPage";
+import FlashcardsPage from "./pages/FlashcardsPage";
+import NotesPage from "./pages/NotesPage";
+import CalendarPage from "./pages/CalendarPage";
+import LandingPage from "./pages/LandingPage";
+import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 
 function App() {
@@ -24,6 +29,8 @@ function App() {
   const { loadSessions } = useChatStore();
   useAuthRefresh();
   const [currentPage, setCurrentPage] = useState("dashboard");
+  const [showLanding, setShowLanding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("eduai_dark") === "true" ||
@@ -59,7 +66,20 @@ function App() {
   }
 
   if (!isAuthenticated) {
+    if (showLanding) {
+      return (
+        <LandingPage
+          onLogin={() => setShowLanding(false)}
+          onRegister={() => setShowLanding(false)}
+          onIQTest={() => setShowLanding(false)}
+        />
+      );
+    }
     return <AuthPage />;
+  }
+
+  if (showOnboarding) {
+    return <OnboardingPage onComplete={() => setShowOnboarding(false)} />;
   }
 
   const renderPage = () => {
@@ -88,6 +108,12 @@ function App() {
         return <TurnierPage />;
       case "iq-test":
         return <IQTestPage />;
+      case "flashcards":
+        return <FlashcardsPage />;
+      case "notes":
+        return <NotesPage />;
+      case "calendar":
+        return <CalendarPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

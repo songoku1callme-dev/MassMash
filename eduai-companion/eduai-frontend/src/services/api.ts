@@ -854,11 +854,16 @@ export interface IQTestResult {
   percentile: number;
   klassifikation: string;
   kategorien: Record<string, number>;
+  kategorie_iq?: Record<string, number>;
   staerken: string[];
   schwaechen: string[];
   vergleich: string;
   raw_score: number;
   max_score: number;
+  training?: string[];
+  iq_table?: { range: string; label: string; percent: string }[];
+  total_correct?: number;
+  total_questions?: number;
 }
 
 export interface IQCooldownResponse {

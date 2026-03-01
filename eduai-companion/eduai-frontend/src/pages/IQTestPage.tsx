@@ -511,6 +511,73 @@ export default function IQTestPage() {
           )}
         </div>
 
+        {/* Training Recommendations */}
+        {result.training && result.training.length > 0 && (
+          <Card className="border-indigo-200 dark:border-indigo-800">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
+                <Target className="w-5 h-5" />
+                Trainings-Empfehlungen
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {result.training.map((t, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <ChevronRight className="w-4 h-4 text-indigo-500 mt-0.5 shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* IQ Classification Table */}
+        {result.iq_table && result.iq_table.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Brain className="w-5 h-5 text-indigo-500" />
+                IQ-Einordnung
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700">
+                      <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">IQ-Bereich</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Klassifikation</th>
+                      <th className="text-left py-2 px-3 font-medium text-gray-500 dark:text-gray-400">Bevölkerung</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.iq_table.map((row, i) => {
+                      const isCurrentRange =
+                        (row.range === "130+" && result.iq >= 130) ||
+                        (row.range.includes("-") && (() => {
+                          const [lo, hi] = row.range.split("-").map(Number);
+                          return result.iq >= lo && result.iq <= hi;
+                        })());
+                      return (
+                        <tr
+                          key={i}
+                          className={`border-b border-gray-100 dark:border-gray-800 ${isCurrentRange ? "bg-indigo-50 dark:bg-indigo-900/30 font-medium" : ""}`}
+                        >
+                          <td className="py-2 px-3 text-gray-900 dark:text-white">{row.range}</td>
+                          <td className="py-2 px-3 text-gray-700 dark:text-gray-300">{row.label}</td>
+                          <td className="py-2 px-3 text-gray-500 dark:text-gray-400">{row.percent}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* IQ Distribution Visual */}
         <Card>
           <CardHeader>
@@ -522,7 +589,6 @@ export default function IQTestPage() {
               {/* Bell curve approximation with gradient */}
               <div className="absolute inset-0 flex items-end">
                 {Array.from({ length: 40 }, (_, i) => {
-                  const x = (i / 39) * 100;
                   const iq = 55 + (i / 39) * 90; // IQ range 55-145
                   const z = (iq - 100) / 15;
                   const height = Math.exp(-0.5 * z * z) * 100;

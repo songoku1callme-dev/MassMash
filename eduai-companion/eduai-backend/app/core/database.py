@@ -334,12 +334,19 @@ async def init_db():
     except Exception:
         pass  # is_pro column may not exist in very old DBs
 
-    # Admin account: user_id=1 or username/email contains 'admin' → Max forever
-    admin_email = os.getenv("ADMIN_EMAIL", "")
+    # Admin accounts: all configured admin emails get permanent Max tier
+    # They can NEVER be downgraded
+    admin_emails_raw = ",".join([
+        os.getenv("ADMIN_EMAIL", ""),
+        os.getenv("ADMIN_EMAIL_2", ""),
+        os.getenv("ADMIN_EMAIL_3", ""),
+        os.getenv("ADMIN_EMAIL_4", ""),
+    ])
+    admin_emails = [e.strip() for e in admin_emails_raw.split(",") if e.strip()]
     try:
         admin_conditions = ["id = 1", "username = 'admin'"]
-        if admin_email:
-            admin_conditions.append(f"email = '{admin_email}'")
+        for ae in admin_emails:
+            admin_conditions.append(f"email = '{ae}'")
         admin_where = " OR ".join(admin_conditions)
         await db.execute(
             f"UPDATE users SET subscription_tier = 'max', is_pro = 1, is_admin = 1, "
