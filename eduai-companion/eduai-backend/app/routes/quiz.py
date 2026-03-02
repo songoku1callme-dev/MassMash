@@ -22,7 +22,7 @@ from app.models.schemas import (
     QuizSubmitRequest, QuizResultResponse,
     AnswerCheckRequest, AnswerCheckResponse,
 )
-from app.services.ai_engine import generate_quiz, update_proficiency
+from app.services.ai_engine import generate_quiz, update_proficiency, generate_explain_why_wrong, get_fach_regeln
 from app.services.quiz_topics import get_topics_for_subject, get_all_topics, get_topic_count
 from app.services.ki_personalities import get_personalities, get_personality_by_id
 from app.services.latein_modus import is_latein_modus_fach, get_latein_quiz_prompt, LATEIN_QUIZ_VERTEILUNG
@@ -277,10 +277,44 @@ async def check_answer(
     answer_data = dict(row)
     is_correct = request.user_answer.strip().lower() == answer_data["correct_answer"].strip().lower()
 
+    # Final Polish 5.1 Block 2: Explain-Why-Wrong Loop
+    erklaerung_falsch = None
+    intervention = None
+    if not is_correct:
+        erklaerung_falsch = generate_explain_why_wrong(
+            fach=request.quiz_id.split("_")[2] if len(request.quiz_id.split("_")) > 2 else "general",
+            frage=request.question_id,
+            falsche_antwort=request.user_answer,
+            richtige_antwort=answer_data["correct_answer"],
+            erklaerung=answer_data["explanation"],
+        )
+        # Track consecutive errors for intervention
+        try:
+            user_id = current_user["id"]
+            fach = request.quiz_id.split("_")[2] if len(request.quiz_id.split("_")) > 2 else "general"
+            err_cursor = await db.execute(
+                """SELECT COUNT(*) as cnt FROM question_history
+                WHERE user_id = ? AND fach = ? AND richtig = 0
+                AND created_at >= datetime('now', '-1 hour')""",
+                (user_id, fach),
+            )
+            err_row = await err_cursor.fetchone()
+            recent_errors = dict(err_row)["cnt"] if err_row else 0
+            if recent_errors >= 5:
+                intervention = (
+                    f"Du hast {recent_errors} Fehler hintereinander gemacht. "
+                    "Kein Problem! Versuche es mit dem Tutor-Modus — dort erklaere ich dir alles Schritt fuer Schritt. "
+                    "Manchmal hilft auch eine kurze Pause."
+                )
+        except Exception:
+            pass  # Non-fatal
+
     return AnswerCheckResponse(
         correct=is_correct,
         correct_answer=answer_data["correct_answer"],
         explanation=answer_data["explanation"],
+        erklaerung_falsch=erklaerung_falsch,
+        intervention=intervention,
     )
 
 

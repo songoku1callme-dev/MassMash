@@ -622,6 +622,18 @@ async def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_schulbuch_scans_user ON schulbuch_scans(user_id, created_at);
 
+        -- Final Polish 5.1 Block 1: WebSocket tickets table
+        CREATE TABLE IF NOT EXISTS ws_tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket TEXT UNIQUE NOT NULL,
+            user_id INTEGER NOT NULL,
+            expires_at TEXT NOT NULL,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_ws_tickets_ticket ON ws_tickets(ticket, expires_at);
+
         -- Faecher-Expansion 5.0 Block 4: Lehrplan-Themen cache
         CREATE TABLE IF NOT EXISTS lehrplan_themen (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -665,6 +677,8 @@ async def init_db():
         ("users", "bundesland", "TEXT DEFAULT ''"),
         ("users", "klasse", "INTEGER DEFAULT 10"),
         ("users", "schultyp_detail", "TEXT DEFAULT 'Gymnasium'"),
+        # Final Polish 5.1 Block 1: Additional user profile fields
+        ("users", "favoriten_faecher", "TEXT DEFAULT '[]'"),
     ]
     for table, column, col_type in migrations:
         try:

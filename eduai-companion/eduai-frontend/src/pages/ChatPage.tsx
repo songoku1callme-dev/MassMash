@@ -357,7 +357,7 @@ export default function ChatPage() {
           onClick={handleTutorToggle}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
             tutorModus
-              ? "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
+              ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700"
               : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
           }`}
           title="Tutor-Modus: KI stellt nur Gegenfragen (Sokratische Methode)"
@@ -424,6 +424,8 @@ export default function ChatPage() {
             placeholder={
               isListening
                 ? (language === "de" ? "Sprich jetzt..." : "Speak now...")
+                : tutorModus
+                ? (language === "de" ? "Stelle eine Frage — die KI antwortet nur mit Gegenfragen..." : "Ask a question — AI will only ask guiding questions...")
                 : (language === "de" ? "Stelle eine Frage..." : "Ask a question...")
             }
             disabled={isSending}

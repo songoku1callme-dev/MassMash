@@ -145,6 +145,8 @@ class AnswerCheckResponse(BaseModel):
     correct: bool
     correct_answer: str
     explanation: str
+    erklaerung_falsch: Optional[str] = None  # Final Polish 5.1: Explain-Why-Wrong
+    intervention: Optional[str] = None  # Final Polish 5.1: 5+ errors intervention
 
 
 class QuizSubmitRequest(BaseModel):

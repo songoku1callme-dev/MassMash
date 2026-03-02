@@ -1,13 +1,14 @@
 /* EduAI Companion — Service Worker (Perfect School 4.1: PWA Offline + Push) */
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = "eduai-v14";
+const CACHE_NAME = "eduai-v15";
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
   "/quiz",
   "/chat",
   "/karteikarten",
+  "/scanner",
   "/offline.html",
   "/pwa-192x192.png",
 ];

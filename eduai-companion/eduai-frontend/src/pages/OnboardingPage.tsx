@@ -7,8 +7,14 @@ interface OnboardingProps {
   onComplete: () => void;
 }
 
-const SCHOOL_TYPES = ["Gymnasium", "Realschule", "Gesamtschule", "Hauptschule", "Berufsschule"];
+const SCHOOL_TYPES = ["Gymnasium", "Realschule", "Gesamtschule", "Hauptschule", "Berufsschule", "Fachoberschule"];
 const GRADES = ["5", "6", "7", "8", "9", "10", "11", "12", "13"];
+const BUNDESLAENDER = [
+  "Baden-Wuerttemberg", "Bayern", "Berlin", "Brandenburg", "Bremen",
+  "Hamburg", "Hessen", "Mecklenburg-Vorpommern", "Niedersachsen",
+  "Nordrhein-Westfalen", "Rheinland-Pfalz", "Saarland", "Sachsen",
+  "Sachsen-Anhalt", "Schleswig-Holstein", "Thueringen",
+];
 
 const SUBJECTS = [
   "Mathematik", "Deutsch", "Englisch", "Physik", "Chemie", "Biologie",
@@ -26,6 +32,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [grade, setGrade] = useState("10");
   const [schoolType, setSchoolType] = useState("Gymnasium");
+  const [bundesland, setBundesland] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [goal, setGoal] = useState("");
 
@@ -76,6 +83,29 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "In welchem Bundesland bist du?",
+      subtitle: "Der Lehrplan unterscheidet sich je nach Bundesland",
+      content: (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            {BUNDESLAENDER.map((bl) => (
+              <button
+                key={bl}
+                onClick={() => setBundesland(bl)}
+                className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  bundesland === bl
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+              >
+                {bl}
+              </button>
+            ))}
           </div>
         </div>
       ),

@@ -233,3 +233,89 @@ def call_groq_llm(
         language=language,
         chat_history=chat_history,
     )
+
+
+def deep_think_answer(
+    prompt: str,
+    system_prompt: str,
+    subject: str,
+    level: str,
+    language: str = "de",
+    chat_history: Optional[list] = None,
+    rag_context: str = "",
+    web_context: str = "",
+    is_pro: bool = False,
+    temperature_override: Optional[float] = None,
+) -> str:
+    """Final Polish 5.1 Block 6: Multi-Step Reasoning (ANALYSE -> ANTWORT -> CHECK).
+
+    Step 1: Fast internal analysis using llama-3.1-8b-instant (cheap, fast)
+    Step 2: Perfect answer using llama-3.3-70b-versatile with full system prompt
+    The analysis informs the final answer but is NOT shown to the student.
+    """
+    client = _get_client()
+    if client is None:
+        # No API key — use standard call
+        return call_groq_llm(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            subject=subject,
+            level=level,
+            language=language,
+            chat_history=chat_history,
+            rag_context=rag_context,
+            web_context=web_context,
+            is_pro=is_pro,
+            temperature_override=temperature_override,
+        )
+
+    # --- Step 1: ANALYSE (fast, cheap model) ---
+    analyse_prompt = (
+        f"Du bist ein Lehr-Analyse-Assistent. Analysiere INTERN folgende Schueler-Frage:\n"
+        f"Fach: {subject} | Niveau: {level} | Sprache: {language}\n\n"
+        f"Frage: {prompt}\n\n"
+        f"Beantworte KURZ (max 3 Saetze):\n"
+        f"1. Was ist das Kernthema?\n"
+        f"2. Welches Vorwissen braucht der Schueler?\n"
+        f"3. Haeufige Fehler bei diesem Thema?"
+    )
+
+    analyse_result = ""
+    try:
+        analyse_completion = client.chat.completions.create(
+            model=FAST_MODEL,
+            messages=[
+                {"role": "system", "content": "Du bist ein interner Analyse-Assistent. Antworte kurz und praezise."},
+                {"role": "user", "content": analyse_prompt},
+            ],
+            max_tokens=300,
+            temperature=0.3,
+            stream=False,
+        )
+        analyse_result = analyse_completion.choices[0].message.content or ""
+        logger.debug("Deep think analyse: %s", analyse_result[:100])
+    except Exception as e:
+        logger.warning("Deep think analyse failed (non-fatal): %s", e)
+
+    # --- Step 2: ANTWORT (quality model with analysis context) ---
+    enhanced_system = system_prompt
+    if analyse_result:
+        enhanced_system += (
+            f"\n\nINTERNE ANALYSE (nicht dem Schueler zeigen!):\n{analyse_result}\n"
+            f"Nutze diese Analyse um eine perfekte, geprueft korrekte Antwort zu geben."
+        )
+
+    return call_groq_llm(
+        prompt=prompt,
+        system_prompt=enhanced_system,
+        subject=subject,
+        level=level,
+        language=language,
+        chat_history=chat_history,
+        model=DEFAULT_MODEL,
+        rag_context=rag_context,
+        web_context=web_context,
+        is_pro=is_pro,
+        temperature_override=temperature_override,
+        task_type="explanation",
+    )

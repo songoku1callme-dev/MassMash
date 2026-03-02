@@ -822,6 +822,73 @@ def generate_quiz(
     return questions
 
 
+def get_fach_regeln(fach: str) -> str:
+    """Return subject-specific quiz generation rules for all 32 subjects.
+
+    Final Polish 5.1 Block 2: Fach-spezifische Regeln fuer Groq-basierte Quiz-Generierung.
+    """
+    regeln: dict[str, str] = {
+        "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklaerung. LaTeX fuer Formeln: $x^2$. Immer Probe angeben.",
+        "Physik": "Formeln + Einheiten immer angeben. Realweltbezug herstellen. Rechenaufgaben bevorzugen.",
+        "Chemie": "Reaktionsgleichungen ausgleichen. Stoffnamen + Formeln. Sicherheitshinweise erwaehnen.",
+        "Biologie": "Fachbegriffe lateinisch + deutsch. Schaubilder beschreiben. Evolutionaere Zusammenhaenge.",
+        "Deutsch": "Grammatik-Regeln mit Beispielsaetzen. Literatur-Epochen nennen. Rechtschreibregeln erklaeren.",
+        "Englisch": "Grammatik mit Signalwoertern. Vokabeln im Kontext. Uebersetzungen Deutsch-Englisch.",
+        "Franzoesisch": "Grammatik mit Konjugationstabellen. Vokabeln mit Artikel. Aussprache-Hinweise.",
+        "Latein": "Stammformen angeben. Deklinationen/Konjugationen tabellarisch. Uebersetzung Latein-Deutsch.",
+        "Spanisch": "Konjugationen vollstaendig. Ser vs Estar erklaeren. Vokabeln mit Genus.",
+        "Italienisch": "Konjugationen mit Beispielen. Aussprache-Tipps. Kulturelle Kontexte.",
+        "Russisch": "Kyrillisch + Transliteration. Aspekte erklaeren. Kasus-Tabellen nutzen.",
+        "Tuerkisch": "Vokalharmonie erklaeren. Suffixe hervorheben. Agglutination zeigen.",
+        "Altgriechisch": "Stammformen angeben. Partizipien erklaeren. Uebersetzung Griechisch-Deutsch.",
+        "Geschichte": "Jahreszahlen + Epochen. Quellenanalyse-Methodik. Ursache-Wirkungs-Ketten.",
+        "Geografie": "Karten-Bezug herstellen. Klimazonen + Vegetationszonen. Aktuelle Statistiken.",
+        "Politik": "Grundgesetz-Artikel zitieren. Institutionen erklaeren. Aktuelle Bezuege.",
+        "Wirtschaft": "Formeln fuer Berechnungen. Grafiken beschreiben. Marktmodelle erklaeren.",
+        "Informatik": "Code-Beispiele in Python/Java. Algorithmen Schritt-fuer-Schritt. Big-O-Notation.",
+        "Astronomie": "Groessenverhaeltnisse nennen. Formeln + Einheiten. Beobachtungstipps.",
+        "Technik": "Schaltplaene beschreiben. Materialien + Eigenschaften. Sicherheitsregeln.",
+        "Psychologie": "Studien zitieren. Fachbegriffe definieren. Alltags-Beispiele geben.",
+        "Paedagogik": "Theorien + Vertreter nennen. Fallbeispiele konstruieren. Methodenvergleich.",
+        "Sozialwissenschaften": "Statistiken interpretieren. Theorien vergleichen. Aktuelle Studien.",
+        "Philosophie": "Zitate + Denker zuordnen. Argumentationsstruktur zeigen. Gedankenexperimente.",
+        "Recht": "Paragraphen zitieren. Fallbeispiele konstruieren. Rechtsgebiete abgrenzen.",
+        "Religion (Kath.)": "Bibelstellen zitieren. Kirchengeschichte einbeziehen. Ethische Dilemmata.",
+        "Religion (Ev.)": "Bibelstellen zitieren. Reformationsgeschichte. Ethische Reflexion.",
+        "Islamunterricht": "Koranverse zitieren. Islamische Geschichte. Interreligioeser Dialog.",
+        "Ethik": "Philosophische Positionen vergleichen. Dilemmata konstruieren. Argumentation foerdern.",
+        "Werte und Normen": "Fallbeispiele aus dem Alltag. Verschiedene Perspektiven zeigen. Reflexionsfragen.",
+        "Kunst": "Epochen + Kuenstler zuordnen. Bildbeschreibung systematisch. Gestaltungsmittel benennen.",
+        "Musik": "Notenlehre + Intervalle. Epochen + Komponisten. Hoerbeispiele beschreiben.",
+        "Darstellendes Spiel": "Theaterbegriffe definieren. Szenenanalyse. Improvisationstechniken.",
+        "Sport": "Regelkunde + Taktik. Anatomie-Bezug. Trainingslehre-Prinzipien.",
+        "Hauswirtschaft": "Naehrwerte + Ernaehrungsregeln. Hygiene-Standards. Rezept-Berechnungen.",
+        "Ernaehrungslehre": "Naehrstoffe + Funktionen. Ernaehrungspyramide. Allergien + Unvertraeglichkeiten.",
+    }
+    return regeln.get(fach, "Stelle klare, praezise Fragen auf Deutsch. Gib hilfreiche Erklaerungen.")
+
+
+def generate_explain_why_wrong(
+    fach: str,
+    frage: str,
+    falsche_antwort: str,
+    richtige_antwort: str,
+    erklaerung: str,
+) -> str:
+    """Generate a mini-Lerneinheit explaining why an answer was wrong.
+
+    Final Polish 5.1 Block 2: Explain-Why-Wrong Loop.
+    Returns a 3-sentence explanation tailored to the subject.
+    """
+    fach_context = get_fach_regeln(fach)
+    return (
+        f"**Nicht ganz richtig!** Die korrekte Antwort ist: **{richtige_antwort}**\n\n"
+        f"{erklaerung}\n\n"
+        f"**Tipp:** {fach_context.split('.')[0]}. "
+        f"Versuche es beim naechsten Mal mit diesem Wissen!"
+    )
+
+
 def get_learning_path(subject: str, level: str, language: str = "de") -> dict:
     """Generate a learning path recommendation based on subject and level."""
     paths = {

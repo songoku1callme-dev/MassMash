@@ -36,6 +36,7 @@ import MarketplacePage from "./pages/MarketplacePage";
 import BattlePassPage from "./pages/BattlePassPage";
 import StatsPage from "./pages/StatsPage";
 import LandingPage from "./pages/LandingPage";
+import ScannerPage from "./pages/ScannerPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -163,6 +164,8 @@ function App() {
         return <BattlePassPage />;
       case "meine-stats":
         return <StatsPage />;
+      case "scanner":
+        return <ScannerPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

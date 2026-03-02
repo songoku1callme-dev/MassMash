@@ -9,7 +9,8 @@ import {
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Database,
   CreditCard, Star, Globe, Trophy, Users, Shield, Swords, Brain,
   Layers, FileText, CalendarDays, Lock, School, Sparkles, Timer,
-  ShoppingBag, Target, Mic, Heart, Calendar, Handshake, Store, BarChart3
+  ShoppingBag, Target, Mic, Heart, Calendar, Handshake, Store, BarChart3,
+  Camera
 } from "lucide-react";
 
 const SUBJECT_ICONS: Record<string, React.ReactNode> = {
@@ -60,6 +61,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "marketplace", label: "Marketplace", icon: <Store className="w-5 h-5" /> },
     { id: "battle-pass", label: "Battle Pass", icon: <Trophy className="w-5 h-5" /> },
     { id: "meine-stats", label: "Meine Statistiken", icon: <BarChart3 className="w-5 h-5" /> },
+    { id: "scanner", label: "Schulbuch-Scanner", icon: <Camera className="w-5 h-5" /> },
     { id: "parents", label: "Eltern-Dashboard", icon: <Heart className="w-5 h-5" /> },
     { id: "school", label: "Schul-Lizenzen", icon: <School className="w-5 h-5" /> },
     ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),

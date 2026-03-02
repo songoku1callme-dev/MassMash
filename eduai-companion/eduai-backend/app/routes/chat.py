@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
 from app.services.ai_engine import detect_subject, build_system_prompt
-from app.services.groq_llm import call_groq_llm, classify_needs_search
+from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
 from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, detect_emotion, get_emotion_prompt
@@ -393,18 +393,33 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
             combined_prompt += f"\nWICHTIG: {extra_instruction}\n"
             break
 
-    ai_response = call_groq_llm(
-        prompt=request.message,
-        system_prompt=combined_prompt,
-        subject=subject,
-        level=level,
-        language=request.language,
-        chat_history=messages,
-        rag_context=rag_context,
-        is_pro=is_pro,
-        temperature_override=personality_temperature,
-        web_context=web_context,
-    )
+    # Final Polish 5.1 Block 6: Use Multi-Step Reasoning for Pro/Max users
+    if user_tier in ("pro", "max"):
+        ai_response = deep_think_answer(
+            prompt=request.message,
+            system_prompt=combined_prompt,
+            subject=subject,
+            level=level,
+            language=request.language,
+            chat_history=messages,
+            rag_context=rag_context,
+            web_context=web_context,
+            is_pro=is_pro,
+            temperature_override=personality_temperature,
+        )
+    else:
+        ai_response = call_groq_llm(
+            prompt=request.message,
+            system_prompt=combined_prompt,
+            subject=subject,
+            level=level,
+            language=request.language,
+            chat_history=messages,
+            rag_context=rag_context,
+            is_pro=is_pro,
+            temperature_override=personality_temperature,
+            web_context=web_context,
+        )
 
     # Award gamification XP for chat
     try:
