@@ -80,7 +80,7 @@ export default function PricingPage() {
           Wähle deinen Plan
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
-          Lerne besser mit EduAI - vom Einsteiger bis zum Abitur
+          Lerne besser mit Lumnos - vom Einsteiger bis zum Abitur
         </p>
       </div>
 

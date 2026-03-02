@@ -53,7 +53,7 @@ function App() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("eduai_dark") === "true" ||
+      return localStorage.getItem("lumnos_dark") === "true" ||
         window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return false;
@@ -71,15 +71,15 @@ function App() {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("eduai_dark", String(darkMode));
+    localStorage.setItem("lumnos_dark", String(darkMode));
   }, [darkMode]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen cyber-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto" />
-          <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm">Laden...</p>
+          <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"\u2726"}</div>
+          <p className="mt-4 text-lumnos-muted text-sm">Laden...</p>
         </div>
       </div>
     );
@@ -176,7 +176,7 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen cyber-bg text-lumnos-text">
       <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
       <main className="flex-1 overflow-auto relative">
         <div className="absolute top-4 right-4 z-30">

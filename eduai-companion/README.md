@@ -1,4 +1,4 @@
-# EduAI Companion — KI-Tutor für deutsche Schüler
+# Lumnos Companion — KI-Tutor für deutsche Schüler
 
 > **Production-Ready 1.0** — AI-powered tutoring for German students (Gymnasium/Realschule).
 
@@ -41,13 +41,13 @@
 
 ```bash
 git clone https://github.com/songoku1callme-dev/MassMash.git
-cd MassMash/eduai-companion
+cd MassMash/lumnos-companion
 ```
 
 ### 2. Backend starten
 
 ```bash
-cd eduai-backend
+cd lumnos-backend
 
 # Dependencies installieren
 poetry install
@@ -66,7 +66,7 @@ API-Docs: `http://localhost:8000/docs`
 ### 3. Frontend starten
 
 ```bash
-cd eduai-frontend
+cd lumnos-frontend
 
 # Dependencies installieren
 npm install
@@ -80,7 +80,7 @@ Frontend läuft auf: `http://localhost:5173`
 ### 4. Alternativ: Docker Compose
 
 ```bash
-cd eduai-companion
+cd lumnos-companion
 cp .env.template .env
 # SECRET_KEY eintragen
 docker compose up --build
@@ -96,7 +96,7 @@ Frontend: `http://localhost:5173` | Backend: `http://localhost:8000`
 |----------|-------------|--------------|
 | `SECRET_KEY` | **Ja** (Produktion) | JWT-Signatur. Generieren: `python -c "import secrets; print(secrets.token_urlsafe(64))"` |
 | `GROQ_API_KEY` | Nein | Groq API Key für echte KI-Antworten. Ohne: Template-Engine als Fallback. |
-| `EDUAI_DEV_MODE` | Nein | `1` = permissive CORS (alle Origins erlaubt) |
+| `LUMNOS_DEV_MODE` | Nein | `1` = permissive CORS (alle Origins erlaubt) |
 | `DATABASE_PATH` | Nein | SQLite-Pfad. Standard: `app.db` (lokal) oder `/data/app.db` (Fly.io) |
 | `CLERK_PUBLISHABLE_KEY` | Nein | Clerk OAuth (https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | Nein | Clerk OAuth Secret |
@@ -186,10 +186,10 @@ Siehe `.env.template` für die vollständige Liste.
 ## Projektstruktur
 
 ```
-eduai-companion/
+lumnos-companion/
 ├── .env.template              # Alle Umgebungsvariablen dokumentiert
 ├── docker-compose.yml         # Lokales Setup (Backend + Frontend)
-├── eduai-backend/
+├── lumnos-backend/
 │   ├── Dockerfile             # Production Image (Tesseract + FAISS)
 │   ├── .dockerignore
 │   ├── fly.toml               # Fly.io Deployment (2GB RAM, Volume)
@@ -221,7 +221,7 @@ eduai-companion/
 │   │       ├── rag_service.py # FAISS RAG Service
 │   │       └── seed_curriculum.py  # Deutsche Lehrplandaten
 │   └── tests/                 # pytest (24+ Tests)
-├── eduai-frontend/
+├── lumnos-frontend/
 │   ├── Dockerfile             # Dev Container (Node 20)
 │   ├── src/
 │   │   ├── pages/             # React Pages (7 Seiten)
@@ -238,12 +238,12 @@ eduai-companion/
 
 ```bash
 # Backend (pytest)
-cd eduai-backend
+cd lumnos-backend
 poetry run pytest tests/ -v
 # Erwartet: 24+ Tests bestanden
 
 # Frontend (vitest)
-cd eduai-frontend
+cd lumnos-frontend
 npm run test
 # Erwartet: 15+ Tests bestanden
 
@@ -259,7 +259,7 @@ npm run build
 ### Backend (Fly.io)
 
 ```bash
-cd eduai-backend
+cd lumnos-backend
 fly deploy
 # Setzt voraus: fly.toml konfiguriert, Secrets gesetzt
 fly secrets set SECRET_KEY=dein_key GROQ_API_KEY=gsk_dein_key
@@ -268,7 +268,7 @@ fly secrets set SECRET_KEY=dein_key GROQ_API_KEY=gsk_dein_key
 ### Frontend (Vercel)
 
 ```bash
-cd eduai-frontend
+cd lumnos-frontend
 vercel --prod
 # Oder: Git Push → Vercel Auto-Deploy
 ```

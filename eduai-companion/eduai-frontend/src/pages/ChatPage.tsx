@@ -30,7 +30,7 @@ export default function ChatPage() {
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
   const [showPersonalities, setShowPersonalities] = useState(false);
-  const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("eduai_tutor_modus") === "true");
+  const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("lumnos_tutor_modus") === "true");
   const [eli5, setEli5] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +76,7 @@ export default function ChatPage() {
   const handleTutorToggle = useCallback(() => {
     const next = !tutorModus;
     setTutorModus(next);
-    localStorage.setItem("eduai_tutor_modus", String(next));
+    localStorage.setItem("lumnos_tutor_modus", String(next));
   }, [tutorModus]);
 
   const handleSend = () => {

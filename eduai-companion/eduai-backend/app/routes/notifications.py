@@ -150,7 +150,7 @@ async def send_test_notification(
         raise HTTPException(status_code=404, detail="Keine Push-Subscription gefunden")
 
     vapid_private = os.getenv("VAPID_PRIVATE_KEY", "")
-    vapid_email = os.getenv("VAPID_EMAIL", "mailto:noreply@eduai.de")
+    vapid_email = os.getenv("VAPID_EMAIL", "mailto:noreply@lumnos.de")
 
     if not vapid_private:
         return {"message": "VAPID Keys nicht konfiguriert - Test-Modus", "subscriptions": len(subs)}
@@ -166,7 +166,7 @@ async def send_test_notification(
                     "keys": {"p256dh": sd["p256dh"], "auth": sd["auth_key"]},
                 },
                 data=json.dumps({
-                    "title": "EduAI Test",
+                    "title": "Lumnos Test",
                     "body": "Push-Benachrichtigungen funktionieren!",
                     "icon": "/favicon.ico",
                 }),
@@ -297,7 +297,7 @@ async def send_weekly_report(
         </div>
 
         <p style="color: #6b7280; font-size: 12px;">
-            Du erhaeltst diese Email jeden Montag. | EduAI Companion
+            Du erhaeltst diese Email jeden Montag. | Lumnos Companion
         </p>
     </div>
     """
@@ -309,7 +309,7 @@ async def send_weekly_report(
                 "https://api.resend.com/emails",
                 headers={"Authorization": f"Bearer {resend_key}"},
                 json={
-                    "from": "EduAI <noreply@eduai.de>",
+                    "from": "Lumnos <noreply@lumnos.de>",
                     "to": [ud["email"]],
                     "subject": f"Dein Wochen-Report: {stats_response['total_xp']} XP, {stats_response['week_quizzes']} Quizze",
                     "html": html,

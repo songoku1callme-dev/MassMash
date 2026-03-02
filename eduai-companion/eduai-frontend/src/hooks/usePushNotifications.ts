@@ -41,7 +41,7 @@ export function usePushNotifications() {
         });
         setSubscription(sub);
         // Store subscription preference
-        localStorage.setItem("eduai_push_enabled", "true");
+        localStorage.setItem("lumnos_push_enabled", "true");
         return true;
       } catch {
         console.warn("Push subscription failed");

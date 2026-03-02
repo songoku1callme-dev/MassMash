@@ -5,9 +5,9 @@ import asyncio
 import tempfile
 
 # Use a temp file for the test database (writable path) — must be set before app import
-_test_db = os.path.join(tempfile.gettempdir(), "test_eduai.db")
+_test_db = os.path.join(tempfile.gettempdir(), "test_lumnos.db")
 os.environ["DATABASE_URL"] = _test_db
-os.environ["EDUAI_DEV_MODE"] = "1"
+os.environ["LUMNOS_DEV_MODE"] = "1"
 
 import pytest
 from app.core.database import init_db

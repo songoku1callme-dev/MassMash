@@ -97,7 +97,7 @@ const PRICING = [
 ];
 
 const TESTIMONIALS = [
-  { name: "Sarah M.", grade: "12. Klasse", text: "Dank EduAI habe ich meine Mathe-Note von 4 auf 2 verbessert!", avatar: "S" },
+  { name: "Sarah M.", grade: "12. Klasse", text: "Dank Lumnos habe ich meine Mathe-Note von 4 auf 2 verbessert!", avatar: "S" },
   { name: "Tim K.", grade: "10. Klasse", text: "Der IQ-Test und die Turniere machen richtig Spaß. Lernen war noch nie so cool!", avatar: "T" },
   { name: "Lisa W.", grade: "13. Klasse", text: "Die Abitur-Simulation hat mir mega geholfen. Ich fühle mich jetzt viel sicherer.", avatar: "L" },
 ];
@@ -113,52 +113,52 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen cyber-bg">
       {/* Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg border-b border-gray-100 dark:border-gray-800">
+      <nav className="fixed top-0 w-full z-50 glass border-b border-lumnos-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white">
-              <GraduationCap className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg bg-lumnos-gradient flex items-center justify-center text-white animate-pulse-glow">
+              <span className="font-bold">{"\u2726"}</span>
             </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-white">EduAI</span>
+            <span className="font-bold text-lg text-lumnos-text">Lumnos</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={onLogin}>Anmelden</Button>
-            <Button size="sm" onClick={onRegister}>Kostenlos starten</Button>
+            <Button variant="ghost" size="sm" className="text-lumnos-muted hover:text-lumnos-text" onClick={onLogin}>Anmelden</Button>
+            <Button size="sm" className="lumnos-btn-primary border-0" onClick={onRegister}>Kostenlos starten</Button>
           </div>
         </div>
       </nav>
 
       {/* Hero */}
       <section className="pt-32 pb-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium mb-6 animate-pulse">
+        <div className="max-w-4xl mx-auto text-center animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-6 animate-pulse-glow">
             <Sparkles className="w-4 h-4" />
-            Deutschlands #1 KI-Tutor — Bereits 1.247+ Schueler lernen mit EduAI
+            Deutschlands #1 KI-Tutor — Bereits 1.247+ Schueler lernen mit Lumnos
           </div>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-lumnos-text leading-tight">
             Lerne{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500">
+            <span className="text-transparent bg-clip-text bg-lumnos-gradient">
               3x schneller
             </span>
             {" "}mit KI
           </h1>
-          <p className="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="mt-6 text-lg sm:text-xl text-lumnos-muted max-w-2xl mx-auto">
             IQ-Test, Abitur-Simulation, 16 Faecher, taegliche Turniere, Voice Mode.
-            20 KI-Persoenlichkeiten helfen dir beim Lernen. <strong>100% kostenlos starten.</strong>
+            20 KI-Persoenlichkeiten helfen dir beim Lernen. <strong className="text-lumnos-text">100% kostenlos starten.</strong>
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="gap-2 text-base px-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25" onClick={onRegister}>
+            <Button size="lg" className="gap-2 text-base px-8 lumnos-btn-primary border-0 shadow-glow-md" onClick={onRegister}>
               Mit Google starten
               <ChevronRight className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="lg" className="gap-2 text-base" onClick={onIQTest}>
+            <Button variant="outline" size="lg" className="gap-2 text-base border-lumnos-border text-lumnos-text hover:bg-lumnos-surface" onClick={onIQTest}>
               <Brain className="w-5 h-5" />
               Gratis IQ-Test
             </Button>
           </div>
-          <p className="mt-3 text-xs text-gray-400">Keine Kreditkarte noetig. DSGVO-konform.</p>
+          <p className="mt-3 text-xs text-lumnos-muted">Keine Kreditkarte noetig. DSGVO-konform.</p>
         </div>
       </section>
 
@@ -309,15 +309,15 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">EduAI vs. Andere Lern-Apps</h2>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Warum EduAI die beste Wahl ist</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Lumnos vs. Andere Lern-Apps</h2>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">Warum Lumnos die beste Wahl ist</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b dark:border-gray-700">
                   <th className="text-left p-3 text-gray-500 dark:text-gray-400">Feature</th>
-                  <th className="p-3 text-indigo-600 dark:text-indigo-400 font-bold">EduAI</th>
+                  <th className="p-3 text-indigo-600 dark:text-indigo-400 font-bold">Lumnos</th>
                   <th className="p-3 text-gray-500 dark:text-gray-400">Knowunity</th>
                   <th className="p-3 text-gray-500 dark:text-gray-400">Studyflix</th>
                 </tr>
@@ -334,10 +334,10 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
                   ["Klassen-Challenges", "check", "partial", "cross"],
                   ["16 Faecher", "check", "check", "partial"],
                   ["Kostenloser Plan", "check", "partial", "check"],
-                ].map(([feature, eduai, knowunity, studyflix], i) => (
+                ].map(([feature, lumnos, knowunity, studyflix], i) => (
                   <tr key={i} className="border-b dark:border-gray-700/50">
                     <td className="text-left p-3 text-gray-700 dark:text-gray-300">{feature}</td>
-                    {[eduai, knowunity, studyflix].map((val, j) => (
+                    {[lumnos, knowunity, studyflix].map((val, j) => (
                       <td key={j} className="p-3">
                         {val === "check" ? <span className="text-green-500 font-bold">Ja</span> :
                          val === "partial" ? <span className="text-yellow-500">Teilweise</span> :
@@ -360,11 +360,11 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
           </div>
           <div className="space-y-4">
             {[
-              { q: "Ist EduAI wirklich kostenlos?", a: "Ja! Der Free-Plan ist dauerhaft kostenlos und beinhaltet 5 KI-Persoenlichkeiten, 3 Quizzes pro Tag und den IQ-Test." },
-              { q: "Fuer welche Klassenstufen ist EduAI geeignet?", a: "EduAI ist fuer Schueler der Klassen 5-13 an Gymnasium, Realschule und Gesamtschule geeignet. Die KI passt sich automatisch an dein Niveau an." },
+              { q: "Ist Lumnos wirklich kostenlos?", a: "Ja! Der Free-Plan ist dauerhaft kostenlos und beinhaltet 5 KI-Persoenlichkeiten, 3 Quizzes pro Tag und den IQ-Test." },
+              { q: "Fuer welche Klassenstufen ist Lumnos geeignet?", a: "Lumnos ist fuer Schueler der Klassen 5-13 an Gymnasium, Realschule und Gesamtschule geeignet. Die KI passt sich automatisch an dein Niveau an." },
               { q: "Wie funktioniert der KI-Tutor?", a: "Der KI-Tutor nutzt modernste Sprachmodelle, um dir Themen Schritt fuer Schritt zu erklaeren. Du kannst aus 20 verschiedenen KI-Persoenlichkeiten waehlen." },
-              { q: "Sind meine Daten sicher?", a: "Absolut. EduAI ist DSGVO-konform. Deine Daten werden in Europa gespeichert und niemals an Dritte weitergegeben." },
-              { q: "Kann ich EduAI auf dem Handy nutzen?", a: "Ja! EduAI ist eine Progressive Web App (PWA) und funktioniert auf jedem Geraet mit Browser - auch offline fuer Karteikarten und Quizzes." },
+              { q: "Sind meine Daten sicher?", a: "Absolut. Lumnos ist DSGVO-konform. Deine Daten werden in Europa gespeichert und niemals an Dritte weitergegeben." },
+              { q: "Kann ich Lumnos auf dem Handy nutzen?", a: "Ja! Lumnos ist eine Progressive Web App (PWA) und funktioniert auf jedem Geraet mit Browser - auch offline fuer Karteikarten und Quizzes." },
             ].map((faq, i) => (
               <details key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <summary className="p-4 font-medium text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
@@ -384,7 +384,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
             Werde Teil der smartesten Lern-Community Deutschlands
           </h2>
           <p className="mt-4 text-indigo-100 text-lg">
-            1.247+ Schueler vertrauen bereits auf EduAI. Starte jetzt kostenlos.
+            1.247+ Schueler vertrauen bereits auf Lumnos. Starte jetzt kostenlos.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="gap-2 text-base px-8 bg-white text-indigo-700 hover:bg-gray-100 shadow-lg" onClick={onRegister}>
@@ -405,7 +405,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <GraduationCap className="w-5 h-5 text-indigo-600" />
-            <span className="font-bold text-gray-900 dark:text-white">EduAI Companion</span>
+            <span className="font-bold text-gray-900 dark:text-white">Lumnos Companion</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
             <span>DSGVO-konform</span>

@@ -24,7 +24,7 @@ export default function SchoolPage() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState("");
   const [message, setMessage] = useState("");
-  const token = localStorage.getItem("eduai_token");
+  const token = localStorage.getItem("lumnos_token");
 
   const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 

@@ -1,4 +1,4 @@
-"""RAG (Retrieval-Augmented Generation) service for EduAI Companion.
+"""RAG (Retrieval-Augmented Generation) service for Lumnos Companion.
 
 Uses FAISS for local vector similarity search and sentence-transformers
 for generating embeddings. Documents and their metadata are persisted

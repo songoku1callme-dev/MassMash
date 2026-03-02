@@ -122,7 +122,7 @@ async def voice_chat(
         from app.services.groq_llm import call_groq_llm
 
         system_prompt = (
-            "Du bist EduAI, ein freundlicher KI-Tutor fuer deutsche Schueler. "
+            "Du bist Lumnos, ein freundlicher KI-Tutor fuer deutsche Schueler. "
             "Antworte kurz und praegnant (max 3 Saetze), da deine Antwort vorgelesen wird. "
             "Verwende einfache Sprache, keine LaTeX-Formeln. "
             "Sei motivierend und ermutigend."

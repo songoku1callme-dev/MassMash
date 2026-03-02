@@ -54,8 +54,8 @@ async def get_referral_code(
     username = current_user.get("username", "user")
     return {
         "code": code,
-        "link": f"https://eduai.de/ref/{code}",
-        "share_text": f"Lerne mit EduAI! Nutze meinen Code '{code}' und wir bekommen beide 7 Tage Pro gratis!",
+        "link": f"https://lumnos.de/ref/{code}",
+        "share_text": f"Lerne mit Lumnos! Nutze meinen Code '{code}' und wir bekommen beide 7 Tage Pro gratis!",
     }
 
 

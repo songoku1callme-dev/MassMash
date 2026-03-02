@@ -1,6 +1,6 @@
 """Bundesland-Logik: Lehrplan-spezifische Anpassungen fuer 16 deutsche Bundeslaender.
 
-EDUAI Faecher-Expansion 5.0 Block 3:
+LUMNOS Faecher-Expansion 5.0 Block 3:
 - 16 Bundeslaender mit Curriculum-Kontext
 - Bundesland-spezifischer System-Prompt fuer KI
 - Schultyp-Erkennung (Gymnasium, Realschule, etc.)

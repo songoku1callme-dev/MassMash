@@ -21,7 +21,7 @@ export default function NotificationBell() {
 
   const fetchBell = useCallback(async () => {
     try {
-      const token = localStorage.getItem("eduai_access_token");
+      const token = localStorage.getItem("lumnos_access_token");
       if (!token) return;
       const resp = await fetch(`${API_URL}/api/notifications/bell`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -38,7 +38,7 @@ export default function NotificationBell() {
 
   const markAllRead = async () => {
     try {
-      const token = localStorage.getItem("eduai_access_token");
+      const token = localStorage.getItem("lumnos_access_token");
       if (!token) return;
       await fetch(`${API_URL}/api/notifications/mark-all-read`, {
         method: "POST",
@@ -55,7 +55,7 @@ export default function NotificationBell() {
   useEffect(() => {
     fetchBell();
 
-    const token = localStorage.getItem("eduai_token") || localStorage.getItem("eduai_access_token");
+    const token = localStorage.getItem("lumnos_token") || localStorage.getItem("lumnos_access_token");
     if (!token) {
       const interval = setInterval(fetchBell, 30000);
       return () => clearInterval(interval);
@@ -78,7 +78,7 @@ export default function NotificationBell() {
         const { ticket } = await ticketResp.json();
 
         // Parse user_id from stored user data
-        const userStr = localStorage.getItem("eduai_user");
+        const userStr = localStorage.getItem("lumnos_user");
         const userId = userStr ? JSON.parse(userStr).id : 0;
 
         const wsBase = API_URL.replace(/^http/, "ws");

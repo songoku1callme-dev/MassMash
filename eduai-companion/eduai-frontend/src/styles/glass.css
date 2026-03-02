@@ -1,0 +1,59 @@
+/* Lumnos Glassmorphism System */
+.glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 16px;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+}
+
+.neon-border {
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    box-shadow: inset 0 0 15px rgba(99, 102, 241, 0.05),
+                0 0 15px rgba(99, 102, 241, 0.1);
+}
+
+.lumnos-btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.lumnos-btn-primary:hover {
+    box-shadow: 0 0 25px rgba(99, 102, 241, 0.6);
+    transform: translateY(-1px);
+}
+
+.cyber-bg {
+    background-color: #0a0f1e;
+    background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+.fach-glow-mathe   { box-shadow: 0 0 15px rgba(59,130,246,0.4); }
+.fach-glow-physik  { box-shadow: 0 0 15px rgba(6,182,212,0.4); }
+.fach-glow-chemie  { box-shadow: 0 0 15px rgba(16,185,129,0.4); }
+.fach-glow-bio     { box-shadow: 0 0 15px rgba(34,197,94,0.4); }
+.fach-glow-history { box-shadow: 0 0 15px rgba(245,158,11,0.4); }
+.fach-glow-default { box-shadow: 0 0 15px rgba(99,102,241,0.4); }

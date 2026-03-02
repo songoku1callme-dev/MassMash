@@ -45,7 +45,7 @@ export default function StatsPage() {
   const [prognoseEmpfehlung, setPrognoseEmpfehlung] = useState("");
   const [prognoseTrend, setPrognoseTrend] = useState("");
 
-  const token = localStorage.getItem("eduai_access_token");
+  const token = localStorage.getItem("lumnos_access_token");
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function StatsPage() {
             className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
             onClick={(e) => {
               e.preventDefault();
-              const t = localStorage.getItem("eduai_token") || localStorage.getItem("eduai_access_token");
+              const t = localStorage.getItem("lumnos_token") || localStorage.getItem("lumnos_access_token");
               if (t) window.open(`${API_URL}/api/stats/export/csv?token=${t}`, "_blank");
             }}
           >

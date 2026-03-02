@@ -80,7 +80,7 @@ export default function DatenschutzPage() {
 
       {view === "impressum" && (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{impressum.name || "EduAI Companion"}</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{impressum.name || "Lumnos Companion"}</h2>
           <p className="text-gray-600 dark:text-gray-400">{impressum.description}</p>
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
             <p><strong>E-Mail:</strong> {impressum.email}</p>

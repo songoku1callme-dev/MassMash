@@ -1,4 +1,4 @@
-# Fly.io configuration for eduai-backend
+# Fly.io configuration for lumnos-backend
 #
 # Notes:
 # - App name should match your Fly app (current prod backend: https://app-kbhrgvhm.fly.dev)
@@ -14,7 +14,7 @@ primary_region = "fra"
   PORT = "8080"
 
 [[mounts]]
-  source = "eduai_data"
+  source = "lumnos_data"
   destination = "/data"
 
 [http_service]

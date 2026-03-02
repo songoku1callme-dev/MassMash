@@ -12,7 +12,7 @@ from app.core.auth import get_password_hash
 router = APIRouter(prefix="/api/auth", tags=["password-reset"])
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-FROM_EMAIL = "noreply@eduai.de"
+FROM_EMAIL = "noreply@lumnos.de"
 
 
 class PasswordResetRequest(BaseModel):
@@ -89,7 +89,7 @@ async def request_password_reset(
     )
     await db.commit()
 
-    reset_url = f"https://eduai.de/reset-password?token={token}"
+    reset_url = f"https://lumnos.de/reset-password?token={token}"
     html = f"""
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
         <h2>Passwort zurücksetzen</h2>
@@ -103,7 +103,7 @@ async def request_password_reset(
     </div>
     """
 
-    await _send_email(req.email, "EduAI - Passwort zurücksetzen", html)
+    await _send_email(req.email, "Lumnos - Passwort zurücksetzen", html)
     return {"status": "ok", "message": "Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link gesendet."}
 
 

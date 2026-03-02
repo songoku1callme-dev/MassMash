@@ -85,19 +85,19 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Brand */}
-      <div className="p-4 flex items-center gap-3 border-b border-gray-200 dark:border-gray-700">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
-          <GraduationCap className="w-5 h-5" />
+      <div className="p-4 flex items-center gap-3 border-b border-lumnos-border">
+        <div className="w-10 h-10 rounded-xl bg-lumnos-gradient flex items-center justify-center text-white shadow-glow-sm animate-pulse-glow">
+          <span className="text-lg font-bold">{"\u2726"}</span>
         </div>
         <div>
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm">EduAI</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Companion</p>
+          <h2 className="font-bold text-lumnos-text text-sm">Lumnos</h2>
+          <p className="text-xs text-lumnos-muted">KI-Lerncoach</p>
         </div>
       </div>
 
       {/* New Chat */}
       <div className="p-3">
-        <Button onClick={handleNewChat} className="w-full gap-2" size="sm">
+        <Button onClick={handleNewChat} className="w-full gap-2 lumnos-btn-primary border-0" size="sm">
           <MessageSquarePlus className="w-4 h-4" />
           Neuer Chat
         </Button>
@@ -111,8 +111,8 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             onClick={() => { onPageChange(item.id); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               currentPage === item.id
-                ? "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 font-medium"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium"
+                : "text-lumnos-muted hover:bg-lumnos-surface hover:text-lumnos-text"
             }`}
           >
             {item.icon}
@@ -123,7 +123,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
       {/* Chat History */}
       <div className="mt-4 px-3">
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2 px-3">
+        <p className="text-xs font-semibold text-lumnos-muted uppercase tracking-wider mb-2 px-3">
           Letzte Chats
         </p>
       </div>
@@ -132,11 +132,11 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           {sessions.slice(0, 10).map((session) => (
             <div
               key={session.id}
-              className="group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-lumnos-surface transition-colors"
               onClick={() => handleSessionClick(session.id)}
             >
               {SUBJECT_ICONS[session.subject] || SUBJECT_ICONS.general}
-              <span className="flex-1 truncate text-gray-600 dark:text-gray-400">
+              <span className="flex-1 truncate text-lumnos-muted">
                 {session.title}
               </span>
               <button
@@ -156,18 +156,18 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </ScrollArea>
 
       {/* User Profile & Logout */}
-      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-t border-lumnos-border">
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-lumnos-gradient flex items-center justify-center text-white text-sm font-bold shadow-glow-sm">
             {user?.full_name?.[0] || user?.username?.[0] || "?"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex items-center gap-1">
+            <p className="text-sm font-medium text-lumnos-text truncate flex items-center gap-1">
               {user?.full_name || user?.username}
               {user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
               {user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-lumnos-muted">
               {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-lg dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glass border border-lumnos-border shadow-glow-sm"
       >
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -203,7 +203,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-lumnos-bg border-r border-lumnos-border transform transition-transform lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

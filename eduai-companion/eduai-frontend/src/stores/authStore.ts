@@ -23,9 +23,9 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
-  token: localStorage.getItem("eduai_token"),
+  token: localStorage.getItem("lumnos_token"),
   isLoading: true,
-  isAuthenticated: !!localStorage.getItem("eduai_token"),
+  isAuthenticated: !!localStorage.getItem("lumnos_token"),
 
   login: async (username, password) => {
     const response = await authApi.login({ username, password });

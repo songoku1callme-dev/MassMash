@@ -60,17 +60,17 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen cyber-bg flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-fade-in">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white mb-4 shadow-lg">
-            <GraduationCap className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-lumnos-gradient text-white mb-4 shadow-glow-md animate-pulse-glow">
+            <span className="text-2xl font-bold">{"\u2726"}</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">EduAI Companion</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 flex items-center justify-center gap-1">
+          <h1 className="text-3xl font-bold text-lumnos-text">Lumnos</h1>
+          <p className="text-lumnos-muted mt-1 flex items-center justify-center gap-1">
             <BookOpen className="w-4 h-4" />
-            Dein persönlicher KI-Tutor
+            Dein KI-Lerncoach
           </p>
         </div>
 

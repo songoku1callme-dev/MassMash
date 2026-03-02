@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/export", tags=["export"])
 
 
-def _generate_simple_pdf(title: str, content: str, author: str = "EduAI") -> io.BytesIO:
+def _generate_simple_pdf(title: str, content: str, author: str = "Lumnos") -> io.BytesIO:
     """Generate a simple PDF from text content.
 
     Uses a basic approach that doesn't require heavy dependencies.
@@ -66,7 +66,7 @@ endobj
     stream_lines.append(f"/F2 10 Tf")
     stream_lines.append(f"0 -25 Td")
     date_str = datetime.now().strftime("%d.%m.%Y")
-    stream_lines.append(f"(Erstellt von {author} am {date_str} | EduAI Companion) Tj")
+    stream_lines.append(f"(Erstellt von {author} am {date_str} | Lumnos Companion) Tj")
     stream_lines.append(f"0 -15 Td")
     stream_lines.append(f"(---) Tj")
     # Content lines
@@ -149,7 +149,7 @@ async def export_note_pdf(
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=EduAI_{title[:30]}.pdf"},
+        headers={"Content-Disposition": f"attachment; filename=Lumnos_{title[:30]}.pdf"},
     )
 
 
@@ -210,5 +210,5 @@ async def export_lernplan_pdf(
     return StreamingResponse(
         pdf_buffer,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=EduAI_Lernplan_{username}.pdf"},
+        headers={"Content-Disposition": f"attachment; filename=Lumnos_Lernplan_{username}.pdf"},
     )

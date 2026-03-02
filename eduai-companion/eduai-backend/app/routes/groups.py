@@ -3,7 +3,7 @@
 Features:
 - Create/join/leave study groups
 - Real-time messaging via WebSocket
-- @EduAI mentions trigger KI responses via Groq
+- @Lumnos mentions trigger KI responses via Groq
 - Subject-based groups
 - Max 10 members per group
 """
@@ -254,16 +254,16 @@ async def send_group_message(
     return {"message": "Nachricht gesendet", "msg": new_msg}
 
 
-async def _get_eduai_response(text: str) -> str:
-    """Get KI response from Groq when @EduAI is mentioned."""
+async def _get_lumnos_response(text: str) -> str:
+    """Get KI response from Groq when @Lumnos is mentioned."""
     groq_key = os.getenv("GROQ_API_KEY", "")
     if not groq_key:
-        return "Ich bin EduAI! Leider ist gerade kein API-Key konfiguriert."
+        return "Ich bin Lumnos! Leider ist gerade kein API-Key konfiguriert."
 
     try:
         import httpx
-        # Remove @EduAI from the text
-        clean_text = text.replace("@EduAI", "").replace("@eduai", "").strip()
+        # Remove @Lumnos from the text
+        clean_text = text.replace("@Lumnos", "").replace("@lumnos", "").strip()
         async with httpx.AsyncClient(timeout=20) as client:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
@@ -274,7 +274,7 @@ async def _get_eduai_response(text: str) -> str:
                         {
                             "role": "system",
                             "content": (
-                                "Du bist EduAI, ein freundlicher KI-Lernhelfer in einem Gruppen-Chat. "
+                                "Du bist Lumnos, ein freundlicher KI-Lernhelfer in einem Gruppen-Chat. "
                                 "Antworte kurz und hilfreich auf Deutsch. "
                                 "Erkläre Konzepte einfach und gib Beispiele."
                             ),
@@ -299,7 +299,7 @@ async def websocket_group_chat(
 ):
     """WebSocket endpoint for real-time group chat.
 
-    Supports @EduAI mentions which trigger KI responses via Groq.
+    Supports @Lumnos mentions which trigger KI responses via Groq.
     """
     await websocket.accept()
 
@@ -330,13 +330,13 @@ async def websocket_group_chat(
             # Broadcast user message
             await _broadcast(msg_data)
 
-            # Check for @EduAI mention → trigger KI response
+            # Check for @Lumnos mention → trigger KI response
             user_text = msg_data.get("content", "") or msg_data.get("text", "")
-            if "@EduAI" in user_text or "@eduai" in user_text.lower():
-                ki_response = await _get_eduai_response(user_text)
+            if "@Lumnos" in user_text or "@lumnos" in user_text.lower():
+                ki_response = await _get_lumnos_response(user_text)
                 ki_msg = {
                     "user_id": 0,
-                    "username": "EduAI",
+                    "username": "Lumnos",
                     "content": ki_response,
                     "timestamp": datetime.now().isoformat(),
                     "is_ai": True,

@@ -1,4 +1,4 @@
-# EduAI Companion — Backend
+# Lumnos Companion — Backend
 
 AI-powered tutoring API for German students (Gymnasium/Realschule).  
 Built with **FastAPI**, **SQLite** (aiosqlite), and optional **Groq LLM** integration.
@@ -8,7 +8,7 @@ Built with **FastAPI**, **SQLite** (aiosqlite), and optional **Groq LLM** integr
 ## Quick Start
 
 ```bash
-cd eduai-companion/eduai-backend
+cd lumnos-companion/lumnos-backend
 
 # Install dependencies
 poetry install

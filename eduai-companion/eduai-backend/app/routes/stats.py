@@ -570,7 +570,7 @@ async def export_stats_csv(
         ])
 
     output.seek(0)
-    filename = f"eduai_lernbericht_{current_user.get('username', 'user')}_{datetime.now().strftime('%Y%m%d')}.csv"
+    filename = f"lumnos_lernbericht_{current_user.get('username', 'user')}_{datetime.now().strftime('%Y%m%d')}.csv"
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",

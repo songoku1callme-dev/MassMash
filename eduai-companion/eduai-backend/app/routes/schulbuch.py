@@ -1,6 +1,6 @@
 """Schulbuch-Scanner: OCR -> Quiz + Karteikarten (Pro/Max Feature).
 
-EDUAI Faecher-Expansion 5.0 Block 5:
+LUMNOS Faecher-Expansion 5.0 Block 5:
 - Image upload with OCR text extraction
 - KI-powered analysis (Hauptthema, Lernziele, Schlüsselbegriffe)
 - Auto-generate quiz questions from scanned text

@@ -22,7 +22,7 @@ async def datenschutzerklaerung():
         "sections": [
             {
                 "title": "1. Verantwortlicher",
-                "content": "EduAI Companion ist ein Bildungstechnologie-Projekt. Kontakt: support@eduai-companion.de"
+                "content": "Lumnos Companion ist ein Bildungstechnologie-Projekt. Kontakt: support@lumnos-companion.de"
             },
             {
                 "title": "2. Welche Daten wir erheben",
@@ -66,9 +66,9 @@ async def impressum():
     return {
         "title": "Impressum",
         "content": {
-            "name": "EduAI Companion",
+            "name": "Lumnos Companion",
             "description": "KI-gestuetztes Lernen fuer deutsche Schueler",
-            "email": "support@eduai-companion.de",
+            "email": "support@lumnos-companion.de",
             "haftungsausschluss": "Die Inhalte dieser App wurden mit groesster Sorgfalt erstellt. Fuer die Richtigkeit, Vollstaendigkeit und Aktualitaet der Inhalte koennen wir jedoch keine Gewaehr uebernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
             "urheberrecht": "Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.",
         },

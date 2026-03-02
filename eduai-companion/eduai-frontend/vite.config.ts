@@ -33,8 +33,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: "EduAI Tutor - Dein KI-Lernbegleiter",
-        short_name: "EduAI",
+        name: "Lumnos Tutor - Dein KI-Lernbegleiter",
+        short_name: "Lumnos",
         description: "KI-Tutor fuer deutsche Schueler: Mathe, Englisch, Deutsch, Geschichte, Naturwissenschaften",
         theme_color: "#3B82F6",
         background_color: "#F9FAFB",

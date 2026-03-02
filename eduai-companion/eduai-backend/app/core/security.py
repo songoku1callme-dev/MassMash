@@ -137,7 +137,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 # Allowed frontend origins — extend as needed
 ALLOWED_ORIGINS = [
-    "https://eduai-german-tutor-app-mzmkkhlp.devinapps.com",
+    "https://lumnos-german-tutor-app-mzmkkhlp.devinapps.com",
     "https://mass-mash-git-devin-1772317-607977-songoku1callme-devs-projects.vercel.app",
     "https://massmash.vercel.app",
     "http://localhost:5173",

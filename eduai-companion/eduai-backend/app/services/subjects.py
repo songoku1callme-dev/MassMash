@@ -1,6 +1,6 @@
 """Vollstaendige Faecher-Datenbank: 32 Faecher in 6 Kategorien.
 
-EDUAI Faecher-Expansion 5.0 Block 1:
+LUMNOS Faecher-Expansion 5.0 Block 1:
 - 32 subjects organized in 6 categories
 - 50+ topics per new subject
 - Metadata: kategorie, emoji, pflicht, spezial mode

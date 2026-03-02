@@ -114,17 +114,17 @@ async def create_checkout(
 
     if req.plan == "max":
         price_cents = MAX_YEARLY_PRICE_CENTS if is_yearly else MAX_PRICE_CENTS
-        plan_name = "EduAI Max" + (" (Jahresabo)" if is_yearly else "")
+        plan_name = "Lumnos Max" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "GPT-4o Priority, 20 KI-Stile, 300+ Quiz-Themen, Wochen-Coach, Abitur-Sim, Internet-Recherche"
         target_tier = "max"
     elif req.plan == "eltern":
         price_cents = ELTERN_YEARLY_PRICE_CENTS if is_yearly else ELTERN_PRICE_CENTS
-        plan_name = "EduAI Eltern-Abo" + (" (Jahresabo)" if is_yearly else "")
+        plan_name = "Lumnos Eltern-Abo" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "Lernfortschritt in Echtzeit, Woechentliche Reports, Streak-Alerts, Schwaechen-Analyse"
         target_tier = "eltern"
     else:
         price_cents = PRO_YEARLY_PRICE_CENTS if is_yearly else PRO_PRICE_CENTS
-        plan_name = "EduAI Pro" + (" (Jahresabo)" if is_yearly else "")
+        plan_name = "Lumnos Pro" + (" (Jahresabo)" if is_yearly else "")
         plan_desc = "Unbegrenzt KI-Tutor, OCR, Spracheingabe, 8 KI-Stile, 25 Quiz-Themen"
         target_tier = "pro"
 
@@ -148,7 +148,7 @@ async def create_checkout(
     if not stripe_customer_id:
         customer = stripe.Customer.create(
             email=user_email,
-            metadata={"eduai_user_id": str(user_id)},
+            metadata={"lumnos_user_id": str(user_id)},
         )
         stripe_customer_id = customer.id
         await db.execute(
@@ -183,7 +183,7 @@ async def create_checkout(
         success_url=success_url,
         cancel_url=cancel_url,
         metadata={
-            "eduai_user_id": str(user_id),
+            "lumnos_user_id": str(user_id),
             "plan": target_tier,
             "billing": billing,
         },
@@ -262,7 +262,7 @@ async def stripe_webhook(request: Request, db: aiosqlite.Connection = Depends(ge
     data = event.get("data", {}).get("object", {})
 
     if event_type == "checkout.session.completed":
-        user_id = data.get("metadata", {}).get("eduai_user_id")
+        user_id = data.get("metadata", {}).get("lumnos_user_id")
         plan = data.get("metadata", {}).get("plan", "pro")
         billing = data.get("metadata", {}).get("billing", "monthly")
         customer_id = data.get("customer", "")

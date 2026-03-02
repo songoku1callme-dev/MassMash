@@ -1,6 +1,6 @@
 """Latein-Spezial-Modus: Erweiterte KI-Faehigkeiten fuer Latein und Altgriechisch.
 
-EDUAI Faecher-Expansion 5.0 Block 2:
+LUMNOS Faecher-Expansion 5.0 Block 2:
 - Vokabel-Trainer (Stammformen, Genus, Deklination, Etymologie)
 - Grammatik-Analyse (Satz-Gliederung, Kasus, Tempora, Konstruktionen)
 - Uebersetzungs-Hilfe (Schritt-fuer-Schritt)

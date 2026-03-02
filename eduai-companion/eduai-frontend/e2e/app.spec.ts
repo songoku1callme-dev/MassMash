@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 
 const BASE = process.env.BASE_URL || "http://localhost:5173";
 
-test.describe("EduAI Companion E2E — Final Polish 5.1", () => {
+test.describe("Lumnos Companion E2E — Final Polish 5.1", () => {
   // Test 1: Registrierung + Token
   test("registration form has all fields and shows token flow", async ({ page }) => {
     await page.goto(`${BASE}/auth`);
@@ -71,7 +71,7 @@ test.describe("EduAI Companion E2E — Final Polish 5.1", () => {
     if (swResponse) {
       expect(swResponse.status()).toBeLessThan(400);
       const text = await swResponse.text();
-      expect(text).toContain("eduai-v");
+      expect(text).toContain("lumnos-v");
       expect(text).toContain("/scanner");
       expect(text).toContain("/karteikarten");
     }

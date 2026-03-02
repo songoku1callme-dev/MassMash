@@ -1,7 +1,7 @@
-/* EduAI Companion — Service Worker (Perfect School 4.1: PWA Offline + Push) */
+/* Lumnos Companion — Service Worker (Perfect School 4.1: PWA Offline + Push) */
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = "eduai-v15";
+const CACHE_NAME = "lumnos-v1";
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
@@ -82,7 +82,7 @@ self.addEventListener("fetch", (event) => {
 // --- Push notifications ---
 self.addEventListener("push", (event) => {
   let data = {
-    title: "EduAI",
+    title: "Lumnos",
     body: "Du hast eine neue Benachrichtigung!",
     icon: "/pwa-192x192.png",
   };

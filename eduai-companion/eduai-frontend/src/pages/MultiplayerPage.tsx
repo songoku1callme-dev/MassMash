@@ -24,7 +24,7 @@ export default function MultiplayerPage() {
   const [copied, setCopied] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef(0);
-  const token = localStorage.getItem("eduai_token");
+  const token = localStorage.getItem("lumnos_token");
 
   const apiCall = async (url: string, method = "POST") => {
     const res = await fetch(`${API}${url}`, {

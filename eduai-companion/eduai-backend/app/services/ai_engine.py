@@ -1,4 +1,4 @@
-"""AI Engine - Core intelligence for EduAI Companion.
+"""AI Engine - Core intelligence for Lumnos Companion.
 
 Handles subject detection, adaptive prompting, proficiency-aware responses,
 quiz generation, and learning path recommendations.
@@ -169,7 +169,7 @@ def build_system_prompt(subject: str, level: str, language: str = "de", detail_l
         detail_modifier = "\n\nWICHTIG: Der Schüler möchte mehr Details. Gib eine ausführlichere Erklärung mit zusätzlichen Beispielen." if language == "de" else "\n\nIMPORTANT: The student wants more details. Give a more thorough explanation with additional examples."
 
     if language == "de":
-        return f"""Du bist EduAI, ein freundlicher und kompetenter KI-Tutor für deutsche Schüler (Gymnasium/Realschule).
+        return f"""Du bist Lumnos, ein freundlicher und kompetenter KI-Tutor für deutsche Schüler (Gymnasium/Realschule).
 Aktuelles Fach: {subject_name}
 Schülerniveau: {level}
 
@@ -186,7 +186,7 @@ Wichtige Regeln:
 - Biete am Ende immer eine Übungsaufgabe oder weiterführende Frage an
 - Verwende LaTeX-Notation für Formeln: $formel$ für inline, $$formel$$ für Block"""
     else:
-        return f"""You are EduAI, a friendly and knowledgeable AI tutor for German students (Gymnasium/Realschule level).
+        return f"""You are Lumnos, a friendly and knowledgeable AI tutor for German students (Gymnasium/Realschule level).
 Current subject: {subject_name}
 Student level: {level}
 
@@ -608,7 +608,7 @@ Ask me any science question!
 
 def _generate_general_response(message: str, level: str, language: str) -> str:
     if language == "de":
-        return f"""Hallo! Ich bin **EduAI**, dein persönlicher KI-Tutor!
+        return f"""Hallo! Ich bin **Lumnos**, dein persönlicher KI-Tutor!
 
 Ich kann dir bei folgenden Fächern helfen:
 
@@ -625,7 +625,7 @@ Wähle ein Fach aus oder stelle mir einfach eine Frage - ich erkenne automatisch
 **Tipp:** Du kannst jederzeit "Erkläre einfacher" oder "Mehr Details" sagen, um die Erklärung anzupassen.
 """
     else:
-        return f"""Hello! I'm **EduAI**, your personal AI tutor!
+        return f"""Hello! I'm **Lumnos**, your personal AI tutor!
 
 I can help you with the following subjects:
 

@@ -19,7 +19,7 @@ import sys
 
 # PostgreSQL-compatible DDL (equivalent of the SQLite schema in database.py)
 POSTGRES_SCHEMA = """\
--- EduAI Companion — PostgreSQL Schema
+-- Lumnos Companion — PostgreSQL Schema
 -- Generated from SQLite schema in app/core/database.py
 
 CREATE TABLE IF NOT EXISTS users (
@@ -123,7 +123,7 @@ def apply_schema() -> None:
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
         print("ERROR: DATABASE_URL environment variable is not set.", file=sys.stderr)
-        print("Example: DATABASE_URL=postgresql://user:pass@host:5432/eduai", file=sys.stderr)
+        print("Example: DATABASE_URL=postgresql://user:pass@host:5432/lumnos", file=sys.stderr)
         sys.exit(1)
 
     try:
@@ -141,7 +141,7 @@ def apply_schema() -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="EduAI PostgreSQL migration")
+    parser = argparse.ArgumentParser(description="Lumnos PostgreSQL migration")
     parser.add_argument("--apply", action="store_true", help="Apply schema to DATABASE_URL")
     args = parser.parse_args()
 

@@ -1,4 +1,4 @@
-# docker-compose.yml — Local development setup for EduAI Companion
+# docker-compose.yml — Local development setup for Lumnos Companion
 #
 # Usage:
 #   cp .env.template .env   # fill in your keys
@@ -11,34 +11,34 @@
 services:
   backend:
     build:
-      context: ./eduai-backend
+      context: ./lumnos-backend
       dockerfile: Dockerfile
     ports:
       - "8000:8080"
     env_file:
       - .env
     environment:
-      - EDUAI_DEV_MODE=1
+      - LUMNOS_DEV_MODE=1
       - DATABASE_PATH=/data/app.db
       - PORT=8080
     volumes:
-      - eduai-data:/data
-      - ./eduai-backend/app:/app/app  # hot-reload source
+      - lumnos-data:/data
+      - ./lumnos-backend/app:/app/app  # hot-reload source
     command: >
       uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 
   frontend:
     build:
-      context: ./eduai-frontend
+      context: ./lumnos-frontend
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
     environment:
       - VITE_API_URL=http://localhost:8000
     volumes:
-      - ./eduai-frontend/src:/app/src  # hot-reload source
+      - ./lumnos-frontend/src:/app/src  # hot-reload source
     depends_on:
       - backend
 
 volumes:
-  eduai-data:
+  lumnos-data:

@@ -228,7 +228,7 @@ async def _proactive_tips_job():
 
 
 app = FastAPI(
-    title="EduAI Companion",
+    title="Lumnos Companion",
     description="AI-powered tutoring for German students",
     version="1.0.0",
     lifespan=lifespan
@@ -257,7 +257,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
 # CORS — restrict to known frontend origins in production, allow all in dev
-_cors_origins: list[str] = ["*"] if os.getenv("EDUAI_DEV_MODE") else ALLOWED_ORIGINS
+_cors_origins: list[str] = ["*"] if os.getenv("LUMNOS_DEV_MODE") else ALLOWED_ORIGINS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,

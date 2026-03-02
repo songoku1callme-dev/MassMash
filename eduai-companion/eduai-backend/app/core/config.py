@@ -16,7 +16,7 @@ _INSECURE_DEFAULT = "__CHANGE_ME_IN_PRODUCTION__"
 
 class Settings(BaseSettings):
     """App settings loaded from environment variables."""
-    APP_NAME: str = "EduAI Companion"
+    APP_NAME: str = "Lumnos Companion"
     SECRET_KEY: str = _INSECURE_DEFAULT
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # Short-lived access token (30 min)

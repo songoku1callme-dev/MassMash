@@ -5,7 +5,7 @@
  * Cards are stored locally and synced when online.
  */
 
-const DB_NAME = "eduai_flashcards";
+const DB_NAME = "lumnos_flashcards";
 const DB_VERSION = 1;
 const STORE_DECKS = "decks";
 const STORE_CARDS = "cards";

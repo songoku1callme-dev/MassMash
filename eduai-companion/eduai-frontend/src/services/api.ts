@@ -18,23 +18,23 @@ interface JwtPayload {
 // --- Token helpers ---
 
 export function getAccessToken(): string | null {
-  return localStorage.getItem("eduai_token");
+  return localStorage.getItem("lumnos_token");
 }
 
 export function getRefreshToken(): string | null {
-  return localStorage.getItem("eduai_refresh_token");
+  return localStorage.getItem("lumnos_refresh_token");
 }
 
 export function setTokens(access: string, refresh?: string): void {
-  localStorage.setItem("eduai_token", access);
+  localStorage.setItem("lumnos_token", access);
   if (refresh) {
-    localStorage.setItem("eduai_refresh_token", refresh);
+    localStorage.setItem("lumnos_refresh_token", refresh);
   }
 }
 
 export function clearTokens(): void {
-  localStorage.removeItem("eduai_token");
-  localStorage.removeItem("eduai_refresh_token");
+  localStorage.removeItem("lumnos_token");
+  localStorage.removeItem("lumnos_refresh_token");
 }
 
 /** Returns true if the access token expires within `bufferSec` seconds. */
@@ -1103,42 +1103,42 @@ export const offlineApi = {
       // Cache flashcards
       try {
         const fc = await request<any>("/api/flashcards");
-        localStorage.setItem("eduai_offline_flashcards", JSON.stringify(fc));
+        localStorage.setItem("lumnos_offline_flashcards", JSON.stringify(fc));
       } catch { /* ignore */ }
 
       // Cache quiz history
       try {
         const qh = await request<any>("/api/quiz/history");
-        localStorage.setItem("eduai_offline_quiz_history", JSON.stringify(qh));
+        localStorage.setItem("lumnos_offline_quiz_history", JSON.stringify(qh));
       } catch { /* ignore */ }
 
       // Cache notes
       try {
         const notes = await request<any>("/api/notes");
-        localStorage.setItem("eduai_offline_notes", JSON.stringify(notes));
+        localStorage.setItem("lumnos_offline_notes", JSON.stringify(notes));
       } catch { /* ignore */ }
 
-      localStorage.setItem("eduai_offline_cached_at", new Date().toISOString());
+      localStorage.setItem("lumnos_offline_cached_at", new Date().toISOString());
     } catch { /* ignore */ }
   },
 
   getOfflineFlashcards: () => {
     try {
-      const data = localStorage.getItem("eduai_offline_flashcards");
+      const data = localStorage.getItem("lumnos_offline_flashcards");
       return data ? JSON.parse(data) : null;
     } catch { return null; }
   },
 
   getOfflineNotes: () => {
     try {
-      const data = localStorage.getItem("eduai_offline_notes");
+      const data = localStorage.getItem("lumnos_offline_notes");
       return data ? JSON.parse(data) : null;
     } catch { return null; }
   },
 
   isOffline: () => !navigator.onLine,
 
-  getCachedAt: () => localStorage.getItem("eduai_offline_cached_at"),
+  getCachedAt: () => localStorage.getItem("lumnos_offline_cached_at"),
 };
 
 // Supreme 12.0: Stats Dashboard API

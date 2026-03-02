@@ -1,4 +1,4 @@
-"""Groq LLM integration for EduAI Companion.
+"""Groq LLM integration for Lumnos Companion.
 
 Provides a central function to call the Groq API for generating
 AI tutoring responses. Falls back to the template engine if no

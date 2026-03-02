@@ -67,16 +67,16 @@ async def link_child(
                     "https://api.resend.com/emails",
                     headers={"Authorization": f"Bearer {resend_key}"},
                     json={
-                        "from": "EduAI <noreply@eduai.de>",
+                        "from": "Lumnos <noreply@lumnos.de>",
                         "to": [child_email],
-                        "subject": "Eltern-Verknuepfung bestaetigen - EduAI",
+                        "subject": "Eltern-Verknuepfung bestaetigen - Lumnos",
                         "html": (
                             f"<p>Hallo {child_dict['username']}!</p>"
-                            f"<p>Ein Elternteil moechte sich mit deinem EduAI-Account verknuepfen, "
+                            f"<p>Ein Elternteil moechte sich mit deinem Lumnos-Account verknuepfen, "
                             f"um deinen Lernfortschritt zu sehen.</p>"
                             f'<p><a href="{frontend_url}/parent-verify/{token}">Verknuepfung bestaetigen</a></p>'
                             f'<p>Oder: <a href="{frontend_url}/parent-reject/{token}">Ablehnen</a></p>'
-                            f"<p>Dein EduAI Team</p>"
+                            f"<p>Dein Lumnos Team</p>"
                         ),
                     },
                 )

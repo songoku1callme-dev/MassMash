@@ -14,15 +14,15 @@ export default function PWAInstallBanner() {
 
   useEffect(() => {
     // Check if already dismissed or installed
-    const wasDismissed = localStorage.getItem("eduai_pwa_dismissed");
+    const wasDismissed = localStorage.getItem("lumnos_pwa_dismissed");
     if (wasDismissed) {
       setDismissed(true);
       return;
     }
 
     // Track visit count for showing banner on 3rd visit
-    const visits = parseInt(localStorage.getItem("eduai_visit_count") || "0") + 1;
-    localStorage.setItem("eduai_visit_count", String(visits));
+    const visits = parseInt(localStorage.getItem("lumnos_visit_count") || "0") + 1;
+    localStorage.setItem("lumnos_visit_count", String(visits));
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -43,7 +43,7 @@ export default function PWAInstallBanner() {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
       setShowBanner(false);
-      localStorage.setItem("eduai_pwa_dismissed", "true");
+      localStorage.setItem("lumnos_pwa_dismissed", "true");
     }
     setDeferredPrompt(null);
   };
@@ -51,7 +51,7 @@ export default function PWAInstallBanner() {
   const handleDismiss = () => {
     setShowBanner(false);
     setDismissed(true);
-    localStorage.setItem("eduai_pwa_dismissed", "true");
+    localStorage.setItem("lumnos_pwa_dismissed", "true");
   };
 
   if (!showBanner || dismissed) return null;
@@ -65,7 +65,7 @@ export default function PWAInstallBanner() {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-              EduAI installieren
+              Lumnos installieren
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               Installiere die App auf deinem Handy fuer schnellen Zugriff — auch offline!
