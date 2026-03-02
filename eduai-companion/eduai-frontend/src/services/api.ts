@@ -166,6 +166,8 @@ export const chatApi = {
     language?: string;
     detail_level?: string;
     personality_id?: number;
+    tutor_modus?: boolean;
+    eli5?: boolean;
   }) => request<ChatResponse>("/api/chat", { method: "POST", body: data }),
 
   sessions: () => request<ChatSession[]>("/api/chat/sessions"),

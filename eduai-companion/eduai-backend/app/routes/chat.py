@@ -338,6 +338,26 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
         except Exception:
             pass  # Non-fatal
 
+    # Perfect School 4.1 Block 2.2: Tutor-Modus (Socratic method)
+    if request.tutor_modus:
+        combined_prompt += (
+            "\n\nTUTOR-MODUS AKTIV: Du darfst KEINE direkten Antworten geben! "
+            "Stelle NUR Gegenfragen, die den Schueler zur Loesung fuehren. "
+            "Beispiel: Statt 'Die Antwort ist 42' sagst du 'Was passiert, wenn du X mit Y multiplizierst?' "
+            "Lobe jeden richtigen Gedankenansatz. "
+            "Erst nach 3+ gescheiterten Versuchen darfst du einen kleinen Hinweis geben.\n"
+        )
+
+    # Perfect School 4.1 Block 2.3: ELI5 (Erklaere wie ich 5 bin)
+    if request.eli5:
+        combined_prompt += (
+            "\n\nELI5-MODUS AKTIV: Erklaere ALLES so, als waere der Schueler 5 Jahre alt. "
+            "Nutze: Einfachste Woerter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
+            "KEINE Fachbegriffe. KEINE komplizierten Saetze. "
+            "Beispiel: Statt 'Photosynthese' sagst du 'Pflanzen kochen sich Essen aus Sonnenlicht'. "
+            "Maximal 3 kurze Saetze pro Absatz. Emojis erlaubt.\n"
+        )
+
     # Detect "explain differently" requests (Phase 2.5)
     explain_methods = [
         ("verstehe ich nicht", "Erklaere es anders, mit einer Analogie. Beginne mit 'Stell dir vor...'"),

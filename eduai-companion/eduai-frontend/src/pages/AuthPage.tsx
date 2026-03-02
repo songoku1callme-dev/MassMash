@@ -90,13 +90,20 @@ export default function AuthPage() {
               </div>
             )}
 
-            {/* Supreme 11.0: Google OAuth Button */}
+            {/* Perfect School 4.1 Block 3.3: Google OAuth via Clerk */}
             <Button
               variant="outline"
               className="w-full mb-4 flex items-center gap-2"
               size="lg"
               onClick={() => {
-                setError("Google OAuth erfordert Clerk-Konfiguration. Bitte richte Clerk Social Connections ein.");
+                const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+                if (clerkKey) {
+                  // Redirect to Clerk hosted sign-in with Google
+                  const domain = clerkKey.replace("pk_test_", "").replace("pk_live_", "").replace(/\$.*/, "");
+                  window.location.href = `https://${domain}.clerk.accounts.dev/sign-in?redirect_url=${encodeURIComponent(window.location.origin + "/dashboard")}`;
+                } else {
+                  setError("Google OAuth erfordert Clerk-Konfiguration. Kontaktiere den Admin.");
+                }
               }}
             >
               <Chrome className="w-5 h-5 text-blue-500" />

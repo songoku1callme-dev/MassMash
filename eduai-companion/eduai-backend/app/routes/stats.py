@@ -1,12 +1,16 @@
 """Schueler-Analyse Dashboard routes.
 
 Supreme 12.0 Phase 10: /meine-stats page with learning analytics.
+Perfect School 4.1 Block 3.2: PDF/CSV export of learning data.
 """
+import csv
+import io
 import json
 import logging
 import os
 from datetime import datetime
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 import aiosqlite
 
 from app.core.database import get_db
@@ -466,3 +470,47 @@ async def noten_prognose(
         "gesamt_trend": gesamt_trend,
         "empfehlung": empfehlung,
     }
+
+
+@router.get("/export/csv")
+async def export_stats_csv(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Perfect School 4.1 Block 3.2: Export learning data as CSV.
+
+    Exports quiz results, subject scores, and learning progress.
+    """
+    user_id = current_user["id"]
+
+    # Collect quiz results
+    cursor = await db.execute(
+        """SELECT subject, quiz_type, total_questions, correct_answers,
+                  score, difficulty, completed_at
+        FROM quiz_results WHERE user_id = ? ORDER BY completed_at DESC""",
+        (user_id,),
+    )
+    rows = await cursor.fetchall()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Fach", "Typ", "Fragen", "Richtig", "Score %", "Schwierigkeit", "Datum"])
+    for r in rows:
+        d = dict(r)
+        writer.writerow([
+            d.get("subject", ""),
+            d.get("quiz_type", ""),
+            d.get("total_questions", 0),
+            d.get("correct_answers", 0),
+            d.get("score", 0),
+            d.get("difficulty", ""),
+            d.get("completed_at", ""),
+        ])
+
+    output.seek(0)
+    filename = f"eduai_lernbericht_{current_user.get('username', 'user')}_{datetime.now().strftime('%Y%m%d')}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )

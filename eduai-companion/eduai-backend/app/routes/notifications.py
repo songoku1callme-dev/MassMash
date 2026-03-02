@@ -362,26 +362,27 @@ class _WSConnectionManager:
 ws_manager = _WSConnectionManager()
 
 
-@router.websocket("/ws/{token}")
-async def websocket_notifications(websocket: WebSocket, token: str):
-    """WebSocket endpoint for real-time notifications (Supreme 13.0 Phase 7).
+@router.websocket("/ws/notifications/{user_id}")
+async def websocket_notifications(websocket: WebSocket, user_id: int, ticket: str = ""):
+    """WebSocket endpoint for real-time notifications (Perfect School 4.1).
 
-    Clients connect with their JWT token in the URL path.
-    The server pushes new notifications in real-time instead of polling.
+    Clients authenticate via a short-lived ticket obtained from POST /api/ws/ticket.
+    The ticket expires after 30 seconds and can only be used once.
+    This avoids passing the JWT in the WebSocket URL path (security fix).
     """
-    from app.core.auth import decode_token
-    from jose import JWTError
+    from app.main import ws_tickets
+    from datetime import datetime as _dt
 
-    # Authenticate via token
-    try:
-        payload = decode_token(token)
-        user_id = int(payload.get("sub", 0))
-        if not user_id:
-            await websocket.close(code=4001, reason="Invalid token")
-            return
-    except (JWTError, ValueError, TypeError):
-        await websocket.close(code=4001, reason="Authentication failed")
+    # Validate ticket
+    ticket_data = ws_tickets.get(ticket)
+    if not ticket_data or ticket_data["user_id"] != user_id:
+        await websocket.close(code=4001, reason="Invalid ticket")
         return
+    if _dt.utcnow() > ticket_data["expires"]:
+        await websocket.close(code=4002, reason="Ticket expired")
+        return
+    # Consume the ticket (one-time use)
+    del ws_tickets[ticket]
 
     await ws_manager.connect(user_id, websocket)
     logger.info("WebSocket connected for user %d", user_id)

@@ -74,7 +74,9 @@ class ChatRequest(BaseModel):
     subject: Optional[str] = None
     language: str = "de"
     detail_level: str = "normal"  # "simpler", "normal", "detailed"
-    personality_id: Optional[int] = None  # KI-Persönlichkeit ID (1-15)
+    personality_id: Optional[int] = None  # KI-Persoenlichkeit ID (1-5)
+    tutor_modus: bool = False  # Perfect School 4.1: Socratic method toggle
+    eli5: bool = False  # Perfect School 4.1: Explain Like I'm 5
 
 
 class ChatResponse(BaseModel):

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen, ArrowUp, ArrowDown, Minus } from "lucide-react";
+import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen, ArrowUp, ArrowDown, Minus, Download } from "lucide-react";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -124,14 +125,28 @@ export default function StatsPage() {
             Dein persoenliches Analyse-Dashboard
           </p>
         </div>
-        <button
-          onClick={runKIAnalyse}
-          disabled={analysisLoading}
-          className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-        >
-          <Sparkles className="w-4 h-4" />
-          {analysisLoading ? "Analysiere..." : "KI-Analyse"}
-        </button>
+        <div className="flex items-center gap-2">
+          <a
+            href={`${API_URL}/api/stats/export/csv`}
+            className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center gap-1.5"
+            onClick={(e) => {
+              e.preventDefault();
+              const t = localStorage.getItem("eduai_token") || localStorage.getItem("eduai_access_token");
+              if (t) window.open(`${API_URL}/api/stats/export/csv?token=${t}`, "_blank");
+            }}
+          >
+            <Download className="w-4 h-4" />
+            CSV
+          </a>
+          <button
+            onClick={runKIAnalyse}
+            disabled={analysisLoading}
+            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {analysisLoading ? "Analysiere..." : "KI-Analyse"}
+          </button>
+        </div>
       </div>
 
       {/* Overview Cards */}
@@ -229,6 +244,24 @@ export default function StatsPage() {
           <div className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap leading-relaxed">
             {analysis}
           </div>
+        </div>
+      )}
+
+      {/* Perfect School 4.1 Block 3.1: Fach-Radar */}
+      {subjects.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+            <Target className="w-5 h-5 text-indigo-600" />
+            Fach-Radar
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadarChart data={subjects.map(s => ({ subject: s.subject, score: s.avg_score, fullMark: 100 }))}>
+              <PolarGrid />
+              <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11 }} />
+              <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 10 }} />
+              <Radar name="Score" dataKey="score" stroke="#6366f1" fill="#6366f1" fillOpacity={0.3} />
+            </RadarChart>
+          </ResponsiveContainer>
         </div>
       )}
 

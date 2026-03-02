@@ -1,10 +1,13 @@
 import os
 import logging
+import secrets as _secrets
+from datetime import datetime, timedelta
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.database import init_db
+from app.core.auth import get_current_user
 from app.core.security import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
@@ -230,6 +233,24 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# --- Perfect School 4.1: WebSocket Ticket System (Block 1.3) ---
+ws_tickets: dict[str, dict] = {}
+
+
+@app.post("/api/ws/ticket")
+async def get_ws_ticket(current_user: dict = Depends(get_current_user)):
+    """Issue a short-lived ticket for WebSocket authentication.
+
+    The ticket expires after 30 seconds and can only be used once.
+    This avoids passing the JWT in the WebSocket URL path.
+    """
+    ticket = _secrets.token_urlsafe(32)
+    ws_tickets[ticket] = {
+        "user_id": current_user["id"],
+        "expires": datetime.utcnow() + timedelta(seconds=30),
+    }
+    return {"ticket": ticket}
 
 # --- Security middleware (outermost first) ---
 app.add_middleware(SecurityHeadersMiddleware)

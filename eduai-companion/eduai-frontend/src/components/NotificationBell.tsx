@@ -51,23 +51,39 @@ export default function NotificationBell() {
     }
   };
 
-  // Supreme 13.0 Phase 7: WebSocket with fallback to polling
+  // Perfect School 4.1: WebSocket with ticket system + fallback to polling
   useEffect(() => {
     fetchBell();
 
-    const token = localStorage.getItem("eduai_access_token");
+    const token = localStorage.getItem("eduai_token") || localStorage.getItem("eduai_access_token");
     if (!token) {
       const interval = setInterval(fetchBell, 30000);
       return () => clearInterval(interval);
     }
 
-    // Try WebSocket connection
-    const wsUrl = API_URL.replace(/^http/, "ws") + "/api/notifications/ws/" + token;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let fallbackInterval: ReturnType<typeof setInterval> | null = null;
 
-    const connectWS = () => {
+    const connectWS = async () => {
       try {
+        // Get a short-lived ticket from the backend (Block 1.3)
+        const ticketResp = await fetch(`${API_URL}/api/ws/ticket`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!ticketResp.ok) {
+          if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
+          return;
+        }
+        const { ticket } = await ticketResp.json();
+
+        // Parse user_id from stored user data
+        const userStr = localStorage.getItem("eduai_user");
+        const userId = userStr ? JSON.parse(userStr).id : 0;
+
+        const wsBase = API_URL.replace(/^http/, "ws");
+        const wsUrl = `${wsBase}/api/notifications/ws/notifications/${userId}?ticket=${ticket}`;
+
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 

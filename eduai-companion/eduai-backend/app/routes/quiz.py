@@ -425,6 +425,34 @@ async def submit_quiz(
         except Exception:
             pass  # Non-fatal
 
+    # Perfect School 4.1 Block 2.4: Fehlermuster-Erkennung
+    # If 5+ consecutive wrong answers in same subject → KI-Intervention notification
+    try:
+        err_cursor = await db.execute(
+            """SELECT COUNT(*) as cnt FROM question_history
+            WHERE user_id = ? AND fach = ? AND richtig = 0
+            AND created_at >= datetime('now', '-1 hour')""",
+            (user_id, request.subject),
+        )
+        err_row = await err_cursor.fetchone()
+        recent_errors = dict(err_row)["cnt"] if err_row else 0
+        if recent_errors >= 5:
+            # Create a KI-intervention notification
+            await db.execute(
+                """INSERT INTO notifications (user_id, title, message, type)
+                VALUES (?, ?, ?, 'warning')""",
+                (
+                    user_id,
+                    f"Fehlermuster erkannt in {request.subject}",
+                    f"Du hast {recent_errors} Fehler in der letzten Stunde gemacht. "
+                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 fuer einfachere Erklaerungen. "
+                    "Manchmal hilft auch eine kurze Pause!",
+                ),
+            )
+            await db.commit()
+    except Exception:
+        pass  # Non-fatal
+
     # Award gamification XP for quiz completion
     try:
         from app.routes.gamification import add_xp

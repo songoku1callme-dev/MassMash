@@ -16,7 +16,7 @@ import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
   Camera, Mic, MicOff, Lock, Atom, Leaf, Globe, Landmark, Brain,
-  Palette, Music, Users, Code, BookOpen
+  Palette, Music, Users, Code, BookOpen, GraduationCap, Baby
 } from "lucide-react";
 
 const SUBJECTS = [
@@ -51,6 +51,8 @@ export default function ChatPage() {
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
   const [showPersonalities, setShowPersonalities] = useState(false);
+  const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("eduai_tutor_modus") === "true");
+  const [eli5, setEli5] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,9 +94,15 @@ export default function ChatPage() {
     }
   }, [transcript]);
 
+  const handleTutorToggle = useCallback(() => {
+    const next = !tutorModus;
+    setTutorModus(next);
+    localStorage.setItem("eduai_tutor_modus", String(next));
+  }, [tutorModus]);
+
   const handleSend = () => {
     if (!input.trim() || isSending) return;
-    sendMessage(input.trim(), selectedPersonality);
+    sendMessage(input.trim(), selectedPersonality, tutorModus, eli5);
     setInput("");
   };
 
@@ -376,6 +384,34 @@ export default function ChatPage() {
           {language === "de" ? "Bild wird analysiert..." : "Analyzing image..."}
         </div>
       )}
+
+      {/* Perfect School 4.1: Tutor-Modus + ELI5 toggles */}
+      <div className="px-4 pb-1 flex justify-center gap-2">
+        <button
+          onClick={handleTutorToggle}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+            tutorModus
+              ? "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700"
+              : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+          }`}
+          title="Tutor-Modus: KI stellt nur Gegenfragen (Sokratische Methode)"
+        >
+          <GraduationCap className="w-3.5 h-3.5" />
+          Tutor-Modus {tutorModus ? "AN" : "AUS"}
+        </button>
+        <button
+          onClick={() => setEli5(!eli5)}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+            eli5
+              ? "bg-pink-100 text-pink-700 border-pink-300 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700"
+              : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+          }`}
+          title="ELI5: Erklaere wie ich 5 bin"
+        >
+          <Baby className="w-3.5 h-3.5" />
+          ELI5 {eli5 ? "AN" : "AUS"}
+        </button>
+      </div>
 
       {/* Input */}
       <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 lg:p-4">
