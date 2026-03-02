@@ -1,7 +1,7 @@
 /* Lumnos Companion — Service Worker (Perfect School 4.1: PWA Offline + Push) */
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = "lumnos-v1";
+const CACHE_NAME = "lumnos-v2";
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
@@ -9,9 +9,13 @@ const STATIC_ASSETS = [
   "/chat",
   "/karteikarten",
   "/scanner",
+  "/voice-exam",
   "/offline.html",
   "/pwa-192x192.png",
 ];
+
+// Karteikarten offline cache name
+const FLASHCARD_CACHE = "lumnos-flashcards-v1";
 
 // --- Install: pre-cache static assets ---
 self.addEventListener("install", (event) => {
@@ -37,6 +41,25 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Cache-first für Karteikarten (Offline-Lernen)
+  if (url.pathname.startsWith("/api/flashcards") && request.method === "GET") {
+    event.respondWith(
+      caches.open(FLASHCARD_CACHE).then((cache) =>
+        cache.match(request).then((cached) => {
+          const fetchPromise = fetch(request)
+            .then((res) => {
+              if (res.ok) cache.put(request, res.clone());
+              return res;
+            })
+            .catch(() => cached);
+
+          return cached || fetchPromise;
+        })
+      )
+    );
+    return;
+  }
 
   // Network-first for API calls
   if (url.pathname.startsWith("/api/")) {

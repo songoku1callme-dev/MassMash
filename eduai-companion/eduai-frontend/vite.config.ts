@@ -69,5 +69,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-framer": ["framer-motion"],
+        },
+      },
+    },
+    minify: "esbuild",
+  },
 })
 

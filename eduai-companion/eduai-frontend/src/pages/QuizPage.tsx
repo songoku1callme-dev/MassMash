@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
+import ConfidenceSlider from "../components/ConfidenceSlider";
 import {
   BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2,
@@ -66,6 +67,7 @@ export default function QuizPage() {
   const [history, setHistory] = useState<QuizHistoryItem[]>([]);
   const [fillAnswer, setFillAnswer] = useState("");
   const [presetTopics, setPresetTopics] = useState<{ id: number; name: string; tier: string }[]>([]);
+  const [confidenceGiven, setConfidenceGiven] = useState(false);
 
   useEffect(() => { loadHistory(); }, []);
   useEffect(() => { loadTopics(); }, [subject]);
@@ -120,8 +122,24 @@ export default function QuizPage() {
     setFillAnswer("");
   };
 
+  const handleConfidence = async (level: 1 | 2 | 3 | 4 | 5) => {
+    if (!quiz) return;
+    setConfidenceGiven(true);
+    const question = quiz.questions[currentQ];
+    const warRichtig = answerResult?.correct ? 1 : 0;
+    try {
+      const API = import.meta.env.VITE_API_URL || "";
+      await fetch(`${API}/api/quiz/confidence`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: JSON.stringify({ quiz_id: quiz.quiz_id, fach: subject, thema: question.question.slice(0, 60), confidence: level, war_richtig: warRichtig }),
+      });
+    } catch { /* silent */ }
+  };
+
   const nextQuestion = () => {
     if (!quiz) return;
+    setConfidenceGiven(false);
     if (currentQ < quiz.questions.length - 1) {
       setCurrentQ(currentQ + 1);
       setShowAnswer(false);
@@ -408,8 +426,13 @@ export default function QuizPage() {
           </CardContent>
         </Card>
 
+        {/* Confidence Slider */}
+        {isAnswered && !confidenceGiven && (
+          <ConfidenceSlider onSelect={handleConfidence} />
+        )}
+
         {/* Navigation */}
-        {isAnswered && (
+        {isAnswered && confidenceGiven && (
           <Button onClick={nextQuestion} size="lg" className="w-full gap-2">
             {currentQ < quiz.questions.length - 1 ? (
               <>Nächste Frage <ArrowRight className="w-4 h-4" /></>

@@ -8,7 +8,7 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -33,6 +33,8 @@ async def send_message(
     # Auto-detect subject if not specified
     detected_subject = detect_subject(request.message)
     subject = request.subject if request.subject and request.subject != "general" else detected_subject
+    # Block A: Fach normalisieren — immer Deutsch
+    subject = normalize_fach(subject)
 
     # Get user's proficiency for this subject
     cursor = await db.execute(

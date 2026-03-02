@@ -4,6 +4,7 @@ import { learningApi, type Progress } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 import BentoTile from "../components/BentoTile";
 import LumnosOrb from "../components/LumnosOrb";
+import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -13,9 +14,11 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
   const { user } = useAuthStore();
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [blindSpots, setBlindSpots] = useState<{ fach: string; blind_spots: number }[]>([]);
 
   useEffect(() => {
     loadProgress();
+    loadBlindSpots();
   }, []);
 
   const loadProgress = async () => {
@@ -27,6 +30,19 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadBlindSpots = async () => {
+    try {
+      const API = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${API}/api/quiz/blind-spots`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBlindSpots(data.blind_spots || []);
+      }
+    } catch { /* silent */ }
   };
 
   if (loading) {
@@ -255,6 +271,13 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
         </BentoTile>
 
       </div>
+
+      {/* Blind-Spot Heatmap */}
+      {blindSpots.length > 0 && (
+        <div className="mt-4">
+          <BlindSpotHeatmap fächer={blindSpots} />
+        </div>
+      )}
 
       {/* Upgrade-Banner */}
       {tier === "free" && (

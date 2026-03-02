@@ -634,6 +634,22 @@ async def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_ws_tickets_ticket ON ws_tickets(ticket, expires_at);
 
+        -- Block C: Confidence Tracking + Blind-Spot Detection
+        CREATE TABLE IF NOT EXISTS quiz_confidence (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            quiz_id INTEGER,
+            fach TEXT DEFAULT 'Allgemein',
+            thema TEXT DEFAULT '',
+            confidence INTEGER DEFAULT 3,
+            war_richtig INTEGER DEFAULT 0,
+            blind_spot INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_quiz_confidence_user ON quiz_confidence(user_id, fach, blind_spot);
+
         -- Faecher-Expansion 5.0 Block 4: Lehrplan-Themen cache
         CREATE TABLE IF NOT EXISTS lehrplan_themen (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -37,6 +37,7 @@ import BattlePassPage from "./pages/BattlePassPage";
 import StatsPage from "./pages/StatsPage";
 import LandingPage from "./pages/LandingPage";
 import ScannerPage from "./pages/ScannerPage";
+import VoiceExamPage from "./pages/VoiceExamPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -180,6 +181,8 @@ function App() {
         return <StatsPage />;
       case "scanner":
         return <ScannerPage />;
+      case "voice-exam":
+        return <VoiceExamPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

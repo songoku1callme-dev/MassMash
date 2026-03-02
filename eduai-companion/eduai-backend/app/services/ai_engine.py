@@ -9,6 +9,55 @@ import random
 from typing import Optional
 from datetime import datetime
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK A: Fach-Normalisierung — English → Deutsch
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FACH_MAPPING: dict[str, str] = {
+    "german":      "Deutsch",
+    "math":        "Mathematik",
+    "mathematics": "Mathematik",
+    "physics":     "Physik",
+    "chemistry":   "Chemie",
+    "biology":     "Biologie",
+    "history":     "Geschichte",
+    "english":     "Englisch",
+    "computer":    "Informatik",
+    "science":     "Naturwissenschaft",
+    "geography":   "Geografie",
+    "music":       "Musik",
+    "art":         "Kunst",
+    "ethics":      "Ethik",
+    "latin":       "Latein",
+    "french":      "Französisch",
+    "spanish":     "Spanisch",
+    "economics":   "Wirtschaft",
+    "politics":    "Politik",
+    "religion":    "Religion",
+    "philosophy":  "Philosophie",
+    "psychology":  "Psychologie",
+    "sociology":   "Sozialkunde",
+    "sport":       "Sport",
+    "physical education": "Sport",
+    "general":     "Allgemein",
+}
+
+
+def normalize_fach(fach_raw: str) -> str:
+    """Normalisiert Fach-Namen — immer Deutsch, niemals Englisch."""
+    if not fach_raw:
+        return "Allgemein"
+    clean = fach_raw.strip().lower()
+    # Direktes Mapping
+    if clean in FACH_MAPPING:
+        return FACH_MAPPING[clean]
+    # Substring-Suche
+    for eng, deu in FACH_MAPPING.items():
+        if eng in clean:
+            return deu
+    # Bereits deutsch? Ersten Buchstaben groß
+    return fach_raw.strip().capitalize()
+
+
 # Subject definitions with German curriculum alignment
 SUBJECTS = {
     "math": {
@@ -167,8 +216,10 @@ def build_system_prompt(subject: str, level: str, language: str = "de", detail_l
     - LaTeX for all math formulas
     - Forbidden phrase detection happens in groq_llm.py
     """
+    # Fach normalisieren BEVOR es verwendet wird
+    subject = normalize_fach(subject) if subject else "Allgemein"
     subject_info = SUBJECTS.get(subject, {})
-    subject_name = subject_info.get("name_de", "Allgemein") if language == "de" else subject_info.get("name", "General")
+    subject_name = subject_info.get("name_de", subject) if language == "de" else subject_info.get("name", subject)
 
     # Bundesland-spezifischer Kontext
     bundesland_info = {
