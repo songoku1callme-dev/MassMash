@@ -1159,6 +1159,18 @@ export const statsApi = {
   kiAnalyse: () => request<any>("/api/stats/ki-analyse", { method: "POST" }),
 };
 
+// Axios-compatible wrapper for components that use api.post / api.get
+export const api = {
+  post: async <T = Record<string, unknown>>(endpoint: string, data?: unknown): Promise<{ data: T }> => {
+    const result = await request<T>(endpoint, { method: "POST", body: data });
+    return { data: result };
+  },
+  get: async <T = Record<string, unknown>>(endpoint: string): Promise<{ data: T }> => {
+    const result = await request<T>(endpoint);
+    return { data: result };
+  },
+};
+
 // Supreme 12.0: Notification Bell API
 export const notificationBellApi = {
   bell: () => request<any>("/api/notifications/bell"),
