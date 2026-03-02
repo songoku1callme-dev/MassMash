@@ -14,7 +14,7 @@ import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
-  Sparkles, Camera, Mic, MicOff, Lock, Baby
+  Sparkles, Camera, Mic, MicOff, Lock, Baby, GraduationCap
 } from "lucide-react";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
 
