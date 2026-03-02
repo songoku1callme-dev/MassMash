@@ -13,7 +13,7 @@ from app.core.security import (
     SecurityHeadersMiddleware,
     ALLOWED_ORIGINS,
 )
-from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass, stats
+from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass, stats, schulbuch
 from app.routes import stripe_routes
 from app.core.monitoring import init_sentry, init_posthog, shutdown_posthog
 
@@ -305,6 +305,7 @@ app.include_router(marketplace.router)
 app.include_router(pdf_export.router)
 app.include_router(battle_pass.router)
 app.include_router(stats.router)
+app.include_router(schulbuch.router)
 
 
 @app.get("/healthz")

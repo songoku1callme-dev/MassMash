@@ -14,30 +14,9 @@ import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import {
   Send, Loader2, Copy, Check, ChevronDown, ChevronUp,
-  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Sparkles,
-  Camera, Mic, MicOff, Lock, Atom, Leaf, Globe, Landmark, Brain,
-  Palette, Music, Users, Code, BookOpen, GraduationCap, Baby
+  Sparkles, Camera, Mic, MicOff, Lock, Baby
 } from "lucide-react";
-
-const SUBJECTS = [
-  { id: "general", name: "Alle Fächer", icon: <Sparkles className="w-4 h-4" /> },
-  { id: "math", name: "Mathe", icon: <Calculator className="w-4 h-4" /> },
-  { id: "german", name: "Deutsch", icon: <BookOpenCheck className="w-4 h-4" /> },
-  { id: "english", name: "Englisch", icon: <Languages className="w-4 h-4" /> },
-  { id: "physics", name: "Physik", icon: <Atom className="w-4 h-4" /> },
-  { id: "chemistry", name: "Chemie", icon: <FlaskConical className="w-4 h-4" /> },
-  { id: "biology", name: "Biologie", icon: <Leaf className="w-4 h-4" /> },
-  { id: "history", name: "Geschichte", icon: <Clock className="w-4 h-4" /> },
-  { id: "geography", name: "Geografie", icon: <Globe className="w-4 h-4" /> },
-  { id: "economics", name: "Wirtschaft", icon: <Landmark className="w-4 h-4" /> },
-  { id: "ethics", name: "Ethik", icon: <Brain className="w-4 h-4" /> },
-  { id: "computer_science", name: "Informatik", icon: <Code className="w-4 h-4" /> },
-  { id: "art", name: "Kunst", icon: <Palette className="w-4 h-4" /> },
-  { id: "music", name: "Musik", icon: <Music className="w-4 h-4" /> },
-  { id: "social_studies", name: "Sozialkunde", icon: <Users className="w-4 h-4" /> },
-  { id: "latin", name: "Latein", icon: <BookOpen className="w-4 h-4" /> },
-  { id: "french", name: "Französisch", icon: <Languages className="w-4 h-4" /> },
-];
+import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
 
 export default function ChatPage() {
   const {
@@ -165,22 +144,9 @@ export default function ChatPage() {
       {/* Header */}
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 lg:p-4">
         <div className="flex flex-wrap items-center gap-2">
-          {/* Subject Selector */}
-          <div className="flex items-center gap-1 overflow-x-auto pb-1">
-            {SUBJECTS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSubject(s.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                  currentSubject === s.id
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                }`}
-              >
-                {s.icon}
-                {s.name}
-              </button>
-            ))}
+          {/* Subject Selector — Faecher-Expansion 5.0 Block 6 */}
+          <div className="flex-1 min-w-0">
+            <FachSelector selected={currentSubject} onSelect={setSubject} showAll />
           </div>
 
           {/* KI Personality + Language Toggle */}
@@ -313,7 +279,7 @@ export default function ChatPage() {
                       </button>
                       {msg.subject && (
                         <Badge variant="secondary" className="ml-auto text-xs">
-                          {SUBJECTS.find(s => s.id === msg.subject)?.name || msg.subject}
+                          {ALLE_FAECHER.find(s => s.id === msg.subject)?.name || msg.subject}
                         </Badge>
                       )}
                     </div>

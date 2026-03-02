@@ -412,6 +412,163 @@ async def get_analytics(
     }
 
 
+@router.post("/seed-themen")
+async def seed_themen(
+    fach: str = "Mathematik",
+    bundesland: str = "Bayern",
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Faecher-Expansion 5.0 Block 4: Lehrplan-konforme Quiz-Generierung.
+
+    Uses Tavily API to search for real curriculum documents, then Groq to
+    extract 50 concrete learning objectives. Admin only.
+    """
+    import json
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    tavily_key = os.getenv("TAVILY_API_KEY", "")
+    groq_key = os.getenv("GROQ_API_KEY", "")
+
+    if not tavily_key:
+        raise HTTPException(status_code=400, detail="TAVILY_API_KEY nicht konfiguriert")
+
+    # Step 1: Tavily search for real curriculum documents
+    search_query = f"Bildungsstandards Lehrplan {fach} {bundesland} Gymnasium Sek II"
+    tavily_results = []
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                "https://api.tavily.com/search",
+                json={
+                    "api_key": tavily_key,
+                    "query": search_query,
+                    "search_depth": "advanced",
+                    "max_results": 5,
+                },
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                for r in data.get("results", []):
+                    tavily_results.append({
+                        "title": r.get("title", ""),
+                        "content": r.get("content", "")[:500],
+                        "url": r.get("url", ""),
+                    })
+    except Exception as e:
+        logger.error("Tavily search failed: %s", e)
+
+    if not tavily_results:
+        raise HTTPException(status_code=502, detail="Keine Lehrplan-Quellen gefunden")
+
+    # Step 2: Groq analyzes Tavily results and extracts learning objectives
+    themen = []
+    if groq_key:
+        try:
+            from groq import Groq
+            groq_client = Groq(api_key=groq_key)
+            context = "\n\n".join(
+                f"[{i+1}] {r['title']}: {r['content']}" for i, r in enumerate(tavily_results)
+            )
+            resp = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Du bist ein Lehrplan-Experte. Extrahiere aus den Suchergebnissen "
+                            "50 konkrete Lernziele/Themen fuer das Fach. "
+                            "Antworte NUR mit einem JSON Array von Strings."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Fach: {fach}, Bundesland: {bundesland}\n\n"
+                            f"Suchergebnisse:\n{context}\n\n"
+                            "Extrahiere 50 konkrete Lernziele als JSON Array."
+                        ),
+                    },
+                ],
+                max_tokens=2000,
+                temperature=0.3,
+            )
+            content = resp.choices[0].message.content or "[]"
+            content = content.strip()
+            if content.startswith("```"):
+                content = content.split("```")[1]
+                if content.startswith("json"):
+                    content = content[4:]
+            themen = json.loads(content)
+        except Exception as e:
+            logger.error("Groq themen extraction failed: %s", e)
+
+    if not themen:
+        raise HTTPException(status_code=502, detail="Konnte keine Themen extrahieren")
+
+    # Step 3: Save to DB
+    try:
+        await db.execute(
+            """INSERT OR REPLACE INTO lehrplan_themen (fach, bundesland, themen, quelle, updated_at)
+            VALUES (?, ?, ?, ?, datetime('now'))""",
+            (
+                fach,
+                bundesland,
+                json.dumps(themen, ensure_ascii=False),
+                json.dumps([r["url"] for r in tavily_results], ensure_ascii=False),
+            ),
+        )
+        await db.commit()
+    except Exception as e:
+        logger.error("Could not save lehrplan themen: %s", e)
+
+    return {
+        "fach": fach,
+        "bundesland": bundesland,
+        "themen_count": len(themen),
+        "themen_preview": themen[:10],
+        "quellen": [r["url"] for r in tavily_results],
+    }
+
+
+@router.get("/lehrplan-themen")
+async def get_lehrplan_themen(
+    fach: str = "",
+    bundesland: str = "",
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Get cached lehrplan themen for a subject/state combination."""
+    import json
+    conditions = []
+    params: list = []
+    if fach:
+        conditions.append("fach = ?")
+        params.append(fach)
+    if bundesland:
+        conditions.append("bundesland = ?")
+        params.append(bundesland)
+
+    where = " AND ".join(conditions) if conditions else "1=1"
+    cursor = await db.execute(
+        f"SELECT fach, bundesland, themen, quelle, updated_at FROM lehrplan_themen WHERE {where} ORDER BY updated_at DESC LIMIT 50",
+        tuple(params),
+    )
+    rows = await cursor.fetchall()
+    results = []
+    for r in rows:
+        rd = dict(r)
+        try:
+            rd["themen"] = json.loads(rd.get("themen", "[]"))
+            rd["quelle"] = json.loads(rd.get("quelle", "[]"))
+        except Exception:
+            pass
+        results.append(rd)
+    return {"results": results}
+
+
 @router.get("/monitoring-config")
 async def monitoring_config():
     """Return monitoring configuration for the frontend."""

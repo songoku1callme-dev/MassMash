@@ -25,6 +25,7 @@ from app.models.schemas import (
 from app.services.ai_engine import generate_quiz, update_proficiency
 from app.services.quiz_topics import get_topics_for_subject, get_all_topics, get_topic_count
 from app.services.ki_personalities import get_personalities, get_personality_by_id
+from app.services.latein_modus import is_latein_modus_fach, get_latein_quiz_prompt, LATEIN_QUIZ_VERTEILUNG
 
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 
@@ -175,6 +176,20 @@ async def generate_quiz_endpoint(
     except Exception:
         pass  # Table may not exist yet
 
+    # Faecher-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
+    latein_extra_prompt = ""
+    if is_latein_modus_fach(request.subject):
+        # Distribute quiz types according to LATEIN_QUIZ_VERTEILUNG
+        import random
+        quiz_typen = list(LATEIN_QUIZ_VERTEILUNG.keys())
+        gewichte = list(LATEIN_QUIZ_VERTEILUNG.values())
+        chosen_typ = random.choices(quiz_typen, weights=gewichte, k=1)[0]
+        latein_extra_prompt = get_latein_quiz_prompt(
+            quiz_typ=chosen_typ,
+            thema=effective_topic or "",
+            num_questions=request.num_questions,
+        )
+
     # Supreme 13.0: Generate with multiple angles to ensure variety
     # Try up to 3x the requested amount, then filter for uniqueness
     generation_multiplier = 3 if seen_hashes else 1
@@ -184,7 +199,8 @@ async def generate_quiz_endpoint(
         num_questions=min(request.num_questions * generation_multiplier, 30),
         quiz_type=request.quiz_type,
         language=request.language,
-        topic=effective_topic
+        topic=effective_topic,
+        extra_prompt=latein_extra_prompt,
     )
 
     # Supreme 13.0: 5-angle MD5 filtering — hash question text AND answer

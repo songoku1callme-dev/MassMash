@@ -472,6 +472,68 @@ async def noten_prognose(
     }
 
 
+@router.get("/fach-radar")
+async def fach_radar(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Faecher-Expansion 5.0 Block 7: Fach-Radar for all 32 subjects.
+
+    Returns per-subject scores for radar chart display.
+    Automatically works with any subject the user has quiz data for.
+    """
+    user_id = current_user["id"]
+
+    # Emoji mapping for all 32 subjects
+    FACH_EMOJI: dict[str, str] = {
+        "german": "📖", "english": "🇬🇧", "french": "🇫🇷", "latin": "🏛️",
+        "spanish": "🇪🇸", "italian": "🇮🇹", "russian": "🇷🇺", "turkish": "🇹🇷",
+        "ancient_greek": "🏺", "math": "📐", "physics": "⚛️", "chemistry": "🧪",
+        "biology": "🧬", "computer_science": "💻", "astronomy": "🔭", "technology": "⚙️",
+        "history": "📜", "geography": "🌍", "economics": "📊", "politics": "🏛️",
+        "social_studies": "👥", "psychology": "🧠", "pedagogy": "📚",
+        "social_science": "🔬", "law": "⚖️", "religion_catholic": "✝️",
+        "religion_protestant": "⛪", "islam": "☪️", "ethics": "🤔",
+        "values_norms": "💡", "art": "🎨", "music": "🎵", "drama": "🎭",
+        "home_economics": "🍳", "nutrition": "🥗", "wat": "🔧",
+    }
+
+    cursor = await db.execute(
+        """SELECT subject,
+           COUNT(*) as quizze,
+           ROUND(AVG(score), 1) as avg_score,
+           MAX(score) as best_score
+        FROM quiz_results WHERE user_id = ?
+        GROUP BY subject ORDER BY avg_score DESC""",
+        (user_id,),
+    )
+    rows = await cursor.fetchall()
+
+    faecher = []
+    for r in rows:
+        rd = dict(r)
+        subj = rd["subject"]
+        score = rd.get("avg_score", 0) or 0
+        faecher.append({
+            "fach": subj,
+            "emoji": FACH_EMOJI.get(subj, "📘"),
+            "score": round(score, 1),
+            "quizze": rd["quizze"],
+            "best_score": rd.get("best_score", 0) or 0,
+        })
+
+    staerkstes = faecher[0]["fach"] if faecher else ""
+    schwaechstes = faecher[-1]["fach"] if faecher else ""
+    gesamt_score = round(sum(f["score"] for f in faecher) / max(len(faecher), 1), 1)
+
+    return {
+        "faecher": faecher,
+        "staerkstes_fach": staerkstes,
+        "schwaechstes_fach": schwaechstes,
+        "gesamt_score": gesamt_score,
+    }
+
+
 @router.get("/export/csv")
 async def export_stats_csv(
     current_user: dict = Depends(get_current_user),

@@ -650,6 +650,7 @@ def generate_quiz(
     quiz_type: str = "mcq",
     language: str = "de",
     topic: str = None,
+    extra_prompt: str = "",
 ) -> list:
     """Generate quiz questions for a subject."""
     quizzes = {

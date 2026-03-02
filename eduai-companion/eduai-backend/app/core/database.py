@@ -605,6 +605,33 @@ async def init_db():
             FOREIGN KEY (item_id) REFERENCES marketplace_items(id),
             UNIQUE(user_id, item_id)
         );
+
+        -- Faecher-Expansion 5.0 Block 5: Schulbuch-Scanner scans
+        CREATE TABLE IF NOT EXISTS schulbuch_scans (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            scan_id TEXT UNIQUE NOT NULL,
+            user_id INTEGER NOT NULL,
+            fach TEXT DEFAULT 'Allgemein',
+            ocr_text TEXT DEFAULT '',
+            analyse TEXT DEFAULT '{}',
+            quiz TEXT DEFAULT '[]',
+            karteikarten TEXT DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_schulbuch_scans_user ON schulbuch_scans(user_id, created_at);
+
+        -- Faecher-Expansion 5.0 Block 4: Lehrplan-Themen cache
+        CREATE TABLE IF NOT EXISTS lehrplan_themen (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fach TEXT NOT NULL,
+            bundesland TEXT DEFAULT '',
+            themen TEXT DEFAULT '[]',
+            quelle TEXT DEFAULT '',
+            updated_at TEXT DEFAULT (datetime('now')),
+            UNIQUE(fach, bundesland)
+        );
     """)
 
     await db.commit()
@@ -634,6 +661,10 @@ async def init_db():
         ("users", "streak_days", "INTEGER DEFAULT 0"),
         ("users", "longest_streak", "INTEGER DEFAULT 0"),
         ("users", "last_active", "TEXT DEFAULT ''"),
+        # Faecher-Expansion 5.0 Block 3: Bundesland fields
+        ("users", "bundesland", "TEXT DEFAULT ''"),
+        ("users", "klasse", "INTEGER DEFAULT 10"),
+        ("users", "schultyp_detail", "TEXT DEFAULT 'Gymnasium'"),
     ]
     for table, column, col_type in migrations:
         try:

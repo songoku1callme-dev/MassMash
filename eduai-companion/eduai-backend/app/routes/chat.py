@@ -13,6 +13,8 @@ from app.services.groq_llm import call_groq_llm, classify_needs_search
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
 from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, detect_emotion, get_emotion_prompt
+from app.services.latein_modus import get_spezial_system_prompt, is_latein_modus_fach
+from app.core.bundesland import get_bundesland_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +339,26 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
                 combined_prompt += lernstil_prompt
         except Exception:
             pass  # Non-fatal
+
+    # Faecher-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
+    if is_latein_modus_fach(subject):
+        spezial_prompt = get_spezial_system_prompt(subject)
+        if spezial_prompt:
+            combined_prompt += f"\n{spezial_prompt}\n"
+
+    # Faecher-Expansion 5.0 Block 3: Bundesland-spezifischer Kontext
+    try:
+        bl_cursor = await db.execute(
+            "SELECT bundesland FROM users WHERE id = ?", (user_id,)
+        )
+        bl_row = await bl_cursor.fetchone()
+        user_bundesland = dict(bl_row).get("bundesland", "") if bl_row else ""
+        if user_bundesland:
+            bl_prompt = get_bundesland_prompt(user_bundesland)
+            if bl_prompt:
+                combined_prompt += f"\n{bl_prompt}\n"
+    except Exception:
+        pass  # Non-fatal, bundesland column may not exist yet
 
     # Perfect School 4.1 Block 2.2: Tutor-Modus (Socratic method)
     if request.tutor_modus:
