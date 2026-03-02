@@ -66,7 +66,7 @@ async def _groq_analyze(text: str, fach: str, groq_key: str) -> dict:
 
 Extrahiere:
 1. HAUPTTHEMA: Was wird erklaert? (1 Satz)
-2. LERNZIELE: Was soll der Schueler lernen? (3-5 Punkte als Array)
+2. LERNZIELE: Was soll der Schüler lernen? (3-5 Punkte als Array)
 3. SCHLUESSELBEGRIFFE: Wichtigste Fachbegriffe (max 10, als Array)
 4. SCHWIERIGKEITSGRAD: leicht/mittel/schwer
 5. KLASSE: Fuer welche Klasse ist das? (Schaetzung als Zahl)
@@ -165,7 +165,7 @@ async def _groq_generate_flashcards(begriffe: list, fach: str, groq_key: str) ->
 
 Fach: {fach}
 Vorderseite: Begriff
-Rueckseite: Kurzdefinition (max 2 Saetze, aus dem Buch-Kontext)
+Rückseite: Kurzdefinition (max 2 Sätze, aus dem Buch-Kontext)
 
 FORMAT: JSON Array: [{{"vorne": "Begriff", "hinten": "Definition"}}]""",
                 },

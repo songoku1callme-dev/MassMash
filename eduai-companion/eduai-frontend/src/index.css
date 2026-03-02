@@ -3,47 +3,35 @@
 @tailwind utilities;
 @import './styles/glass.css';
 
-@layer base {
-  :root {
-    --radius: 0.5rem;
-  }
-
-  * {
-    border-color: theme('colors.gray.200');
-  }
-
-  .dark * {
-    border-color: theme('colors.gray.700');
-  }
-
-  body {
-    @apply bg-gray-50 text-gray-900;
-    font-family: "Inter", system-ui, -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  .dark body {
-    @apply bg-gray-900 text-gray-100;
-  }
+:root {
+  color-scheme: dark;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+* {
+  box-sizing: border-box;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+html, body, #root {
+  background-color: #0a0f1e !important;
+  color: #f1f5f9 !important;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
+/* Cyber-Grid Hintergrund */
+body {
+  background-image:
+    linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  @apply bg-gray-600;
+  background: #6366f1;
+  border-radius: 3px;
 }
 
 /* Prose styles for markdown */
@@ -56,21 +44,21 @@
 }
 
 .prose pre code {
-  @apply text-gray-100;
-}
-
-/* KaTeX dark mode */
-.dark .katex {
   color: #e5e7eb;
 }
 
-.dark .katex .mord,
-.dark .katex .mbin,
-.dark .katex .mrel,
-.dark .katex .mopen,
-.dark .katex .mclose,
-.dark .katex .mpunct,
-.dark .katex .minner {
+/* KaTeX */
+.katex {
+  color: #e5e7eb;
+}
+
+.katex .mord,
+.katex .mbin,
+.katex .mrel,
+.katex .mopen,
+.katex .mclose,
+.katex .mpunct,
+.katex .minner {
   color: #e5e7eb;
 }
 

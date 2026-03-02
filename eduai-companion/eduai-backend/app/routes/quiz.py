@@ -278,15 +278,15 @@ async def check_answer(
     is_correct = request.user_answer.strip().lower() == answer_data["correct_answer"].strip().lower()
 
     # Final Polish 5.1 Block 2: Explain-Why-Wrong Loop
-    erklaerung_falsch = None
+    erklärung_falsch = None
     intervention = None
     if not is_correct:
-        erklaerung_falsch = generate_explain_why_wrong(
+        erklärung_falsch = generate_explain_why_wrong(
             fach=request.quiz_id.split("_")[2] if len(request.quiz_id.split("_")) > 2 else "general",
             frage=request.question_id,
             falsche_antwort=request.user_answer,
             richtige_antwort=answer_data["correct_answer"],
-            erklaerung=answer_data["explanation"],
+            erklärung=answer_data["explanation"],
         )
         # Track consecutive errors for intervention
         try:
@@ -303,7 +303,7 @@ async def check_answer(
             if recent_errors >= 5:
                 intervention = (
                     f"Du hast {recent_errors} Fehler hintereinander gemacht. "
-                    "Kein Problem! Versuche es mit dem Tutor-Modus — dort erklaere ich dir alles Schritt fuer Schritt. "
+                    "Kein Problem! Versuche es mit dem Tutor-Modus — dort erkläre ich dir alles Schritt fuer Schritt. "
                     "Manchmal hilft auch eine kurze Pause."
                 )
         except Exception:
@@ -313,7 +313,7 @@ async def check_answer(
         correct=is_correct,
         correct_answer=answer_data["correct_answer"],
         explanation=answer_data["explanation"],
-        erklaerung_falsch=erklaerung_falsch,
+        erklärung_falsch=erklärung_falsch,
         intervention=intervention,
     )
 
@@ -495,7 +495,7 @@ async def submit_quiz(
                     user_id,
                     f"Fehlermuster erkannt in {request.subject}",
                     f"Du hast {recent_errors} Fehler in der letzten Stunde gemacht. "
-                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 fuer einfachere Erklaerungen. "
+                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 fuer einfachere Erklärungen. "
                     "Manchmal hilft auch eine kurze Pause!",
                 ),
             )

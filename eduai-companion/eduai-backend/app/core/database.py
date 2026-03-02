@@ -666,7 +666,7 @@ async def init_db():
         # Supreme 11.0: KI-Memory extended columns
         ("ki_relationship", "last_emotion", "TEXT DEFAULT ''"),
         ("ki_relationship", "erfolge_erwaehnt", "TEXT DEFAULT '[]'"),
-        ("ki_relationship", "lieblingserklaerung", "TEXT DEFAULT 'Analogien'"),
+        ("ki_relationship", "lieblingserklärung", "TEXT DEFAULT 'Analogien'"),
         # Supreme 11.0: Parent link verification
         ("parent_links", "verification_token", "TEXT DEFAULT ''"),
         # Supreme 13.0: User streak tracking

@@ -73,7 +73,7 @@ def compress_history(chat_history: list) -> str:
         if content:
             summary_parts.append(f"{role}: {content}")
     if summary_parts:
-        return "BISHERIGER GESPRAECHSVERLAUF (Zusammenfassung):\n" + "\n".join(summary_parts) + "\n---\n"
+        return "BISHERIGER GESPRÄCHSVERLAUF (Zusammenfassung):\n" + "\n".join(summary_parts) + "\n---\n"
     return ""
 
 
@@ -150,8 +150,8 @@ def call_groq_llm(
             "\n\n--- Relevanter Kontext aus dem Lehrplan / Curriculum ---\n"
             f"{rag_context}\n"
             "--- Ende Kontext ---\n"
-            "Nutze diesen Kontext um die Frage des Schuelers zu beantworten. "
-            "Nenne die Quellen wenn moeglich."
+            "Nutze diesen Kontext um die Frage des Schülers zu beantworten. "
+            "Nenne die Quellen wenn möglich."
         )
 
     # Inject web search context (Auto-Web-Search)
@@ -271,13 +271,13 @@ def deep_think_answer(
 
     # --- Step 1: ANALYSE (fast, cheap model) ---
     analyse_prompt = (
-        f"Du bist ein Lehr-Analyse-Assistent. Analysiere INTERN folgende Schueler-Frage:\n"
+        f"Du bist ein Lehr-Analyse-Assistent. Analysiere INTERN folgende Schüler-Frage:\n"
         f"Fach: {subject} | Niveau: {level} | Sprache: {language}\n\n"
         f"Frage: {prompt}\n\n"
-        f"Beantworte KURZ (max 3 Saetze):\n"
+        f"Beantworte KURZ (max 3 Sätze):\n"
         f"1. Was ist das Kernthema?\n"
-        f"2. Welches Vorwissen braucht der Schueler?\n"
-        f"3. Haeufige Fehler bei diesem Thema?"
+        f"2. Welches Vorwissen braucht der Schüler?\n"
+        f"3. Häufige Fehler bei diesem Thema?"
     )
 
     analyse_result = ""
@@ -285,7 +285,7 @@ def deep_think_answer(
         analyse_completion = client.chat.completions.create(
             model=FAST_MODEL,
             messages=[
-                {"role": "system", "content": "Du bist ein interner Analyse-Assistent. Antworte kurz und praezise."},
+                {"role": "system", "content": "Du bist ein interner Analyse-Assistent. Antworte kurz und präzise."},
                 {"role": "user", "content": analyse_prompt},
             ],
             max_tokens=300,
@@ -301,8 +301,8 @@ def deep_think_answer(
     enhanced_system = system_prompt
     if analyse_result:
         enhanced_system += (
-            f"\n\nINTERNE ANALYSE (nicht dem Schueler zeigen!):\n{analyse_result}\n"
-            f"Nutze diese Analyse um eine perfekte, geprueft korrekte Antwort zu geben."
+            f"\n\nINTERNE ANALYSE (nicht dem Schüler zeigen!):\n{analyse_result}\n"
+            f"Nutze diese Analyse um eine perfekte, geprüft korrekte Antwort zu geben."
         )
 
     return call_groq_llm(

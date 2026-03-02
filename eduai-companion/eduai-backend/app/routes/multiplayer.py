@@ -45,7 +45,7 @@ async def create_room(
     # Generate quiz questions via Groq
     questions = []
     try:
-        prompt = f"Erstelle {num_questions} Multiple-Choice Quiz-Fragen zum Thema '{topic or subject}' fuer deutsche Gymnasialschueler. Format als JSON Array: [{{\"frage\": \"...\", \"optionen\": [\"A\", \"B\", \"C\", \"D\"], \"richtig\": 0, \"erklaerung\": \"...\"}}]. Nur das JSON Array, kein anderer Text."
+        prompt = f"Erstelle {num_questions} Multiple-Choice Quiz-Fragen zum Thema '{topic or subject}' fuer deutsche Gymnasialschüler. Format als JSON Array: [{{\"frage\": \"...\", \"optionen\": [\"A\", \"B\", \"C\", \"D\"], \"richtig\": 0, \"erklärung\": \"...\"}}]. Nur das JSON Array, kein anderer Text."
         response = call_groq_llm(
             prompt=prompt,
             system_prompt="Du bist ein Quiz-Generator. Antworte NUR mit validem JSON.",
@@ -68,7 +68,7 @@ async def create_room(
     if not questions:
         # Fallback questions
         questions = [
-            {"frage": f"Beispielfrage {i+1} zu {topic or subject}", "optionen": ["A", "B", "C", "D"], "richtig": 0, "erklaerung": "Fallback-Frage"}
+            {"frage": f"Beispielfrage {i+1} zu {topic or subject}", "optionen": ["A", "B", "C", "D"], "richtig": 0, "erklärung": "Fallback-Frage"}
             for i in range(num_questions)
         ]
 
@@ -238,7 +238,7 @@ async def submit_answer(
             except Exception:
                 pass
 
-    return {"correct": is_correct, "points": points, "correct_answer": correct, "erklaerung": question.get("erklaerung", "")}
+    return {"correct": is_correct, "points": points, "correct_answer": correct, "erklärung": question.get("erklärung", "")}
 
 
 @router.get("/room/{room_code}")

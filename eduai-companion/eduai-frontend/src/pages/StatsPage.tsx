@@ -122,7 +122,7 @@ export default function StatsPage() {
             Meine Statistiken
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Dein persoenliches Analyse-Dashboard
+            Dein persönliches Analyse-Dashboard
           </p>
         </div>
         <div className="flex items-center gap-2">

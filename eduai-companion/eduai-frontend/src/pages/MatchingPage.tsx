@@ -37,7 +37,7 @@ export default function MatchingPage() {
           Lernpartner finden
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Die KI findet Schueler mit aehnlichen Schwaechen — gemeinsam lernt ihr besser!
+          Die KI findet Schüler mit ähnlichen Schwaechen — gemeinsam lernt ihr besser!
         </p>
       </div>
 

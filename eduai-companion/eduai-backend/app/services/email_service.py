@@ -43,7 +43,7 @@ def _base_template(content: str) -> str:
       <div style="background: #ffffff; border-radius: 14px; overflow: hidden;">
         <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 24px 32px; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 24px;">Lumnos Companion</h1>
-          <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 14px;">Dein persoenlicher KI-Tutor</p>
+          <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 14px;">Dein persönlicher KI-Tutor</p>
         </div>
         <div style="padding: 32px;">
           {content}
@@ -66,8 +66,8 @@ async def send_welcome_email(to: str, username: str) -> bool:
       Schoen, dass du dabei bist! Mit Lumnos hast du jetzt Zugang zu:
     </p>
     <ul style="color: #4b5563; line-height: 2;">
-      <li>20 KI-Persoenlichkeiten die dir alles erklaeren</li>
-      <li>Taegliche Turniere gegen andere Schueler</li>
+      <li>20 KI-Persönlichkeiten die dir alles erklären</li>
+      <li>Tägliche Turniere gegen andere Schüler</li>
       <li>IQ-Test mit wissenschaftlichen Fragen</li>
       <li>Abitur-Simulation fuer alle 16 Faecher</li>
     </ul>
@@ -105,7 +105,7 @@ async def send_parent_link_email(
 ) -> bool:
     """Template 3: Parent linking verification email."""
     content = f"""
-    <h2 style="color: #1f2937;">Eltern-Verknuepfung bestaetigen</h2>
+    <h2 style="color: #1f2937;">Eltern-Verknuepfung bestätigen</h2>
     <p style="color: #4b5563; line-height: 1.6;">
       Hallo! <strong>{parent_name}</strong> moechte das Konto von <strong>{child_name}</strong> verknuepfen,
       um den Lernfortschritt zu verfolgen.

@@ -893,9 +893,9 @@ export const iqApi = {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const intelligenceApi = {
   lernstil: () => request<{ lernstil: string; beschreibung: string; tipps: string[] }>("/api/intelligence/lernstil"),
-  feynman: (thema: string, erklaerung: string) =>
+  feynman: (thema: string, erklärung: string) =>
     request<{ bewertung: string; thema: string }>(
-      `/api/intelligence/feynman?thema=${encodeURIComponent(thema)}&erklaerung=${encodeURIComponent(erklaerung)}`,
+      `/api/intelligence/feynman?thema=${encodeURIComponent(thema)}&erklärung=${encodeURIComponent(erklärung)}`,
       { method: "POST" }
     ),
   sokrates: (frage: string) =>

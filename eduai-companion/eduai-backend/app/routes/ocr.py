@@ -81,10 +81,10 @@ async def solve_from_image(
         else:
             # Use Groq LLM for non-math subjects
             subject_prompts = {
-                "physics": "Du bist ein Physik-Experte. Erklaere und loese die folgende Physik-Aufgabe Schritt fuer Schritt.",
-                "chemistry": "Du bist ein Chemie-Experte. Erklaere und loese die folgende Chemie-Aufgabe Schritt fuer Schritt.",
-                "biology": "Du bist ein Biologie-Experte. Erklaere das folgende biologische Konzept ausfuehrlich.",
-                "text": "Erklaere den folgenden Text und beantworte moegliche Fragen dazu.",
+                "physics": "Du bist ein Physik-Experte. Erkläre und löse die folgende Physik-Aufgabe Schritt fuer Schritt.",
+                "chemistry": "Du bist ein Chemie-Experte. Erkläre und löse die folgende Chemie-Aufgabe Schritt fuer Schritt.",
+                "biology": "Du bist ein Biologie-Experte. Erkläre das folgende biologische Konzept ausführlich.",
+                "text": "Erkläre den folgenden Text und beantworte mögliche Fragen dazu.",
             }
             prompt = subject_prompts.get(subject, subject_prompts["text"])
             explanation = call_groq_llm(

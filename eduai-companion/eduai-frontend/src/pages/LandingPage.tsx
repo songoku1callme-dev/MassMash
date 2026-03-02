@@ -72,26 +72,26 @@ const FEATURES = [
 const PRICING = [
   {
     tier: "Free", price: "0", period: "", features: [
-      "5 KI-Persoenlichkeiten", "3 Quizzes/Tag", "IQ-Test (1x/Woche)",
-      "Basis-Faecher", "Gruppen-Chats",
+        "5 KI-Persönlichkeiten", "3 Quizzes/Tag", "IQ-Test (1x/Woche)",
+        "Basis-Fächer", "Gruppen-Chats",
     ],
   },
   {
     tier: "Pro", price: "4,99", period: "/Monat", features: [
-      "12 KI-Persoenlichkeiten", "Unbegrenzte Quizzes", "Abitur-Simulation",
-      "Karteikarten + Notizen", "Pruefungs-Kalender", "Internet-Recherche",
+      "12 KI-Persönlichkeiten", "Unbegrenzte Quizzes", "Abitur-Simulation",
+      "Karteikarten + Notizen", "Prüfungs-Kalender", "Internet-Recherche",
     ], popular: true, yearPrice: "39,99",
   },
   {
     tier: "Max", price: "9,99", period: "/Monat", features: [
-      "Alle 20 KI-Persoenlichkeiten", "Alles in Pro", "Prioritaets-Support",
+      "Alle 20 KI-Persönlichkeiten", "Alles in Pro", "Prioritäts-Support",
       "Erweiterte Statistiken", "PDF/Word Export", "Multiplayer-Quiz",
     ], yearPrice: "79,99",
   },
   {
     tier: "Eltern", price: "2,99", period: "/Monat", features: [
-      "Lernfortschritt in Echtzeit", "Woechentliche E-Mail Berichte",
-      "Streak-Alerts", "Schwaechen-Analyse", "Pruefungs-Kalender Einblick",
+      "Lernfortschritt in Echtzeit", "Wöchentliche E-Mail Berichte",
+      "Streak-Alerts", "Schwächen-Analyse", "Prüfungs-Kalender Einblick",
     ], yearPrice: "23,99",
   },
 ];
@@ -106,8 +106,8 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
   const liveStats = useLiveStats();
 
   const LIVE_STATS = [
-    { icon: <Users className="w-6 h-6" />, value: liveStats.users, suffix: "+", label: "Aktive Schueler" },
-    { icon: <Brain className="w-6 h-6" />, value: liveStats.quizzes, suffix: "+", label: "Quizzes geloest" },
+    { icon: <Users className="w-6 h-6" />, value: liveStats.users, suffix: "+", label: "Aktive Schüler" },
+    { icon: <Brain className="w-6 h-6" />, value: liveStats.quizzes, suffix: "+", label: "Quizzes gelöst" },
     { icon: <Trophy className="w-6 h-6" />, value: liveStats.tournaments, suffix: "", label: "Turniere gespielt" },
     { icon: <Flame className="w-6 h-6" />, value: liveStats.improvement, suffix: "%", label: "Notenverbesserung" },
   ];
@@ -135,7 +135,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
         <div className="max-w-4xl mx-auto text-center animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-6 animate-pulse-glow">
             <Sparkles className="w-4 h-4" />
-            Deutschlands #1 KI-Tutor — Bereits 1.247+ Schueler lernen mit Lumnos
+            Deutschlands #1 KI-Tutor — Bereits 1.247+ Schüler lernen mit Lumnos
           </div>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-lumnos-text leading-tight">
             Lerne{" "}
@@ -145,8 +145,8 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
             {" "}mit KI
           </h1>
           <p className="mt-6 text-lg sm:text-xl text-lumnos-muted max-w-2xl mx-auto">
-            IQ-Test, Abitur-Simulation, 16 Faecher, taegliche Turniere, Voice Mode.
-            20 KI-Persoenlichkeiten helfen dir beim Lernen. <strong className="text-lumnos-text">100% kostenlos starten.</strong>
+            IQ-Test, Abitur-Simulation, 16 Fächer, tägliche Turniere, Voice Mode.
+            20 KI-Persönlichkeiten helfen dir beim Lernen. <strong className="text-lumnos-text">100% kostenlos starten.</strong>
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="gap-2 text-base px-8 lumnos-btn-primary border-0 shadow-glow-md" onClick={onRegister}>
@@ -158,23 +158,23 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
               Gratis IQ-Test
             </Button>
           </div>
-          <p className="mt-3 text-xs text-lumnos-muted">Keine Kreditkarte noetig. DSGVO-konform.</p>
+          <p className="mt-3 text-xs text-lumnos-muted">Keine Kreditkarte nötig. DSGVO-konform.</p>
         </div>
       </section>
 
       {/* Live Stats Counter */}
-      <section className="py-12 px-4 border-b border-gray-100 dark:border-gray-800">
+      <section className="py-12 px-4 border-b border-indigo-500/10">
         <div className="max-w-5xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {LIVE_STATS.map((s, i) => (
               <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 mb-2">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-900/30 text-indigo-400 mb-2">
                   {s.icon}
                 </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">
+                <div className="text-2xl sm:text-3xl font-extrabold text-white">
                   <AnimatedCounter target={s.value} suffix={s.suffix} />
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">{s.label}</div>
+                <div className="text-sm text-slate-400">{s.label}</div>
               </div>
             ))}
           </div>
@@ -186,7 +186,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
         <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
-            <span>Gestern: <strong>247 Schueler</strong> im Mathe-Turnier</span>
+            <span>Gestern: <strong>247 Schüler</strong> im Mathe-Turnier</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
@@ -194,27 +194,27 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
           </div>
           <div className="flex items-center gap-2">
             <Star className="w-4 h-4" />
-            <span><strong>4.8/5</strong> Sterne von Schuelern</span>
+            <span><strong>4.8/5</strong> Sterne von Schülern</span>
           </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-800/50 px-4">
+      <section className="py-20 bg-[#0a0f1e] px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Alles was du zum Lernen brauchst</h2>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">In einer App. Für alle Fächer. Mit KI.</p>
+            <h2 className="text-3xl font-bold text-white">Alles was du zum Lernen brauchst</h2>
+            <p className="mt-3 text-slate-400">In einer App. Für alle Fächer. Mit KI.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (
-              <Card key={i} className="hover:shadow-lg transition-shadow border-0 bg-white dark:bg-gray-900">
+              <Card key={i} className="hover:shadow-lg transition-shadow border border-indigo-500/20 bg-[#0f172a]" style={{ backdropFilter: "blur(12px)" }}>
                 <CardContent className="p-6">
                   <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white mb-4 shadow-md`}>
                     {f.icon}
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{f.title}</h3>
-                  <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm">{f.desc}</p>
+                  <h3 className="text-lg font-semibold text-white">{f.title}</h3>
+                  <p className="mt-2 text-slate-400 text-sm">{f.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -226,25 +226,25 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Was Schüler sagen</h2>
+            <h2 className="text-3xl font-bold text-white">Was Schüler sagen</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
-              <Card key={i} className="border-0 bg-gray-50 dark:bg-gray-800">
+              <Card key={i} className="border border-indigo-500/20 bg-[#0f172a]">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-1 mb-3">
                     {[...Array(5)].map((_, j) => (
                       <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                     ))}
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm italic mb-4">"{t.text}"</p>
+                  <p className="text-slate-300 text-sm italic mb-4">"{t.text}"</p>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
                       {t.avatar}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">{t.name}</p>
-                      <p className="text-xs text-gray-500">{t.grade}</p>
+                      <p className="font-medium text-white text-sm">{t.name}</p>
+                      <p className="text-xs text-slate-500">{t.grade}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -255,44 +255,44 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       </section>
 
       {/* Pricing */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-800/50 px-4">
+      <section className="py-20 bg-[#0a0f1e] px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Einfache Preise</h2>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Starte kostenlos. Upgrade wenn du willst.</p>
+            <h2 className="text-3xl font-bold text-white">Einfache Preise</h2>
+            <p className="mt-3 text-slate-400">Starte kostenlos. Upgrade wenn du willst.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PRICING.map((p, i) => (
               <Card
                 key={i}
-                className={`relative border-0 ${p.popular ? "ring-2 ring-indigo-600 shadow-xl" : "shadow-md"}`}
+                className={`relative border border-indigo-500/20 bg-[#0f172a] ${p.popular ? "ring-2 ring-indigo-500 shadow-xl" : ""}`}
               >
                 {p.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-indigo-600 text-white text-xs font-medium rounded-full">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-white text-xs font-medium rounded-full" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
                     Beliebteste Wahl
                   </div>
                 )}
                 <CardContent className="p-6">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">{p.tier}</h3>
+                  <h3 className="text-lg font-bold text-white">{p.tier}</h3>
                   <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{p.price}&euro;</span>
-                    <span className="text-gray-500 dark:text-gray-400">{p.period}</span>
+                    <span className="text-4xl font-extrabold text-white">{p.price}&euro;</span>
+                    <span className="text-slate-400">{p.period}</span>
                   </div>
                   {p.yearPrice && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-slate-400 mt-1">
                       oder {p.yearPrice}&euro;/Jahr (spare 33%)
                     </p>
                   )}
                   <ul className="mt-6 space-y-3">
                     {p.features.map((f, j) => (
-                      <li key={j} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                        <Zap className="w-4 h-4 text-indigo-500 shrink-0" />
+                      <li key={j} className="flex items-center gap-2 text-sm text-slate-300">
+                        <Zap className="w-4 h-4 text-indigo-400 shrink-0" />
                         {f}
                       </li>
                     ))}
                   </ul>
                   <Button
-                    className="w-full mt-6"
+                    className={`w-full mt-6 ${p.popular ? "" : "border-indigo-500/30 text-white hover:bg-indigo-500/10"}`}
                     variant={p.popular ? "default" : "outline"}
                     onClick={onRegister}
                   >
@@ -309,17 +309,17 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       <section className="py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Lumnos vs. Andere Lern-Apps</h2>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Warum Lumnos die beste Wahl ist</p>
+            <h2 className="text-3xl font-bold text-white">Lumnos vs. Andere Lern-Apps</h2>
+            <p className="mt-3 text-slate-400">Warum Lumnos die beste Wahl ist</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b dark:border-gray-700">
-                  <th className="text-left p-3 text-gray-500 dark:text-gray-400">Feature</th>
-                  <th className="p-3 text-indigo-600 dark:text-indigo-400 font-bold">Lumnos</th>
-                  <th className="p-3 text-gray-500 dark:text-gray-400">Knowunity</th>
-                  <th className="p-3 text-gray-500 dark:text-gray-400">Studyflix</th>
+                <tr className="border-b border-indigo-500/20">
+                  <th className="text-left p-3 text-slate-400">Feature</th>
+                  <th className="p-3 text-indigo-400 font-bold">Lumnos</th>
+                  <th className="p-3 text-slate-400">Knowunity</th>
+                  <th className="p-3 text-slate-400">Studyflix</th>
                 </tr>
               </thead>
               <tbody className="text-center">
@@ -327,16 +327,16 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
                   ["KI-Tutor (20 Stile)", "check", "cross", "cross"],
                   ["IQ-Test", "check", "cross", "cross"],
                   ["Abitur-Simulation", "check", "cross", "partial"],
-                  ["Taegliche Turniere", "check", "cross", "cross"],
+                  ["Tägliche Turniere", "check", "cross", "cross"],
                   ["Pomodoro-Timer", "check", "cross", "cross"],
-                  ["Wissensluecken-Scanner", "check", "cross", "cross"],
+                  ["Wissenslücken-Scanner", "check", "cross", "cross"],
                   ["Belohnungs-Shop", "check", "cross", "cross"],
                   ["Klassen-Challenges", "check", "partial", "cross"],
-                  ["16 Faecher", "check", "check", "partial"],
+                  ["16 Fächer", "check", "check", "partial"],
                   ["Kostenloser Plan", "check", "partial", "check"],
                 ].map(([feature, lumnos, knowunity, studyflix], i) => (
-                  <tr key={i} className="border-b dark:border-gray-700/50">
-                    <td className="text-left p-3 text-gray-700 dark:text-gray-300">{feature}</td>
+                  <tr key={i} className="border-b border-indigo-500/10">
+                    <td className="text-left p-3 text-slate-300">{feature}</td>
                     {[lumnos, knowunity, studyflix].map((val, j) => (
                       <td key={j} className="p-3">
                         {val === "check" ? <span className="text-green-500 font-bold">Ja</span> :
@@ -353,24 +353,24 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
       </section>
 
       {/* FAQ */}
-      <section className="py-20 bg-gray-50 dark:bg-gray-800/50 px-4">
+      <section className="py-20 bg-[#0a0f1e] px-4">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Haeufige Fragen</h2>
+            <h2 className="text-3xl font-bold text-white">Häufige Fragen</h2>
           </div>
           <div className="space-y-4">
             {[
-              { q: "Ist Lumnos wirklich kostenlos?", a: "Ja! Der Free-Plan ist dauerhaft kostenlos und beinhaltet 5 KI-Persoenlichkeiten, 3 Quizzes pro Tag und den IQ-Test." },
-              { q: "Fuer welche Klassenstufen ist Lumnos geeignet?", a: "Lumnos ist fuer Schueler der Klassen 5-13 an Gymnasium, Realschule und Gesamtschule geeignet. Die KI passt sich automatisch an dein Niveau an." },
-              { q: "Wie funktioniert der KI-Tutor?", a: "Der KI-Tutor nutzt modernste Sprachmodelle, um dir Themen Schritt fuer Schritt zu erklaeren. Du kannst aus 20 verschiedenen KI-Persoenlichkeiten waehlen." },
+              { q: "Ist Lumnos wirklich kostenlos?", a: "Ja! Der Free-Plan ist dauerhaft kostenlos und beinhaltet 5 KI-Persönlichkeiten, 3 Quizzes pro Tag und den IQ-Test." },
+              { q: "Für welche Klassenstufen ist Lumnos geeignet?", a: "Lumnos ist für Schüler der Klassen 5-13 an Gymnasium, Realschule und Gesamtschule geeignet. Die KI passt sich automatisch an dein Niveau an." },
+              { q: "Wie funktioniert der KI-Tutor?", a: "Der KI-Tutor nutzt modernste Sprachmodelle, um dir Themen Schritt für Schritt zu erklären. Du kannst aus 20 verschiedenen KI-Persönlichkeiten wählen." },
               { q: "Sind meine Daten sicher?", a: "Absolut. Lumnos ist DSGVO-konform. Deine Daten werden in Europa gespeichert und niemals an Dritte weitergegeben." },
-              { q: "Kann ich Lumnos auf dem Handy nutzen?", a: "Ja! Lumnos ist eine Progressive Web App (PWA) und funktioniert auf jedem Geraet mit Browser - auch offline fuer Karteikarten und Quizzes." },
+              { q: "Kann ich Lumnos auf dem Handy nutzen?", a: "Ja! Lumnos ist eine Progressive Web App (PWA) und funktioniert auf jedem Gerät mit Browser - auch offline für Karteikarten und Quizzes." },
             ].map((faq, i) => (
-              <details key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <summary className="p-4 font-medium text-gray-900 dark:text-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+              <details key={i} className="bg-[#0f172a] rounded-xl border border-indigo-500/20 overflow-hidden">
+                <summary className="p-4 font-medium text-white cursor-pointer hover:bg-indigo-500/10">
                   {faq.q}
                 </summary>
-                <p className="px-4 pb-4 text-gray-600 dark:text-gray-400 text-sm">{faq.a}</p>
+                <p className="px-4 pb-4 text-slate-400 text-sm">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -384,10 +384,10 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
             Werde Teil der smartesten Lern-Community Deutschlands
           </h2>
           <p className="mt-4 text-indigo-100 text-lg">
-            1.247+ Schueler vertrauen bereits auf Lumnos. Starte jetzt kostenlos.
+            1.247+ Schüler vertrauen bereits auf Lumnos. Starte jetzt kostenlos.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="gap-2 text-base px-8 bg-white text-indigo-700 hover:bg-gray-100 shadow-lg" onClick={onRegister}>
+            <Button size="lg" className="gap-2 text-base px-8 lumnos-btn-primary border-0 shadow-glow-md" onClick={onRegister}>
               Kostenlos starten
               <ChevronRight className="w-5 h-5" />
             </Button>
@@ -396,18 +396,18 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
               Gratis IQ-Test
             </Button>
           </div>
-          <p className="mt-4 text-indigo-200 text-sm">Keine Kreditkarte noetig. Jederzeit kuendbar.</p>
+          <p className="mt-4 text-indigo-200 text-sm">Keine Kreditkarte nötig. Jederzeit kündbar.</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 py-8 px-4">
+      <footer className="border-t border-indigo-500/20 py-8 px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <GraduationCap className="w-5 h-5 text-indigo-600" />
-            <span className="font-bold text-gray-900 dark:text-white">Lumnos Companion</span>
+            <GraduationCap className="w-5 h-5 text-indigo-400" />
+            <span className="font-bold text-white">Lumnos</span>
           </div>
-          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-4 text-sm text-slate-400">
             <span>DSGVO-konform</span>
             <Shield className="w-4 h-4" />
             <span>Made in Germany</span>

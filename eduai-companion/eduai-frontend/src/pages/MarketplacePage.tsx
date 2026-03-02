@@ -54,7 +54,7 @@ export default function MarketplacePage() {
           Lehrer-Marketplace
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Quiz-Sets, Karteikarten und Lernplaene von Lehrern — fuer Schueler gemacht!
+          Quiz-Sets, Karteikarten und Lernplaene von Lehrern — fuer Schüler gemacht!
         </p>
       </div>
 

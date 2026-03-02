@@ -144,7 +144,7 @@ async def export_note_pdf(
     except Exception:
         pass
 
-    pdf_buffer = _generate_simple_pdf(title, content, current_user.get("username", "Schueler"))
+    pdf_buffer = _generate_simple_pdf(title, content, current_user.get("username", "Schüler"))
 
     return StreamingResponse(
         pdf_buffer,
@@ -204,7 +204,7 @@ async def export_lernplan_pdf(
         "  So: Entspannung + leichte Wiederholung",
     ])
 
-    username = current_user.get("username", "Schueler")
+    username = current_user.get("username", "Schüler")
     pdf_buffer = _generate_simple_pdf(f"Lernplan fuer {username}", "\n".join(lines), username)
 
     return StreamingResponse(

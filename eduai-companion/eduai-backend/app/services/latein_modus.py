@@ -3,7 +3,7 @@
 LUMNOS Faecher-Expansion 5.0 Block 2:
 - Vokabel-Trainer (Stammformen, Genus, Deklination, Etymologie)
 - Grammatik-Analyse (Satz-Gliederung, Kasus, Tempora, Konstruktionen)
-- Uebersetzungs-Hilfe (Schritt-fuer-Schritt)
+- Übersetzungs-Hilfe (Schritt-fuer-Schritt)
 - Vokabel-Abfrage (Tabellen-Format)
 - Spezielle Quiz-Typen fuer alte Sprachen
 """
@@ -16,7 +16,7 @@ LATEIN-SPEZIAL-FAEHIGKEITEN:
    - Latein -> Deutsch UND Deutsch -> Latein
    - Stammformen nennen: amare -> amo, amare, amavi, amatum
    - Genus & Deklinations-Klasse angeben
-   - Etymologie erklaeren (lat. Wort in modernen Sprachen)
+   - Etymologie erklären (lat. Wort in modernen Sprachen)
 
 2. GRAMMATIK-ANALYSE:
    - Satz syntaktisch gliedern (Subjekt, Praedikat, Objekt...)
@@ -28,17 +28,17 @@ LATEIN-SPEZIAL-FAEHIGKEITEN:
    - Schritt-fuer-Schritt uebersetzen
    - Zuerst: Verb finden -> Zeit/Modus bestimmen
    - Dann: Subjekt + Objekte zuordnen
-   - Schliesslich: Konstruktionen aufloesen
+   - Schliesslich: Konstruktionen auflösen
    - Sinngemässe Uebertragung ins Deutsche
 
 4. VOKABEL-ABFRAGE (auf Anfrage):
    Format: "Nenne mir 10 Vokabeln zu [Thema]"
    -> Tabelle: Latein | Stammformen | Deutsch | Deklination/Konjugation
 
-IMMER: Grammatikregeln mit Beispielen erklaeren.
-Bei Fehlern: Freundlich korrigieren und den Fehler erklaeren.
+IMMER: Grammatikregeln mit Beispielen erklären.
+Bei Fehlern: Freundlich korrigieren und den Fehler erklären.
 Verwende Markdown-Tabellen fuer uebersichtliche Darstellung.
-Biete am Ende immer eine Uebungsaufgabe an.
+Biete am Ende immer eine Übungsaufgabe an.
 """
 
 ALTGRIECHISCH_SYSTEM_PROMPT = """Du bist ein Altgriechisch-Experte und Sprach-Tutor.
@@ -62,7 +62,7 @@ ALTGRIECHISCH-SPEZIAL-FAEHIGKEITEN:
    - Schritt-fuer-Schritt uebersetzen
    - Verb finden -> Tempus/Modus/Genus Verbi bestimmen
    - Subjekt + Objekte zuordnen
-   - Partizipien und Infinitivkonstruktionen aufloesen
+   - Partizipien und Infinitivkonstruktionen auflösen
    - Sinngemässe Uebertragung ins Deutsche
 
 4. VOKABEL-ABFRAGE:
@@ -79,7 +79,7 @@ LATEIN_QUIZ_TYPEN = [
     "kasuserkennung",    # Welchen Kasus hat dieses Wort?
     "konjugation",       # Konjugiere dieses Verb
     "konstruktionen",    # Erkenne die Konstruktion (AcI, Abl. Abs., PC)
-    "uebersetzung",      # Uebersetze diesen Satz
+    "übersetzung",      # Uebersetze diesen Satz
 ]
 
 # Verteilung der Quiz-Typen
@@ -101,7 +101,7 @@ Mische:
 - 50% Latein -> Deutsch (Multiple Choice mit 4 Optionen)
 - 50% Deutsch -> Latein (Multiple Choice mit 4 Optionen)
 
-Bei jeder Frage: Nenne auch die Stammformen in der Erklaerung.
+Bei jeder Frage: Nenne auch die Stammformen in der Erklärung.
 FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
 
     elif quiz_typ == "stammformen":
@@ -120,7 +120,7 @@ Thema: {thema or 'Kasusbestimmung'}
 
 Format: Gib einen lateinischen Satz und frage nach dem Kasus eines markierten Wortes.
 Optionen: Nominativ, Genitiv, Dativ, Akkusativ, Ablativ, Vokativ
-Erklaerung: Warum dieser Kasus? (Funktion im Satz)
+Erklärung: Warum dieser Kasus? (Funktion im Satz)
 
 FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
 
@@ -139,7 +139,7 @@ FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
         return f"""Erstelle {num_questions} Konstruktions-Erkennungsfragen.
 Thema: {thema or 'Lateinische Konstruktionen'}
 
-Gib lateinische Saetze mit folgenden Konstruktionen:
+Gib lateinische Sätze mit folgenden Konstruktionen:
 - AcI (Accusativus cum Infinitivo)
 - Ablativus Absolutus
 - Participium Coniunctum
@@ -147,17 +147,17 @@ Gib lateinische Saetze mit folgenden Konstruktionen:
 - Gerundium/Gerundivum
 
 Frage: "Welche Konstruktion liegt vor?" mit 4 Optionen.
-Erklaerung: Wie erkennt man sie? Wie uebersetzt man sie?
+Erklärung: Wie erkennt man sie? Wie übersetzt man sie?
 
 FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
 
-    elif quiz_typ == "uebersetzung":
-        return f"""Erstelle {num_questions} Uebersetzungs-Quizfragen.
-Thema: {thema or 'Uebersetzung'}
+    elif quiz_typ == "übersetzung":
+        return f"""Erstelle {num_questions} Übersetzungs-Quizfragen.
+Thema: {thema or 'Übersetzung'}
 
-Gib kurze lateinische Saetze (1-2 Zeilen) und frage nach der korrekten Uebersetzung.
-4 Optionen: 1 korrekte, 3 fehlerhafte Uebersetzungen (typische Schueler-Fehler).
-Erklaerung: Schritt-fuer-Schritt Uebersetzungsweg.
+Gib kurze lateinische Sätze (1-2 Zeilen) und frage nach der korrekten Übersetzung.
+4 Optionen: 1 korrekte, 3 fehlerhafte Übersetzungen (typische Schüler-Fehler).
+Erklärung: Schritt-fuer-Schritt Übersetzungsweg.
 
 FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
 

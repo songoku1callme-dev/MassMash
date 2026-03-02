@@ -74,6 +74,19 @@ function App() {
     localStorage.setItem("lumnos_dark", String(darkMode));
   }, [darkMode]);
 
+  // Allow navigation from pages that don't receive onNavigate props (e.g. Chat header upgrade button)
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (typeof detail === "string") {
+        setCurrentPage(detail);
+      }
+    };
+
+    window.addEventListener("navigate", handler);
+    return () => window.removeEventListener("navigate", handler);
+  }, []);
+
   if (isLoading) {
     return (
       <div className="min-h-screen cyber-bg flex items-center justify-center">

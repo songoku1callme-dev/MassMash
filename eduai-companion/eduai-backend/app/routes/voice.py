@@ -43,7 +43,7 @@ async def transcribe_audio(
                 model="whisper-large-v3",
                 file=(audio.filename or "audio.webm", f.read(), audio.content_type or "audio/webm"),
                 language="de",
-                prompt="Schueler fragt Lehrer auf Deutsch. Fachbegriffe: Mathematik, Physik, Chemie, Biologie, Deutsch, Geschichte.",
+                prompt="Schüler fragt Lehrer auf Deutsch. Fachbegriffe: Mathematik, Physik, Chemie, Biologie, Deutsch, Geschichte.",
             )
 
         os.unlink(tmp_path)
@@ -122,8 +122,8 @@ async def voice_chat(
         from app.services.groq_llm import call_groq_llm
 
         system_prompt = (
-            "Du bist Lumnos, ein freundlicher KI-Tutor fuer deutsche Schueler. "
-            "Antworte kurz und praegnant (max 3 Saetze), da deine Antwort vorgelesen wird. "
+            "Du bist Lumnos, ein freundlicher KI-Tutor fuer deutsche Schüler. "
+            "Antworte kurz und prägnant (max 3 Sätze), da deine Antwort vorgelesen wird. "
             "Verwende einfache Sprache, keine LaTeX-Formeln. "
             "Sei motivierend und ermutigend."
         )

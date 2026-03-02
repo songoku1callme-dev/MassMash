@@ -1,4 +1,4 @@
-"""Taegliche Quests routes - Gamification 2.0.
+"""Tägliche Quests routes - Gamification 2.0.
 
 Supreme 10.0 Phase 6: Daily quests with progress tracking.
 """
@@ -22,15 +22,15 @@ import hashlib
 _ALL_SUBJECTS = [
     "Mathematik", "Deutsch", "Physik", "Englisch", "Geschichte",
     "Biologie", "Chemie", "Informatik", "Geographie", "Kunst",
-    "Musik", "Philosophie", "Wirtschaft", "Politik", "Franzoesisch", "Sport",
+    "Musik", "Philosophie", "Wirtschaft", "Politik", "Französisch", "Sport",
 ]
 
 _SOCIAL_QUESTS = [
-    ("Duell gewinnen", "Gewinne ein Multiplayer-Quiz gegen einen anderen Schueler"),
+    ("Duell gewinnen", "Gewinne ein Multiplayer-Quiz gegen einen anderen Schüler"),
     ("Lernpartner finden", "Finde einen Lernpartner ueber die Matching-Seite"),
     ("Gruppen-Chat", "Schreibe eine Nachricht in einem Gruppen-Chat"),
-    ("Turnier-Teilnahme", "Nimm am taeglichen Turnier teil"),
-    ("Hilf einem Mitschueler", "Beantworte eine Frage in der Community"),
+    ("Turnier-Teilnahme", "Nimm am täglichen Turnier teil"),
+    ("Hilf einem Mitschüler", "Beantworte eine Frage in der Community"),
 ]
 
 

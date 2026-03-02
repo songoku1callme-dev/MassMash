@@ -121,7 +121,7 @@ export default function SchoolPage() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
             Klasse erstellen
           </Button>
-          <p className="text-xs text-gray-500 mt-3">Alle Schueler in deiner Klasse erhalten automatisch Max-Zugang.</p>
+          <p className="text-xs text-gray-500 mt-3">Alle Schüler in deiner Klasse erhalten automatisch Max-Zugang.</p>
         </div>
       )}
 
@@ -154,14 +154,14 @@ export default function SchoolPage() {
                   </div>
                 </div>
                 <Badge variant={c.is_active ? "default" : "secondary"}>
-                  {c.student_count}/{c.max_students} Schueler
+                  {c.student_count}/{c.max_students} Schüler
                 </Badge>
               </div>
 
               {c.students.length > 0 && (
                 <div className="space-y-2">
                   <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-500 px-2">
-                    <span>Schueler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span>
+                    <span>Schüler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span>
                   </div>
                   {c.students.map((s) => (
                     <div key={s.id} className="grid grid-cols-5 gap-2 items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm">
@@ -175,7 +175,7 @@ export default function SchoolPage() {
                 </div>
               )}
               {c.students.length === 0 && (
-                <p className="text-sm text-gray-500 text-center py-4">Noch keine Schueler beigetreten. Teile den Code!</p>
+                <p className="text-sm text-gray-500 text-center py-4">Noch keine Schüler beigetreten. Teile den Code!</p>
               )}
             </div>
           ))}
@@ -189,12 +189,12 @@ export default function SchoolPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
             <h3 className="font-semibold">Klassen-Lizenz</h3>
             <p className="text-2xl font-bold text-blue-600 my-2">49,99 EUR/Monat</p>
-            <p className="text-xs text-gray-500">Bis zu 30 Schueler</p>
+            <p className="text-xs text-gray-500">Bis zu 30 Schüler</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border-2 border-blue-500">
             <h3 className="font-semibold">Schul-Lizenz</h3>
             <p className="text-2xl font-bold text-blue-600 my-2">299,99 EUR/Monat</p>
-            <p className="text-xs text-gray-500">Bis zu 300 Schueler</p>
+            <p className="text-xs text-gray-500">Bis zu 300 Schüler</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-700">
             <h3 className="font-semibold">Enterprise</h3>

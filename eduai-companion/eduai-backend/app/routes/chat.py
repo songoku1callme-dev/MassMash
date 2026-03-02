@@ -178,16 +178,16 @@ async def send_message(
             # Build memory context for system prompt
             parts = []
             if known_name:
-                parts.append(f"Der Schueler heisst {known_name}. Sprich ihn mit Namen an.")
+                parts.append(f"Der Schüler heißt {known_name}. Sprich ihn mit Namen an.")
             if hobbies and hobbies != "[]":
                 parts.append(f"Hobbys: {hobbies}. Nutze Analogien aus diesen Bereichen.")
             if difficult and difficult != "[]":
-                parts.append(f"Schwierige Themen: {difficult}. Erklaere diese besonders gruendlich.")
+                parts.append(f"Schwierige Themen: {difficult}. Erkläre diese besonders gründlich.")
             if trust >= 7:
-                parts.append("Ihr habt eine vertrauensvolle Beziehung. Sei persoenlich und motivierend.")
+                parts.append("Ihr habt eine vertrauensvolle Beziehung. Sei persönlich und motivierend.")
             elif trust >= 4:
-                parts.append("Der Schueler kennt dich schon. Sei freundlich aber professionell.")
-            parts.append(f"Bevorzugte Erklaerweise: {pref_expl}")
+                parts.append("Der Schüler kennt dich schon. Sei freundlich aber professionell.")
+            parts.append(f"Bevorzugte Erklärweise: {pref_expl}")
             if parts:
                 ki_memory_prompt = "\nKI-MEMORY:\n" + "\n".join(parts) + "\n"
 
@@ -229,7 +229,7 @@ async def send_message(
     known_name = ""
     hobbies_str = ""
     schwaechen_str = ""
-    pref_expl = "Schritt-fuer-Schritt"
+    pref_expl = "Schritt-für-Schritt"
     try:
         if ki_memory_prompt:  # Already loaded above
             pass  # Data already in ki_memory_prompt
@@ -244,13 +244,13 @@ async def send_message(
             trust_level = md2.get("trust_level", 1.0) or 1.0
             known_name = md2.get("known_name", "") or ""
             hobbies_str = md2.get("known_hobbies", "") or ""
-            pref_expl = md2.get("preferred_explanation", "Schritt-fuer-Schritt") or "Schritt-fuer-Schritt"
+            pref_expl = md2.get("preferred_explanation", "Schritt-für-Schritt") or "Schritt-für-Schritt"
             schwaechen_str = md2.get("difficult_topics", "") or ""
     except Exception:
         pass
 
     # Vertrauen-Level based tone (Supreme 13.0 Phase 3)
-    display_name = known_name or current_user.get("full_name", "") or current_user.get("username", "Schueler")
+    display_name = known_name or current_user.get("full_name", "") or current_user.get("username", "Schüler")
     school_grade = current_user.get("school_grade", "10")
     school_type = current_user.get("school_type", "Gymnasium")
     streak_days = current_user.get("streak_days", 0) or 0
@@ -260,19 +260,19 @@ async def send_message(
     elif trust_level >= 5:
         ton_str = f"Du bist {display_name}s hilfreicher Lerncoach. Freundlich und professionell."
     else:
-        ton_str = "Du bist ein freundlicher, geduldiger Tutor. Begruesse den Schueler herzlich."
+        ton_str = "Du bist ein freundlicher, geduldiger Tutor. Begrüße den Schüler herzlich."
 
-    hobby_kontext = f"Nutze {hobbies_str}-Analogien wenn moeglich." if hobbies_str and hobbies_str != "[]" else ""
+    hobby_kontext = f"Nutze {hobbies_str}-Analogien wenn möglich." if hobbies_str and hobbies_str != "[]" else ""
     schwaechen_info = (
-        f"BEKANNTE SCHWAECHEN: {schwaechen_str} → Hier extra geduldig sein!"
+        f"BEKANNTE SCHWÄCHEN: {schwaechen_str} → Hier extra geduldig sein!"
         if schwaechen_str and schwaechen_str != "[]" else ""
     )
 
-    master_prompt = f"""Du bist Lumnos – Deutschlands bester KI-Lehrer und {display_name}s persoenlicher Lerncoach.
-Du bist wie ein brillanter aelterer Freund: geduldig, witzig, immer erklaerst du alles so
-dass man es WIRKLICH versteht – nie herabwuerdigend, immer auf Augenhoehe.
+    master_prompt = f"""Du bist Lumnos – Deutschlands bester KI-Lehrer und {display_name}s persönlicher Lerncoach.
+Du bist wie ein brillanter älterer Freund: geduldig, witzig, immer erklärst du alles so
+dass man es WIRKLICH versteht – nie herabwürdigend, immer auf Augenhöhe.
 
-SCHUELER-PROFIL:
+SCHÜLER-PROFIL:
 Name: {display_name} | Klasse: {school_grade} | Schultyp: {school_type}
 Lernstil: {pref_expl} | Vertrauenslevel: {trust_level}/10 | Streak: {streak_days} Tage
 {schwaechen_info}
@@ -280,29 +280,29 @@ Lernstil: {pref_expl} | Vertrauenslevel: {trust_level}/10 | Streak: {streak_days
 TON: {ton_str}
 {hobby_kontext}
 
-MULTI-STEP REASONING (Supreme 13.0 – intern, NICHT dem Schueler zeigen):
-Bevor du antwortest, fuehre INTERN 3 Schritte durch:
-1. ANALYSE: Was ist das Kernthema? Welches Vorwissen braucht der Schueler?
-   Welches Niveau (Klasse {school_grade}, {school_type})? Haeufige Fehler?
-2. ANTWORT-GENERIERUNG: Erstelle die perfekte Erklaerung mit Schritt-fuer-Schritt,
-   Beispielen, LaTeX-Formeln, Analogien aus dem Alltag des Schuelers.
-3. SELF-CHECK: Pruefe deine Antwort auf Fehler. Bei Mathe: rechne nach.
+MULTI-STEP REASONING (Supreme 13.0 – intern, NICHT dem Schüler zeigen):
+Bevor du antwortest, führe INTERN 3 Schritte durch:
+1. ANALYSE: Was ist das Kernthema? Welches Vorwissen braucht der Schüler?
+   Welches Niveau (Klasse {school_grade}, {school_type})? Häufige Fehler?
+2. ANTWORT-GENERIERUNG: Erstelle die perfekte Erklärung mit Schritt-für-Schritt,
+   Beispielen, LaTeX-Formeln, Analogien aus dem Alltag des Schülers.
+3. SELF-CHECK: Prüfe deine Antwort auf Fehler. Bei Mathe: rechne nach.
    Bei Fakten: bist du sicher? Wenn nicht, sage es ehrlich.
-   Zeige dem Schueler NUR die fertige, geprueft perfekte Erklaerung.
+   Zeige dem Schüler NUR die fertige, geprüft perfekte Erklärung.
 
 ABSOLUTE REGELN – IMMER EINHALTEN:
-1. SCHRITT FUER SCHRITT: Erst Theorie → dann Beispiel → dann Uebungsaufgabe
-2. LATEX fuer Mathe: $\\frac{{1}}{{2}}$, $x^2 + 5x = 0$
+1. SCHRITT FUER SCHRITT: Erst Theorie → dann Beispiel → dann Übungsaufgabe
+2. LATEX für Mathe: $\\frac{{1}}{{2}}$, $x^2 + 5x = 0$
 3. QUELLEN zitieren wenn Web-Suche genutzt: [1] quelle.de
-4. NIEMALS Schueler dumm fuehlen lassen – jede Frage ist gut
+4. NIEMALS Schüler dumm fühlen lassen – jede Frage ist gut
 5. Bei Frustration: Methodenwechsel + extra Ermutigung
-6. Am Ende IMMER: 'Moechtest du eine Uebungsaufgabe dazu?'
-7. Wenn Schueler etwas gut macht: Echtes Lob (nicht uebertrieben)
+6. Am Ende IMMER: 'Möchtest du eine Übungsaufgabe dazu?'
+7. Wenn Schüler etwas gut macht: Echtes Lob (nicht übertrieben)
 8. Komplexe Themen: Erst einfachste Version, dann Vertiefung
-9. Fehler des Schuelers: Nie direkt sagen 'falsch' → 'Fast richtig! Schau mal hier...'
-10. Abitur-Relevanz immer erwaehnen wenn passend
+9. Fehler des Schülers: Nie direkt sagen 'falsch' → 'Fast richtig! Schau mal hier...'
+10. Abitur-Relevanz immer erwähnen wenn passend
 11. Nutze IMMER andere Beispiele als vorher
-12. PROAKTIVE TIPPS: Erwaehne verwandte Themen und Lernstrategien
+12. PROAKTIVE TIPPS: Erwähne verwandte Themen und Lernstrategien
 """
 
     # Generate AI response via Groq LLM (falls back to template engine if no API key)
@@ -340,13 +340,13 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
         except Exception:
             pass  # Non-fatal
 
-    # Faecher-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
+    # Fächer-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
     if is_latein_modus_fach(subject):
         spezial_prompt = get_spezial_system_prompt(subject)
         if spezial_prompt:
             combined_prompt += f"\n{spezial_prompt}\n"
 
-    # Faecher-Expansion 5.0 Block 3: Bundesland-spezifischer Kontext
+    # Fächer-Expansion 5.0 Block 3: Bundesland-spezifischer Kontext
     try:
         bl_cursor = await db.execute(
             "SELECT bundesland FROM users WHERE id = ?", (user_id,)
@@ -364,28 +364,28 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
     if request.tutor_modus:
         combined_prompt += (
             "\n\nTUTOR-MODUS AKTIV: Du darfst KEINE direkten Antworten geben! "
-            "Stelle NUR Gegenfragen, die den Schueler zur Loesung fuehren. "
+            "Stelle NUR Gegenfragen, die den Schüler zur Lösung führen. "
             "Beispiel: Statt 'Die Antwort ist 42' sagst du 'Was passiert, wenn du X mit Y multiplizierst?' "
             "Lobe jeden richtigen Gedankenansatz. "
             "Erst nach 3+ gescheiterten Versuchen darfst du einen kleinen Hinweis geben.\n"
         )
 
-    # Perfect School 4.1 Block 2.3: ELI5 (Erklaere wie ich 5 bin)
+    # Perfect School 4.1 Block 2.3: ELI5 (Erkläre wie ich 5 bin)
     if request.eli5:
         combined_prompt += (
-            "\n\nELI5-MODUS AKTIV: Erklaere ALLES so, als waere der Schueler 5 Jahre alt. "
-            "Nutze: Einfachste Woerter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
-            "KEINE Fachbegriffe. KEINE komplizierten Saetze. "
+            "\n\nELI5-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
+            "Nutze: Einfachste Wörter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
+            "KEINE Fachbegriffe. KEINE komplizierten Sätze. "
             "Beispiel: Statt 'Photosynthese' sagst du 'Pflanzen kochen sich Essen aus Sonnenlicht'. "
-            "Maximal 3 kurze Saetze pro Absatz. Emojis erlaubt.\n"
+            "Maximal 3 kurze Sätze pro Absatz. Emojis erlaubt.\n"
         )
 
     # Detect "explain differently" requests (Phase 2.5)
     explain_methods = [
-        ("verstehe ich nicht", "Erklaere es anders, mit einer Analogie. Beginne mit 'Stell dir vor...'"),
-        ("zu kompliziert", "Erklaere es viel einfacher, als wuerdest du es einem Freund erklaeren."),
-        ("noch mal", "Erklaere es visuell mit Schritt-fuer-Schritt Auflistung und Beispielen."),
-        ("anders erklaeren", "Nutze eine komplett andere Erklaermethode als vorher."),
+        ("verstehe ich nicht", "Erkläre es anders, mit einer Analogie. Beginne mit 'Stell dir vor...'"),
+        ("zu kompliziert", "Erkläre es viel einfacher, als würdest du es einem Freund erklären."),
+        ("noch mal", "Erkläre es visuell mit Schritt-für-Schritt Auflistung und Beispielen."),
+        ("anders erklären", "Nutze eine komplett andere Erklärmethode als vorher."),
     ]
     msg_lower = request.message.lower()
     for trigger, extra_instruction in explain_methods:

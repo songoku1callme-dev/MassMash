@@ -24,8 +24,8 @@ def _get_client() -> Optional[Groq]:
 
 LERNSTIL_DESCRIPTIONS = {
     "visuell": "Diagramme, Tabellen, Schritt-fuer-Schritt mit Pfeilen, ASCII-Art",
-    "auditiv": "Ausfuehrliche Erklaerungen, Analogien, Geschichten, als wuerdest du es erzaehlen",
-    "kinesthetisch": "Sofort Uebungsaufgabe geben, 'Probiere es selbst', interaktiv",
+    "auditiv": "Ausführliche Erklärungen, Analogien, Geschichten, als würdest du es erzaehlen",
+    "kinesthetisch": "Sofort Übungsaufgabe geben, 'Probiere es selbst', interaktiv",
     "lesen": "Stichpunkte, nummerierte Listen, Zusammenfassung, strukturierter Text",
 }
 
@@ -48,11 +48,11 @@ async def detect_lernstil(chat_history: list) -> str:
             messages=[{
                 "role": "system",
                 "content": (
-                    "Analysiere diese Chat-Nachrichten eines Schuelers. "
+                    "Analysiere diese Chat-Nachrichten eines Schülers. "
                     "Erkenne seinen Lernstil:\n"
                     "- VISUELL: Fragt nach Diagrammen, Tabellen, 'Zeig mir'\n"
-                    "- AUDITIV: Fragt nach Erklaerungen, 'Erklaer mir warum'\n"
-                    "- KINESTHETISCH: Will selbst ausprobieren, 'Lass mich loesen'\n"
+                    "- AUDITIV: Fragt nach Erklärungen, 'Erklaer mir warum'\n"
+                    "- KINESTHETISCH: Will selbst ausprobieren, 'Lass mich lösen'\n"
                     "- LESEN: Will Stichpunkte, Listen, Zusammenfassungen\n\n"
                     "Antworte NUR mit einem Wort: VISUELL / AUDITIV / KINESTHETISCH / LESEN"
                 ),
@@ -95,7 +95,7 @@ EMOTION_KEYWORDS = {
         "kapier nicht", "keine ahnung", "zu schwer",
     ],
     "gestresst": [
-        "klausur morgen", "pruefung heute", "keine zeit", "hilfe",
+        "klausur morgen", "prüfung heute", "keine zeit", "hilfe",
         "morgen test", "muss heute", "deadline", "panik", "stress",
         "schaffe das nicht", "zu viel",
     ],
@@ -108,21 +108,21 @@ EMOTION_KEYWORDS = {
 
 EMOTION_RESPONSES = {
     "frustriert": (
-        "EMOTIONAL: Der Schueler ist FRUSTRIERT. Reagiere einfuehlsam:\n"
+        "EMOTIONAL: Der Schüler ist FRUSTRIERT. Reagiere einfühlsam:\n"
         "- Sage 'Ich verstehe, das ist wirklich ein schwieriges Thema.'\n"
-        "- Nutze die EINFACHSTE moegliche Erklaerung\n"
+        "- Nutze die EINFACHSTE mögliche Erklärung\n"
         "- Gib ein sehr leichtes Beispiel zuerst\n"
         "- Ermutige: 'Schritt fuer Schritt schaffen wir das!'\n"
     ),
     "gestresst": (
-        "EMOTIONAL: Der Schueler ist GESTRESST (Pruefung/Zeitdruck). Reagiere supportiv:\n"
+        "EMOTIONAL: Der Schüler ist GESTRESST (Prüfung/Zeitdruck). Reagiere supportiv:\n"
         "- Sage 'Du schaffst das! Lass uns das JETZT in 10 Minuten durchgehen.'\n"
-        "- Gib NUR das Wichtigste (keine langen Erklaerungen)\n"
-        "- Fokus auf Pruefungs-relevante Punkte\n"
+        "- Gib NUR das Wichtigste (keine langen Erklärungen)\n"
+        "- Fokus auf Prüfungs-relevante Punkte\n"
         "- Strukturiere klar: '3 Dinge die du wissen musst:'\n"
     ),
     "motiviert": (
-        "EMOTIONAL: Der Schueler ist MOTIVIERT. Nutze den Schwung:\n"
+        "EMOTIONAL: Der Schüler ist MOTIVIERT. Nutze den Schwung:\n"
         "- Lobe: 'Super gemacht!'\n"
         "- Gib eine Herausforderungs-Aufgabe\n"
         "- Erhoehe das Niveau leicht\n"
@@ -148,14 +148,14 @@ def get_emotion_prompt(emotion: str) -> str:
 # ── 3.3 Sokrates-Methode ────────────────────────────────────────────
 
 SOKRATES_PROMPT = (
-    "DU BIST SOKRATES. Statt direkt zu antworten, fuehre den Schueler durch FRAGEN zur Antwort.\n"
+    "DU BIST SOKRATES. Statt direkt zu antworten, führe den Schüler durch FRAGEN zur Antwort.\n"
     "REGELN:\n"
     "1. Beginne IMMER mit einer Frage: 'Was weisst du schon ueber...?'\n"
     "2. Stelle Folgefragen basierend auf der Antwort\n"
-    "3. Leite den Schueler Schritt fuer Schritt zum Verstaendnis\n"
+    "3. Leite den Schüler Schritt fuer Schritt zum Verständnis\n"
     "4. Gib NIEMALS die komplette Antwort direkt\n"
-    "5. Wenn der Schueler nah dran ist, bestaerke ihn\n"
-    "6. Am Ende: Zusammenfassung was der Schueler SELBST herausgefunden hat\n"
+    "5. Wenn der Schüler nah dran ist, bestärke ihn\n"
+    "6. Am Ende: Zusammenfassung was der Schüler SELBST herausgefunden hat\n"
     "Wissenschaftlich bewiesen: Selbst-Entdeckung = 3x besseres Langzeitgedaechtnis!\n"
 )
 
@@ -163,14 +163,14 @@ SOKRATES_PROMPT = (
 # ── 3.4 Feynman-Technik ─────────────────────────────────────────────
 
 FEYNMAN_SYSTEM_PROMPT = (
-    "Der Schueler nutzt die FEYNMAN-TECHNIK. Er erklaert dir ein Thema.\n"
+    "Der Schüler nutzt die FEYNMAN-TECHNIK. Er erklaert dir ein Thema.\n"
     "DEINE AUFGABE:\n"
-    "1. Bewerte sein Verstaendnis (1-10)\n"
+    "1. Bewerte sein Verständnis (1-10)\n"
     "2. Zeige Luecken auf: 'Du hast X gut erklaert, aber bei Y fehlt noch...'\n"
     "3. Stelle Rueckfragen zu schwachen Stellen\n"
     "4. Gib Feedback: Was war gut, was kann besser werden\n"
     "5. Am Ende: Zusammenfassung + Note (1-10)\n"
-    "Wissenschaftlich: Erklaeren = die BESTE Lernmethode!\n"
+    "Wissenschaftlich: Erklären = die BESTE Lernmethode!\n"
 )
 
 
@@ -188,7 +188,7 @@ async def generate_diagnostic_questions(subject: str, grade: str) -> list:
             messages=[{
                 "role": "system",
                 "content": (
-                    "Erstelle 10 kurze Diagnose-Fragen fuer einen Schueler.\n"
+                    "Erstelle 10 kurze Diagnose-Fragen fuer einen Schüler.\n"
                     "REGELN:\n"
                     "- Fach: {subject}, Klasse: {grade}\n"
                     "- Jede Frage testet ein ANDERES Unterthema\n"
@@ -273,7 +273,7 @@ def _gap_recommendation(gaps: list, score: float) -> str:
 def build_weekly_plan_prompt(user_info: dict, weak_topics: list, exams: list) -> str:
     """Build a prompt for generating a personalized weekly study plan."""
     return (
-        f"Erstelle einen KONKRETEN Wochenplan (Mo-So) fuer diesen Schueler:\n\n"
+        f"Erstelle einen KONKRETEN Wochenplan (Mo-So) fuer diesen Schüler:\n\n"
         f"Klasse: {user_info.get('grade', '10')} | Schule: {user_info.get('school_type', 'Gymnasium')}\n"
         f"Schwaechen: {', '.join(weak_topics) if weak_topics else 'Keine bekannt'}\n"
         f"Kommende Klausuren: {', '.join(exams) if exams else 'Keine eingetragen'}\n"

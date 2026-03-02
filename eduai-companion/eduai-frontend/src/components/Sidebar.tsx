@@ -55,7 +55,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "shop", label: "Belohnungs-Shop", icon: <ShoppingBag className="w-5 h-5" /> },
     { id: "challenges", label: "Challenges", icon: <Target className="w-5 h-5" /> },
     { id: "voice", label: "Voice-Modus", icon: <Mic className="w-5 h-5" /> },
-    { id: "quests", label: "Taegliche Quests", icon: <Target className="w-5 h-5" /> },
+    { id: "quests", label: "Tägliche Quests", icon: <Target className="w-5 h-5" /> },
     { id: "events", label: "Saisonale Events", icon: <Calendar className="w-5 h-5" /> },
     { id: "matching", label: "Lernpartner", icon: <Handshake className="w-5 h-5" /> },
     { id: "marketplace", label: "Marketplace", icon: <Store className="w-5 h-5" /> },
@@ -154,6 +154,29 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           )}
         </div>
       </ScrollArea>
+
+      {/* UPGRADE BANNER für Free-User */}
+      {(!user?.subscription_tier || user.subscription_tier === "free") && (
+        <div className="mx-3 mb-3 rounded-xl p-3 cursor-pointer"
+             style={{
+               background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
+               border: "1px solid rgba(99,102,241,0.4)",
+               boxShadow: "0 0 15px rgba(99,102,241,0.1)"
+             }}
+             onClick={() => { onPageChange("pricing"); setMobileOpen(false); }}>
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{"\u26A1"}</span>
+            <div className="flex-1">
+              <div className="font-bold text-white text-xs">Pro upgraden</div>
+              <div className="text-[10px] text-slate-400">Ab 4,99€/Monat</div>
+            </div>
+            <div className="px-2 py-1 rounded-lg text-[10px] font-bold text-white"
+                 style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+              Upgrade
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* User Profile & Logout */}
       <div className="p-3 border-t border-lumnos-border">

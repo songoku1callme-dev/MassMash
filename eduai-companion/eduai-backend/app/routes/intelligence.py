@@ -46,14 +46,14 @@ async def get_lernstil(
         "lernstil": lernstil,
         "beschreibung": {
             "visuell": "Du lernst am besten mit Bildern, Diagrammen und visuellen Darstellungen.",
-            "auditiv": "Du lernst am besten durch Zuhoeren und ausfuehrliche Erklaerungen.",
-            "kinesthetisch": "Du lernst am besten durch Ausprobieren und praktische Uebungen.",
+            "auditiv": "Du lernst am besten durch Zuhören und ausführliche Erklärungen.",
+            "kinesthetisch": "Du lernst am besten durch Ausprobieren und praktische Übungen.",
             "lesen": "Du lernst am besten durch Lesen, Stichpunkte und Zusammenfassungen.",
         }.get(lernstil, ""),
         "tipps": {
             "visuell": ["Erstelle Mind-Maps", "Nutze Karteikarten mit Farben", "Zeichne Diagramme"],
-            "auditiv": ["Erklaere Themen laut", "Nutze die TTS-Funktion", "Diskutiere in Gruppen-Chats"],
-            "kinesthetisch": ["Loese viele Uebungsaufgaben", "Nutze den Quiz-Modus", "Experimentiere selbst"],
+            "auditiv": ["Erkläre Themen laut", "Nutze die TTS-Funktion", "Diskutiere in Gruppen-Chats"],
+            "kinesthetisch": ["Löse viele Übungsaufgaben", "Nutze den Quiz-Modus", "Experimentiere selbst"],
             "lesen": ["Schreibe Zusammenfassungen", "Nutze die Notizen-Funktion", "Erstelle Stichpunktlisten"],
         }.get(lernstil, []),
     }
@@ -62,13 +62,13 @@ async def get_lernstil(
 @router.post("/feynman")
 async def feynman_test(
     thema: str,
-    erklaerung: str,
+    erklärung: str,
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
     """Feynman-Technik: Student explains a topic, KI evaluates understanding."""
     response = call_groq_llm(
-        prompt=f"Thema: {thema}\n\nMeine Erklaerung:\n{erklaerung}",
+        prompt=f"Thema: {thema}\n\nMeine Erklärung:\n{erklärung}",
         system_prompt=FEYNMAN_SYSTEM_PROMPT,
         subject="general",
         level="intermediate",

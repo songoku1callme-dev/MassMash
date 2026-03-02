@@ -37,7 +37,7 @@ SCHULTYPEN = [
 BUNDESLAND_KONTEXT: dict[str, str] = {
     "Bayern": (
         "Gymnasium endet mit G8/G9. Abitur sehr anspruchsvoll. LehrplanPLUS. "
-        "Besonderheiten: Profiloberstufe, Colloquium als muendliche Pruefung. "
+        "Besonderheiten: Profiloberstufe, Colloquium als muendliche Prüfung. "
         "Starker Fokus auf MINT und Sprachen."
     ),
     "Nordrhein-Westfalen": (
@@ -47,7 +47,7 @@ BUNDESLAND_KONTEXT: dict[str, str] = {
     ),
     "Berlin": (
         "ISS (Integrierte Sekundarschule) und Gymnasium. Berliner Rahmenlehrplan. "
-        "Besonderheit: 5. Pruefungskomponente im Abitur (Praesentation/BLL). "
+        "Besonderheit: 5. Prüfungskomponente im Abitur (Praesentation/BLL). "
         "Ethik als Pflichtfach."
     ),
     "Baden-Wuerttemberg": (
@@ -57,13 +57,13 @@ BUNDESLAND_KONTEXT: dict[str, str] = {
     ),
     "Niedersachsen": (
         "Kerncurriculum Niedersachsen. Werte und Normen statt Ethik. "
-        "Besonderheit: P5 muendliche Pruefung im Abitur. "
+        "Besonderheit: P5 muendliche Prüfung im Abitur. "
         "G9 seit 2015. Seminarfach als eigenes Fach."
     ),
     "Hessen": (
         "Kerncurriculum Hessen. Landesabitur. "
         "Besonderheit: Politik und Wirtschaft als eigenes Fach. "
-        "G8 und G9 parallel moeglich."
+        "G8 und G9 parallel möglich."
     ),
     "Sachsen": (
         "Lehrplaene Sachsen. Sehr hohes Leistungsniveau. "
@@ -77,7 +77,7 @@ BUNDESLAND_KONTEXT: dict[str, str] = {
     ),
     "Schleswig-Holstein": (
         "Fachanforderungen SH. G9 am Gymnasium. "
-        "Besonderheit: Praesentation als 5. Pruefungskomponente. "
+        "Besonderheit: Praesentation als 5. Prüfungskomponente. "
         "Gemeinschaftsschule als Alternative zum Gymnasium."
     ),
     "Rheinland-Pfalz": (
@@ -112,7 +112,7 @@ BUNDESLAND_KONTEXT: dict[str, str] = {
     ),
     "Saarland": (
         "Lehrplaene Saarland. G8 am Gymnasium. "
-        "Besonderheit: Franzoesisch als 1. Fremdsprache moeglich. "
+        "Besonderheit: Französisch als 1. Fremdsprache möglich. "
         "Gemeinschaftsschule als Alternative."
     ),
 }
@@ -137,8 +137,8 @@ def get_bundesland_prompt(bundesland: str) -> str:
     return f"""
 BUNDESLAND-KONTEXT: {bundesland}
 {kontext}
--> Orientiere Quizfragen und Erklaerungen am Lehrplan von {bundesland}.
--> Erwaehne Abitur-Besonderheiten von {bundesland} wenn relevant.
+-> Orientiere Quizfragen und Erklärungen am Lehrplan von {bundesland}.
+-> Erwähne Abitur-Besonderheiten von {bundesland} wenn relevant.
 -> Nutze Beispiele die zum Curriculum von {bundesland} passen.
 """
 
@@ -150,9 +150,9 @@ def get_schultyp_prompt(schultyp: str) -> str:
 
     typ_map = {
         "Gymnasium": "Gymnasium-Niveau (Abitur-Vorbereitung). Hohes Anforderungsniveau.",
-        "Realschule": "Realschul-Niveau (Mittlerer Schulabschluss). Praxisbezogene Erklaerungen.",
-        "Hauptschule": "Hauptschul-Niveau. Einfache, alltagsnahe Erklaerungen mit vielen Beispielen.",
-        "Gesamtschule": "Gesamtschul-Niveau. Differenzierte Erklaerungen fuer verschiedene Niveaus.",
+        "Realschule": "Realschul-Niveau (Mittlerer Schulabschluss). Praxisbezogene Erklärungen.",
+        "Hauptschule": "Hauptschul-Niveau. Einfache, alltagsnahe Erklärungen mit vielen Beispielen.",
+        "Gesamtschule": "Gesamtschul-Niveau. Differenzierte Erklärungen fuer verschiedene Niveaus.",
         "Fachoberschule": "FOS-Niveau. Berufsbezogene Schwerpunkte.",
         "Berufsschule": "Berufsschul-Niveau. Praxisorientierte Inhalte.",
     }
@@ -168,6 +168,6 @@ def get_klasse_prompt(klasse: int | None) -> str:
     if klasse <= 6:
         return f"Klasse {klasse}: Unterstufe. Sehr einfache Sprache, viele Bilder und Beispiele."
     elif klasse <= 10:
-        return f"Klasse {klasse}: Mittelstufe. Fachbegriffe mit Erklaerungen, zunehmende Komplexitaet."
+        return f"Klasse {klasse}: Mittelstufe. Fachbegriffe mit Erklärungen, zunehmende Komplexität."
     else:
         return f"Klasse {klasse}: Oberstufe/Abitur. Wissenschaftliche Sprache, Transferaufgaben, Analyse."

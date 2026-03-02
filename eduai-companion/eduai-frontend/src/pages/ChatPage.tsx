@@ -142,19 +142,29 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 lg:p-4">
+      <div className="border-b border-indigo-500/20 bg-[#0a0f1e] p-3 lg:p-4" style={{ backdropFilter: "blur(12px)" }}>
         <div className="flex flex-wrap items-center gap-2">
           {/* Subject Selector — Faecher-Expansion 5.0 Block 6 */}
           <div className="flex-1 min-w-0">
             <FachSelector selected={currentSubject} onSelect={setSubject} showAll />
           </div>
 
+          {/* Upgrade Button für Free-User */}
+          {user?.subscription_tier === "free" && (
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 0 15px rgba(99,102,241,0.4)" }}>
+              ⚡ Pro
+            </button>
+          )}
+
           {/* KI Personality + Language Toggle */}
           <div className="ml-auto flex items-center gap-2 relative">
             {/* KI Personality Selector */}
             <button
               onClick={() => setShowPersonalities(!showPersonalities)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/30 text-xs font-medium text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors border border-purple-200 dark:border-purple-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-900/30 text-xs font-medium text-purple-300 hover:bg-purple-900/50 transition-colors border border-purple-700"
               title="KI-Persönlichkeit wählen"
             >
               <span>{currentPersonality?.emoji || "😊"}</span>
@@ -163,9 +173,9 @@ export default function ChatPage() {
 
             {/* Personality Dropdown */}
             {showPersonalities && (
-              <div className="absolute top-full right-12 mt-1 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
-                <div className="p-2 border-b border-gray-100 dark:border-gray-700">
-                  <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-2">KI-Persönlichkeit</p>
+              <div className="absolute top-full right-12 mt-1 w-72 bg-[#1e293b] border border-indigo-500/20 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto" style={{ backdropFilter: "blur(12px)" }}>
+                <div className="p-2 border-b border-indigo-500/10">
+                  <p className="text-xs font-semibold text-slate-400 px-2">KI-Persönlichkeit</p>
                 </div>
                 <div className="p-1">
                   {personalities.map((p) => (
@@ -174,10 +184,10 @@ export default function ChatPage() {
                       onClick={() => p.accessible ? handlePersonalityChange(p.id) : undefined}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition-colors ${
                         selectedPersonality === p.id
-                          ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                          ? "bg-purple-900/30 text-purple-300"
                           : p.accessible
-                            ? "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            : "opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-500"
+                            ? "hover:bg-slate-700 text-slate-300"
+                            : "opacity-50 cursor-not-allowed text-slate-500"
                       }`}
                       disabled={!p.accessible}
                     >
@@ -202,7 +212,7 @@ export default function ChatPage() {
 
             <button
               onClick={() => setLanguage(language === "de" ? "en" : "de")}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-xs font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-800 text-xs font-medium hover:bg-slate-700 transition-colors text-slate-300"
             >
               {language === "de" ? "DE" : "EN"}
             </button>
@@ -214,13 +224,13 @@ export default function ChatPage() {
       <ScrollArea className="flex-1 p-4 lg:p-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-xl mb-6">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white shadow-xl mb-6" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 0 30px rgba(99,102,241,0.4)" }}>
               <Sparkles className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-2xl font-bold text-white mb-2">
               {language === "de" ? "Hallo! Wie kann ich dir helfen?" : "Hello! How can I help you?"}
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 max-w-md mb-8">
+            <p className="text-slate-400 max-w-md mb-8">
               {language === "de"
                 ? "Stelle mir eine Frage zu Mathe, Englisch, Deutsch, Geschichte oder Naturwissenschaften!"
                 : "Ask me about Math, English, German, History, or Science!"}
@@ -235,7 +245,7 @@ export default function ChatPage() {
                 <button
                   key={i}
                   onClick={() => { setInput(suggestion.text); inputRef.current?.focus(); }}
-                  className="p-3 rounded-xl border border-gray-200 dark:border-gray-700 text-left text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 transition-all"
+                  className="p-3 rounded-xl border border-indigo-500/20 text-left text-sm text-slate-400 hover:bg-indigo-500/10 hover:border-indigo-500/40 transition-all"
                 >
                   {suggestion.text}
                 </button>
@@ -252,12 +262,16 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[85%] lg:max-w-[75%] rounded-2xl px-4 py-3 ${
                     msg.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-md"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md"
+                      ? "text-white rounded-br-md"
+                      : "text-slate-100 rounded-bl-md"
                   }`}
+                  style={msg.role === "user"
+                    ? { background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }
+                    : { background: "rgba(30,41,59,0.6)", border: "1px solid rgba(99,102,241,0.15)" }
+                  }
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-code:text-blue-600 dark:prose-code:text-blue-400">
+                    <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-code:text-blue-400">
                       <ReactMarkdown
                         remarkPlugins={[remarkMath]}
                         rehypePlugins={[rehypeKatex]}
@@ -269,10 +283,10 @@ export default function ChatPage() {
 
                   {/* Message Actions */}
                   {msg.role === "assistant" && (
-                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-indigo-500/20">
                       <button
                         onClick={() => copyToClipboard(msg.content, idx)}
-                        className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        className="p-1 rounded hover:bg-slate-700 text-slate-400 hover:text-slate-300 transition-colors"
                         title="Kopieren"
                       >
                         {copiedIdx === idx ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -291,7 +305,7 @@ export default function ChatPage() {
             {/* Typing indicator */}
             {isSending && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl rounded-bl-md px-4 py-3">
+                <div className="rounded-2xl rounded-bl-md px-4 py-3" style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(99,102,241,0.2)" }}>
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -357,8 +371,8 @@ export default function ChatPage() {
           onClick={handleTutorToggle}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
             tutorModus
-              ? "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-700"
-              : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+              ? "bg-purple-900/30 text-purple-300 border-purple-700"
+              : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
           }`}
           title="Tutor-Modus: KI stellt nur Gegenfragen (Sokratische Methode)"
         >
@@ -369,8 +383,8 @@ export default function ChatPage() {
           onClick={() => setEli5(!eli5)}
           className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
             eli5
-              ? "bg-pink-100 text-pink-700 border-pink-300 dark:bg-pink-900/30 dark:text-pink-300 dark:border-pink-700"
-              : "bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+              ? "bg-pink-900/30 text-pink-300 border-pink-700"
+              : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
           }`}
           title="ELI5: Erklaere wie ich 5 bin"
         >
@@ -380,7 +394,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 lg:p-4">
+      <div className="border-t border-indigo-500/20 bg-[#0a0f1e] p-3 lg:p-4">
         <div className="flex items-center gap-2 max-w-4xl mx-auto">
           {/* Camera/OCR Button */}
           <input

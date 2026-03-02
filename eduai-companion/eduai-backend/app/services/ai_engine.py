@@ -828,23 +828,23 @@ def get_fach_regeln(fach: str) -> str:
     Final Polish 5.1 Block 2: Fach-spezifische Regeln fuer Groq-basierte Quiz-Generierung.
     """
     regeln: dict[str, str] = {
-        "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklaerung. LaTeX fuer Formeln: $x^2$. Immer Probe angeben.",
+        "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklärung. LaTeX fuer Formeln: $x^2$. Immer Probe angeben.",
         "Physik": "Formeln + Einheiten immer angeben. Realweltbezug herstellen. Rechenaufgaben bevorzugen.",
-        "Chemie": "Reaktionsgleichungen ausgleichen. Stoffnamen + Formeln. Sicherheitshinweise erwaehnen.",
+        "Chemie": "Reaktionsgleichungen ausgleichen. Stoffnamen + Formeln. Sicherheitshinweise erwähnen.",
         "Biologie": "Fachbegriffe lateinisch + deutsch. Schaubilder beschreiben. Evolutionaere Zusammenhaenge.",
-        "Deutsch": "Grammatik-Regeln mit Beispielsaetzen. Literatur-Epochen nennen. Rechtschreibregeln erklaeren.",
-        "Englisch": "Grammatik mit Signalwoertern. Vokabeln im Kontext. Uebersetzungen Deutsch-Englisch.",
-        "Franzoesisch": "Grammatik mit Konjugationstabellen. Vokabeln mit Artikel. Aussprache-Hinweise.",
-        "Latein": "Stammformen angeben. Deklinationen/Konjugationen tabellarisch. Uebersetzung Latein-Deutsch.",
-        "Spanisch": "Konjugationen vollstaendig. Ser vs Estar erklaeren. Vokabeln mit Genus.",
+        "Deutsch": "Grammatik-Regeln mit Beispielsätzen. Literatur-Epochen nennen. Rechtschreibregeln erklären.",
+        "Englisch": "Grammatik mit Signalwörtern. Vokabeln im Kontext. Übersetzungen Deutsch-Englisch.",
+        "Französisch": "Grammatik mit Konjugationstabellen. Vokabeln mit Artikel. Aussprache-Hinweise.",
+        "Latein": "Stammformen angeben. Deklinationen/Konjugationen tabellarisch. Übersetzung Latein-Deutsch.",
+        "Spanisch": "Konjugationen vollständig. Ser vs Estar erklären. Vokabeln mit Genus.",
         "Italienisch": "Konjugationen mit Beispielen. Aussprache-Tipps. Kulturelle Kontexte.",
-        "Russisch": "Kyrillisch + Transliteration. Aspekte erklaeren. Kasus-Tabellen nutzen.",
-        "Tuerkisch": "Vokalharmonie erklaeren. Suffixe hervorheben. Agglutination zeigen.",
-        "Altgriechisch": "Stammformen angeben. Partizipien erklaeren. Uebersetzung Griechisch-Deutsch.",
+        "Russisch": "Kyrillisch + Transliteration. Aspekte erklären. Kasus-Tabellen nutzen.",
+        "Türkisch": "Vokalharmonie erklären. Suffixe hervorheben. Agglutination zeigen.",
+        "Altgriechisch": "Stammformen angeben. Partizipien erklären. Übersetzung Griechisch-Deutsch.",
         "Geschichte": "Jahreszahlen + Epochen. Quellenanalyse-Methodik. Ursache-Wirkungs-Ketten.",
         "Geografie": "Karten-Bezug herstellen. Klimazonen + Vegetationszonen. Aktuelle Statistiken.",
-        "Politik": "Grundgesetz-Artikel zitieren. Institutionen erklaeren. Aktuelle Bezuege.",
-        "Wirtschaft": "Formeln fuer Berechnungen. Grafiken beschreiben. Marktmodelle erklaeren.",
+        "Politik": "Grundgesetz-Artikel zitieren. Institutionen erklären. Aktuelle Bezüge.",
+        "Wirtschaft": "Formeln fuer Berechnungen. Grafiken beschreiben. Marktmodelle erklären.",
         "Informatik": "Code-Beispiele in Python/Java. Algorithmen Schritt-fuer-Schritt. Big-O-Notation.",
         "Astronomie": "Groessenverhaeltnisse nennen. Formeln + Einheiten. Beobachtungstipps.",
         "Technik": "Schaltplaene beschreiben. Materialien + Eigenschaften. Sicherheitsregeln.",
@@ -865,7 +865,7 @@ def get_fach_regeln(fach: str) -> str:
         "Hauswirtschaft": "Naehrwerte + Ernaehrungsregeln. Hygiene-Standards. Rezept-Berechnungen.",
         "Ernaehrungslehre": "Naehrstoffe + Funktionen. Ernaehrungspyramide. Allergien + Unvertraeglichkeiten.",
     }
-    return regeln.get(fach, "Stelle klare, praezise Fragen auf Deutsch. Gib hilfreiche Erklaerungen.")
+    return regeln.get(fach, "Stelle klare, präzise Fragen auf Deutsch. Gib hilfreiche Erklärungen.")
 
 
 def generate_explain_why_wrong(
@@ -873,7 +873,7 @@ def generate_explain_why_wrong(
     frage: str,
     falsche_antwort: str,
     richtige_antwort: str,
-    erklaerung: str,
+    erklärung: str,
 ) -> str:
     """Generate a mini-Lerneinheit explaining why an answer was wrong.
 
@@ -883,7 +883,7 @@ def generate_explain_why_wrong(
     fach_context = get_fach_regeln(fach)
     return (
         f"**Nicht ganz richtig!** Die korrekte Antwort ist: **{richtige_antwort}**\n\n"
-        f"{erklaerung}\n\n"
+        f"{erklärung}\n\n"
         f"**Tipp:** {fach_context.split('.')[0]}. "
         f"Versuche es beim naechsten Mal mit diesem Wissen!"
     )

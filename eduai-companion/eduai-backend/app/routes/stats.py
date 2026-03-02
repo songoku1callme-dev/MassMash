@@ -1,4 +1,4 @@
-"""Schueler-Analyse Dashboard routes.
+"""Schüler-Analyse Dashboard routes.
 
 Supreme 12.0 Phase 10: /meine-stats page with learning analytics.
 Perfect School 4.1 Block 3.2: PDF/CSV export of learning data.
@@ -278,9 +278,9 @@ async def ki_analyse(
                 {
                     "role": "system",
                     "content": (
-                        "Du bist ein Lern-Analytiker. Analysiere die Statistiken eines Schuelers "
+                        "Du bist ein Lern-Analytiker. Analysiere die Statistiken eines Schülers "
                         "und gib einen personalisierten Bericht mit konkreten Tipps. "
-                        "Antworte auf Deutsch, maximal 300 Woerter. "
+                        "Antworte auf Deutsch, maximal 300 Wörter. "
                         "Strukturiere: 1) Zusammenfassung 2) Staerken 3) Schwaechen 4) Konkrete Tipps"
                     ),
                 },
@@ -430,9 +430,9 @@ async def noten_prognose(
                     {
                         "role": "system",
                         "content": (
-                            "Du bist ein Lern-Berater. Analysiere die Noten-Prognosen eines Schuelers "
+                            "Du bist ein Lern-Berater. Analysiere die Noten-Prognosen eines Schülers "
                             "und gib 3 konkrete, motivierende Empfehlungen auf Deutsch. "
-                            "Maximal 150 Woerter. Sei positiv aber ehrlich."
+                            "Maximal 150 Wörter. Sei positiv aber ehrlich."
                         ),
                     },
                     {"role": "user", "content": f"Meine Noten-Prognosen:\n{prognose_summary}"},
@@ -453,7 +453,7 @@ async def noten_prognose(
             parts.append(f"Super Fortschritt in: {', '.join(steigend)}!")
         if fallend:
             parts.append(f"Mehr ueben in: {', '.join(fallend)}.")
-        parts.append("Tipp: Taegliche Quizze halten dein Wissen frisch!")
+        parts.append("Tipp: Tägliche Quizze halten dein Wissen frisch!")
         empfehlung = " ".join(parts)
 
     # Overall trend

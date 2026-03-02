@@ -14,7 +14,7 @@ export default function IntelligencePage() {
 
   // Feynman
   const [feynmanThema, setFeynmanThema] = useState("");
-  const [feynmanErklaerung, setFeynmanErklaerung] = useState("");
+  const [feynmanErklärung, setFeynmanErklärung] = useState("");
   const [feynmanResult, setFeynmanResult] = useState<string | null>(null);
 
   // Sokrates
@@ -44,10 +44,10 @@ export default function IntelligencePage() {
   };
 
   const submitFeynman = async () => {
-    if (!feynmanThema || !feynmanErklaerung) return;
+    if (!feynmanThema || !feynmanErklärung) return;
     setLoading(true);
     try {
-      const data = await intelligenceApi.feynman(feynmanThema, feynmanErklaerung);
+      const data = await intelligenceApi.feynman(feynmanThema, feynmanErklärung);
       setFeynmanResult(data.bewertung);
     } catch (e) {
       console.error(e);
@@ -164,7 +164,7 @@ export default function IntelligencePage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-2 dark:text-white">Feynman-Technik</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
-            Erklaere ein Thema in eigenen Worten. Die KI bewertet dein Verstaendnis (1-10) und zeigt Luecken auf.
+            Erkläre ein Thema in eigenen Worten. Die KI bewertet dein Verständnis (1-10) und zeigt Luecken auf.
           </p>
           <input
             value={feynmanThema}
@@ -173,13 +173,13 @@ export default function IntelligencePage() {
             className="w-full mb-3 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
           <textarea
-            value={feynmanErklaerung}
-            onChange={(e) => setFeynmanErklaerung(e.target.value)}
-            placeholder="Erklaere das Thema in deinen eigenen Worten..."
+            value={feynmanErklärung}
+            onChange={(e) => setFeynmanErklärung(e.target.value)}
+            placeholder="Erkläre das Thema in deinen eigenen Worten..."
             rows={6}
             className="w-full mb-3 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           />
-          <Button onClick={submitFeynman} disabled={loading || !feynmanThema || !feynmanErklaerung}>
+          <Button onClick={submitFeynman} disabled={loading || !feynmanThema || !feynmanErklärung}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BookOpen className="w-4 h-4 mr-2" />}
             Bewertung anfordern
           </Button>

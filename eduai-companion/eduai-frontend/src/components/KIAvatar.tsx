@@ -3,7 +3,7 @@ import React from "react";
 const PERSONA_STYLES: Record<string, { farbe: string; emoji: string }> = {
     mentor:    { farbe: "#6366f1", emoji: "\uD83E\uDDD9\u200D\u2642\uFE0F" },
     buddy:     { farbe: "#06b6d4", emoji: "\uD83E\uDD19" },
-    pruefer:   { farbe: "#f59e0b", emoji: "\uD83D\uDCCB" },
+    prüfer:   { farbe: "#f59e0b", emoji: "\uD83D\uDCCB" },
     motivator: { farbe: "#22c55e", emoji: "\uD83D\uDE80" },
     sokrates:  { farbe: "#8b5cf6", emoji: "\uD83C\uDFDB\uFE0F" },
 };

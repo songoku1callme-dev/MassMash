@@ -19,14 +19,42 @@ export default function PricingPage() {
 
   const tier = user?.subscription_tier || "free";
 
+  const paymentLinks: Record<PlanKey, Record<BillingPeriod, string | undefined>> = {
+    pro: {
+      monthly: import.meta.env.VITE_STRIPE_LINK_PRO_MONTHLY,
+      yearly: import.meta.env.VITE_STRIPE_LINK_PRO_YEARLY,
+    },
+    max: {
+      monthly: import.meta.env.VITE_STRIPE_LINK_MAX_MONTHLY,
+      yearly: import.meta.env.VITE_STRIPE_LINK_MAX_YEARLY,
+    },
+    eltern: {
+      monthly: import.meta.env.VITE_STRIPE_LINK_ELTERN_MONTHLY,
+      yearly: import.meta.env.VITE_STRIPE_LINK_ELTERN_YEARLY,
+    },
+  };
+
   const handleUpgrade = async (plan: PlanKey) => {
     setLoading(plan);
     setError("");
+
     try {
+      // Preferred: Stripe Payment Links (supports prefilled_email)
+      const paymentLink = paymentLinks[plan]?.[billing];
+      if (paymentLink) {
+        const url = new URL(paymentLink);
+        if (user?.email) {
+          url.searchParams.set("prefilled_email", user.email);
+        }
+        window.location.href = url.toString();
+        return;
+      }
+
+      // Fallback: API-based Checkout Session
       const currentUrl = window.location.origin;
       const result = await stripeApi.createCheckout({
-        success_url: `${currentUrl}?upgrade_success=${plan}`,
-        cancel_url: currentUrl,
+        success_url: `${currentUrl}/dashboard?upgrade=success&plan=${plan}`,
+        cancel_url: `${currentUrl}/pricing`,
         plan,
         billing,
       });
@@ -73,26 +101,26 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="p-4 lg:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#0a0f1e] p-4 lg:p-6 max-w-6xl mx-auto space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-white">
           Wähle deinen Plan
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
-          Lerne besser mit Lumnos - vom Einsteiger bis zum Abitur
+        <p className="text-slate-400 mt-2 text-lg">
+          Lerne besser mit Lumnos — vom Einsteiger bis zum Abitur
         </p>
       </div>
 
       {/* Billing Toggle */}
       <div className="flex items-center justify-center gap-4">
-        <span className={`text-sm font-medium ${billing === "monthly" ? "text-gray-900 dark:text-white" : "text-gray-400"}`}>
+        <span className={`text-sm font-medium ${billing === "monthly" ? "text-white" : "text-slate-500"}`}>
           Monatlich
         </span>
         <button
           onClick={() => setBilling(billing === "monthly" ? "yearly" : "monthly")}
           className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors ${
-            billing === "yearly" ? "bg-emerald-600" : "bg-gray-300 dark:bg-gray-600"
+            billing === "yearly" ? "bg-emerald-600" : "bg-slate-600"
           }`}
         >
           <span
@@ -101,20 +129,20 @@ export default function PricingPage() {
             }`}
           />
         </button>
-        <span className={`text-sm font-medium ${billing === "yearly" ? "text-gray-900 dark:text-white" : "text-gray-400"}`}>
+        <span className={`text-sm font-medium ${billing === "yearly" ? "text-white" : "text-slate-500"}`}>
           Jährlich
         </span>
         {billing === "yearly" && (
-          <span className="text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+          <span className="text-xs font-bold text-emerald-400 bg-emerald-900/30 px-2 py-1 rounded-full">
             2 Monate GRATIS!
           </span>
         )}
       </div>
 
       {tier !== "free" && (
-        <div className="flex items-center justify-center gap-2 p-4 rounded-xl bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-800">
-          <Crown className="w-6 h-6 text-yellow-600" />
-          <span className="text-lg font-semibold text-yellow-800 dark:text-yellow-300">
+        <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-yellow-800" style={{ background: "rgba(234,179,8,0.1)" }}>
+          <Crown className="w-6 h-6 text-yellow-500" />
+          <span className="text-lg font-semibold text-yellow-300">
             Du bist {tier === "max" ? "Max" : "Pro"}-Mitglied!
           </span>
           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
@@ -122,7 +150,7 @@ export default function PricingPage() {
       )}
 
       {error && (
-        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-center">
+        <div className="p-4 rounded-lg bg-red-900/20 text-red-400 text-center">
           {error}
         </div>
       )}
@@ -130,44 +158,44 @@ export default function PricingPage() {
       {/* Pricing Cards - 4 Tiers */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Free Plan */}
-        <Card className="relative">
+        <Card className="relative border border-indigo-500/20 bg-[#0f172a]">
           <CardHeader>
-            <CardTitle className="text-xl">Kostenlos</CardTitle>
-            <CardDescription>Perfekt zum Ausprobieren</CardDescription>
+            <CardTitle className="text-xl text-white">Kostenlos</CardTitle>
+            <CardDescription className="text-slate-400">Perfekt zum Ausprobieren</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">0 EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/Monat</span>
+              <span className="text-4xl font-bold text-white">0€</span>
+              <span className="text-slate-400 ml-1">/Monat</span>
             </div>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
               {freePlan.map((feature, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
                   <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   {feature}
                 </li>
               ))}
             </ul>
-            <Button variant="outline" className="w-full mt-6" disabled>
+            <Button variant="outline" className="w-full mt-6 border-indigo-500/30 text-slate-300" disabled>
               {tier === "free" ? "Aktueller Plan" : "Kostenlos"}
             </Button>
           </CardContent>
         </Card>
 
         {/* Pro Plan */}
-        <Card className="relative border-2 border-blue-500 dark:border-blue-400 shadow-lg">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-blue-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
+        <Card className="relative border-2 border-indigo-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(99,102,241,0.2)" }}>
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-white text-xs font-bold rounded-full uppercase tracking-wider" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
             Beliebt
           </div>
           <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2 text-white">
               Pro
               <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
             </CardTitle>
-            <CardDescription>Für ambitionierte Schüler</CardDescription>
+            <CardDescription className="text-slate-400">Für ambitionierte Schüler</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "39,99" : "4,99"} EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
+              <span className="text-4xl font-bold text-white">{billing === "yearly" ? "39,99" : "4,99"}€</span>
+              <span className="text-slate-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
             {billing === "yearly" && (
               <p className="text-sm text-emerald-600 font-medium mt-1">Spare 20€ vs. monatlich!</p>
@@ -176,8 +204,8 @@ export default function PricingPage() {
           <CardContent>
             <ul className="space-y-3">
               {proPlan.map((feature, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Zap className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                  <Zap className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -205,19 +233,19 @@ export default function PricingPage() {
         </Card>
 
         {/* Max Plan */}
-        <Card className="relative border-2 border-purple-500 dark:border-purple-400 shadow-xl bg-gradient-to-b from-purple-50/50 to-white dark:from-purple-900/10 dark:to-gray-900">
+        <Card className="relative border-2 border-purple-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(139,92,246,0.2)" }}>
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
             Premium
           </div>
           <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2 text-white">
               Max
-              <Crown className="w-5 h-5 text-purple-500" />
+              <Crown className="w-5 h-5 text-purple-400" />
             </CardTitle>
-            <CardDescription>Fuer Abitur-Champions</CardDescription>
+            <CardDescription className="text-slate-400">Für Abitur-Champions</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "79,99" : "9,99"} EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
+              <span className="text-4xl font-bold text-white">{billing === "yearly" ? "79,99" : "9,99"}€</span>
+              <span className="text-slate-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
             {billing === "yearly" && (
               <p className="text-sm text-emerald-600 font-medium mt-1">Spare 40 EUR vs. monatlich! (2 Monate GRATIS)</p>
@@ -226,8 +254,8 @@ export default function PricingPage() {
           <CardContent>
             <ul className="space-y-3">
               {maxPlan.map((feature, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Crown className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                  <Crown className="w-4 h-4 text-purple-400 flex-shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -255,19 +283,19 @@ export default function PricingPage() {
         </Card>
 
         {/* Eltern-Abo Plan - Supreme 11.0 Phase 10 */}
-        <Card className="relative border-2 border-pink-400 dark:border-pink-500 shadow-lg bg-gradient-to-b from-pink-50/50 to-white dark:from-pink-900/10 dark:to-gray-900">
+        <Card className="relative border-2 border-pink-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(236,72,153,0.15)" }}>
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-pink-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
-            Fuer Eltern
+            Für Eltern
           </div>
           <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-2">
+            <CardTitle className="text-xl flex items-center gap-2 text-white">
               Eltern
-              <Heart className="w-5 h-5 text-pink-500" />
+              <Heart className="w-5 h-5 text-pink-400" />
             </CardTitle>
-            <CardDescription>Lernfortschritt deines Kindes verfolgen</CardDescription>
+            <CardDescription className="text-slate-400">Lernfortschritt deines Kindes verfolgen</CardDescription>
             <div className="mt-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{billing === "yearly" ? "23,99" : "2,99"} EUR</span>
-              <span className="text-gray-500 dark:text-gray-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
+              <span className="text-4xl font-bold text-white">{billing === "yearly" ? "23,99" : "2,99"}€</span>
+              <span className="text-slate-400 ml-1">/{billing === "yearly" ? "Jahr" : "Monat"}</span>
             </div>
             {billing === "yearly" && (
               <p className="text-sm text-emerald-600 font-medium mt-1">Spare 12 EUR vs. monatlich!</p>
@@ -277,14 +305,14 @@ export default function PricingPage() {
             <ul className="space-y-3">
               {[
                 "Lernfortschritt in Echtzeit",
-                "Woechentliche E-Mail Berichte",
+                "Wöchentliche E-Mail Berichte",
                 "Streak-Alerts (wenn Kind nicht lernt)",
-                "Schwaechen-Analyse pro Fach",
-                "Pruefungs-Kalender Einblick",
-                "Aktivitaets-Statistiken",
+                "Schwächen-Analyse pro Fach",
+                "Prüfungs-Kalender Einblick",
+                "Aktivitäts-Statistiken",
               ].map((feature, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Heart className="w-4 h-4 text-pink-500 flex-shrink-0" />
+                <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                  <Heart className="w-4 h-4 text-pink-400 flex-shrink-0" />
                   {feature}
                 </li>
               ))}
@@ -306,80 +334,80 @@ export default function PricingPage() {
       </div>
 
       {/* Feature Comparison */}
-      <Card>
+      <Card className="border border-indigo-500/20 bg-[#0f172a]">
         <CardHeader>
-          <CardTitle className="text-lg">Alle Features im Überblick</CardTitle>
+          <CardTitle className="text-lg text-white">Alle Features im Überblick</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Palette className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">20 KI-Persönlichkeiten</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Von Freundlich bis Einstein, Zen-Meister, Cyber-Coach</p>
+                <p className="font-medium text-white text-sm">20 KI-Persönlichkeiten</p>
+                <p className="text-xs text-slate-400">Von Freundlich bis Einstein, Zen-Meister, Cyber-Coach</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Brain className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">300+ Quiz-Themen</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">16 F\u00e4cher, alle Klassenstufen</p>
+                <p className="font-medium text-white text-sm">300+ Quiz-Themen</p>
+                <p className="text-xs text-slate-400">16 F\u00e4cher, alle Klassenstufen</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Camera className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Unbegrenzt OCR</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Mathe-Fotos ohne Limit (Pro+)</p>
+                <p className="font-medium text-white text-sm">Unbegrenzt OCR</p>
+                <p className="text-xs text-slate-400">Mathe-Fotos ohne Limit (Pro+)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Mic className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Unbegrenzt Sprache</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Eingabe & Vorlesen (Pro+)</p>
+                <p className="font-medium text-white text-sm">Unbegrenzt Sprache</p>
+                <p className="text-xs text-slate-400">Eingabe & Vorlesen (Pro+)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <GraduationCap className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Abitur-Simulation</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Echte Prüfungsbedingungen (Max)</p>
+                <p className="font-medium text-white text-sm">Abitur-Simulation</p>
+                <p className="text-xs text-slate-400">Echte Prüfungsbedingungen (Max)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Users className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Gruppen-Chats</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Zusammen lernen (Max)</p>
+                <p className="font-medium text-white text-sm">Gruppen-Chats</p>
+                <p className="text-xs text-slate-400">Zusammen lernen (Max)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <BarChart3 className="w-5 h-5 text-purple-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Wochen-Coach</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">KI erstellt deinen Lernplan (Max)</p>
+                <p className="font-medium text-white text-sm">Wochen-Coach</p>
+                <p className="text-xs text-slate-400">KI erstellt deinen Lernplan (Max)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <FileText className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">PDF/Word Export</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Chats & Quizze exportieren</p>
+                <p className="font-medium text-white text-sm">PDF/Word Export</p>
+                <p className="text-xs text-slate-400">Chats & Quizze exportieren</p>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
               <Shield className="w-5 h-5 text-emerald-500 mt-0.5" />
               <div>
-                <p className="font-medium text-gray-900 dark:text-white text-sm">Eltern-Share</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Fortschritt mit Eltern teilen (Max)</p>
+                <p className="font-medium text-white text-sm">Eltern-Share</p>
+                <p className="text-xs text-slate-400">Fortschritt mit Eltern teilen (Max)</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <p className="text-center text-xs text-gray-400 dark:text-gray-600">
+      <p className="text-center text-xs text-slate-500">
         Sichere Zahlung über Stripe. Jederzeit kündbar. DSGVO-konform.
       </p>
     </div>

@@ -14,10 +14,10 @@ router = APIRouter(prefix="/api/legal", tags=["legal"])
 
 
 @router.get("/datenschutz")
-async def datenschutzerklaerung():
-    """Return the privacy policy (Datenschutzerklaerung)."""
+async def datenschutzerklärung():
+    """Return the privacy policy (Datenschutzerklärung)."""
     return {
-        "title": "Datenschutzerklaerung",
+        "title": "Datenschutzerklärung",
         "last_updated": "2026-03-01",
         "sections": [
             {
@@ -30,7 +30,7 @@ async def datenschutzerklaerung():
             },
             {
                 "title": "3. Zweck der Verarbeitung",
-                "content": "Personalisiertes Lernen, KI-gestuetztes Tutoring, Fortschrittsverfolgung, Gamification. Keine Daten werden an Dritte verkauft."
+                "content": "Personalisiertes Lernen, KI-gestütztes Tutoring, Fortschrittsverfolgung, Gamification. Keine Daten werden an Dritte verkauft."
             },
             {
                 "title": "4. KI-Verarbeitung (Groq)",
@@ -67,9 +67,9 @@ async def impressum():
         "title": "Impressum",
         "content": {
             "name": "Lumnos Companion",
-            "description": "KI-gestuetztes Lernen fuer deutsche Schueler",
+            "description": "KI-gestütztes Lernen fuer deutsche Schüler",
             "email": "support@lumnos-companion.de",
-            "haftungsausschluss": "Die Inhalte dieser App wurden mit groesster Sorgfalt erstellt. Fuer die Richtigkeit, Vollstaendigkeit und Aktualitaet der Inhalte koennen wir jedoch keine Gewaehr uebernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
+            "haftungsausschluss": "Die Inhalte dieser App wurden mit groesster Sorgfalt erstellt. Fuer die Richtigkeit, Vollständigkeit und Aktualitaet der Inhalte koennen wir jedoch keine Gewaehr uebernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
             "urheberrecht": "Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.",
         },
     }

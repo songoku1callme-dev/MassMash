@@ -30,7 +30,7 @@ async def link_child(
     cursor = await db.execute("SELECT id, email, username FROM users WHERE email = ?", (child_email,))
     child = await cursor.fetchone()
     if not child:
-        raise HTTPException(status_code=404, detail="Kein Schueler mit dieser Email gefunden")
+        raise HTTPException(status_code=404, detail="Kein Schüler mit dieser Email gefunden")
 
     child_dict = dict(child)
     child_id = child_dict["id"]
@@ -69,12 +69,12 @@ async def link_child(
                     json={
                         "from": "Lumnos <noreply@lumnos.de>",
                         "to": [child_email],
-                        "subject": "Eltern-Verknuepfung bestaetigen - Lumnos",
+                        "subject": "Eltern-Verknuepfung bestätigen - Lumnos",
                         "html": (
                             f"<p>Hallo {child_dict['username']}!</p>"
                             f"<p>Ein Elternteil moechte sich mit deinem Lumnos-Account verknuepfen, "
                             f"um deinen Lernfortschritt zu sehen.</p>"
-                            f'<p><a href="{frontend_url}/parent-verify/{token}">Verknuepfung bestaetigen</a></p>'
+                            f'<p><a href="{frontend_url}/parent-verify/{token}">Verknuepfung bestätigen</a></p>'
                             f'<p>Oder: <a href="{frontend_url}/parent-reject/{token}">Ablehnen</a></p>'
                             f"<p>Dein Lumnos Team</p>"
                         ),
@@ -84,7 +84,7 @@ async def link_child(
             logger.warning("Failed to send parent verification email: %s", e)
 
     return {
-        "message": f"Verifizierungsmail an {child_email} gesendet! Der Schueler muss bestaetigen.",
+        "message": f"Verifizierungsmail an {child_email} gesendet! Der Schüler muss bestätigen.",
         "status": "pending",
     }
 
@@ -111,7 +111,7 @@ async def verify_parent_link(
     cursor = await db.execute("SELECT id FROM users WHERE email = ?", (child_email,))
     child = await cursor.fetchone()
     if not child:
-        raise HTTPException(status_code=404, detail="Schueler nicht gefunden")
+        raise HTTPException(status_code=404, detail="Schüler nicht gefunden")
 
     child_id = dict(child)["id"]
 
