@@ -223,105 +223,45 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
-    # Supreme 13.0: Ultimate KI-Tutor System Prompt with Multi-Step Reasoning
-    # Build vertrauen-level based tone from ki_relationship
-    trust_level = 1.0
-    known_name = ""
-    hobbies_str = ""
-    schwaechen_str = ""
-    pref_expl = "Schritt-für-Schritt"
+    # Nuclear Reset Block A: Extract user profile for Perplexity-standard prompt
+    display_name = current_user.get("full_name", "") or current_user.get("username", "Schüler")
+    school_grade = current_user.get("school_grade", "10") or "10"
+    school_type = current_user.get("school_type", "Gymnasium") or "Gymnasium"
+
+    # Get user's Bundesland
+    user_bundesland = ""
     try:
-        if ki_memory_prompt:  # Already loaded above
-            pass  # Data already in ki_memory_prompt
-        # Extract trust info from the memory we loaded earlier
-        mem_cursor2 = await db.execute(
-            "SELECT trust_level, known_name, known_hobbies, preferred_explanation, difficult_topics FROM ki_relationship WHERE user_id = ?",
-            (user_id,),
+        bl_cursor = await db.execute(
+            "SELECT bundesland FROM users WHERE id = ?", (user_id,)
         )
-        mem_row2 = await mem_cursor2.fetchone()
-        if mem_row2:
-            md2 = dict(mem_row2)
-            trust_level = md2.get("trust_level", 1.0) or 1.0
-            known_name = md2.get("known_name", "") or ""
-            hobbies_str = md2.get("known_hobbies", "") or ""
-            pref_expl = md2.get("preferred_explanation", "Schritt-für-Schritt") or "Schritt-für-Schritt"
-            schwaechen_str = md2.get("difficult_topics", "") or ""
+        bl_row = await bl_cursor.fetchone()
+        user_bundesland = dict(bl_row).get("bundesland", "") if bl_row else ""
     except Exception:
         pass
 
-    # Vertrauen-Level based tone (Supreme 13.0 Phase 3)
-    display_name = known_name or current_user.get("full_name", "") or current_user.get("username", "Schüler")
-    school_grade = current_user.get("school_grade", "10")
-    school_type = current_user.get("school_type", "Gymnasium")
-    streak_days = current_user.get("streak_days", 0) or 0
-
-    if trust_level >= 8:
-        ton_str = f"Du kennst {display_name} sehr gut. Ihr seid beste Freunde. Locker, warm, ehrlich."
-    elif trust_level >= 5:
-        ton_str = f"Du bist {display_name}s hilfreicher Lerncoach. Freundlich und professionell."
-    else:
-        ton_str = "Du bist ein freundlicher, geduldiger Tutor. Begrüße den Schüler herzlich."
-
-    hobby_kontext = f"Nutze {hobbies_str}-Analogien wenn möglich." if hobbies_str and hobbies_str != "[]" else ""
-    schwaechen_info = (
-        f"BEKANNTE SCHWÄCHEN: {schwaechen_str} → Hier extra geduldig sein!"
-        if schwaechen_str and schwaechen_str != "[]" else ""
-    )
-
-    master_prompt = f"""Du bist Lumnos – Deutschlands bester KI-Lehrer und {display_name}s persönlicher Lerncoach.
-Du bist wie ein brillanter älterer Freund: geduldig, witzig, immer erklärst du alles so
-dass man es WIRKLICH versteht – nie herabwürdigend, immer auf Augenhöhe.
-
-SCHÜLER-PROFIL:
-Name: {display_name} | Klasse: {school_grade} | Schultyp: {school_type}
-Lernstil: {pref_expl} | Vertrauenslevel: {trust_level}/10 | Streak: {streak_days} Tage
-{schwaechen_info}
-
-TON: {ton_str}
-{hobby_kontext}
-
-MULTI-STEP REASONING (Supreme 13.0 – intern, NICHT dem Schüler zeigen):
-Bevor du antwortest, führe INTERN 3 Schritte durch:
-1. ANALYSE: Was ist das Kernthema? Welches Vorwissen braucht der Schüler?
-   Welches Niveau (Klasse {school_grade}, {school_type})? Häufige Fehler?
-2. ANTWORT-GENERIERUNG: Erstelle die perfekte Erklärung mit Schritt-für-Schritt,
-   Beispielen, LaTeX-Formeln, Analogien aus dem Alltag des Schülers.
-3. SELF-CHECK: Prüfe deine Antwort auf Fehler. Bei Mathe: rechne nach.
-   Bei Fakten: bist du sicher? Wenn nicht, sage es ehrlich.
-   Zeige dem Schüler NUR die fertige, geprüft perfekte Erklärung.
-
-ABSOLUTE REGELN – IMMER EINHALTEN:
-1. SCHRITT FUER SCHRITT: Erst Theorie → dann Beispiel → dann Übungsaufgabe
-2. LATEX für Mathe: $\\frac{{1}}{{2}}$, $x^2 + 5x = 0$
-3. QUELLEN zitieren wenn Web-Suche genutzt: [1] quelle.de
-4. NIEMALS Schüler dumm fühlen lassen – jede Frage ist gut
-5. Bei Frustration: Methodenwechsel + extra Ermutigung
-6. Am Ende IMMER: 'Möchtest du eine Übungsaufgabe dazu?'
-7. Wenn Schüler etwas gut macht: Echtes Lob (nicht übertrieben)
-8. Komplexe Themen: Erst einfachste Version, dann Vertiefung
-9. Fehler des Schülers: Nie direkt sagen 'falsch' → 'Fast richtig! Schau mal hier...'
-10. Abitur-Relevanz immer erwähnen wenn passend
-11. Nutze IMMER andere Beispiele als vorher
-12. PROAKTIVE TIPPS: Erwähne verwandte Themen und Lernstrategien
-"""
-
-    # Generate AI response via Groq LLM (falls back to template engine if no API key)
-    system_prompt = build_system_prompt(
+    # Nuclear Reset Block A: Build the NEW Perplexity-standard system prompt
+    combined_prompt = build_system_prompt(
         subject=subject,
         level=level,
         language=request.language,
         detail_level=request.detail_level,
+        user_name=display_name,
+        klasse=str(school_grade),
+        schultyp=school_type,
+        bundesland=user_bundesland,
+        tutor_modus=request.tutor_modus,
+        web_quellen=web_context,
     )
 
-    # Combine: Master prompt + Personality + KI-Memory + Memory + Subject-specific prompt
-    combined_prompt = master_prompt
+    # Add personality if available
     if personality_prompt:
-        combined_prompt += f"\nPERS\u00d6NLICHKEIT: {personality_prompt}\n"
+        combined_prompt += f"\nPERSÖNLICHKEIT: {personality_prompt}\n"
+    # Add KI-Memory context
     if ki_memory_prompt:
         combined_prompt += ki_memory_prompt
+    # Add weak-topic memory
     if memory_hint:
         combined_prompt += memory_hint
-    combined_prompt += f"\n{system_prompt}"
 
     # Phase 3 Supreme 9.0: Lernstil-Erkennung + Emotionale Intelligenz
     # Detect emotion from current message
@@ -346,29 +286,7 @@ ABSOLUTE REGELN – IMMER EINHALTEN:
         if spezial_prompt:
             combined_prompt += f"\n{spezial_prompt}\n"
 
-    # Fächer-Expansion 5.0 Block 3: Bundesland-spezifischer Kontext
-    try:
-        bl_cursor = await db.execute(
-            "SELECT bundesland FROM users WHERE id = ?", (user_id,)
-        )
-        bl_row = await bl_cursor.fetchone()
-        user_bundesland = dict(bl_row).get("bundesland", "") if bl_row else ""
-        if user_bundesland:
-            bl_prompt = get_bundesland_prompt(user_bundesland)
-            if bl_prompt:
-                combined_prompt += f"\n{bl_prompt}\n"
-    except Exception:
-        pass  # Non-fatal, bundesland column may not exist yet
-
-    # Perfect School 4.1 Block 2.2: Tutor-Modus (Socratic method)
-    if request.tutor_modus:
-        combined_prompt += (
-            "\n\nTUTOR-MODUS AKTIV: Du darfst KEINE direkten Antworten geben! "
-            "Stelle NUR Gegenfragen, die den Schüler zur Lösung führen. "
-            "Beispiel: Statt 'Die Antwort ist 42' sagst du 'Was passiert, wenn du X mit Y multiplizierst?' "
-            "Lobe jeden richtigen Gedankenansatz. "
-            "Erst nach 3+ gescheiterten Versuchen darfst du einen kleinen Hinweis geben.\n"
-        )
+    # Bundesland + Tutor-Modus are now handled in build_system_prompt (Nuclear Reset Block A)
 
     # Perfect School 4.1 Block 2.3: ELI5 (Erkläre wie ich 5 bin)
     if request.eli5:

@@ -34,6 +34,18 @@ body {
   border-radius: 3px;
 }
 
+/* ===== BLOCK D: bg-white/bg-gray OVERRIDES ===== */
+.bg-white { background-color: #0f172a !important; }
+.bg-gray-50 { background-color: #0a0f1e !important; }
+.bg-gray-100 { background-color: #0f172a !important; }
+.bg-gray-200 { background-color: #1e293b !important; }
+.bg-slate-50 { background-color: #0a0f1e !important; }
+.bg-slate-100 { background-color: #0f172a !important; }
+.text-gray-900 { color: #f1f5f9 !important; }
+.text-gray-800 { color: #e2e8f0 !important; }
+.border-gray-200 { border-color: rgba(99,102,241,0.2) !important; }
+.border-gray-300 { border-color: rgba(99,102,241,0.15) !important; }
+
 /* Prose styles for markdown */
 .prose pre {
   @apply bg-gray-800 rounded-lg p-3 overflow-x-auto;

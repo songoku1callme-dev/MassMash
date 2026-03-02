@@ -29,8 +29,23 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 FALLBACK_MODEL = "llama-3.1-8b-instant"
 FAST_MODEL = "llama-3.1-8b-instant"
-MAX_HISTORY_MESSAGES = 10  # Keep last N messages for context (GDPR: minimize data)
-MAX_TOKENS = 2048
+MAX_HISTORY_MESSAGES = 12  # Keep last 12 messages for context (GDPR: minimize data)
+MAX_TOKENS = 1200
+
+# Nuclear Reset Block A: Forbidden phrases that indicate generic theme lists
+VERBOTENE_PHRASEN = [
+    "ich kann dir helfen bei",
+    "ich bin dein mathe-tutor",
+    "hier sind themen die ich",
+    "ich biete hilfe in folgenden",
+    "stelle mir eine konkrete frage",
+    "ich erkläre dir gerne",
+    "welches thema möchtest du",
+    "ich kann dir bei folgenden",
+    "hier ist eine übersicht",
+    "ich helfe dir gerne mit",
+    "meine spezialgebiete",
+]
 
 
 def route_model(task_type: str) -> str:
@@ -197,7 +212,34 @@ def call_groq_llm(
         )
         response_text = completion.choices[0].message.content
         if response_text:
-            return response_text.strip()
+            cleaned = response_text.strip()
+            # Nuclear Reset Block A: Check for forbidden generic theme lists
+            cleaned_lower = cleaned.lower()
+            if any(p in cleaned_lower for p in VERBOTENE_PHRASEN):
+                logger.warning("Forbidden phrase detected in AI response, retrying with stricter prompt")
+                # Retry with much stricter prompt forcing direct answer
+                retry_messages = list(messages)  # copy
+                retry_messages[-1] = {
+                    "role": "user",
+                    "content": (
+                        f"WICHTIG: Beantworte NUR diese konkrete Frage direkt: {prompt}\n"
+                        f"KEIN allgemeines Angebot, KEINE Themenliste — direkte Antwort!"
+                    ),
+                }
+                try:
+                    retry_completion = client.chat.completions.create(
+                        model=DEFAULT_MODEL,
+                        messages=retry_messages,
+                        max_tokens=MAX_TOKENS,
+                        temperature=0.5,
+                        stream=False,
+                    )
+                    retry_text = retry_completion.choices[0].message.content
+                    if retry_text:
+                        return retry_text.strip()
+                except Exception as retry_err:
+                    logger.warning("Retry after forbidden phrase failed: %s", retry_err)
+            return cleaned
         # Empty response — fall through to fallback
         logger.warning("Groq returned empty response, falling back to template engine")
 
