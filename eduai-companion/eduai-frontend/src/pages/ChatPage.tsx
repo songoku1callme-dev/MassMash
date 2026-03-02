@@ -9,6 +9,7 @@ import { ocrApi, quizApi } from "../services/api";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
+import LumnosOrb from "../components/LumnosOrb";
 
 /* ============================================================
    LUMNOS 1.0 — BLOCK B: Chat UI (Nuclear Reset)
@@ -16,10 +17,17 @@ import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
    Action-Buttons, Welcome Message, Tutor-Modus Toggle
    ============================================================ */
 
+interface Karteikarte {
+  frage: string;
+  antwort: string;
+}
+
 interface Msg {
   role: "user" | "assistant";
   content: string;
   subject?: string;
+  karteikarten?: Karteikarte[];
+  zusammenfassung?: string;
 }
 
 export default function ChatPage() {
@@ -30,6 +38,8 @@ export default function ChatPage() {
   const { user } = useAuthStore();
   const [input, setInput] = useState("");
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [expandedKarten, setExpandedKarten] = useState<Record<number, boolean>>({});
+  const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
@@ -272,17 +282,8 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           /* === WELCOME MESSAGE === */
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
-            {/* KI Avatar */}
-            <div
-              className="w-24 h-24 rounded-2xl flex items-center justify-center text-white shadow-2xl mb-6"
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #8b5cf6, #06b6d4)",
-                boxShadow: "0 0 40px rgba(99,102,241,0.5), 0 0 80px rgba(99,102,241,0.2)",
-                fontSize: "40px",
-              }}
-            >
-              &#10022;
-            </div>
+            {/* KI Orb */}
+            <LumnosOrb fach={currentSubject} size="lg" />
             <h2 className="text-3xl font-bold text-white mb-2">
               {language === "de" ? "Was m\u00f6chtest du wissen?" : "What would you like to know?"}
             </h2>
@@ -324,15 +325,8 @@ export default function ChatPage() {
               >
                 {/* KI Avatar */}
                 {msg.role === "assistant" && (
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0 mt-1"
-                    style={{
-                      background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                      boxShadow: "0 0 12px rgba(99,102,241,0.4)",
-                      fontSize: "14px",
-                    }}
-                  >
-                    &#10022;
+                  <div className="flex-shrink-0 mt-1">
+                    <LumnosOrb fach={currentSubject} size="sm" isTyping={isSending && idx === messages.length - 1} />
                   </div>
                 )}
 
@@ -356,6 +350,55 @@ export default function ChatPage() {
                     </div>
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  )}
+
+                  {/* Auto-Karteikarten (Block 4) */}
+                  {msg.role === "assistant" && msg.karteikarten && msg.karteikarten.length > 0 && (
+                    <div className="mt-3 pt-2 border-t border-indigo-500/20">
+                      {msg.zusammenfassung && (
+                        <p className="text-[11px] text-cyan-400 mb-2 italic">{msg.zusammenfassung}</p>
+                      )}
+                      <button
+                        onClick={() => setExpandedKarten(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-[11px] font-bold text-amber-400 hover:bg-amber-900/20 transition-all mb-2"
+                      >
+                        <span>&#128196;</span>
+                        {expandedKarten[idx] ? "Karteikarten ausblenden" : `${msg.karteikarten.length} Karteikarten anzeigen`}
+                      </button>
+                      {expandedKarten[idx] && (
+                        <div className="grid gap-2">
+                          {msg.karteikarten.map((k, ki) => {
+                            const cardKey = `${idx}-${ki}`;
+                            const isFlipped = flippedCards[cardKey];
+                            return (
+                              <button
+                                key={ki}
+                                onClick={() => setFlippedCards(prev => ({ ...prev, [cardKey]: !prev[cardKey] }))}
+                                className="w-full text-left p-3 rounded-xl transition-all hover:scale-[1.01] cursor-pointer"
+                                style={{
+                                  background: isFlipped
+                                    ? "rgba(16,185,129,0.15)"
+                                    : "rgba(99,102,241,0.1)",
+                                  border: isFlipped
+                                    ? "1px solid rgba(16,185,129,0.3)"
+                                    : "1px solid rgba(99,102,241,0.2)",
+                                }}
+                              >
+                                <p className="text-[10px] font-bold mb-1" style={{ color: isFlipped ? "#10b981" : "#818cf8" }}>
+                                  {isFlipped ? "Antwort" : "Frage"} {ki + 1}/3
+                                </p>
+                                <p className="text-xs text-slate-200">
+                                  {isFlipped ? k.antwort : k.frage}
+                                </p>
+                                <p className="text-[9px] text-slate-500 mt-1">
+                                  {isFlipped ? "Klicke für Frage" : "Klicke für Antwort"}
+                                </p>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Action Buttons under KI responses */}

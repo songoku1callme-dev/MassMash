@@ -66,6 +66,23 @@ async def lifespan(app: FastAPI):
                 _proactive_tips_job, CronTrigger(hour=16, minute=0),
                 id="proactive_tips", replace_existing=True,
             )
+            # Ghost Founder Engine (Block 3)
+            from app.services.ghost_founder import (
+                send_daily_impulse, check_inactive_users,
+                send_weekly_report as ghost_weekly_report,
+            )
+            scheduler.add_job(
+                send_daily_impulse, CronTrigger(hour=8, minute=0),
+                id="ghost_daily_impulse", replace_existing=True,
+            )
+            scheduler.add_job(
+                check_inactive_users, CronTrigger(hour=18, minute=0),
+                id="ghost_inactivity", replace_existing=True,
+            )
+            scheduler.add_job(
+                ghost_weekly_report, CronTrigger(day_of_week="sun", hour=20, minute=0),
+                id="ghost_weekly_report", replace_existing=True,
+            )
             scheduler.start()
             logger.info("APScheduler gestartet mit %d Jobs", len(scheduler.get_jobs()))
         except Exception as exc:

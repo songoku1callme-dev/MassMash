@@ -79,12 +79,19 @@ class ChatRequest(BaseModel):
     eli5: bool = False  # Perfect School 4.1: Explain Like I'm 5
 
 
+class Karteikarte(BaseModel):
+    frage: str
+    antwort: str
+
+
 class ChatResponse(BaseModel):
     response: str
     session_id: int
     subject: str
     detected_subject: Optional[str] = None
     proficiency_level: str = "intermediate"
+    karteikarten: List[Karteikarte] = []
+    zusammenfassung: str = ""
 
 
 class ChatSessionResponse(BaseModel):

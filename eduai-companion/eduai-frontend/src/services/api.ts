@@ -334,12 +334,19 @@ export interface User {
   created_at: string;
 }
 
+export interface Karteikarte {
+  frage: string;
+  antwort: string;
+}
+
 export interface ChatResponse {
   response: string;
   session_id: number;
   subject: string;
   detected_subject: string | null;
   proficiency_level: string;
+  karteikarten: Karteikarte[];
+  zusammenfassung: string;
 }
 
 export interface ChatSession {
@@ -361,6 +368,8 @@ export interface ChatMessage {
   content: string;
   subject?: string;
   timestamp?: string;
+  karteikarten?: Karteikarte[];
+  zusammenfassung?: string;
 }
 
 export interface Subject {

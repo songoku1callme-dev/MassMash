@@ -85,6 +85,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
         content: response.response,
         subject: response.subject,
         timestamp: new Date().toISOString(),
+        karteikarten: response.karteikarten || [],
+        zusammenfassung: response.zusammenfassung || "",
       };
 
       set((state) => ({

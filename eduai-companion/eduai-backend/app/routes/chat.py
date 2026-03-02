@@ -339,6 +339,41 @@ async def send_message(
             web_context=web_context,
         )
 
+    # Block 4: Auto-Karteikarten + Zusammenfassung generieren
+    karteikarten = []
+    zusammenfassung = ""
+    try:
+        import re as _re
+        extras_prompt = (
+            f'Aus dieser KI-Erklärung:\n"{ai_response[:500]}"\n\n'
+            "Erstelle kompakt im JSON-Format (KEIN anderer Text, NUR JSON):\n"
+            '{"zusammenfassung": "Genau 2 Sätze die den Kern erklären.",'
+            ' "karteikarten": [{"frage": "...", "antwort": "..."},'
+            ' {"frage": "...", "antwort": "..."},'
+            ' {"frage": "...", "antwort": "..."}]}\n\n'
+            "Nutze echte Umlaute (ä ö ü ß). Keine oe ae ue."
+        )
+        extras_text = call_groq_llm(
+            prompt=extras_prompt,
+            system_prompt="Du bist ein JSON-Generator. Antworte NUR mit validem JSON.",
+            subject=subject,
+            level=level,
+            language=request.language,
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+        match = _re.search(r'\{.*\}', extras_text, _re.DOTALL)
+        if match:
+            extras_data = json.loads(match.group())
+            raw_karten = extras_data.get("karteikarten", [])
+            for k in raw_karten[:3]:
+                if isinstance(k, dict) and "frage" in k and "antwort" in k:
+                    karteikarten.append({"frage": k["frage"], "antwort": k["antwort"]})
+            zusammenfassung = extras_data.get("zusammenfassung", "")
+    except Exception as karten_err:
+        logger.debug("Karteikarten generation failed (non-fatal): %s", karten_err)
+
     # Award gamification XP for chat
     try:
         from app.routes.gamification import add_xp
@@ -395,7 +430,9 @@ async def send_message(
         session_id=session_id,
         subject=subject,
         detected_subject=detected_subject,
-        proficiency_level=level
+        proficiency_level=level,
+        karteikarten=karteikarten,
+        zusammenfassung=zusammenfassung,
     )
 
 

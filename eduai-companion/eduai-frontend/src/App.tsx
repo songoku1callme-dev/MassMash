@@ -43,6 +43,7 @@ import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
 import OfflineBanner from "./components/OfflineBanner";
 import NotificationBell from "./components/NotificationBell";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   const { isAuthenticated, isLoading, loadUser } = useAuthStore();
@@ -189,18 +190,20 @@ function App() {
   };
 
   return (
-    <div className="flex h-screen cyber-bg text-lumnos-text">
-      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-      <main className="flex-1 overflow-auto relative">
-        <div className="absolute top-4 right-4 z-30">
-          <NotificationBell />
-        </div>
-        {renderPage()}
-      </main>
-      <PWAInstallBanner />
-      <CookieBanner />
-      <OfflineBanner />
-    </div>
+    <ErrorBoundary>
+      <div className="flex h-screen cyber-bg text-lumnos-text">
+        <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+        <main className="flex-1 overflow-auto relative">
+          <div className="absolute top-4 right-4 z-30">
+            <NotificationBell />
+          </div>
+          {renderPage()}
+        </main>
+        <PWAInstallBanner />
+        <CookieBanner />
+        <OfflineBanner />
+      </div>
+    </ErrorBoundary>
   );
 }
 
