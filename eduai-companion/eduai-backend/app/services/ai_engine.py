@@ -58,6 +58,198 @@ def normalize_fach(fach_raw: str) -> str:
     return fach_raw.strip().capitalize()
 
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FACH-KEYWORDS mit Priorität (höher = wichtiger)
+# Reihenfolge = Priorität: Spezifisches vor Allgemeinem
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FACH_KEYWORDS: list[tuple[str, str, int]] = [
+    # (keyword_lowercase, fach, priorität)
+
+    # ═══ MATHEMATIK (höchste Priorität für Formeln) ═══
+    ("pythagoras",       "Mathematik", 100),
+    ("integral",         "Mathematik", 100),
+    ("ableitung",        "Mathematik", 100),
+    ("differenzial",     "Mathematik", 100),
+    ("quadratisch",      "Mathematik", 100),
+    ("gleichung",        "Mathematik",  90),
+    ("bruchrechnung",    "Mathematik",  90),
+    ("trigonometrie",    "Mathematik",  90),
+    ("sinus",            "Mathematik",  90),
+    ("kosinus",          "Mathematik",  90),
+    ("tangens",          "Mathematik",  90),
+    ("kurvendiskussion", "Mathematik",  90),
+    ("nullstelle",       "Mathematik",  90),
+    ("steigung",         "Mathematik",  85),
+    ("wurzel",           "Mathematik",  85),
+    ("vektor",           "Mathematik",  85),
+    ("matrix",           "Mathematik",  85),
+    ("wahrscheinlich",   "Mathematik",  80),
+    ("statistik",        "Mathematik",  80),
+    ("geometrie",        "Mathematik",  80),
+    ("dreieck",          "Mathematik",  80),
+    ("kreis",            "Mathematik",  75),
+    ("fläche",           "Mathematik",  75),
+    ("volumen",          "Mathematik",  75),
+    ("funktion",         "Mathematik",  70),
+    ("berechne",         "Mathematik",  65),
+    ("formel",           "Mathematik",  60),
+
+    # ═══ PHYSIK ═══
+    ("newton",           "Physik",      100),
+    ("relativität",      "Physik",      100),
+    ("quantenmechanik",  "Physik",      100),
+    ("elektromagnet",    "Physik",       95),
+    ("thermodynamik",    "Physik",       95),
+    ("lichtgeschwindig", "Physik",       95),
+    ("kernspaltung",     "Physik",       95),
+    ("radioaktiv",       "Physik",       90),
+    ("impuls",           "Physik",       85),
+    ("energie",          "Physik",       80),
+    ("spannung",         "Physik",       80),
+    ("strom",            "Physik",       75),
+    ("widerstand",       "Physik",       75),
+    ("kraft",            "Physik",       70),
+    ("geschwindigkeit",  "Physik",       70),
+    ("beschleunigung",   "Physik",       70),
+    ("masse",            "Physik",       60),
+    ("welle",            "Physik",       60),
+
+    # ═══ CHEMIE ═══
+    ("molekül",          "Chemie",      100),
+    ("atom",             "Chemie",       95),
+    ("reaktion",         "Chemie",       90),
+    ("säure",            "Chemie",       90),
+    ("base",             "Chemie",       85),
+    ("oxidation",        "Chemie",       90),
+    ("elektronen",       "Chemie",       80),
+    ("bindung",          "Chemie",       75),
+    ("element",          "Chemie",       70),
+    ("periodensystem",   "Chemie",      100),
+    ("verbrennung",      "Chemie",       85),
+    ("katalysator",      "Chemie",       90),
+
+    # ═══ BIOLOGIE ═══
+    ("photosynthese",    "Biologie",    100),
+    ("zelle",            "Biologie",     90),
+    ("chromosom",        "Biologie",    100),
+    ("dna",              "Biologie",    100),
+    ("protein",          "Biologie",     85),
+    ("evolution",        "Biologie",     90),
+    ("ökosystem",        "Biologie",     90),
+    ("mitose",           "Biologie",    100),
+    ("meiose",           "Biologie",    100),
+    ("chloroplast",      "Biologie",    100),
+    ("nervensystem",     "Biologie",     90),
+    ("hormonsystem",     "Biologie",     90),
+    ("blut",             "Biologie",     70),
+    ("herz",             "Biologie",     70),
+    ("erblich",          "Biologie",     85),
+    ("gen ",             "Biologie",     80),
+
+    # ═══ GESCHICHTE ═══
+    ("weimar",           "Geschichte",  100),
+    ("nationalsozial",   "Geschichte",  100),
+    ("holocaust",        "Geschichte",  100),
+    ("weltkrieg",        "Geschichte",  100),
+    ("napoleon",         "Geschichte",   95),
+    ("revolution",       "Geschichte",   85),
+    ("kaiser",           "Geschichte",   80),
+    ("reich",            "Geschichte",   75),
+    ("krieg",            "Geschichte",   70),
+    ("frieden",          "Geschichte",   65),
+    ("kolonial",         "Geschichte",   85),
+    ("demokratie",       "Geschichte",   70),
+    ("antike",           "Geschichte",   85),
+    ("römer",            "Geschichte",   90),
+    ("griechen",         "Geschichte",   85),
+    ("mittelalter",      "Geschichte",   90),
+    ("renaissance",      "Geschichte",   85),
+
+    # ═══ DEUTSCH — KEIN "satz" (zu allgemein!) ═══
+    ("grammatik",        "Deutsch",     100),
+    ("rechtschreibung",  "Deutsch",     100),
+    ("aufsatz",          "Deutsch",      95),
+    ("erörterung",       "Deutsch",     100),
+    ("inhaltsangabe",    "Deutsch",     100),
+    ("analyse",          "Deutsch",      70),
+    ("metapher",         "Deutsch",      95),
+    ("stilmittel",       "Deutsch",     100),
+    ("gedicht",          "Deutsch",      95),
+    ("lyrik",            "Deutsch",     100),
+    ("epik",             "Deutsch",     100),
+    ("dramatik",         "Deutsch",     100),
+    ("roman",            "Deutsch",      85),
+    ("konjunktiv",       "Deutsch",     100),
+    ("genitiv",          "Deutsch",     100),
+    ("dativ",            "Deutsch",      95),
+    ("akkusativ",        "Deutsch",      95),
+    ("komma",            "Deutsch",      90),
+    ("faust",            "Deutsch",      95),
+    ("schiller",         "Deutsch",      95),
+    ("goethe",           "Deutsch",      95),
+    ("kafka",            "Deutsch",      95),
+
+    # ═══ ENGLISCH ═══
+    ("grammar",          "Englisch",    100),
+    ("tense",            "Englisch",    100),
+    ("present perfect",  "Englisch",    100),
+    ("past tense",       "Englisch",    100),
+    ("vocabulary",       "Englisch",     95),
+    ("pronunciation",    "Englisch",     95),
+    ("essay",            "Englisch",     85),
+
+    # ═══ INFORMATIK ═══
+    ("algorithmus",      "Informatik",  100),
+    ("python",           "Informatik",  100),
+    ("javascript",       "Informatik",  100),
+    ("datenbank",        "Informatik",  100),
+    ("programmier",      "Informatik",  100),
+    ("code",             "Informatik",   90),
+    ("schleife",         "Informatik",   90),
+    ("array",            "Informatik",   95),
+    ("binär",            "Informatik",   95),
+    ("netzwerk",         "Informatik",   85),
+    ("rekursion",        "Informatik",   95),
+
+    # ═══ LATEIN ═══
+    ("latein",           "Latein",      100),
+    ("cäsar",            "Latein",       95),
+    ("cicero",           "Latein",       95),
+    ("konjugation",      "Latein",       90),
+    ("deklinieren",      "Latein",      100),
+
+    # ═══ WEITERE ═══
+    ("volkswirtschaft",  "Wirtschaft",  100),
+    ("angebot",          "Wirtschaft",   85),
+    ("nachfrage",        "Wirtschaft",   85),
+    ("markt",            "Wirtschaft",   80),
+    ("psychologie",      "Psychologie", 100),
+    ("verhalten",        "Psychologie",  75),
+    ("erdkunde",         "Geografie",    90),
+    ("klima",            "Geografie",    85),
+    ("land",             "Geografie",    60),
+]
+
+# Kombinierte Phrases die Priorität erzwingen
+FACH_PHRASES: list[tuple[str, str]] = [
+    # (phrase, fach) — exact match hat IMMER Vorrang
+    ("satz des pythagoras",    "Mathematik"),
+    ("binomischer lehrsatz",   "Mathematik"),
+    ("satz von gauss",         "Mathematik"),
+    ("zweiter hauptsatz",      "Physik"),
+    ("erster hauptsatz",       "Physik"),
+    ("ohmsches gesetz",        "Physik"),
+    ("mendelsches gesetz",     "Biologie"),
+    ("weimarer republik",      "Geschichte"),
+    ("zweiter weltkrieg",      "Geschichte"),
+    ("erster weltkrieg",       "Geschichte"),
+    ("kalter krieg",           "Geschichte"),
+    ("satz vom nullprodukt",   "Mathematik"),
+    ("relativitätstheorie",    "Physik"),
+    ("e=mc",                   "Physik"),
+]
+
+
 # Subject definitions with German curriculum alignment
 SUBJECTS = {
     "math": {
@@ -149,21 +341,44 @@ SUBJECTS = {
 }
 
 
-def detect_subject(message: str) -> str:
-    """Detect subject from user message using keyword matching."""
-    message_lower = message.lower()
-    scores = {}
-    for subject_id, subject_data in SUBJECTS.items():
-        score = 0
-        for keyword in subject_data["keywords"]:
-            if keyword in message_lower:
-                score += 1
-        scores[subject_id] = score
+def detect_subject(message: str, user_fach: str | None = None) -> str:
+    """Intelligente Fach-Erkennung mit Prioritäts-Scoring.
 
-    best_subject = max(scores, key=scores.get)
-    if scores[best_subject] > 0:
-        return best_subject
-    return "general"
+    1. Wenn User explizit ein Fach gesetzt hat → nutze das
+    2. Phrase-Matching (exakte Zusammensetzungen haben Vorrang)
+    3. Keyword-Scoring (höchste Priorität gewinnt)
+    """
+    # User hat ein Fach explizit gewählt → IMMER respektieren
+    if user_fach and user_fach not in ("", "Alle", "Allgemein", "general"):
+        return normalize_fach(user_fach)
+
+    text_lower = message.lower()
+
+    # Schritt 1: Exakte Phrase-Matches (höchste Priorität)
+    for phrase, fach in FACH_PHRASES:
+        if phrase in text_lower:
+            return fach
+
+    # Schritt 2: Keyword-Scoring
+    scores: dict[str, int] = {}
+    for keyword, fach, prio in FACH_KEYWORDS:
+        if keyword in text_lower:
+            scores[fach] = scores.get(fach, 0) + prio
+
+    if not scores:
+        return "Allgemein"
+
+    # Höchster Score gewinnt
+    bestes_fach = max(scores, key=lambda f: scores[f])
+
+    # Tie-Breaker: Mindest-Score-Differenz von 30
+    sortiert = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    if len(sortiert) >= 2:
+        differenz = sortiert[0][1] - sortiert[1][1]
+        if differenz < 30 and user_fach:
+            return normalize_fach(user_fach)
+
+    return bestes_fach
 
 
 def get_proficiency_prompt(level: str, language: str = "de") -> str:

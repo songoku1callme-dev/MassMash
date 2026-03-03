@@ -28,6 +28,8 @@ interface Msg {
   subject?: string;
   karteikarten?: Karteikarte[];
   zusammenfassung?: string;
+  quellen?: string[];
+  internet_genutzt?: boolean;
 }
 
 export default function ChatPage() {
@@ -40,6 +42,7 @@ export default function ChatPage() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [expandedKarten, setExpandedKarten] = useState<Record<number, boolean>>({});
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<number, string>>({});
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
@@ -401,9 +404,87 @@ export default function ChatPage() {
                     </div>
                   )}
 
-                  {/* Action Buttons under KI responses */}
+                  {/* Quellen separat anzeigen (Bug-Fix 2) */}
+                  {msg.role === "assistant" && msg.quellen && msg.quellen.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-indigo-500/10">
+                      <p className="text-[10px] font-bold text-slate-500 mb-1">Quellen:</p>
+                      <div className="space-y-0.5">
+                        {msg.quellen.map((q, qi) => (
+                          <p key={qi} className="text-[10px] text-indigo-400">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                              components={{
+                                p: ({ children }) => <span>{children}</span>,
+                                a: ({ href, children }) => (
+                                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline">
+                                    {children}
+                                  </a>
+                                ),
+                              }}
+                            >{q}</ReactMarkdown>
+                          </p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Internet-Indikator (Block 4) */}
+                  {msg.role === "assistant" && msg.internet_genutzt && (
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      </span>
+                      <span className="text-[10px] text-emerald-400">Internet-Recherche</span>
+                    </div>
+                  )}
+
+                  {/* Action Buttons + Feedback (Block 5) */}
                   {msg.role === "assistant" && (
                     <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-indigo-500/20 flex-wrap">
+                      {/* Feedback Buttons */}
+                      {!feedbackGiven[idx] ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              setFeedbackGiven(prev => ({ ...prev, [idx]: "positive" }));
+                              fetch(`/api/chat/feedback?message_index=${idx}&session_id=${useChatStore.getState().currentSessionId || 0}&rating=positive&fach=${msg.subject || ""}`, {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${localStorage.getItem("lumnos_token")}` },
+                              }).catch(() => {});
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-emerald-400 hover:bg-emerald-900/20 transition-all"
+                            title="Gute Antwort"
+                          >
+                            &#128077;
+                          </button>
+                          <button
+                            onClick={() => {
+                              setFeedbackGiven(prev => ({ ...prev, [idx]: "negative" }));
+                              fetch(`/api/chat/feedback?message_index=${idx}&session_id=${useChatStore.getState().currentSessionId || 0}&rating=negative&fach=${msg.subject || ""}`, {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${localStorage.getItem("lumnos_token")}` },
+                              }).catch(() => {});
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-red-400 hover:bg-red-900/20 transition-all"
+                            title="Schlechte Antwort"
+                          >
+                            &#128078;
+                          </button>
+                        </>
+                      ) : (
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                          feedbackGiven[idx] === "positive"
+                            ? "text-emerald-400 bg-emerald-900/20"
+                            : "text-red-400 bg-red-900/20"
+                        }`}>
+                          {feedbackGiven[idx] === "positive" ? "Danke! \u2713" : "Feedback gesendet"}
+                        </span>
+                      )}
+
+                      <span className="w-px h-4 bg-slate-700" />
+
                       {/* Copy */}
                       <button
                         onClick={() => copyToClipboard(msg.content, idx)}

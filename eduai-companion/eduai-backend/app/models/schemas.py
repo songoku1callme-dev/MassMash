@@ -92,6 +92,8 @@ class ChatResponse(BaseModel):
     proficiency_level: str = "intermediate"
     karteikarten: List[Karteikarte] = []
     zusammenfassung: str = ""
+    quellen: List[str] = []
+    internet_genutzt: bool = False
 
 
 class ChatSessionResponse(BaseModel):

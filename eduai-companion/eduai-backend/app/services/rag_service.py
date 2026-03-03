@@ -210,8 +210,12 @@ async def search_similar(
     query: str,
     top_k: int = 3,
     filter_metadata: Optional[dict] = None,
+    fach_filter: Optional[str] = None,
 ) -> list[dict]:
     """Search for document chunks most similar to the query.
+
+    Bug-Fix 3: Fach-Filter — nur Ergebnisse des richtigen Fachs zurückgeben.
+    Wenn fach_filter gesetzt ist, werden Ergebnisse anderer Fächer blockiert.
 
     Returns list of dicts: {doc_id, chunk_text, score, metadata, source}.
     """
@@ -225,7 +229,7 @@ async def search_similar(
 
     query_vec = embed_texts([query])
     # Search more than needed if we have to filter
-    search_k = min(top_k * 3, index.ntotal)
+    search_k = min(top_k * 5, index.ntotal)  # Mehr holen für besseres Filtern
     distances, indices = index.search(query_vec, search_k)
 
     db = await _init_rag_db()
@@ -256,6 +260,17 @@ async def search_similar(
             # Apply metadata filter
             if filter_metadata:
                 if not all(meta.get(k) == v for k, v in filter_metadata.items()):
+                    continue
+
+            # Bug-Fix 3: Fach-Filter — falsches Fach blockieren
+            if fach_filter and fach_filter not in ("Allgemein", "general", "Alle"):
+                doc_fach = meta.get("subject", meta.get("fach", ""))
+                if doc_fach and doc_fach != fach_filter:
+                    # Dieses Dokument gehört zu einem anderen Fach → überspringen
+                    logger.debug(
+                        "RAG Fach-Filter: Überspringe %s (Fach=%s, erwartet=%s)",
+                        doc_id, doc_fach, fach_filter,
+                    )
                     continue
 
             results.append({

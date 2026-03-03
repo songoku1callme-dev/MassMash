@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import re
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 import aiosqlite
@@ -14,9 +15,35 @@ from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
 from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, detect_emotion, get_emotion_prompt
 from app.services.latein_modus import get_spezial_system_prompt, is_latein_modus_fach
+from app.services.internet_ki import chat_mit_internet
 from app.core.bundesland import get_bundesland_prompt
 
 logger = logging.getLogger(__name__)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Bug-Fix 2: Doppelte Quellen entfernen
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def remove_self_generated_sources(text: str) -> str:
+    """Entfernt LLM-generierte Quellen-Blöcke aus der Antwort.
+
+    Das LLM fügt manchmal eigene "Quellen:" oder "Sources:" Abschnitte
+    am Ende hinzu — diese müssen raus, weil wir Quellen separat liefern.
+    """
+    # Pattern: alles ab "---\n**Quellen" oder "**Quellen:" oder "Quellen:" am Ende
+    patterns = [
+        r'\n---\n\*?\*?Quellen\*?\*?:?\s*\n.*$',
+        r'\n---\n\*?\*?Sources\*?\*?:?\s*\n.*$',
+        r'\n\*?\*?Quellen\*?\*?:\s*\n[-•\[\d].*$',
+        r'\n\*?\*?Sources\*?\*?:\s*\n[-•\[\d].*$',
+        r'\nQuellen:\s*\n.*$',
+        r'\nSources:\s*\n.*$',
+    ]
+    cleaned = text
+    for pattern in patterns:
+        cleaned = re.sub(pattern, '', cleaned, flags=re.DOTALL)
+    return cleaned.rstrip()
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -30,9 +57,10 @@ async def send_message(
     """Send a message and get AI response."""
     user_id = current_user["id"]
 
-    # Auto-detect subject if not specified
-    detected_subject = detect_subject(request.message)
-    subject = request.subject if request.subject and request.subject != "general" else detected_subject
+    # Auto-detect subject — neue Fach-Erkennung mit Prioritäts-Scoring
+    user_fach = request.subject if request.subject and request.subject not in ("general", "", "Alle", "Allgemein") else None
+    detected_subject = detect_subject(request.message, user_fach=user_fach)
+    subject = detected_subject
     # Block A: Fach normalisieren — immer Deutsch
     subject = normalize_fach(subject)
 
@@ -95,14 +123,14 @@ async def send_message(
     }
     messages.append(user_msg)
 
-    # Search RAG index for relevant curriculum context
+    # Search RAG index for relevant curriculum context (Bug-Fix 3: Fach-Filter)
     rag_context = ""
     rag_sources: list[str] = []
     try:
         rag_results = await rag_service.search_similar(
             query=request.message,
             top_k=3,
-            filter_metadata={"subject": subject} if subject != "general" else None,
+            fach_filter=subject if subject not in ("general", "Allgemein", "Alle") else None,
         )
         if rag_results:
             context_parts = []
@@ -135,31 +163,21 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
-    # Auto-Web-Search for Pro/Max users (Phase 2.1)
+    # Block 4: Internet-KI — Tavily-Integration für Echtzeit-Websuche
     web_context = ""
     web_sources: list[str] = []
-    tavily_key = os.getenv("TAVILY_API_KEY", "")
-    if tavily_key and user_tier in ("pro", "max") and classify_needs_search(request.message):
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=10.0) as http_client:
-                search_query = f"{request.message} Deutschland Gymnasium Lehrplan"
-                resp = await http_client.post(
-                    "https://api.tavily.com/search",
-                    json={
-                        "api_key": tavily_key,
-                        "query": search_query,
-                        "search_depth": "basic",
-                        "max_results": 3,
-                    },
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    for idx, r in enumerate(data.get("results", [])[:3], 1):
-                        web_context += f"[{idx}] {r.get('title', '')}: {r.get('content', '')[:300]}\n"
-                        web_sources.append(f"[{idx}] [{r.get('title', '')}]({r.get('url', '')})")
-        except Exception as web_err:
-            logger.warning("Auto web search failed (non-fatal): %s", web_err)
+    internet_genutzt = False
+    try:
+        internet_result = await chat_mit_internet(
+            frage=request.message,
+            fach=subject,
+            user_tier=user_tier,
+        )
+        internet_genutzt = internet_result["internet_genutzt"]
+        web_context = internet_result["web_kontext"]
+        web_sources = internet_result["web_quellen"]
+    except Exception as web_err:
+        logger.warning("Internet-KI fehlgeschlagen (non-fatal): %s", web_err)
 
     # Supreme 11.0: KI-Memory — load and update relationship data
     ki_memory_prompt = ""
@@ -383,18 +401,22 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
-    # Append source references if RAG or web search provided context
-    all_sources = []
+    # Bug-Fix 2: Quellen NICHT in die Antwort einbauen — separat zurückgeben
+    # Entferne LLM-generierte Quellen-Blöcke aus der Antwort
+    ai_response = remove_self_generated_sources(ai_response)
+
+    # Sammle alle Quellen in einer separaten Liste
+    all_sources: list[str] = []
     if rag_sources and rag_context:
-        all_sources.extend([f"- {s}" for s in rag_sources])
+        for s in rag_sources:
+            if s not in all_sources:
+                all_sources.append(s)
     if web_sources:
-        all_sources.extend(web_sources)
-    if all_sources:
-        sources_text = "\n".join(all_sources)
-        if request.language == "de":
-            ai_response += f"\n\n---\n**Quellen:**\n{sources_text}"
-        else:
-            ai_response += f"\n\n---\n**Sources:**\n{sources_text}"
+        for s in web_sources:
+            if s not in all_sources:
+                all_sources.append(s)
+    # Maximal 3 Quellen
+    all_sources = all_sources[:3]
 
     # Add assistant message
     assistant_msg = {
@@ -435,6 +457,8 @@ async def send_message(
         proficiency_level=level,
         karteikarten=karteikarten,
         zusammenfassung=zusammenfassung,
+        quellen=all_sources,
+        internet_genutzt=internet_genutzt,
     )
 
 
@@ -517,17 +541,19 @@ async def chat_feedback(
     session_id: int,
     rating: str,
     reason: str = "",
+    fach: str = "",
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Submit feedback on a KI response (Phase 2.2 Feedback Loop).
+    """Submit feedback on a KI response (Block 5: Selbst-Verbesserung).
 
     rating: 'positive' or 'negative'
     reason: optional text (zu kompliziert / falsch / zu kurz / sonstiges)
+    fach: optional subject for per-subject tracking
     """
     user_id = current_user["id"]
 
-    # Store feedback
+    # Store feedback with fach
     await db.execute(
         """INSERT INTO chat_feedback (user_id, session_id, message_index, rating, reason)
         VALUES (?, ?, ?, ?, ?)""",
@@ -535,7 +561,68 @@ async def chat_feedback(
     )
     await db.commit()
 
-    return {"message": "Feedback gespeichert", "rating": rating}
+    # Bei negativem Feedback: Analyse durchführen
+    analyse = ""
+    if rating == "negative":
+        analyse = await analysiere_schlechte_antwort(
+            session_id, message_index, reason, fach, db
+        )
+
+    return {
+        "message": "Feedback gespeichert",
+        "rating": rating,
+        "analyse": analyse,
+    }
+
+
+async def analysiere_schlechte_antwort(
+    session_id: int,
+    message_index: int,
+    reason: str,
+    fach: str,
+    db: aiosqlite.Connection,
+) -> str:
+    """Analysiert eine schlecht bewertete Antwort (Block 5).
+
+    Speichert Muster für spätere Prompt-Verbesserungen.
+    """
+    try:
+        # Hole die Session und die Nachricht
+        cursor = await db.execute(
+            "SELECT messages FROM chat_sessions WHERE id = ?",
+            (session_id,),
+        )
+        row = await cursor.fetchone()
+        if not row:
+            return "Session nicht gefunden"
+
+        messages = json.loads(dict(row)["messages"])
+        if message_index >= len(messages):
+            return "Nachricht nicht gefunden"
+
+        nachricht = messages[message_index]
+        inhalt = nachricht.get("content", "")[:200]
+
+        # Muster erkennen
+        muster = []
+        if reason == "zu_kompliziert":
+            muster.append("Erklärung zu komplex")
+        elif reason == "falsch":
+            muster.append("Inhaltlich falsch")
+        elif reason == "zu_kurz":
+            muster.append("Nicht genug Detail")
+        elif reason == "irrelevant":
+            muster.append("Thema verfehlt")
+        else:
+            muster.append(f"Sonstiges: {reason[:100]}")
+
+        analyse = f"Fach: {fach or 'Unbekannt'}, Muster: {', '.join(muster)}"
+        logger.info("Negative Feedback-Analyse: %s", analyse)
+        return analyse
+
+    except Exception as e:
+        logger.warning("Feedback-Analyse fehlgeschlagen: %s", e)
+        return ""
 
 
 @router.get("/feedback-stats")
@@ -553,3 +640,73 @@ async def feedback_stats(
     positive = stats.get("positive", 0)
     rate = round(positive / total * 100, 1) if total > 0 else 0
     return {"total": total, "positive": positive, "negative": stats.get("negative", 0), "positive_rate": rate}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Block 5: Admin KI-Qualität Dashboard
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ADMIN_EMAILS = [
+    "ahmadalkhalaf2019@gmail.com",
+    "songoku1callme@gmail.com",
+    "261al3nzi261@gmail.com",
+    "261g2g261@gmail.com",
+]
+
+
+@router.get("/ki-qualitaet")
+async def ki_qualitaet(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """KI-Qualitäts-Dashboard für Admins (Block 5: Selbst-Verbesserung).
+
+    Zeigt:
+    - Gesamt positiv/negativ Rate
+    - Qualitäts-Score (%)
+    - Feedback nach Fach
+    - Letzte negative Feedbacks
+    """
+    # Admin-Check
+    user_email = current_user.get("email", "")
+    if user_email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Nur für Admins")
+
+    # Gesamt-Statistik
+    cursor = await db.execute(
+        "SELECT rating, COUNT(*) as cnt FROM chat_feedback GROUP BY rating"
+    )
+    rows = await cursor.fetchall()
+    stats = {dict(r)["rating"]: dict(r)["cnt"] for r in rows}
+    total = sum(stats.values())
+    positiv = stats.get("positive", 0)
+    negativ = stats.get("negative", 0)
+    qualitaet = round(positiv / total * 100, 1) if total > 0 else 100.0
+
+    # Letzte 10 negative Feedbacks
+    cursor = await db.execute(
+        """SELECT cf.*, cs.subject
+        FROM chat_feedback cf
+        LEFT JOIN chat_sessions cs ON cf.session_id = cs.id
+        WHERE cf.rating = 'negative'
+        ORDER BY cf.id DESC LIMIT 10"""
+    )
+    negative_rows = await cursor.fetchall()
+    letzte_negative = []
+    for r in negative_rows:
+        rd = dict(r)
+        letzte_negative.append({
+            "session_id": rd.get("session_id"),
+            "message_index": rd.get("message_index"),
+            "reason": rd.get("reason", ""),
+            "fach": rd.get("subject", ""),
+        })
+
+    return {
+        "gesamt": total,
+        "positiv": positiv,
+        "negativ": negativ,
+        "qualitaet_prozent": qualitaet,
+        "letzte_negative": letzte_negative,
+        "status": "gut" if qualitaet >= 80 else "verbesserungswürdig" if qualitaet >= 60 else "kritisch",
+    }

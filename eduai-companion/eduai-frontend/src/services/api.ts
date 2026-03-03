@@ -347,6 +347,8 @@ export interface ChatResponse {
   proficiency_level: string;
   karteikarten: Karteikarte[];
   zusammenfassung: string;
+  quellen: string[];
+  internet_genutzt: boolean;
 }
 
 export interface ChatSession {
@@ -370,6 +372,8 @@ export interface ChatMessage {
   timestamp?: string;
   karteikarten?: Karteikarte[];
   zusammenfassung?: string;
+  quellen?: string[];
+  internet_genutzt?: boolean;
 }
 
 export interface Subject {
