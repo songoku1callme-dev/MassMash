@@ -84,6 +84,11 @@ class Karteikarte(BaseModel):
     antwort: str
 
 
+class WebQuelle(BaseModel):
+    url: str = ""
+    titel: str = ""
+
+
 class ChatResponse(BaseModel):
     response: str
     session_id: int
@@ -93,9 +98,12 @@ class ChatResponse(BaseModel):
     karteikarten: List[Karteikarte] = []
     zusammenfassung: str = ""
     quellen: List[str] = []
+    web_quellen: List[WebQuelle] = []
     internet_genutzt: bool = False
     modell_genutzt: str = ""
     multi_step: bool = False
+    is_verified: bool = False
+    confidence: int = 0
 
 
 class ChatSessionResponse(BaseModel):

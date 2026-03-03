@@ -162,9 +162,10 @@ async def create_checkout(
     success_url = req.success_url or f"{base_url}/success?session_id={{CHECKOUT_SESSION_ID}}"
     cancel_url = req.cancel_url or f"{base_url}/pricing"
 
-    # Create Checkout Session
+    # Create Checkout Session (Card + PayPal + Sofort für DE-Markt)
     session = stripe.checkout.Session.create(
         customer=stripe_customer_id,
+        payment_method_types=["card", "paypal", "sofort"],
         mode="subscription",
         line_items=[
             {

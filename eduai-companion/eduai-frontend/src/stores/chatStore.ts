@@ -88,7 +88,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
         karteikarten: response.karteikarten || [],
         zusammenfassung: response.zusammenfassung || "",
         quellen: response.quellen || [],
+        web_quellen: response.web_quellen || [],
         internet_genutzt: response.internet_genutzt || false,
+        is_verified: response.is_verified || false,
+        confidence: response.confidence || 0,
       };
 
       set((state) => ({

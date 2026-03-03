@@ -362,6 +362,8 @@ async def send_message(
     router_internet = routed_result.get("internet_genutzt", False)
     router_multi_step = routed_result.get("multi_step", False)
     router_web_quellen = routed_result.get("web_quellen", [])
+    is_verified = routed_result.get("is_verified", False)
+    confidence = routed_result.get("confidence", 0)
 
     # Fallback: wenn Router keine Antwort liefert, Standard-Pfad
     if not ai_response:
@@ -478,6 +480,15 @@ async def send_message(
     )
     await db.commit()
 
+    # Web-Quellen als strukturierte Objekte für Frontend
+    structured_web_quellen = []
+    for wq in router_web_quellen:
+        if isinstance(wq, dict):
+            structured_web_quellen.append({
+                "url": wq.get("url", ""),
+                "titel": wq.get("title", wq.get("titel", "")),
+            })
+
     return ChatResponse(
         response=ai_response,
         session_id=session_id,
@@ -487,9 +498,12 @@ async def send_message(
         karteikarten=karteikarten,
         zusammenfassung=zusammenfassung,
         quellen=all_sources,
+        web_quellen=structured_web_quellen,
         internet_genutzt=internet_genutzt,
         modell_genutzt=modell_genutzt,
         multi_step=router_multi_step,
+        is_verified=is_verified,
+        confidence=confidence,
     )
 
 

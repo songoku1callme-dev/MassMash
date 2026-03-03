@@ -22,6 +22,11 @@ interface Karteikarte {
   antwort: string;
 }
 
+interface WebQuelle {
+  url: string;
+  titel: string;
+}
+
 interface Msg {
   role: "user" | "assistant";
   content: string;
@@ -29,7 +34,10 @@ interface Msg {
   karteikarten?: Karteikarte[];
   zusammenfassung?: string;
   quellen?: string[];
+  web_quellen?: WebQuelle[];
   internet_genutzt?: boolean;
+  is_verified?: boolean;
+  confidence?: number;
 }
 
 export default function ChatPage() {
@@ -404,39 +412,83 @@ export default function ChatPage() {
                     </div>
                   )}
 
-                  {/* Quellen separat anzeigen (Bug-Fix 2) */}
-                  {msg.role === "assistant" && msg.quellen && msg.quellen.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-indigo-500/10">
-                      <p className="text-[10px] font-bold text-slate-500 mb-1">Quellen:</p>
-                      <div className="space-y-0.5">
-                        {msg.quellen.map((q, qi) => (
-                          <p key={qi} className="text-[10px] text-indigo-400">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkMath]}
-                              rehypePlugins={[rehypeKatex]}
-                              components={{
-                                p: ({ children }) => <span>{children}</span>,
-                                a: ({ href, children }) => (
-                                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline">
-                                    {children}
-                                  </a>
-                                ),
-                              }}
-                            >{q}</ReactMarkdown>
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* ===== QUALITY ENGINE BADGES (Perplexity-Style) ===== */}
+                  {msg.role === "assistant" && (msg.is_verified || msg.confidence || msg.internet_genutzt) && (
+                    <div className="mt-3 pt-3 border-t border-slate-700/50">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* KI-Geprüft Badge */}
+                        {msg.is_verified && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            <span className="text-emerald-400 text-xs">✓</span>
+                            <span className="text-emerald-400 text-[11px] font-medium">KI-Geprüft</span>
+                          </div>
+                        )}
 
-                  {/* Internet-Indikator (Block 4) */}
-                  {msg.role === "assistant" && msg.internet_genutzt && (
-                    <div className="mt-1 flex items-center gap-1.5">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                      </span>
-                      <span className="text-[10px] text-emerald-400">Internet-Recherche</span>
+                        {/* Präzisions-Score */}
+                        {typeof msg.confidence === "number" && msg.confidence > 0 && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
+                            <span className="text-blue-400 text-[11px] font-medium">
+                              Präzision: {msg.confidence}%
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Live Web-Suche Badge */}
+                        {msg.internet_genutzt && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                            <span className="text-amber-400 text-xs">&#127760;</span>
+                            <span className="text-amber-400 text-[11px] font-medium">Live Web-Suche</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Web-Quellen Liste (Perplexity-Style klickbar) */}
+                      {msg.web_quellen && msg.web_quellen.length > 0 && (
+                        <div className="mt-3">
+                          <span className="text-slate-400 text-xs font-medium mb-2 block">Quellen:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {msg.web_quellen.map((quelle: WebQuelle, qIdx: number) => (
+                              <a
+                                key={qIdx}
+                                href={quelle.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700 transition-colors max-w-[200px]"
+                              >
+                                <div className="w-4 h-4 rounded bg-slate-700 flex items-center justify-center text-[9px] text-slate-300 shrink-0">
+                                  {qIdx + 1}
+                                </div>
+                                <span className="text-xs text-slate-300 truncate">{quelle.titel || `Quelle ${qIdx + 1}`}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Fallback: alte string-Quellen anzeigen */}
+                      {(!msg.web_quellen || msg.web_quellen.length === 0) && msg.quellen && msg.quellen.length > 0 && (
+                        <div className="mt-3">
+                          <span className="text-slate-400 text-xs font-medium mb-2 block">Quellen:</span>
+                          <div className="space-y-0.5">
+                            {msg.quellen.map((q, qi) => (
+                              <p key={qi} className="text-[10px] text-indigo-400">
+                                <ReactMarkdown
+                                  remarkPlugins={[remarkMath]}
+                                  rehypePlugins={[rehypeKatex]}
+                                  components={{
+                                    p: ({ children }) => <span>{children}</span>,
+                                    a: ({ href, children }) => (
+                                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 underline">
+                                        {children}
+                                      </a>
+                                    ),
+                                  }}
+                                >{q}</ReactMarkdown>
+                              </p>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

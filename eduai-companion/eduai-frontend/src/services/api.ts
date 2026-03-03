@@ -339,6 +339,11 @@ export interface Karteikarte {
   antwort: string;
 }
 
+export interface WebQuelle {
+  url: string;
+  titel: string;
+}
+
 export interface ChatResponse {
   response: string;
   session_id: number;
@@ -348,9 +353,12 @@ export interface ChatResponse {
   karteikarten: Karteikarte[];
   zusammenfassung: string;
   quellen: string[];
+  web_quellen: WebQuelle[];
   internet_genutzt: boolean;
   modell_genutzt: string;
   multi_step: boolean;
+  is_verified: boolean;
+  confidence: number;
 }
 
 export interface ChatSession {
@@ -375,7 +383,10 @@ export interface ChatMessage {
   karteikarten?: Karteikarte[];
   zusammenfassung?: string;
   quellen?: string[];
+  web_quellen?: WebQuelle[];
   internet_genutzt?: boolean;
+  is_verified?: boolean;
+  confidence?: number;
 }
 
 export interface Subject {
