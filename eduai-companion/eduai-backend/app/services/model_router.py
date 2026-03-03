@@ -194,12 +194,35 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def strip_thinking_tags(text: str) -> tuple[str, str]:
-    """Extrahiert <thinking>...</thinking> und gibt (thinking_text, visible_text) zurück."""
+    """Extrahiert <thinking>...</thinking> und gibt (thinking_text, visible_text) zurück.
+
+    Handles both closed and unclosed <thinking> tags:
+    - <thinking>content</thinking> → extracts content, removes tags
+    - <thinking>content (no closing tag) → extracts everything after <thinking>
+    - <thinking> content\n\nvisible → extracts thinking, returns visible part
+    """
+    # Case 1: Properly closed <thinking>...</thinking>
     thinking_match = _re.search(r'<thinking>(.*?)</thinking>', text, _re.DOTALL)
     if thinking_match:
         thinking_text = thinking_match.group(1).strip()
         visible_text = text[:thinking_match.start()] + text[thinking_match.end():]
         return thinking_text, visible_text.strip()
+
+    # Case 2: Unclosed <thinking> tag (LLM forgot to close it)
+    unclosed_match = _re.search(r'<thinking>\s*', text, _re.DOTALL)
+    if unclosed_match:
+        # Everything after <thinking> is thinking content
+        thinking_text = text[unclosed_match.end():].strip()
+        visible_text = text[:unclosed_match.start()].strip()
+        # If there's no visible text, the entire response was thinking
+        # In that case, return empty visible text (will trigger retry)
+        return thinking_text, visible_text
+
+    # Case 3: Stray </thinking> tag without opening
+    if "</thinking>" in text:
+        parts = text.split("</thinking>", 1)
+        return parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
+
     return "", text
 
 
@@ -627,12 +650,18 @@ async def execute_routed_chat(
     if antwort_text:
         is_verified = True
 
+    # Strip <thinking> tags from visible response (Pedagogical Brain Block 1)
+    thinking_text = ""
+    if antwort_text:
+        thinking_text, antwort_text = strip_thinking_tags(antwort_text)
+
     # Perplexity-Style Citations [1][2]
     if web_quellen and antwort_text:
         antwort_text = inject_citations(antwort_text, web_quellen)
 
     return {
         "antwort": antwort_text,
+        "thinking": thinking_text,
         "modell_genutzt": decision.modell,
         "internet_genutzt": decision.internet and bool(web_quellen),
         "multi_step": decision.multi_step,
