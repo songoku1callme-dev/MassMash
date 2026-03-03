@@ -99,9 +99,13 @@ export default function AuthPage() {
               onClick={() => {
                 const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
                 if (clerkKey) {
-                  // Redirect to Clerk hosted sign-in with Google
-                  const domain = clerkKey.replace("pk_test_", "").replace("pk_live_", "").replace(/\$.*/, "");
-                  window.location.href = `https://${domain}.clerk.accounts.dev/sign-in?redirect_url=${encodeURIComponent(window.location.origin + "/dashboard")}`;
+                  // FIX 2: Clerk Redirect mit aktueller Domain (nicht localhost!)
+                  // Decode base64 part of clerk key to get the frontend API domain
+                  const keyBody = clerkKey.replace("pk_test_", "").replace("pk_live_", "").replace(/\$.*/, "");
+                  // Use current origin for redirect so it works on any domain (localhost, tunnel, production)
+                  const afterSignInUrl = import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard";
+                  const redirectUrl = window.location.origin + afterSignInUrl;
+                  window.location.href = `https://${keyBody}.clerk.accounts.dev/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`;
                 } else {
                   setError("Google OAuth erfordert Clerk-Konfiguration. Kontaktiere den Admin.");
                 }

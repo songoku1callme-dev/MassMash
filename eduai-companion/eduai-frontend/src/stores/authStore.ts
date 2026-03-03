@@ -23,6 +23,7 @@ interface AuthState {
   updateUser: (data: { full_name?: string; school_grade?: string; school_type?: string; preferred_language?: string }) => Promise<void>;
   enterGuestMode: () => void;
   exitGuestMode: () => void;
+  devBypassLogin: () => Promise<void>;
 }
 
 function getOrCreateGuestId(): string {
@@ -96,6 +97,28 @@ export const useAuthStore = create<AuthState>((set) => ({
   exitGuestMode: () => {
     localStorage.removeItem("lumnos_guest_session_id");
     set({ isGuest: false, guestSessionId: null });
+  },
+
+  devBypassLogin: async () => {
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/auth/dev-bypass`, { method: "POST" });
+      if (!res.ok) throw new Error("Dev bypass failed");
+      const data = await res.json();
+      setTokens(data.access_token, data.refresh_token);
+      localStorage.removeItem("lumnos_guest_session_id");
+      set({
+        user: data.user,
+        token: data.access_token,
+        isAuthenticated: true,
+        isLoading: false,
+        isGuest: false,
+        guestSessionId: null,
+      });
+    } catch {
+      // Dev bypass failed — fall through to normal auth flow
+      set({ isLoading: false });
+    }
   },
 
   updateUser: async (data) => {

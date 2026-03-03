@@ -1,8 +1,11 @@
 """Authentication routes."""
 import json
 import os
+import secrets
+import time
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, EmailStr
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import (
@@ -385,3 +388,172 @@ async def clerk_webhook(request: Request, db: aiosqlite.Connection = Depends(get
         await db.commit()
 
     return {"status": "ok"}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK 3: Email OTP (Magic Link / Code) — Bot-Schutz
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# In-memory OTP store: {email: {"code": "123456", "expires": timestamp}}
+_otp_store: dict[str, dict] = {}
+OTP_EXPIRY_SECONDS = 900  # 15 minutes
+OTP_COOLDOWN_SECONDS = 60  # 1 minute between sends
+
+
+class OTPSendRequest(BaseModel):
+    email: str  # Using str instead of EmailStr to avoid pydantic[email] dependency
+
+
+class OTPVerifyRequest(BaseModel):
+    email: str
+    code: str
+
+
+@router.post("/send-magic-link")
+async def send_magic_link(req: OTPSendRequest, db: aiosqlite.Connection = Depends(get_db)):
+    """Send a 6-digit OTP code to the given email via Resend.
+
+    - Generates a random 6-digit code
+    - Stores it in-memory with 15 min expiry
+    - Sends a styled HTML email via Resend API
+    - Rate-limited: 1 send per 60 seconds per email
+    """
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Ungueltige E-Mail-Adresse.")
+
+    # Rate limit: check cooldown
+    existing = _otp_store.get(email)
+    if existing:
+        elapsed = time.time() - existing.get("created_at", 0)
+        if elapsed < OTP_COOLDOWN_SECONDS:
+            remaining = int(OTP_COOLDOWN_SECONDS - elapsed)
+            raise HTTPException(
+                status_code=429,
+                detail=f"Bitte warte {remaining} Sekunden bevor du einen neuen Code anforderst.",
+            )
+
+    # Generate 6-digit code
+    code = f"{secrets.randbelow(900000) + 100000}"
+
+    # Store with expiry
+    _otp_store[email] = {
+        "code": code,
+        "expires": time.time() + OTP_EXPIRY_SECONDS,
+        "created_at": time.time(),
+        "attempts": 0,
+    }
+
+    # Send email via Resend
+    from app.services.email_service import send_otp_code_email
+    sent = await send_otp_code_email(email, code)
+
+    return {
+        "success": True,
+        "message": "Code wurde gesendet." if sent else "Code generiert (E-Mail-Versand deaktiviert).",
+        "email_sent": sent,
+        # In dev mode, return the code for testing
+        "dev_code": code if os.getenv("LUMNOS_DEV_MODE") == "1" else None,
+    }
+
+
+@router.post("/verify-code")
+async def verify_code(req: OTPVerifyRequest, db: aiosqlite.Connection = Depends(get_db)):
+    """Verify a 6-digit OTP code and return a JWT token.
+
+    - Validates the code against the in-memory store
+    - On success: finds or creates the user, returns JWT tokens
+    - On failure: increments attempt counter (max 5 attempts)
+    - After verification: deletes the OTP entry
+    """
+    email = req.email.strip().lower()
+    code = req.code.strip()
+
+    if not email or not code:
+        raise HTTPException(status_code=400, detail="E-Mail und Code sind erforderlich.")
+
+    # Look up OTP
+    entry = _otp_store.get(email)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Kein Code fuer diese E-Mail gefunden. Fordere einen neuen an.")
+
+    # Check expiry
+    if time.time() > entry["expires"]:
+        del _otp_store[email]
+        raise HTTPException(status_code=410, detail="Code abgelaufen. Fordere einen neuen an.")
+
+    # Check max attempts (brute-force protection)
+    if entry["attempts"] >= 5:
+        del _otp_store[email]
+        raise HTTPException(status_code=429, detail="Zu viele Versuche. Fordere einen neuen Code an.")
+
+    # Verify code
+    entry["attempts"] += 1
+    if entry["code"] != code:
+        remaining = 5 - entry["attempts"]
+        raise HTTPException(
+            status_code=401,
+            detail=f"Falscher Code. Noch {remaining} Versuche.",
+        )
+
+    # Success — delete OTP entry
+    del _otp_store[email]
+
+    # Find or create user
+    cursor = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = await cursor.fetchone()
+
+    if user:
+        user_dict = dict(user)
+        user_id = user_dict["id"]
+        # Admin check
+        if is_admin(email):
+            await _ensure_admin_max_tier(db, user_id)
+            user_dict["subscription_tier"] = "max"
+            user_dict["is_pro"] = 1
+    else:
+        # Create new user from email
+        username = email.split("@")[0]
+        # Ensure unique username
+        cursor = await db.execute("SELECT id FROM users WHERE username = ?", (username,))
+        if await cursor.fetchone():
+            username = f"{username}_{secrets.randbelow(9999)}"
+
+        hashed_pw = get_password_hash(secrets.token_urlsafe(32))
+        _is_admin = is_admin(email)
+        _tier = "max" if _is_admin else "free"
+
+        cursor = await db.execute(
+            """INSERT INTO users (email, username, hashed_password, full_name, school_grade,
+            school_type, preferred_language, subscription_tier, is_pro, auth_provider)
+            VALUES (?, ?, ?, ?, '10', 'Gymnasium', 'de', ?, ?, 'email_otp')""",
+            (email, username, hashed_pw, username, _tier, int(_is_admin)),
+        )
+        await db.commit()
+        user_id = cursor.lastrowid
+
+        # Create learning profiles
+        for subject in SUBJECTS:
+            await db.execute(
+                "INSERT INTO learning_profiles (user_id, subject, proficiency_level, mastery_score) VALUES (?, ?, 'beginner', 0.0)",
+                (user_id, subject),
+            )
+        await db.commit()
+
+        if _is_admin:
+            await _ensure_admin_max_tier(db, user_id)
+
+        # Re-fetch
+        cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user_dict = dict(await cursor.fetchone())
+
+    # Generate tokens
+    access_token = create_access_token(data={"sub": user_id})
+    refresh_token = create_refresh_token(data={"sub": user_id})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user": _user_response_from_dict(user_dict),
+        "is_new_user": user is None,
+    }

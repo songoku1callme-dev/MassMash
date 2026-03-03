@@ -216,6 +216,28 @@ async def send_streak_loss_email(to: str, username: str, lost_streak: int) -> bo
     )
 
 
+async def send_otp_code_email(to: str, code: str) -> bool:
+    """Template 7: Email OTP / Magic Link verification code."""
+    content = f"""
+    <h2 style="color: #1f2937;">Dein Anmeldecode</h2>
+    <p style="color: #4b5563; line-height: 1.6;">
+      Hier ist dein Einmal-Code fuer LUMNOS. Gib diesen Code in der App ein:
+    </p>
+    <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); padding: 24px; border-radius: 12px;
+                text-align: center; margin: 20px 0; border: 2px dashed #6366f1;">
+      <p style="color: #4f46e5; font-size: 36px; font-weight: bold; letter-spacing: 8px; margin: 0;
+                font-family: 'Courier New', monospace;">{code}</p>
+    </div>
+    <p style="color: #6b7280; font-size: 14px;">
+      Dieser Code ist <strong>15 Minuten</strong> gueltig. Falls du keinen Code angefordert hast, ignoriere diese E-Mail.
+    </p>
+    <p style="color: #9ca3af; font-size: 12px; margin-top: 16px;">
+      Tipp: Kopiere den Code und fuege ihn in der App ein.
+    </p>
+    """
+    return await _send_email(to, f"Dein LUMNOS Anmeldecode: {code}", _base_template(content))
+
+
 async def send_tournament_winner_email(
     to: str, username: str, rank: int, subject: str, prize: str
 ) -> bool:

@@ -48,7 +48,7 @@ import NotificationBell from "./components/NotificationBell";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
-  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode } = useAuthStore();
+  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode, devBypassLogin } = useAuthStore();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -63,7 +63,20 @@ function App() {
   });
 
   useEffect(() => {
-    loadUser();
+    // FIX 1: Hard bypass — wenn VITE_DEV_BYPASS=true, sofort als Admin einloggen
+    // User landet direkt auf /dashboard ohne jemals Login zu sehen
+    const devBypass = import.meta.env.VITE_DEV_BYPASS === "true";
+    const hasToken = !!localStorage.getItem("lumnos_token");
+
+    if (devBypass && !hasToken) {
+      // Kein Token vorhanden → sofort dev-bypass aufrufen
+      devBypassLogin().then(() => {
+        setShowLanding(false);
+        setCurrentPage("chat");
+      });
+    } else {
+      loadUser();
+    }
   }, []);
 
   useEffect(() => {
@@ -102,6 +115,19 @@ function App() {
   }
 
   if (!isAuthenticated && !isGuest) {
+    // Wenn dev bypass aktiv ist und noch lädt, zeige Loading statt Landing
+    const devBypass = import.meta.env.VITE_DEV_BYPASS === "true";
+    if (devBypass) {
+      // Dev bypass läuft noch — Loading anzeigen statt Landing/Auth
+      return (
+        <div className="min-h-screen cyber-bg flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"\u2726"}</div>
+            <p className="mt-4 text-lumnos-muted text-sm">Auto-Login...</p>
+          </div>
+        </div>
+      );
+    }
     if (showLanding) {
       return (
         <LandingPage
