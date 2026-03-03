@@ -11,9 +11,13 @@ from datetime import datetime, timedelta
 import aiosqlite
 import httpx
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+def _get_groq_key() -> str:
+    return settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
 
 # Aktive Prompts pro Fach (werden aus DB geladen)
 AKTIVE_PROMPTS: dict[str, str] = {}
@@ -49,13 +53,14 @@ def get_prompt_for_fach(fach: str, default_prompt: str) -> str:
 async def _groq_generate(prompt: str, max_tokens: int = 600,
                           temperature: float = 0.3) -> str:
     """Groq API call helper."""
-    if not GROQ_API_KEY:
+    groq_key = _get_groq_key()
+    if not groq_key:
         return ""
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                headers={"Authorization": f"Bearer {groq_key}"},
                 json={
                     "model": "llama-3.3-70b-versatile",
                     "messages": [{"role": "user", "content": prompt}],

@@ -13,10 +13,17 @@ from pathlib import Path
 
 import httpx
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+
+def _get_groq_key() -> str:
+    return settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
+
+
+def _get_tavily_key() -> str:
+    return os.getenv("TAVILY_API_KEY", "")
 
 # Vertrauenswürdige Quellen für jedes Fach
 FACH_QUELLEN = {
@@ -115,13 +122,14 @@ def save_cache(cache: set):
 async def _groq_generate(prompt: str, model: str = "llama-3.1-8b-instant",
                          max_tokens: int = 80, temperature: float = 0.5) -> str:
     """Groq API call helper."""
-    if not GROQ_API_KEY:
+    groq_key = _get_groq_key()
+    if not groq_key:
         return ""
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                headers={"Authorization": f"Bearer {groq_key}"},
                 json={
                     "model": model,
                     "messages": [{"role": "user", "content": prompt}],
@@ -218,7 +226,8 @@ async def tavily_deep_search(thema: str, fach: str) -> list[dict]:
     Tavily-Suche mit anschließendem tiefem Crawl der Ergebnisse.
     Für komplexe Fragen die mehr als eine Snippets-Suche brauchen.
     """
-    if not TAVILY_API_KEY:
+    tavily_key = _get_tavily_key()
+    if not tavily_key:
         logger.warning("TAVILY_API_KEY nicht gesetzt")
         return []
 
@@ -247,8 +256,8 @@ async def tavily_deep_search(thema: str, fach: str) -> list[dict]:
                 async with httpx.AsyncClient(timeout=15.0) as client:
                     resp = await client.post(
                         "https://api.tavily.com/search",
-                        json={
-                            "api_key": TAVILY_API_KEY,
+                            json={
+                                "api_key": tavily_key,
                             "query": query,
                             "search_depth": "advanced",
                             "max_results": 5,

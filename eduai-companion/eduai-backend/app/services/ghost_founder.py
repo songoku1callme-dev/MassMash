@@ -13,9 +13,13 @@ from datetime import datetime, timedelta
 
 import aiosqlite
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+def _get_groq_key() -> str:
+    return settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
 FROM = "Lumnos \u2726 <onboarding@resend.dev>"
 APP_URL = os.getenv(
     "LUMNOS_APP_URL",
@@ -25,7 +29,8 @@ APP_URL = os.getenv(
 
 async def _groq_generate(prompt: str, max_tokens: int = 80, temperature: float = 0.9) -> str:
     """Generate text via Groq API (lightweight helper)."""
-    if not GROQ_API_KEY:
+    groq_key = _get_groq_key()
+    if not groq_key:
         return ""
     try:
         import httpx
@@ -33,7 +38,7 @@ async def _groq_generate(prompt: str, max_tokens: int = 80, temperature: float =
         async with httpx.AsyncClient(timeout=15.0) as client:
             resp = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                headers={"Authorization": f"Bearer {groq_key}"},
                 json={
                     "model": "llama-3.1-8b-instant",
                     "messages": [{"role": "user", "content": prompt}],
