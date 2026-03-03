@@ -88,7 +88,7 @@ export default function ShopPage() {
             <ShoppingBag className="w-6 h-6" />
             Belohnungs-Shop
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">Gib deine XP fuer Themes, KI-Stile und Boosts aus</p>
+          <p className="text-gray-500 dark:text-gray-400">Gib deine XP für Themes, KI-Stile und Boosts aus</p>
         </div>
         <div className="text-right">
           <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{userXp}</p>

@@ -183,7 +183,7 @@ export default function StatsPage() {
         </div>
 
         {prognosen.length === 0 ? (
-          <p className="text-gray-400 text-sm">Klicke auf &quot;Prognose erstellen&quot; fuer deine Noten-Vorhersage</p>
+          <p className="text-gray-400 text-sm">Klicke auf &quot;Prognose erstellen&quot; für deine Noten-Vorhersage</p>
         ) : (
           <>
             {prognoseTrend && (
@@ -270,7 +270,7 @@ export default function StatsPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
           <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-green-600" />
-            Staerkste Faecher
+            Stärkste Fächer
           </h3>
           {strongest.length === 0 ? (
             <p className="text-gray-400 text-sm">Noch keine Daten</p>
@@ -298,7 +298,7 @@ export default function StatsPage() {
       {/* All Subjects Table */}
       {subjects.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Alle Faecher</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Alle Fächer</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

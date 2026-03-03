@@ -45,7 +45,7 @@ async def create_room(
     # Generate quiz questions via Groq
     questions = []
     try:
-        prompt = f"Erstelle {num_questions} Multiple-Choice Quiz-Fragen zum Thema '{topic or subject}' fuer deutsche Gymnasialschüler. Format als JSON Array: [{{\"frage\": \"...\", \"optionen\": [\"A\", \"B\", \"C\", \"D\"], \"richtig\": 0, \"erklärung\": \"...\"}}]. Nur das JSON Array, kein anderer Text."
+        prompt = f"Erstelle {num_questions} Multiple-Choice Quiz-Fragen zum Thema '{topic or subject}' für deutsche Gymnasialschüler. Format als JSON Array: [{{\"frage\": \"...\", \"optionen\": [\"A\", \"B\", \"C\", \"D\"], \"richtig\": 0, \"erklärung\": \"...\"}}]. Nur das JSON Array, kein anderer Text."
         response = call_groq_llm(
             prompt=prompt,
             system_prompt="Du bist ein Quiz-Generator. Antworte NUR mit validem JSON.",

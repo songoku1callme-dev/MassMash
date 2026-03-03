@@ -77,7 +77,7 @@ export default function VoicePage() {
             setResponse(chatResult.transcript ? `KI konnte nicht antworten. Deine Frage: "${chatResult.transcript}"` : "Verarbeitung fehlgeschlagen");
           }
         } catch {
-          setResponse("Transkription erfolgreich! Sende die Nachricht im Chat fuer eine KI-Antwort.");
+          setResponse("Transkription erfolgreich! Sende die Nachricht im Chat für eine KI-Antwort.");
         }
       }
     } catch (err) {
@@ -189,7 +189,7 @@ export default function VoicePage() {
           <li>1. Klicke den Mikrofon-Button und stelle deine Frage</li>
           <li>2. Whisper AI transkribiert deine Sprache in Text</li>
           <li>3. Der KI-Tutor antwortet auf deine Frage</li>
-          <li>4. Klicke "Vorlesen" fuer die Sprachausgabe</li>
+          <li>4. Klicke "Vorlesen" für die Sprachausgabe</li>
         </ul>
       </div>
     </div>

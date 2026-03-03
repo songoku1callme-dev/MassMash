@@ -83,8 +83,16 @@ LEHRPLAN_URLS = {
     ],
 }
 
-# Bereits gecrawlte URLs (verhindert Duplikate)
-CRAWLED_CACHE_PATH = Path("crawled_cache.json")
+# Persistent Storage auf Fly.io Volume (/data)
+DATA_DIR = Path(os.getenv("DATA_DIR", "/data"))
+RAG_INDEX_DIR = DATA_DIR / "rag_index_v2"
+CRAWLED_CACHE_PATH = DATA_DIR / "crawl_cache.json"
+
+# Fallback für lokale Entwicklung
+if not DATA_DIR.exists():
+    DATA_DIR = Path(".")  # Aktuelles Verzeichnis
+    RAG_INDEX_DIR = DATA_DIR / "rag_index_v2"
+    CRAWLED_CACHE_PATH = DATA_DIR / "crawl_cache.json"
 
 
 def load_cache() -> set:
@@ -98,6 +106,7 @@ def load_cache() -> set:
 
 def save_cache(cache: set):
     try:
+        CRAWLED_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
         CRAWLED_CACHE_PATH.write_text(json.dumps(list(cache)))
     except Exception as e:
         logger.warning("Cache speichern fehlgeschlagen: %s", e)

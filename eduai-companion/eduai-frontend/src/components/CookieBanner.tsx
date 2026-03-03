@@ -29,7 +29,7 @@ export default function CookieBanner() {
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Cookie-Einstellungen</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Wir verwenden Cookies fuer die Funktionalitaet der App. Optionale Cookies helfen uns, die App zu verbessern.
+              Wir verwenden Cookies für die Funktionalität der App. Optionale Cookies helfen uns, die App zu verbessern.
               Mehr Infos in unserer <a href="/datenschutz" className="text-blue-600 underline">Datenschutzerklaerung</a>.
             </p>
           </div>

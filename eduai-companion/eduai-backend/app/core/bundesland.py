@@ -1,8 +1,8 @@
-"""Bundesland-Logik: Lehrplan-spezifische Anpassungen fuer 16 deutsche Bundeslaender.
+"""Bundesland-Logik: Lehrplan-spezifische Anpassungen für 16 deutsche Bundesländer.
 
-LUMNOS Faecher-Expansion 5.0 Block 3:
-- 16 Bundeslaender mit Curriculum-Kontext
-- Bundesland-spezifischer System-Prompt fuer KI
+LUMNOS Fächer-Expansion 5.0 Block 3:
+- 16 Bundesländer mit Curriculum-Kontext
+- Bundesland-spezifischer System-Prompt für KI
 - Schultyp-Erkennung (Gymnasium, Realschule, etc.)
 """
 
@@ -152,7 +152,7 @@ def get_schultyp_prompt(schultyp: str) -> str:
         "Gymnasium": "Gymnasium-Niveau (Abitur-Vorbereitung). Hohes Anforderungsniveau.",
         "Realschule": "Realschul-Niveau (Mittlerer Schulabschluss). Praxisbezogene Erklärungen.",
         "Hauptschule": "Hauptschul-Niveau. Einfache, alltagsnahe Erklärungen mit vielen Beispielen.",
-        "Gesamtschule": "Gesamtschul-Niveau. Differenzierte Erklärungen fuer verschiedene Niveaus.",
+        "Gesamtschule": "Gesamtschul-Niveau. Differenzierte Erklärungen für verschiedene Niveaus.",
         "Fachoberschule": "FOS-Niveau. Berufsbezogene Schwerpunkte.",
         "Berufsschule": "Berufsschul-Niveau. Praxisorientierte Inhalte.",
     }

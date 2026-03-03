@@ -23,7 +23,7 @@ def _get_client() -> Optional[Groq]:
 # ── 3.1 Lernstil-Erkennung ──────────────────────────────────────────
 
 LERNSTIL_DESCRIPTIONS = {
-    "visuell": "Diagramme, Tabellen, Schritt-fuer-Schritt mit Pfeilen, ASCII-Art",
+    "visuell": "Diagramme, Tabellen, Schritt-für-Schritt mit Pfeilen, ASCII-Art",
     "auditiv": "Ausführliche Erklärungen, Analogien, Geschichten, als würdest du es erzaehlen",
     "kinesthetisch": "Sofort Übungsaufgabe geben, 'Probiere es selbst', interaktiv",
     "lesen": "Stichpunkte, nummerierte Listen, Zusammenfassung, strukturierter Text",
@@ -112,7 +112,7 @@ EMOTION_RESPONSES = {
         "- Sage 'Ich verstehe, das ist wirklich ein schwieriges Thema.'\n"
         "- Nutze die EINFACHSTE mögliche Erklärung\n"
         "- Gib ein sehr leichtes Beispiel zuerst\n"
-        "- Ermutige: 'Schritt fuer Schritt schaffen wir das!'\n"
+        "- Ermutige: 'Schritt für Schritt schaffen wir das!'\n"
     ),
     "gestresst": (
         "EMOTIONAL: Der Schüler ist GESTRESST (Prüfung/Zeitdruck). Reagiere supportiv:\n"
@@ -152,7 +152,7 @@ SOKRATES_PROMPT = (
     "REGELN:\n"
     "1. Beginne IMMER mit einer Frage: 'Was weisst du schon ueber...?'\n"
     "2. Stelle Folgefragen basierend auf der Antwort\n"
-    "3. Leite den Schüler Schritt fuer Schritt zum Verständnis\n"
+    "3. Leite den Schüler Schritt für Schritt zum Verständnis\n"
     "4. Gib NIEMALS die komplette Antwort direkt\n"
     "5. Wenn der Schüler nah dran ist, bestärke ihn\n"
     "6. Am Ende: Zusammenfassung was der Schüler SELBST herausgefunden hat\n"
@@ -163,10 +163,10 @@ SOKRATES_PROMPT = (
 # ── 3.4 Feynman-Technik ─────────────────────────────────────────────
 
 FEYNMAN_SYSTEM_PROMPT = (
-    "Der Schüler nutzt die FEYNMAN-TECHNIK. Er erklaert dir ein Thema.\n"
+    "Der Schüler nutzt die FEYNMAN-TECHNIK. Er erklärt dir ein Thema.\n"
     "DEINE AUFGABE:\n"
     "1. Bewerte sein Verständnis (1-10)\n"
-    "2. Zeige Luecken auf: 'Du hast X gut erklaert, aber bei Y fehlt noch...'\n"
+    "2. Zeige Lücken auf: 'Du hast X gut erklärt, aber bei Y fehlt noch...'\n"
     "3. Stelle Rueckfragen zu schwachen Stellen\n"
     "4. Gib Feedback: Was war gut, was kann besser werden\n"
     "5. Am Ende: Zusammenfassung + Note (1-10)\n"
@@ -188,7 +188,7 @@ async def generate_diagnostic_questions(subject: str, grade: str) -> list:
             messages=[{
                 "role": "system",
                 "content": (
-                    "Erstelle 10 kurze Diagnose-Fragen fuer einen Schüler.\n"
+                    "Erstelle 10 kurze Diagnose-Fragen für einen Schüler.\n"
                     "REGELN:\n"
                     "- Fach: {subject}, Klasse: {grade}\n"
                     "- Jede Frage testet ein ANDERES Unterthema\n"
@@ -200,7 +200,7 @@ async def generate_diagnostic_questions(subject: str, grade: str) -> list:
                 ).replace("{subject}", subject).replace("{grade}", grade),
             }, {
                 "role": "user",
-                "content": f"Erstelle 10 Diagnose-Fragen fuer {subject} Klasse {grade}",
+                "content": f"Erstelle 10 Diagnose-Fragen für {subject} Klasse {grade}",
             }],
             max_tokens=2000,
             temperature=0.5,
@@ -259,11 +259,11 @@ def analyze_gaps(answers: list, questions: list) -> dict:
 
 def _gap_recommendation(gaps: list, score: float) -> str:
     if score >= 90:
-        return "Hervorragend! Du hast kaum Luecken. Fokussiere dich auf die fortgeschrittenen Themen."
+        return "Hervorragend! Du hast kaum Lücken. Fokussiere dich auf die fortgeschrittenen Themen."
     elif score >= 70:
-        return f"Gutes Grundwissen! Arbeite an diesen Luecken: {', '.join(gaps[:3])}"
+        return f"Gutes Grundwissen! Arbeite an diesen Lücken: {', '.join(gaps[:3])}"
     elif score >= 50:
-        return f"Du hast einige Luecken. Prioritaet: {', '.join(gaps[:5])}"
+        return f"Du hast einige Lücken. Prioritaet: {', '.join(gaps[:5])}"
     else:
         return f"Viele Grundlagen fehlen noch. Starte mit: {', '.join(gaps[:3])}"
 
@@ -273,7 +273,7 @@ def _gap_recommendation(gaps: list, score: float) -> str:
 def build_weekly_plan_prompt(user_info: dict, weak_topics: list, exams: list) -> str:
     """Build a prompt for generating a personalized weekly study plan."""
     return (
-        f"Erstelle einen KONKRETEN Wochenplan (Mo-So) fuer diesen Schüler:\n\n"
+        f"Erstelle einen KONKRETEN Wochenplan (Mo-So) für diesen Schüler:\n\n"
         f"Klasse: {user_info.get('grade', '10')} | Schule: {user_info.get('school_type', 'Gymnasium')}\n"
         f"Schwaechen: {', '.join(weak_topics) if weak_topics else 'Keine bekannt'}\n"
         f"Kommende Klausuren: {', '.join(exams) if exams else 'Keine eingetragen'}\n"

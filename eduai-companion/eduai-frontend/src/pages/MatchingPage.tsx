@@ -44,7 +44,7 @@ export default function MatchingPage() {
       {/* My Weak Subjects */}
       {myWeakSubjects.length > 0 && (
         <div className="mb-6 p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-xl border border-cyan-200 dark:border-cyan-800">
-          <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300 mb-2">Deine schwachen Faecher:</p>
+          <p className="text-sm font-medium text-cyan-700 dark:text-cyan-300 mb-2">Deine schwachen Fächer:</p>
           <div className="flex flex-wrap gap-2">
             {myWeakSubjects.map((s) => (
               <span key={s} className="px-3 py-1 bg-cyan-100 dark:bg-cyan-800/50 text-cyan-700 dark:text-cyan-300 text-sm rounded-full">

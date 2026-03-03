@@ -1,11 +1,11 @@
-"""Latein-Spezial-Modus: Erweiterte KI-Faehigkeiten fuer Latein und Altgriechisch.
+"""Latein-Spezial-Modus: Erweiterte KI-Faehigkeiten für Latein und Altgriechisch.
 
-LUMNOS Faecher-Expansion 5.0 Block 2:
+LUMNOS Fächer-Expansion 5.0 Block 2:
 - Vokabel-Trainer (Stammformen, Genus, Deklination, Etymologie)
 - Grammatik-Analyse (Satz-Gliederung, Kasus, Tempora, Konstruktionen)
-- Übersetzungs-Hilfe (Schritt-fuer-Schritt)
+- Übersetzungs-Hilfe (Schritt-für-Schritt)
 - Vokabel-Abfrage (Tabellen-Format)
-- Spezielle Quiz-Typen fuer alte Sprachen
+- Spezielle Quiz-Typen für alte Sprachen
 """
 
 LATEIN_SYSTEM_PROMPT = """Du bist ein Latein-Experte und Sprach-Tutor.
@@ -25,7 +25,7 @@ LATEIN-SPEZIAL-FAEHIGKEITEN:
    - Konstruktionen erkennen (AcI, Abl. Abs., PC, NcI)
 
 3. UEBERSETZUNGS-HILFE:
-   - Schritt-fuer-Schritt uebersetzen
+   - Schritt-für-Schritt übersetzen
    - Zuerst: Verb finden -> Zeit/Modus bestimmen
    - Dann: Subjekt + Objekte zuordnen
    - Schliesslich: Konstruktionen auflösen
@@ -37,7 +37,7 @@ LATEIN-SPEZIAL-FAEHIGKEITEN:
 
 IMMER: Grammatikregeln mit Beispielen erklären.
 Bei Fehlern: Freundlich korrigieren und den Fehler erklären.
-Verwende Markdown-Tabellen fuer uebersichtliche Darstellung.
+Verwende Markdown-Tabellen für übersichtliche Darstellung.
 Biete am Ende immer eine Übungsaufgabe an.
 """
 
@@ -59,7 +59,7 @@ ALTGRIECHISCH-SPEZIAL-FAEHIGKEITEN:
    - Konstruktionen erkennen (AcI, AcP, Gen. Abs.)
 
 3. UEBERSETZUNGS-HILFE:
-   - Schritt-fuer-Schritt uebersetzen
+   - Schritt-für-Schritt übersetzen
    - Verb finden -> Tempus/Modus/Genus Verbi bestimmen
    - Subjekt + Objekte zuordnen
    - Partizipien und Infinitivkonstruktionen auflösen
@@ -72,7 +72,7 @@ IMMER: Akzente und Spiritus beachten.
 Grammatikregeln mit Beispielen aus bekannten Texten (Homer, Platon).
 """
 
-# Quiz-Typen speziell fuer alte Sprachen
+# Quiz-Typen speziell für alte Sprachen
 LATEIN_QUIZ_TYPEN = [
     "vokabeln",          # Latein -> Deutsch / Deutsch -> Latein
     "stammformen",       # Ergaenze die Stammformen
@@ -157,7 +157,7 @@ Thema: {thema or 'Übersetzung'}
 
 Gib kurze lateinische Sätze (1-2 Zeilen) und frage nach der korrekten Übersetzung.
 4 Optionen: 1 korrekte, 3 fehlerhafte Übersetzungen (typische Schüler-Fehler).
-Erklärung: Schritt-fuer-Schritt Übersetzungsweg.
+Erklärung: Schritt-für-Schritt Übersetzungsweg.
 
 FORMAT: JSON Array mit question, options (Array), correct_answer, explanation"""
 

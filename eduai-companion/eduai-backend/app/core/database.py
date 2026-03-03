@@ -606,7 +606,7 @@ async def init_db():
             UNIQUE(user_id, item_id)
         );
 
-        -- Faecher-Expansion 5.0 Block 5: Schulbuch-Scanner scans
+        -- Fächer-Expansion 5.0 Block 5: Schulbuch-Scanner scans
         CREATE TABLE IF NOT EXISTS schulbuch_scans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             scan_id TEXT UNIQUE NOT NULL,
@@ -650,7 +650,7 @@ async def init_db():
 
         CREATE INDEX IF NOT EXISTS idx_quiz_confidence_user ON quiz_confidence(user_id, fach, blind_spot);
 
-        -- Faecher-Expansion 5.0 Block 4: Lehrplan-Themen cache
+        -- Fächer-Expansion 5.0 Block 4: Lehrplan-Themen cache
         CREATE TABLE IF NOT EXISTS lehrplan_themen (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             fach TEXT NOT NULL,
@@ -730,12 +730,12 @@ async def init_db():
         ("users", "streak_days", "INTEGER DEFAULT 0"),
         ("users", "longest_streak", "INTEGER DEFAULT 0"),
         ("users", "last_active", "TEXT DEFAULT ''"),
-        # Faecher-Expansion 5.0 Block 3: Bundesland fields
+        # Fächer-Expansion 5.0 Block 3: Bundesland fields
         ("users", "bundesland", "TEXT DEFAULT ''"),
         ("users", "klasse", "INTEGER DEFAULT 10"),
         ("users", "schultyp_detail", "TEXT DEFAULT 'Gymnasium'"),
         # Final Polish 5.1 Block 1: Additional user profile fields
-        ("users", "favoriten_faecher", "TEXT DEFAULT '[]'"),
+        ("users", "favoriten_fächer", "TEXT DEFAULT '[]'"),
     ]
     for table, column, col_type in migrations:
         try:

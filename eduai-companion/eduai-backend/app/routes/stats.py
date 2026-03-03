@@ -295,7 +295,7 @@ async def ki_analyse(
         analysis = (
             f"Deine Statistiken: {overview['total_quizzes']} Quizze, "
             f"{overview['quiz_success_rate']}% Erfolgsrate, {overview['current_streak']} Tage Streak. "
-            "Tipp: Fokussiere dich auf deine schwachen Faecher!"
+            "Tipp: Fokussiere dich auf deine schwachen Fächer!"
         )
 
     return {"analysis": analysis, "generated_by": "groq"}
@@ -477,7 +477,7 @@ async def fach_radar(
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Faecher-Expansion 5.0 Block 7: Fach-Radar for all 32 subjects.
+    """Fächer-Expansion 5.0 Block 7: Fach-Radar for all 32 subjects.
 
     Returns per-subject scores for radar chart display.
     Automatically works with any subject the user has quiz data for.
@@ -509,12 +509,12 @@ async def fach_radar(
     )
     rows = await cursor.fetchall()
 
-    faecher = []
+    fächer = []
     for r in rows:
         rd = dict(r)
         subj = rd["subject"]
         score = rd.get("avg_score", 0) or 0
-        faecher.append({
+        fächer.append({
             "fach": subj,
             "emoji": FACH_EMOJI.get(subj, "📘"),
             "score": round(score, 1),
@@ -522,12 +522,12 @@ async def fach_radar(
             "best_score": rd.get("best_score", 0) or 0,
         })
 
-    staerkstes = faecher[0]["fach"] if faecher else ""
-    schwaechstes = faecher[-1]["fach"] if faecher else ""
-    gesamt_score = round(sum(f["score"] for f in faecher) / max(len(faecher), 1), 1)
+    staerkstes = fächer[0]["fach"] if fächer else ""
+    schwaechstes = fächer[-1]["fach"] if fächer else ""
+    gesamt_score = round(sum(f["score"] for f in fächer) / max(len(fächer), 1), 1)
 
     return {
-        "faecher": faecher,
+        "fächer": fächer,
         "staerkstes_fach": staerkstes,
         "schwaechstes_fach": schwaechstes,
         "gesamt_score": gesamt_score,

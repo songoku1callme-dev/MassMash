@@ -69,7 +69,7 @@ async def send_welcome_email(to: str, username: str) -> bool:
       <li>20 KI-Persönlichkeiten die dir alles erklären</li>
       <li>Tägliche Turniere gegen andere Schüler</li>
       <li>IQ-Test mit wissenschaftlichen Fragen</li>
-      <li>Abitur-Simulation fuer alle 16 Faecher</li>
+      <li>Abitur-Simulation für alle 16 Fächer</li>
     </ul>
     <div style="text-align: center; margin: 24px 0;">
       <a href="https://lumnos-companion.vercel.app" style="display: inline-block; background: linear-gradient(135deg, #4f46e5, #7c3aed);
@@ -85,7 +85,7 @@ async def send_welcome_email(to: str, username: str) -> bool:
 async def send_password_reset_email(to: str, username: str, reset_token: str) -> bool:
     """Template 2: Password reset email."""
     content = f"""
-    <h2 style="color: #1f2937;">Passwort zuruecksetzen</h2>
+    <h2 style="color: #1f2937;">Passwort zurücksetzen</h2>
     <p style="color: #4b5563; line-height: 1.6;">
       Hallo {username}, du hast ein neues Passwort angefordert.
     </p>
@@ -97,7 +97,7 @@ async def send_password_reset_email(to: str, username: str, reset_token: str) ->
       Dieser Code ist 30 Minuten gueltig. Falls du kein Passwort-Reset angefordert hast, ignoriere diese Email.
     </p>
     """
-    return await _send_email(to, "Passwort zuruecksetzen - Lumnos", _base_template(content))
+    return await _send_email(to, "Passwort zurücksetzen - Lumnos", _base_template(content))
 
 
 async def send_parent_link_email(
@@ -177,7 +177,7 @@ async def send_weekly_report_email(
         <p style="color:#6b7280;font-size:12px;margin:4px 0 0;">Durchschnitt</p>
       </div>
     </div>
-    <p style="color:#374151;font-weight:600;margin:16px 0 8px;">Staerkste Faecher:</p>
+    <p style="color:#374151;font-weight:600;margin:16px 0 8px;">Stärkste Fächer:</p>
     <div>{strong_html}</div>
     <p style="color:#374151;font-weight:600;margin:16px 0 8px;">Zum Ueben:</p>
     <div>{weak_html}</div>

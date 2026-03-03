@@ -94,6 +94,8 @@ class ChatResponse(BaseModel):
     zusammenfassung: str = ""
     quellen: List[str] = []
     internet_genutzt: bool = False
+    modell_genutzt: str = ""
+    multi_step: bool = False
 
 
 class ChatSessionResponse(BaseModel):

@@ -128,7 +128,7 @@ export default function BattlePassPage() {
           />
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-          {status.progress_percent.toFixed(1)}% zum naechsten Level
+          {status.progress_percent.toFixed(1)}% zum nächsten Level
         </p>
       </div>
 

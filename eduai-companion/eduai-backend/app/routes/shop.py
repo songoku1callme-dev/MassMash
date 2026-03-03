@@ -24,7 +24,7 @@ SHOP_ITEMS = [
     {"id": "frame_gold", "name": "Gold Profilrahmen", "category": "frame", "price": 750, "icon": "crown"},
     {"id": "frame_diamond", "name": "Diamant Profilrahmen", "category": "frame", "price": 1500, "icon": "gem"},
     {"id": "boost_double_xp", "name": "Doppel-XP (1 Stunde)", "category": "boost", "price": 200, "icon": "zap"},
-    {"id": "boost_hint", "name": "Hint-Token fuer IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb"},
+    {"id": "boost_hint", "name": "Hint-Token für IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb"},
     {"id": "boost_skip", "name": "Frage-Ueberspringen Token", "category": "boost", "price": 150, "icon": "skip-forward"},
 ]
 
@@ -118,7 +118,7 @@ async def buy_item(
     await db.execute(
         """INSERT INTO activity_log (user_id, activity_type, subject, description, metadata)
         VALUES (?, 'shop_purchase', 'shop', ?, ?)""",
-        (user_id, f"Gekauft: {item['name']} fuer {item['price']} XP",
+        (user_id, f"Gekauft: {item['name']} für {item['price']} XP",
          json.dumps({"item_id": item_id, "price": item["price"]})),
     )
     await db.commit()

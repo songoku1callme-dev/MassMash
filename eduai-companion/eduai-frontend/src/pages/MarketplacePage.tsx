@@ -54,7 +54,7 @@ export default function MarketplacePage() {
           Lehrer-Marketplace
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Quiz-Sets, Karteikarten und Lernplaene von Lehrern — fuer Schüler gemacht!
+          Quiz-Sets, Karteikarten und Lernpläne von Lehrern — für Schüler gemacht!
         </p>
       </div>
 
@@ -64,7 +64,7 @@ export default function MarketplacePage() {
           { value: "", label: "Alle" },
           { value: "quiz_set", label: "Quiz-Sets" },
           { value: "flashcard_deck", label: "Karteikarten" },
-          { value: "lernplan", label: "Lernplaene" },
+          { value: "lernplan", label: "Lernpläne" },
         ].map((f) => (
           <button
             key={f.value}
@@ -88,7 +88,7 @@ export default function MarketplacePage() {
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <Store className="w-16 h-16 mx-auto mb-4 opacity-30" />
           <p className="text-lg">Noch keine Items im Marketplace</p>
-          <p className="text-sm mt-1">Lehrer koennen hier bald ihre Inhalte verkaufen.</p>
+          <p className="text-sm mt-1">Lehrer können hier bald ihre Inhalte verkaufen.</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

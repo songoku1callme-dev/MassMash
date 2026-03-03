@@ -148,7 +148,7 @@ async def claim_reward(
 
     rd = dict(row)
     if rd["current_xp"] < reward["xp_required"]:
-        raise HTTPException(status_code=400, detail="Nicht genug XP fuer dieses Level")
+        raise HTTPException(status_code=400, detail="Nicht genug XP für dieses Level")
 
     try:
         claimed = json.loads(rd["claimed_rewards"])

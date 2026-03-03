@@ -1,6 +1,6 @@
 """Schulbuch-Scanner: OCR -> Quiz + Karteikarten (Pro/Max Feature).
 
-LUMNOS Faecher-Expansion 5.0 Block 5:
+LUMNOS Fächer-Expansion 5.0 Block 5:
 - Image upload with OCR text extraction
 - KI-powered analysis (Hauptthema, Lernziele, Schlüsselbegriffe)
 - Auto-generate quiz questions from scanned text
@@ -65,11 +65,11 @@ async def _groq_analyze(text: str, fach: str, groq_key: str) -> dict:
 "{text[:3000]}"
 
 Extrahiere:
-1. HAUPTTHEMA: Was wird erklaert? (1 Satz)
+1. HAUPTTHEMA: Was wird erklärt? (1 Satz)
 2. LERNZIELE: Was soll der Schüler lernen? (3-5 Punkte als Array)
 3. SCHLUESSELBEGRIFFE: Wichtigste Fachbegriffe (max 10, als Array)
 4. SCHWIERIGKEITSGRAD: leicht/mittel/schwer
-5. KLASSE: Fuer welche Klasse ist das? (Schaetzung als Zahl)
+5. KLASSE: Für welche Klasse ist das? (Schätzung als Zahl)
 
 FORMAT: JSON mit keys: hauptthema, lernziele, schluesselbegriffe, schwierigkeitsgrad, klasse""",
                 },
@@ -117,7 +117,7 @@ async def _groq_generate_quiz(text: str, fach: str, difficulty: str, groq_key: s
                     "content": f"""Erstelle 10 Quizfragen DIREKT aus diesem Schulbuch-Text:
 "{text[:3000]}"
 
-WICHTIG: Fragen sollen NUR aus dem gescannten Text beantwortet werden koennen!
+WICHTIG: Fragen sollen NUR aus dem gescannten Text beantwortet werden können!
 Kein Allgemeinwissen - nur was im Buch steht.
 Fach: {fach}
 Schwierigkeit: {difficulty}
@@ -154,13 +154,13 @@ async def _groq_generate_flashcards(begriffe: list, fach: str, groq_key: str) ->
                 {
                     "role": "system",
                     "content": (
-                        "Du bist ein Karteikarten-Generator. Erstelle Karteikarten fuer Fachbegriffe. "
+                        "Du bist ein Karteikarten-Generator. Erstelle Karteikarten für Fachbegriffe. "
                         "Antworte NUR mit einem JSON Array."
                     ),
                 },
                 {
                     "role": "user",
-                    "content": f"""Erstelle Karteikarten fuer diese Schluesselbegriffe aus dem Schulbuch:
+                    "content": f"""Erstelle Karteikarten für diese Schlüsselbegriffe aus dem Schulbuch:
 {json.dumps(begriffe, ensure_ascii=False)}
 
 Fach: {fach}

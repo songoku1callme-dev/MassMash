@@ -113,7 +113,7 @@ export default function IntelligencePage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">KI-Intelligenz</h1>
-      <p className="text-gray-500 dark:text-gray-400 mb-6">Smarte Lern-Tools fuer personalisiertes Lernen</p>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">Smarte Lern-Tools für personalisiertes Lernen</p>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -164,7 +164,7 @@ export default function IntelligencePage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-2 dark:text-white">Feynman-Technik</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
-            Erkläre ein Thema in eigenen Worten. Die KI bewertet dein Verständnis (1-10) und zeigt Luecken auf.
+            Erkläre ein Thema in eigenen Worten. Die KI bewertet dein Verständnis (1-10) und zeigt Lücken auf.
           </p>
           <input
             value={feynmanThema}
@@ -285,7 +285,7 @@ export default function IntelligencePage() {
               </div>
               {scanResult.gaps.length > 0 && (
                 <div className="mb-3">
-                  <p className="font-medium text-red-600 dark:text-red-400 mb-1">Luecken:</p>
+                  <p className="font-medium text-red-600 dark:text-red-400 mb-1">Lücken:</p>
                   <div className="flex flex-wrap gap-2">
                     {scanResult.gaps.map((g: string, i: number) => (
                       <span key={i} className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-full text-sm">{g}</span>

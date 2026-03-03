@@ -1191,10 +1191,10 @@ def generate_quiz(
 def get_fach_regeln(fach: str) -> str:
     """Return subject-specific quiz generation rules for all 32 subjects.
 
-    Final Polish 5.1 Block 2: Fach-spezifische Regeln fuer Groq-basierte Quiz-Generierung.
+    Final Polish 5.1 Block 2: Fach-spezifische Regeln für Groq-basierte Quiz-Generierung.
     """
     regeln: dict[str, str] = {
-        "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklärung. LaTeX fuer Formeln: $x^2$. Immer Probe angeben.",
+        "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklärung. LaTeX für Formeln: $x^2$. Immer Probe angeben.",
         "Physik": "Formeln + Einheiten immer angeben. Realweltbezug herstellen. Rechenaufgaben bevorzugen.",
         "Chemie": "Reaktionsgleichungen ausgleichen. Stoffnamen + Formeln. Sicherheitshinweise erwähnen.",
         "Biologie": "Fachbegriffe lateinisch + deutsch. Schaubilder beschreiben. Evolutionaere Zusammenhaenge.",
@@ -1210,8 +1210,8 @@ def get_fach_regeln(fach: str) -> str:
         "Geschichte": "Jahreszahlen + Epochen. Quellenanalyse-Methodik. Ursache-Wirkungs-Ketten.",
         "Geografie": "Karten-Bezug herstellen. Klimazonen + Vegetationszonen. Aktuelle Statistiken.",
         "Politik": "Grundgesetz-Artikel zitieren. Institutionen erklären. Aktuelle Bezüge.",
-        "Wirtschaft": "Formeln fuer Berechnungen. Grafiken beschreiben. Marktmodelle erklären.",
-        "Informatik": "Code-Beispiele in Python/Java. Algorithmen Schritt-fuer-Schritt. Big-O-Notation.",
+        "Wirtschaft": "Formeln für Berechnungen. Grafiken beschreiben. Marktmodelle erklären.",
+        "Informatik": "Code-Beispiele in Python/Java. Algorithmen Schritt-für-Schritt. Big-O-Notation.",
         "Astronomie": "Groessenverhaeltnisse nennen. Formeln + Einheiten. Beobachtungstipps.",
         "Technik": "Schaltplaene beschreiben. Materialien + Eigenschaften. Sicherheitsregeln.",
         "Psychologie": "Studien zitieren. Fachbegriffe definieren. Alltags-Beispiele geben.",
@@ -1251,7 +1251,7 @@ def generate_explain_why_wrong(
         f"**Nicht ganz richtig!** Die korrekte Antwort ist: **{richtige_antwort}**\n\n"
         f"{erklärung}\n\n"
         f"**Tipp:** {fach_context.split('.')[0]}. "
-        f"Versuche es beim naechsten Mal mit diesem Wissen!"
+        f"Versuche es beim nächsten Mal mit diesem Wissen!"
     )
 
 

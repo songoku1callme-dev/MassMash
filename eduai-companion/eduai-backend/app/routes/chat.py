@@ -17,6 +17,8 @@ from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, d
 from app.services.latein_modus import get_spezial_system_prompt, is_latein_modus_fach
 from app.services.internet_ki import chat_mit_internet
 from app.core.bundesland import get_bundesland_prompt
+from app.services.model_router import route_request, execute_routed_chat
+from app.services.prompt_optimizer import get_prompt_for_fach
 
 logger = logging.getLogger(__name__)
 
@@ -331,21 +333,39 @@ async def send_message(
             combined_prompt += f"\nWICHTIG: {extra_instruction}\n"
             break
 
-    # Final Polish 5.1 Block 6: Use Multi-Step Reasoning for Pro/Max users
-    if user_tier in ("pro", "max"):
-        ai_response = deep_think_answer(
-            prompt=request.message,
-            system_prompt=combined_prompt,
-            subject=subject,
-            level=level,
-            language=request.language,
-            chat_history=messages,
-            rag_context=rag_context,
-            web_context=web_context,
-            is_pro=is_pro,
-            temperature_override=personality_temperature,
-        )
-    else:
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Integration Fix 1: Model Router + Prompt Optimizer
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+    # Optimierten Prompt verwenden (falls vorhanden)
+    combined_prompt = get_prompt_for_fach(subject, combined_prompt)
+
+    # Model Router entscheidet: 8b-instant vs 70b-versatile vs Internet
+    routing = route_request(request.message, subject, user_tier)
+    logger.info(
+        "Model-Routing: %s | multi_step=%s | internet=%s | %s",
+        routing.modell, routing.multi_step, routing.internet, routing.begründung,
+    )
+
+    # Routed Chat ausführen (Internet + Multi-Step + Qualitäts-Check)
+    routed_result = await execute_routed_chat(
+        frage=request.message,
+        fach=subject,
+        tier=user_tier,
+        verlauf=[{"role": m.get("role", "user"), "content": m.get("content", "")}
+                 for m in messages[-8:] if m.get("content")],
+        system_prompt=combined_prompt,
+    )
+
+    ai_response = routed_result.get("antwort", "")
+    modell_genutzt = routed_result.get("modell_genutzt", routing.modell)
+    router_internet = routed_result.get("internet_genutzt", False)
+    router_multi_step = routed_result.get("multi_step", False)
+    router_web_quellen = routed_result.get("web_quellen", [])
+
+    # Fallback: wenn Router keine Antwort liefert, Standard-Pfad
+    if not ai_response:
+        logger.warning("Router lieferte leere Antwort — Fallback auf call_groq_llm")
         ai_response = call_groq_llm(
             prompt=request.message,
             system_prompt=combined_prompt,
@@ -358,6 +378,15 @@ async def send_message(
             temperature_override=personality_temperature,
             web_context=web_context,
         )
+
+    # Internet-Status aus Router übernehmen
+    if router_internet:
+        internet_genutzt = True
+    if router_web_quellen:
+        for wq in router_web_quellen:
+            url = wq.get("url", "") if isinstance(wq, dict) else str(wq)
+            if url and url not in web_sources:
+                web_sources.append(url)
 
     # Block 4: Auto-Karteikarten + Zusammenfassung generieren
     karteikarten = []
@@ -459,6 +488,8 @@ async def send_message(
         zusammenfassung=zusammenfassung,
         quellen=all_sources,
         internet_genutzt=internet_genutzt,
+        modell_genutzt=modell_genutzt,
+        multi_step=router_multi_step,
     )
 
 

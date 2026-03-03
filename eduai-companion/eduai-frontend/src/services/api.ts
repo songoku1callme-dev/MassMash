@@ -349,6 +349,8 @@ export interface ChatResponse {
   zusammenfassung: string;
   quellen: string[];
   internet_genutzt: boolean;
+  modell_genutzt: string;
+  multi_step: boolean;
 }
 
 export interface ChatSession {

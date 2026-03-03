@@ -83,8 +83,41 @@ async def lifespan(app: FastAPI):
                 ghost_weekly_report, CronTrigger(day_of_week="sun", hour=20, minute=0),
                 id="ghost_weekly_report", replace_existing=True,
             )
+
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            # Self-Evolution Jobs (Fix 2)
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            import pytz
+            tz_berlin = pytz.timezone("Europe/Berlin")
+
+            # Nightly Deep Crawl — 03:00 Berlin
+            from app.services.deep_crawler import nightly_knowledge_update
+            scheduler.add_job(
+                nightly_knowledge_update,
+                CronTrigger(hour=3, minute=0, timezone=tz_berlin),
+                id="nightly_crawl", replace_existing=True,
+            )
+
+            # Weekly Prompt Optimization — Montag 04:00 Berlin
+            from app.services.prompt_optimizer import (
+                weekly_prompt_optimization, load_approved_prompts,
+            )
+            scheduler.add_job(
+                weekly_prompt_optimization,
+                CronTrigger(day_of_week="mon", hour=4, minute=0, timezone=tz_berlin),
+                id="prompt_optimization", replace_existing=True,
+            )
+
+            # Load approved prompts on startup
+            try:
+                import asyncio
+                asyncio.ensure_future(load_approved_prompts())
+                logger.info("Approved prompts werden geladen...")
+            except Exception as prompt_err:
+                logger.warning("Prompt-Laden fehlgeschlagen: %s", prompt_err)
+
             scheduler.start()
-            logger.info("APScheduler gestartet mit %d Jobs", len(scheduler.get_jobs()))
+            logger.info("✅ Scheduler gestartet: %d Jobs registriert", len(scheduler.get_jobs()))
         except Exception as exc:
             logger.warning("APScheduler start failed (non-fatal): %s", exc)
 
@@ -148,7 +181,7 @@ async def _spaced_repetition_job():
                 uid = dict(u)["user_id"]
                 await db.execute(
                     """INSERT INTO notifications (user_id, title, message, notification_type)
-                    VALUES (?, 'Wiederholung faellig', 'Du hast Karteikarten die wiederholt werden muessen!', 'reminder')""",
+                    VALUES (?, 'Wiederholung fällig', 'Du hast Karteikarten die wiederholt werden müssen!', 'reminder')""",
                     (uid,),
                 )
             await db.commit()
@@ -223,11 +256,11 @@ async def _proactive_tips_job():
             )
             users = await cursor.fetchall()
             tips = [
-                "Tipp: Wiederhole heute dein schwaecstes Fach!",
+                "Tipp: Wiederhole heute dein schwächstes Fach!",
                 "Tipp: Ein kurzes Quiz hilft beim Merken!",
-                "Tipp: Probiere den IQ-Test fuer neue Herausforderungen!",
+                "Tipp: Probiere den IQ-Test für neue Herausforderungen!",
                 "Tipp: Nimm am Turnier teil und gewinne XP!",
-                "Tipp: Erstelle Karteikarten fuer effektives Lernen!",
+                "Tipp: Erstelle Karteikarten für effektives Lernen!",
             ]
             import random
             for u in users:

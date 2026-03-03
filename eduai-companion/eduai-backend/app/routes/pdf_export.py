@@ -205,7 +205,7 @@ async def export_lernplan_pdf(
     ])
 
     username = current_user.get("username", "Schüler")
-    pdf_buffer = _generate_simple_pdf(f"Lernplan fuer {username}", "\n".join(lines), username)
+    pdf_buffer = _generate_simple_pdf(f"Lernplan für {username}", "\n".join(lines), username)
 
     return StreamingResponse(
         pdf_buffer,

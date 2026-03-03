@@ -84,7 +84,7 @@ export default function ScannerPage() {
               Pro-Feature
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Der Schulbuch-Scanner ist ein exklusives Feature fuer Pro- und Max-Abonnenten.
+              Der Schulbuch-Scanner ist ein exklusives Feature für Pro- und Max-Abonnenten.
               Scanne Schulbuchseiten und erhalte automatisch Quiz-Fragen und Karteikarten!
             </p>
             <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-4">
@@ -97,7 +97,7 @@ export default function ScannerPage() {
             </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowUpsell(false)} className="flex-1">
-                Zurueck
+                Zurück
               </Button>
               <Button className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600">
                 Upgrade auf Pro

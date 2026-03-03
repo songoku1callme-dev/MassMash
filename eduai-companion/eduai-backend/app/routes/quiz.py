@@ -176,7 +176,7 @@ async def generate_quiz_endpoint(
     except Exception:
         pass  # Table may not exist yet
 
-    # Faecher-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
+    # Fächer-Expansion 5.0 Block 2: Latein/Altgriechisch Spezial-Modus
     latein_extra_prompt = ""
     if is_latein_modus_fach(request.subject):
         # Distribute quiz types according to LATEIN_QUIZ_VERTEILUNG
@@ -303,7 +303,7 @@ async def check_answer(
             if recent_errors >= 5:
                 intervention = (
                     f"Du hast {recent_errors} Fehler hintereinander gemacht. "
-                    "Kein Problem! Versuche es mit dem Tutor-Modus — dort erkläre ich dir alles Schritt fuer Schritt. "
+                    "Kein Problem! Versuche es mit dem Tutor-Modus — dort erkläre ich dir alles Schritt für Schritt. "
                     "Manchmal hilft auch eine kurze Pause."
                 )
         except Exception:
@@ -495,7 +495,7 @@ async def submit_quiz(
                     user_id,
                     f"Fehlermuster erkannt in {request.subject}",
                     f"Du hast {recent_errors} Fehler in der letzten Stunde gemacht. "
-                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 fuer einfachere Erklärungen. "
+                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 für einfachere Erklärungen. "
                     "Manchmal hilft auch eine kurze Pause!",
                 ),
             )

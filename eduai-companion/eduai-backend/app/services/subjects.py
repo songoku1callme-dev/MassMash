@@ -1,6 +1,6 @@
-"""Vollständige Faecher-Datenbank: 32 Faecher in 6 Kategorien.
+"""Vollständige Fächer-Datenbank: 32 Fächer in 6 Kategorien.
 
-LUMNOS Faecher-Expansion 5.0 Block 1:
+LUMNOS Fächer-Expansion 5.0 Block 1:
 - 32 subjects organized in 6 categories
 - 50+ topics per new subject
 - Metadata: kategorie, emoji, pflicht, spezial mode
@@ -668,7 +668,7 @@ THEMEN_ERWEITERUNG: dict[str, list[str]] = {
         "Rawls: Theorie der Gerechtigkeit",
         "Habermas: Diskursethik",
         "Hannah Arendt: Banalitaet des Boesen",
-        "Erkenntnistheorie: Was koennen wir wissen?",
+        "Erkenntnistheorie: Was können wir wissen?",
         "Wissenschaftstheorie (Popper, Kuhn)",
         "Ethik: Grundbegriffe",
         "Angewandte Ethik: Medizinethik",
@@ -999,7 +999,7 @@ THEMEN_ERWEITERUNG: dict[str, list[str]] = {
         "Szenische Interpretation",
         "Theaterbesuch: Nachbereitung",
         "Theaterkritik schreiben",
-        "Dramenanalyse fuer DS",
+        "Dramenanalyse für DS",
         "Performance Art",
         "Theater und Film (Unterschiede)",
         "Theater und digitale Medien",
@@ -1160,7 +1160,7 @@ FACH_TO_SUBJECT_ID: dict[str, str] = {
 SUBJECT_ID_TO_FACH: dict[str, str] = {v: k for k, v in FACH_TO_SUBJECT_ID.items()}
 
 
-def get_faecher_by_kategorie() -> dict[str, list[dict]]:
+def get_fächer_by_kategorie() -> dict[str, list[dict]]:
     """Get all subjects grouped by category."""
     result: dict[str, list[dict]] = {k: [] for k in KATEGORIEN}
     for fach, info in ALLE_FAECHER.items():

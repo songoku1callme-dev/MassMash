@@ -419,7 +419,7 @@ async def seed_themen(
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Faecher-Expansion 5.0 Block 4: Lehrplan-konforme Quiz-Generierung.
+    """Fächer-Expansion 5.0 Block 4: Lehrplan-konforme Quiz-Generierung.
 
     Uses Tavily API to search for real curriculum documents, then Groq to
     extract 50 concrete learning objectives. Admin only.
@@ -479,7 +479,7 @@ async def seed_themen(
                         "role": "system",
                         "content": (
                             "Du bist ein Lehrplan-Experte. Extrahiere aus den Suchergebnissen "
-                            "50 konkrete Lernziele/Themen fuer das Fach. "
+                            "50 konkrete Lernziele/Themen für das Fach. "
                             "Antworte NUR mit einem JSON Array von Strings."
                         ),
                     },

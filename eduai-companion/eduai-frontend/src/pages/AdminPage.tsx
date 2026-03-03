@@ -366,7 +366,7 @@ export default function AdminPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-indigo-600" />
-                Beliebteste Faecher
+                Beliebteste Fächer
               </CardTitle>
             </CardHeader>
             <CardContent>

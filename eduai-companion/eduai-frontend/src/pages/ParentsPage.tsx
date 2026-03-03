@@ -156,7 +156,7 @@ export default function ParentsPage() {
               {/* Weak Subjects */}
               {child.stats?.weak_subjects?.length > 0 && (
                 <div className="px-6 pb-4">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Schwache Faecher:</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Schwache Fächer:</p>
                   <div className="flex flex-wrap gap-2">
                     {child.stats.weak_subjects.map((s: string) => (
                       <span key={s} className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs rounded-full">

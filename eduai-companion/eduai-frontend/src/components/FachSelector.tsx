@@ -1,5 +1,5 @@
 /**
- * FachSelector.tsx — Faecher-Expansion 5.0 Block 6
+ * FachSelector.tsx — Fächer-Expansion 5.0 Block 6
  *
  * Searchable subject selector with:
  * - 32 subjects grouped by 6 categories
@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { Search, Star } from "lucide-react";
 
-// ── 32 Faecher in 6 Kategorien ──────────────────────────────────────
+// ── 32 Fächer in 6 Kategorien ──────────────────────────────────────
 export interface FachItem {
   id: string;
   name: string;
@@ -95,7 +95,7 @@ function setFavoriten(ids: string[]) {
 interface FachSelectorProps {
   selected: string;
   onSelect: (id: string) => void;
-  /** If true, show "Alle Faecher" as first option */
+  /** If true, show "Alle Fächer" as first option */
   showAll?: boolean;
 }
 
@@ -127,7 +127,7 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
   }, [search]);
 
   // Split into favoriten + rest, grouped by category
-  const favFaecher = useMemo(
+  const favFächer = useMemo(
     () => filtered.filter((f) => favoriten.includes(f.id)),
     [filtered, favoriten],
   );
@@ -157,10 +157,10 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
       </div>
 
       <div className="flex flex-wrap gap-1.5 max-h-[320px] overflow-y-auto pr-1">
-        {/* "Alle Faecher" chip */}
+        {/* "Alle Fächer" chip */}
         {showAll && (
           <FachChip
-            fach={{ id: "general", name: "Alle Faecher", emoji: "✨", kategorie: "" }}
+            fach={{ id: "general", name: "Alle Fächer", emoji: "✨", kategorie: "" }}
             isSelected={selected === "general"}
             isFavorit={false}
             onSelect={() => onSelect("general")}
@@ -169,12 +169,12 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
         )}
 
         {/* Favoriten section */}
-        {favFaecher.length > 0 && (
+        {favFächer.length > 0 && (
           <>
             <div className="w-full text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider mt-1">
-              Meine Faecher
+              Meine Fächer
             </div>
-            {favFaecher.map((f) => (
+            {favFächer.map((f) => (
               <FachChip
                 key={f.id}
                 fach={f}

@@ -34,7 +34,7 @@ async def datenschutzerklärung():
             },
             {
                 "title": "4. KI-Verarbeitung (Groq)",
-                "content": "Chat-Nachrichten werden an die Groq API gesendet fuer KI-Antworten. Es werden keine personenbezogenen Daten (Name, E-Mail) an Groq uebermittelt. Nur der Fragetext und minimaler Kontext."
+                "content": "Chat-Nachrichten werden an die Groq API gesendet für KI-Antworten. Es werden keine personenbezogenen Daten (Name, E-Mail) an Groq übermittelt. Nur der Fragetext und minimaler Kontext."
             },
             {
                 "title": "5. Zahlungsdaten (Stripe)",
@@ -67,9 +67,9 @@ async def impressum():
         "title": "Impressum",
         "content": {
             "name": "Lumnos Companion",
-            "description": "KI-gestütztes Lernen fuer deutsche Schüler",
+            "description": "KI-gestütztes Lernen für deutsche Schüler",
             "email": "support@lumnos-companion.de",
-            "haftungsausschluss": "Die Inhalte dieser App wurden mit groesster Sorgfalt erstellt. Fuer die Richtigkeit, Vollständigkeit und Aktualitaet der Inhalte koennen wir jedoch keine Gewaehr uebernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
+            "haftungsausschluss": "Die Inhalte dieser App wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
             "urheberrecht": "Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.",
         },
     }

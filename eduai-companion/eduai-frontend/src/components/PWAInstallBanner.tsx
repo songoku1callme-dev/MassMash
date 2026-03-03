@@ -68,7 +68,7 @@ export default function PWAInstallBanner() {
               Lumnos installieren
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Installiere die App auf deinem Handy fuer schnellen Zugriff — auch offline!
+              Installiere die App auf deinem Handy für schnellen Zugriff — auch offline!
             </p>
             <div className="flex gap-2 mt-3">
               <Button onClick={handleInstall} size="sm" className="gap-1.5 text-xs">

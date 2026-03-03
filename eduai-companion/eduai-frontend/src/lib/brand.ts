@@ -1,6 +1,6 @@
 export const BRAND = {
     name: "Lumnos",
-    tagline: "Dein KI-Lerncoach. Personalisiert. Intelligent. Fuer dich.",
+    tagline: "Dein KI-Lerncoach. Personalisiert. Intelligent. Für dich.",
     tagline_short: "Lerne smarter mit KI",
     description: "Lumnos ist Deutschlands intelligenteste Lernplattform.",
     domain: "lumnos.de",
@@ -10,7 +10,7 @@ export const BRAND = {
     logo_emoji: "\u2726",
     founded: "2026",
 
-    // Fach-Farben fuer Neon-Glow
+    // Fach-Farben für Neon-Glow
     fach_farben: {
         "Mathe":       "#3b82f6",  // Blau
         "Physik":      "#06b6d4",  // Cyan

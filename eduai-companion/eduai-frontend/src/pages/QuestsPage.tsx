@@ -97,7 +97,7 @@ export default function QuestsPage() {
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 text-center">
           <Sparkles className="w-8 h-8 text-green-600 mx-auto mb-2" />
           <p className="text-lg font-bold text-green-700 dark:text-green-300">Alle Quests erledigt!</p>
-          <p className="text-sm text-green-600 dark:text-green-400">Komm morgen wieder fuer neue Quests.</p>
+          <p className="text-sm text-green-600 dark:text-green-400">Komm morgen wieder für neue Quests.</p>
         </div>
       )}
 

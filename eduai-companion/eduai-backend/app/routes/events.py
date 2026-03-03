@@ -26,7 +26,7 @@ SEASONAL_EVENTS = [
         "rewards": {"badge": "abi_ready", "xp_bonus": 500},
         "challenges": [
             {"title": "50 Abitur-Quizze", "target": 50, "xp": 200},
-            {"title": "Alle Faecher mindestens 1x", "target": 16, "xp": 300},
+            {"title": "Alle Fächer mindestens 1x", "target": 16, "xp": 300},
             {"title": "5 Abitur-Simulationen", "target": 5, "xp": 500},
         ],
     },
@@ -40,7 +40,7 @@ SEASONAL_EVENTS = [
         "rewards": {"badge": "winter_learner", "xp_bonus": 300},
         "challenges": [
             {"title": "24 Tage am Stueck lernen", "target": 24, "xp": 500},
-            {"title": "12 verschiedene Faecher", "target": 12, "xp": 200},
+            {"title": "12 verschiedene Fächer", "target": 12, "xp": 200},
         ],
     },
     {
@@ -127,7 +127,7 @@ async def get_event_progress(
                 AND created_at BETWEEN ? AND ?""",
                 (user_id, event["start_date"], event["end_date"]),
             )
-        elif "Faecher" in challenge["title"] or "Faecher" in challenge["title"]:
+        elif "Fächer" in challenge["title"] or "Fächer" in challenge["title"]:
             cursor = await db.execute(
                 """SELECT COUNT(DISTINCT subject) as cnt FROM quiz_results
                 WHERE user_id = ? AND completed_at BETWEEN ? AND ?""",
