@@ -10,6 +10,8 @@ interface ChatState {
   isStreaming: boolean;
   streamStatus: string;
   streamingText: string;
+  thinkingText: string;
+  isThinking: boolean;
   currentSubject: string;
   language: string;
   detailLevel: string;
@@ -35,6 +37,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isStreaming: false,
   streamStatus: "",
   streamingText: "",
+  thinkingText: "",
+  isThinking: false,
   currentSubject: "general",
   language: "de",
   detailLevel: "normal",
@@ -134,6 +138,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isStreaming: true,
       streamStatus: "Verbinde...",
       streamingText: "",
+      thinkingText: "",
+      isThinking: false,
     });
 
     try {
@@ -205,6 +211,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
                 }
                 return { messages: msgs, streamingText: fullText };
               });
+            } else if (currentEventType === "thinking_start") {
+              set({ isThinking: true, streamStatus: "Lumnos überlegt..." });
+            } else if (currentEventType === "thinking_end") {
+              set({ isThinking: false, thinkingText: data.text || "", streamStatus: "" });
             } else if (currentEventType === "correction") {
               fullText = "";
               set({ streamStatus: "Korrigiere Antwort..." });
@@ -247,6 +257,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
             internet_genutzt: (metaData.internet_genutzt as boolean) || false,
             is_verified: (metaData.is_verified as boolean) || false,
             confidence: (metaData.confidence as number) || 0,
+            thinking: (metaData.thinking as string) || state.thinkingText || "",
+            wiki_genutzt: (metaData.wiki_genutzt as boolean) || false,
           };
         }
         return {
@@ -257,13 +269,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
           isStreaming: false,
           streamStatus: "",
           streamingText: "",
+          isThinking: false,
         };
       });
 
       get().loadSessions();
     } catch (err) {
       console.error("Streaming failed, falling back:", err);
-      set({ isStreaming: false, streamStatus: "", isSending: false });
+      set({ isStreaming: false, streamStatus: "", isSending: false, isThinking: false });
     }
   },
 

@@ -417,6 +417,8 @@ export interface ChatMessage {
   internet_genutzt?: boolean;
   is_verified?: boolean;
   confidence?: number;
+  thinking?: string;
+  wiki_genutzt?: boolean;
 }
 
 export interface Subject {

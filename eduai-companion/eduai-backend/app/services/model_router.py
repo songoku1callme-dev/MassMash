@@ -190,17 +190,157 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# BLOCK 2: DUAL-VERIFIER (Gnadenloser Abitur-Prüfer)
+# BLOCK: Chain-of-Thought Parser
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-VERIFIER_PROMPT_STRICT = """Du bist ein absolut gnadenloser, deutscher Abitur-Prüfer.
-Deine Aufgabe ist es, die Antwort einer KI auf FEHLER zu prüfen.
-Du MUSST extrem kritisch sein. Finde Fehler bei:
-1. Jahreszahlen und historischen Fakten.
-2. Mathematischen Formeln und Rechenwegen.
-3. Kausalzusammenhängen.
-4. Dem Lehrplan-Niveau (ist es verständlich, aber präzise?).
-5. Wissenschaftliche Begriffe und deren korrekte Verwendung.
+def strip_thinking_tags(text: str) -> tuple[str, str]:
+    """Extrahiert <thinking>...</thinking> und gibt (thinking_text, visible_text) zurück."""
+    thinking_match = _re.search(r'<thinking>(.*?)</thinking>', text, _re.DOTALL)
+    if thinking_match:
+        thinking_text = thinking_match.group(1).strip()
+        visible_text = text[:thinking_match.start()] + text[thinking_match.end():]
+        return thinking_text, visible_text.strip()
+    return "", text
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK: Wikipedia Fact-Check (Schul-Goldstandard)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WIKI_FÄCHER = {"Geschichte", "Biologie", "Chemie", "Physik", "Geografie"}
+
+
+async def _wikipedia_lookup(frage: str, fach: str) -> str:
+    """Schlägt den wichtigsten Begriff in der deutschen Wikipedia nach.
+
+    Nutzt die Wikipedia REST API (kein Package nötig).
+    Gibt eine Zusammenfassung zurück oder leeren String.
+    """
+    if fach not in WIKI_FÄCHER:
+        return ""
+
+    # Schlüsselbegriff extrahieren: nehme die längsten Nomen aus der Frage
+    words = [w.strip(".,!?:;()[]\"'") for w in frage.split()
+             if len(w) > 3 and w[0].isupper()]
+    if not words:
+        # Fallback: erste 3 Wörter
+        words = frage.split()[:3]
+
+    search_term = " ".join(words[:3])
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            # Schritt 1: Suche nach dem relevantesten Artikel
+            search_resp = await client.get(
+                "https://de.wikipedia.org/w/api.php",
+                params={
+                    "action": "query",
+                    "list": "search",
+                    "srsearch": search_term,
+                    "srlimit": "1",
+                    "format": "json",
+                    "utf8": "1",
+                },
+            )
+            if search_resp.status_code != 200:
+                return ""
+
+            search_data = search_resp.json()
+            results = search_data.get("query", {}).get("search", [])
+            if not results:
+                return ""
+
+            title = results[0]["title"]
+
+            # Schritt 2: Zusammenfassung abrufen
+            summary_resp = await client.get(
+                f"https://de.wikipedia.org/api/rest_v1/page/summary/{title}",
+                headers={"Accept": "application/json"},
+            )
+            if summary_resp.status_code != 200:
+                return ""
+
+            summary_data = summary_resp.json()
+            extract = summary_data.get("extract", "")
+            if extract:
+                logger.info("Wikipedia-Lookup: '%s' → %s (%d Zeichen)",
+                           search_term, title, len(extract))
+                return f"Wikipedia-Artikel '{title}': {extract[:800]}"
+
+    except Exception as exc:
+        logger.warning("Wikipedia-Lookup fehlgeschlagen: %s", exc)
+
+    return ""
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK: Dedizierter Fach-Classifier (8b)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ALLE_FÄCHER_LISTE = (
+    "Mathematik, Physik, Chemie, Biologie, Informatik, Astronomie, "
+    "Deutsch, Englisch, Französisch, Latein, Spanisch, Italienisch, Russisch, "
+    "Geschichte, Geografie, Wirtschaft, Politik, Sozialkunde, Philosophie, Ethik, "
+    "Religion, Kunst, Musik, Sport, Psychologie, Pädagogik, Allgemein"
+)
+
+
+async def classify_fach_with_llm(frage: str) -> str:
+    """Dedizierter 8b-Classifier für Fach-Erkennung.
+
+    Behebt den Bug dass Physik als Geschichte getaggt wird.
+    """
+    classify_prompt = (
+        f"Kategorisiere die folgende Schüler-Frage. "
+        f"Antworte NUR mit exakt einem Fachnamen aus dieser Liste: "
+        f"[{ALLE_FÄCHER_LISTE}]. "
+        f"Keine anderen Worte, kein Satzzeichen, NUR der Fachname!\n\n"
+        f'Frage: "{frage}"'
+    )
+
+    result = await _groq_chat(
+        "llama-3.1-8b-instant",
+        [{"role": "user", "content": classify_prompt}],
+        temperature=0.0,
+        max_tokens=10,
+    )
+
+    if result:
+        # Bereinige die Antwort
+        clean = result.strip().strip('".\'').strip()
+        # Prüfe ob es ein gültiges Fach ist
+        valid_fächer = [f.strip() for f in ALLE_FÄCHER_LISTE.split(",")]
+        for fach in valid_fächer:
+            if clean.lower() == fach.lower():
+                return fach
+        # Fuzzy Match
+        for fach in valid_fächer:
+            if fach.lower() in clean.lower() or clean.lower() in fach.lower():
+                return fach
+
+    return ""  # Leer = Fallback auf keyword-basierte Erkennung
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK 2: DUAL-VERIFIER (Gnadenloser Abitur-Prüfer v2)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VERIFIER_PROMPT_STRICT = """Du bist der STRENGSTE Korrektor Deutschlands — ein gnadenloser Abitur-Prüfer.
+Deine Aufgabe: Suche ABSICHTLICH nach Fehlern in der KI-Antwort.
+
+PRÜFSCHRITTE (alle durchgehen!):
+1. JAHRESZAHLEN: Stimmen alle Jahreszahlen? Prüfe gegen die mitgelieferten Quellen.
+   → Jahreszahl ohne Quelle? → RETRY
+2. FORMELN/RECHENWEGE: Ist jeder Schritt mathematisch korrekt?
+   → Rechenweg nicht logisch oder Fehler? → RETRY
+3. KAUSALITÄT: Stimmen Ursache-Wirkungs-Beziehungen?
+   → Falsche Kausalität? → RETRY
+4. PÄDAGOGIK: Wird dem Schüler die Lösung erklärt (nicht nur genannt)?
+   → Lösung direkt verraten ohne Erklärung? → RETRY (Pädagogik-Verstoß!)
+5. FACHBEGRIFFE: Werden wissenschaftliche Begriffe korrekt verwendet?
+   → Falsche Definition? → RETRY
+6. LEHRPLAN-NIVEAU: Passt die Komplexität zur Klassenstufe?
+   → Uni-Konzepte für 8.-Klässler? → RETRY
 
 Fach: {fach}
 Frage des Schülers: "{frage}"
@@ -210,7 +350,7 @@ Antwort der KI:
 
 {web_referenz}
 
-Wenn auch nur EIN kleiner Fehler existiert, antworte mit STATUS: "RETRY".
+Wenn du RETRY sagst, gib EXAKT an wo der Fehler liegt und was falsch ist.
 Antworte NUR im JSON Format: {{"status": "OK" oder "RETRY", "confidence": 0-100, "kritik": "..."}}"""
 
 
@@ -520,8 +660,23 @@ async def execute_routed_chat_stream(
     decision = route_request(frage, fach, tier)
     web_quellen = []
 
-    # Phase A: Internet-Recherche
+    # Phase 0: LLM-basierte Fach-Klassifikation (Fix für Fächer-Routing Bug)
+    llm_fach = await classify_fach_with_llm(frage)
+    if llm_fach:
+        logger.info("LLM-Classifier: '%s' → %s (override: %s)", frage[:50], llm_fach, fach)
+        fach = llm_fach
+        # Routing-Decision mit korrektem Fach neu berechnen
+        decision = route_request(frage, fach, tier)
+
+    # Phase A: Internet-Recherche + Wikipedia Fact-Check
     tavily_key = _get_tavily_key()
+    wiki_summary = ""
+
+    # Wikipedia parallel zur Tavily-Suche
+    if fach in WIKI_FÄCHER:
+        yield {"type": "status", "text": "Prüfe Wikipedia..."}
+        wiki_summary = await _wikipedia_lookup(frage, fach)
+
     if decision.internet and tavily_key:
         yield {"type": "status", "text": "Durchsuche 5 Quellen..."}
         try:
@@ -542,7 +697,14 @@ async def execute_routed_chat_stream(
         except Exception as e:
             logger.warning("Tavily-Fehler: %s", e)
 
-    # System-Prompt mit Web-Kontext
+    # System-Prompt mit Web-Kontext + Wikipedia
+    if wiki_summary:
+        system_prompt += (
+            "\n\n[OFFIZIELLE FAKTEN AUS WIKIPEDIA]\n"
+            f"{wiki_summary}\n"
+            "Nutze diese Fakten ZWINGEND für deine Argumentation und zitiere sie!\n"
+        )
+
     if web_quellen:
         web_kontext = (
             "\n\n📡 [SYSTEM-INJECTION: AKTUELLE FAKTEN AUS DEM INTERNET]\n"
@@ -574,10 +736,15 @@ async def execute_routed_chat_stream(
             temperature=0.2, max_tokens=200,
         )
 
-    # Phase C: Streaming der Antwort
+    # Phase C: Streaming der Antwort mit Chain-of-Thought Parsing
     yield {"type": "status", "text": "Schreibe Antwort..."}
 
     full_text = ""
+    thinking_buffer = ""
+    in_thinking = False
+    thinking_sent = False
+    thinking_complete = False
+
     async for chunk in _groq_chat_stream(
         decision.modell,
         [
@@ -586,10 +753,42 @@ async def execute_routed_chat_stream(
             {"role": "user", "content": frage}
         ],
         temperature=0.5 if decision.multi_step else 0.7,
-        max_tokens=1800,
+        max_tokens=2400,
     ):
         full_text += chunk
+
+        # Chain-of-Thought: Parse <thinking> tags im Stream
+        if not thinking_complete:
+            if "<thinking>" in full_text and not in_thinking:
+                in_thinking = True
+                if not thinking_sent:
+                    yield {"type": "thinking_start", "text": ""}
+                    thinking_sent = True
+                continue
+            if in_thinking:
+                if "</thinking>" in full_text:
+                    # Thinking abgeschlossen
+                    thinking_match = _re.search(r'<thinking>(.*?)</thinking>', full_text, _re.DOTALL)
+                    if thinking_match:
+                        thinking_buffer = thinking_match.group(1).strip()
+                    in_thinking = False
+                    thinking_complete = True
+                    yield {"type": "thinking_end", "text": thinking_buffer}
+                    # Sende den Rest nach </thinking> als Token
+                    rest_after = full_text[full_text.index("</thinking>") + len("</thinking>"):]
+                    if rest_after.strip():
+                        yield {"type": "token", "text": rest_after.strip()}
+                else:
+                    # Noch im Thinking-Block — kein Token senden
+                    pass
+                continue
+
+        # Normaler Token (nach thinking oder wenn kein thinking)
         yield {"type": "token", "text": chunk}
+
+    # Falls kein thinking erkannt wurde, trotzdem strip
+    _, visible_text = strip_thinking_tags(full_text)
+    full_text = visible_text
 
     # Phase D: Dual-Verifier
     is_verified = False
@@ -657,6 +856,9 @@ async def execute_routed_chat_stream(
         "multi_step": decision.multi_step,
         "verifier_reason": verifier_reason,
         "final_text": final_text,
+        "fach": fach,
+        "thinking": thinking_buffer,
+        "wiki_genutzt": bool(wiki_summary),
     }
 
     yield {"type": "done"}

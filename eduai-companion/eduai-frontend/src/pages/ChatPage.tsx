@@ -38,12 +38,15 @@ interface Msg {
   internet_genutzt?: boolean;
   is_verified?: boolean;
   confidence?: number;
+  thinking?: string;
+  wiki_genutzt?: boolean;
 }
 
 export default function ChatPage() {
   const {
     messages, isSending, isStreaming, streamStatus, currentSubject, language,
-    sendMessage, sendMessageStream, setSubject, setLanguage, addMessage
+    sendMessage, sendMessageStream, setSubject, setLanguage, addMessage,
+    isThinking, thinkingText,
   } = useChatStore();
   const { user } = useAuthStore();
   const [input, setInput] = useState("");
@@ -51,6 +54,7 @@ export default function ChatPage() {
   const [expandedKarten, setExpandedKarten] = useState<Record<number, boolean>>({});
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
   const [feedbackGiven, setFeedbackGiven] = useState<Record<number, string>>({});
+  const [expandedThinking, setExpandedThinking] = useState<Record<number, boolean>>({});
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
@@ -329,8 +333,25 @@ export default function ChatPage() {
         ) : (
           /* === MESSAGE LIST === */
           <div className="space-y-4 max-w-4xl mx-auto">
+            {/* Chain-of-Thought Thinking Indicator */}
+            {isThinking && (
+              <div className="flex justify-start">
+                <div
+                  className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium"
+                  style={{
+                    background: "rgba(139,92,246,0.12)",
+                    border: "1px solid rgba(139,92,246,0.3)",
+                    color: "#c4b5fd",
+                  }}
+                >
+                  <span className="inline-block w-4 h-4 animate-spin" style={{ borderRadius: "50%", border: "2px solid rgba(139,92,246,0.3)", borderTopColor: "#8b5cf6" }} />
+                  Lumnos überlegt...
+                </div>
+              </div>
+            )}
+
             {/* SSE Status Chips (Quality Engine v2 Block 1) */}
-            {isStreaming && streamStatus && (
+            {isStreaming && streamStatus && !isThinking && (
               <div className="flex justify-start">
                 <div
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium animate-pulse"
@@ -387,12 +408,51 @@ export default function ChatPage() {
                   }
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-code:text-cyan-400">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkMath]}
-                        rehypePlugins={[rehypeKatex]}
-                      >{msg.content}</ReactMarkdown>
-                    </div>
+                    <>
+                      {/* Chain-of-Thought Collapsible (Pedagogical Brain) */}
+                      {(thinkingText && idx === messages.length - 1 && isStreaming) || msg.thinking ? (
+                        <div className="mb-3">
+                          <button
+                            onClick={() => setExpandedThinking(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all hover:scale-[1.01]"
+                            style={{
+                              background: "rgba(139,92,246,0.1)",
+                              border: "1px solid rgba(139,92,246,0.25)",
+                              color: "#c4b5fd",
+                            }}
+                          >
+                            <span style={{ fontSize: "14px" }}>&#129504;</span>
+                            {expandedThinking[idx] ? "Denkprozess ausblenden" : "Denkprozess anzeigen"}
+                            <span style={{ transform: expandedThinking[idx] ? "rotate(180deg)" : "rotate(0)", transition: "transform 0.2s" }}>
+                              &#9660;
+                            </span>
+                          </button>
+                          {expandedThinking[idx] && (
+                            <div
+                              className="mt-2 p-3 rounded-lg text-[11px] text-purple-200/80 leading-relaxed"
+                              style={{
+                                background: "rgba(139,92,246,0.08)",
+                                border: "1px solid rgba(139,92,246,0.15)",
+                                maxHeight: "200px",
+                                overflowY: "auto",
+                              }}
+                            >
+                              <ReactMarkdown
+                                remarkPlugins={[remarkMath]}
+                                rehypePlugins={[rehypeKatex]}
+                              >{(msg.thinking || thinkingText || "")}</ReactMarkdown>
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+
+                      <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-table:my-2 prose-pre:my-2 prose-code:text-cyan-400">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                        >{msg.content}</ReactMarkdown>
+                      </div>
+                    </>
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                   )}

@@ -673,6 +673,12 @@ async def send_message_stream(
             elif event_type == "token":
                 yield f"event: token\ndata: {json.dumps({'text': event['text']}, ensure_ascii=False)}\n\n"
 
+            elif event_type == "thinking_start":
+                yield f"event: thinking_start\ndata: {{}}\n\n"
+
+            elif event_type == "thinking_end":
+                yield f"event: thinking_end\ndata: {json.dumps({'text': event.get('text', '')}, ensure_ascii=False)}\n\n"
+
             elif event_type == "correction":
                 yield f"event: correction\ndata: {{}}\n\n"
 

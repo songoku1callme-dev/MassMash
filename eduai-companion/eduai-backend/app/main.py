@@ -420,7 +420,37 @@ app = FastAPI(
 )
 
 # --- Perfect School 4.1: WebSocket Ticket System (Block 1.3) ---
+# Enhanced with Pedagogical Brain Block 5 fixes
 ws_tickets: dict[str, dict] = {}
+
+
+def validate_ws_ticket(ticket: str) -> int | None:
+    """Validate a WebSocket ticket and return user_id if valid.
+
+    Returns None if ticket is invalid, expired, or already used.
+    Tickets are single-use and expire after 30 seconds.
+    """
+    if not ticket or ticket not in ws_tickets:
+        return None
+
+    ticket_data = ws_tickets[ticket]
+    now = datetime.utcnow()
+
+    # Check expiry
+    if now > ticket_data["expires"]:
+        del ws_tickets[ticket]
+        return None
+
+    # Single-use: consume the ticket
+    user_id = ticket_data["user_id"]
+    del ws_tickets[ticket]
+
+    # Cleanup expired tickets (prevent memory leak)
+    expired = [k for k, v in ws_tickets.items() if now > v["expires"]]
+    for k in expired:
+        del ws_tickets[k]
+
+    return user_id
 
 
 @app.post("/api/ws/ticket")
@@ -436,6 +466,36 @@ async def get_ws_ticket(current_user: dict = Depends(get_current_user)):
         "expires": datetime.utcnow() + timedelta(seconds=30),
     }
     return {"ticket": ticket}
+
+
+@app.websocket("/ws/{ticket}")
+async def websocket_endpoint(websocket, ticket: str):
+    """Authenticated WebSocket endpoint for real-time features.
+
+    Validates the ticket before allowing connection.
+    Used for: Gruppen-Chats, Live-Quiz, Status-Updates.
+    """
+    from starlette.websockets import WebSocket, WebSocketDisconnect
+
+    user_id = validate_ws_ticket(ticket)
+    if user_id is None:
+        await websocket.close(code=4001, reason="Ungültiges oder abgelaufenes Ticket")
+        return
+
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Echo back with user context (extend for specific features)
+            await websocket.send_json({
+                "type": "ack",
+                "user_id": user_id,
+                "message": data,
+            })
+    except WebSocketDisconnect:
+        logger.info("WebSocket disconnected: user_id=%s", user_id)
+    except Exception as e:
+        logger.warning("WebSocket error: %s", e)
 
 # --- Security middleware (outermost first) ---
 app.add_middleware(SecurityHeadersMiddleware)
