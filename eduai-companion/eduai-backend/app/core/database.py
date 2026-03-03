@@ -660,6 +660,47 @@ async def init_db():
             updated_at TEXT DEFAULT (datetime('now')),
             UNIQUE(fach, bundesland)
         );
+
+        -- LUMNOS Self-Evolution: Knowledge Updates (Block 1)
+        CREATE TABLE IF NOT EXISTS knowledge_updates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fach TEXT NOT NULL,
+            thema TEXT NOT NULL,
+            quellen_count INTEGER DEFAULT 0,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_knowledge_updates_date ON knowledge_updates(created_at);
+
+        -- LUMNOS Self-Evolution: Prompt-Vorschläge (Block 3)
+        CREATE TABLE IF NOT EXISTS prompt_vorschlaege (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fach TEXT NOT NULL,
+            probleme TEXT DEFAULT '',
+            neuer_prompt TEXT DEFAULT '',
+            feedback_count INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'ausstehend',
+            created_at TEXT DEFAULT (datetime('now')),
+            genehmigt_am TEXT DEFAULT ''
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_prompt_vorschlaege_status ON prompt_vorschlaege(status);
+
+        -- LUMNOS Self-Evolution: Chat Feedbacks v2 (Block 3)
+        CREATE TABLE IF NOT EXISTS chat_feedbacks_v2 (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            message_id TEXT DEFAULT '',
+            frage TEXT DEFAULT '',
+            antwort TEXT DEFAULT '',
+            bewertung TEXT DEFAULT 'positiv',
+            fach TEXT DEFAULT '',
+            kommentar TEXT DEFAULT '',
+            created_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_chat_feedbacks_v2_fach ON chat_feedbacks_v2(fach, bewertung, created_at);
     """)
 
     await db.commit()

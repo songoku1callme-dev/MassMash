@@ -21,6 +21,7 @@ interface OrbProps {
   fach?: string;
   isTyping?: boolean;
   isListening?: boolean;
+  isLearning?: boolean;
   size?: "sm" | "md" | "lg";
   onClick?: () => void;
 }
@@ -29,11 +30,14 @@ export default function LumnosOrb({
   fach = "default",
   isTyping = false,
   isListening = false,
+  isLearning = false,
   size = "md",
   onClick,
 }: OrbProps) {
   const controls   = useAnimation();
-  const [c1, c2]   = FACH_FARBEN[fach] ?? FACH_FARBEN["default"];
+  // Gold override when learning from internet
+  const goldFarben: [string, string] = ["#f59e0b", "#f97316"];
+  const [c1, c2]   = isLearning ? goldFarben : (FACH_FARBEN[fach] ?? FACH_FARBEN["default"]);
   const mouseX     = useMotionValue(0);
   const mouseY     = useMotionValue(0);
   const springX    = useSpring(mouseX, { stiffness: 80, damping: 20 });
@@ -56,7 +60,13 @@ export default function LumnosOrb({
 
   // Animationen
   useEffect(() => {
-    if (isListening) {
+    if (isLearning) {
+      controls.start({
+        scale: [1, 1.15, 1, 1.1, 1],
+        rotate: [0, 5, -5, 0],
+        transition: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+      });
+    } else if (isListening) {
       controls.start({
         scale: [1, 1.25, 1, 1.2, 1],
         transition: { duration: 0.8, repeat: Infinity }
@@ -72,7 +82,7 @@ export default function LumnosOrb({
         transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
       });
     }
-  }, [isTyping, isListening, controls]);
+  }, [isTyping, isListening, isLearning, controls]);
 
   return (
     <motion.div
@@ -157,6 +167,24 @@ export default function LumnosOrb({
           }} transition={{
             duration: 0.8, repeat: Infinity,
             delay: i * 0.13, ease: "easeOut",
+          }} />
+        ))}
+
+        {/* Gold-Ring Animation (Learning) */}
+        {isLearning && [0, 1].map(i => (
+          <motion.div key={`gold-${i}`} style={{
+            position: "absolute", inset: 0,
+            borderRadius: "50%",
+            border: "2px solid #f59e0b",
+            opacity: 0,
+          }} animate={{
+            scale: [1, 2.5],
+            opacity: [0.8, 0],
+          }} transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            delay: i * 0.7,
+            ease: "easeOut",
           }} />
         ))}
       </div>

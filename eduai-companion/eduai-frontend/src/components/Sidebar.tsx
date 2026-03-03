@@ -66,7 +66,10 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     { id: "scanner", label: "Schulbuch-Scanner", icon: <Camera className="w-5 h-5" /> },
     { id: "parents", label: "Eltern-Dashboard", icon: <Heart className="w-5 h-5" /> },
     { id: "school", label: "Schul-Lizenzen", icon: <School className="w-5 h-5" /> },
-    ...(isAdmin ? [{ id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> }] : []),
+    ...(isAdmin ? [
+      { id: "admin", label: "Admin-Panel", icon: <Shield className="w-5 h-5" /> },
+      { id: "forschung", label: "Forschungs-Zentrum", icon: <Brain className="w-5 h-5" /> },
+    ] : []),
     { id: "datenschutz", label: "Datenschutz", icon: <Lock className="w-5 h-5" /> },
     { id: "pricing", label: "Abo & Preise", icon: <CreditCard className="w-5 h-5" /> },
     { id: "settings", label: "Einstellungen", icon: <Settings className="w-5 h-5" /> },

@@ -38,6 +38,7 @@ import StatsPage from "./pages/StatsPage";
 import LandingPage from "./pages/LandingPage";
 import ScannerPage from "./pages/ScannerPage";
 import VoiceExamPage from "./pages/VoiceExamPage";
+import ForschungsSeite from "./pages/ForschungsSeite";
 import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -183,6 +184,8 @@ function App() {
         return <ScannerPage />;
       case "voice-exam":
         return <VoiceExamPage />;
+      case "forschung":
+        return <ForschungsSeite />;
       case "pricing":
         return <PricingPage />;
       case "settings":

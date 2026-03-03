@@ -352,3 +352,33 @@ font-family:Inter,sans-serif;padding:32px 20px;">
         logger.error("Ghost Founder weekly report failed: %s", exc)
 
     logger.info("Ghost Founder: %d Wochenberichte versendet", count)
+
+
+# ─────────────────────────────────────────────
+# JOB 4: Nightly Knowledge Crawl (03:00)
+# LUMNOS Self-Evolution Block 6
+# ─────────────────────────────────────────────
+async def nightly_crawl():
+    """Nächtlicher Crawl der Bildungsquellen für FAISS-Index."""
+    logger.info("Evolution: Nightly Knowledge Crawl starten")
+    try:
+        from app.services.deep_crawler import nightly_knowledge_update
+        await nightly_knowledge_update()
+        logger.info("Evolution: Nightly Crawl abgeschlossen")
+    except Exception as exc:
+        logger.error("Evolution: Nightly Crawl fehlgeschlagen: %s", exc)
+
+
+# ─────────────────────────────────────────────
+# JOB 5: Wöchentliche Prompt-Optimierung (Montag 04:00)
+# LUMNOS Self-Evolution Block 6
+# ─────────────────────────────────────────────
+async def weekly_prompt_optimization():
+    """Wöchentliche Analyse negativer Feedbacks und Prompt-Verbesserung."""
+    logger.info("Evolution: Wöchentliche Prompt-Optimierung starten")
+    try:
+        from app.services.prompt_optimizer import analyze_feedback_and_optimize
+        await analyze_feedback_and_optimize()
+        logger.info("Evolution: Prompt-Optimierung abgeschlossen")
+    except Exception as exc:
+        logger.error("Evolution: Prompt-Optimierung fehlgeschlagen: %s", exc)

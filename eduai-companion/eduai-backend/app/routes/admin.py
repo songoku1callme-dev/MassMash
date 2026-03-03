@@ -573,3 +573,179 @@ async def get_lehrplan_themen(
 async def monitoring_config():
     """Return monitoring configuration for the frontend."""
     return get_monitoring_frontend_config()
+
+
+# ─── LUMNOS Self-Evolution Endpoints ───
+
+class TriggerCrawlRequest(BaseModel):
+    fach: str
+    thema: str
+
+
+@router.get("/knowledge-updates")
+async def get_knowledge_updates(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Heutige Knowledge-Updates für das Admin-Dashboard."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    cursor = await db.execute(
+        """SELECT id, fach, thema, quellen_count, created_at
+        FROM knowledge_updates
+        WHERE DATE(created_at) >= DATE('now', '-1 day')
+        ORDER BY created_at DESC
+        LIMIT 50"""
+    )
+    rows = await cursor.fetchall()
+    return {"updates": [dict(r) for r in rows]}
+
+
+@router.get("/prompt-vorschlaege")
+async def get_prompt_vorschlaege(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Ausstehende Prompt-Vorschläge für Admin-Review."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    cursor = await db.execute(
+        """SELECT id, fach, probleme, neuer_prompt, feedback_count,
+               status, created_at, genehmigt_am
+        FROM prompt_vorschlaege
+        ORDER BY
+            CASE WHEN status = 'ausstehend' THEN 0 ELSE 1 END,
+            created_at DESC
+        LIMIT 50"""
+    )
+    rows = await cursor.fetchall()
+    return {"vorschlaege": [dict(r) for r in rows]}
+
+
+@router.post("/trigger-crawl")
+async def trigger_crawl(
+    req: TriggerCrawlRequest,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Manuellen Crawl für ein Fach/Thema auslösen."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    try:
+        from app.services.deep_crawler import tavily_deep_search, synthesize_and_store
+        docs = await tavily_deep_search(req.thema, req.fach)
+        count = await synthesize_and_store(docs, req.fach, req.thema)
+
+        # In DB loggen
+        await db.execute(
+            """INSERT INTO knowledge_updates (fach, thema, quellen_count)
+            VALUES (?, ?, ?)""",
+            (req.fach, req.thema, count),
+        )
+        await db.commit()
+
+        return {
+            "message": f"Crawl abgeschlossen: {count} Quellen für {req.fach}/{req.thema}",
+            "fach": req.fach,
+            "thema": req.thema,
+            "quellen_count": count,
+        }
+    except Exception as e:
+        logger.error("Manueller Crawl fehlgeschlagen: %s", e)
+        raise HTTPException(status_code=500, detail=f"Crawl fehlgeschlagen: {e}")
+
+
+@router.post("/prompts/{vorschlag_id}/genehmigen")
+async def approve_prompt(
+    vorschlag_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Admin genehmigt einen Prompt-Vorschlag."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    try:
+        from app.services.prompt_optimizer import prompt_genehmigen
+        success = await prompt_genehmigen(vorschlag_id)
+        if success:
+            return {"message": f"Prompt-Vorschlag {vorschlag_id} genehmigt und aktiviert"}
+        raise HTTPException(status_code=404, detail="Vorschlag nicht gefunden")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("Prompt genehmigen fehlgeschlagen: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/evolution-stats")
+async def get_evolution_stats(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Statistiken für die Forschungs-Seite."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    stats: dict = {}
+
+    # Positives/Negatives Feedback heute
+    try:
+        cursor = await db.execute(
+            """SELECT bewertung, COUNT(*) as cnt
+            FROM chat_feedbacks_v2
+            WHERE DATE(created_at) >= DATE('now', '-1 day')
+            GROUP BY bewertung"""
+        )
+        rows = await cursor.fetchall()
+        fb = {dict(r)["bewertung"]: dict(r)["cnt"] for r in rows}
+        stats["positiv_heute"] = fb.get("positiv", 0)
+        stats["negativ_heute"] = fb.get("negativ", 0)
+        total = stats["positiv_heute"] + stats["negativ_heute"]
+        stats["qualitätsrate"] = round(
+            stats["positiv_heute"] / total * 100, 1
+        ) if total > 0 else 100.0
+    except Exception:
+        stats["positiv_heute"] = 0
+        stats["negativ_heute"] = 0
+        stats["qualitätsrate"] = 100.0
+
+    # Neue Quellen heute
+    try:
+        cursor = await db.execute(
+            """SELECT COALESCE(SUM(quellen_count), 0) as total
+            FROM knowledge_updates
+            WHERE DATE(created_at) >= DATE('now', '-1 day')"""
+        )
+        row = await cursor.fetchone()
+        stats["neue_quellen"] = dict(row)["total"] if row else 0
+    except Exception:
+        stats["neue_quellen"] = 0
+
+    # Ausstehende Vorschläge
+    try:
+        cursor = await db.execute(
+            "SELECT COUNT(*) FROM prompt_vorschlaege WHERE status = 'ausstehend'"
+        )
+        row = await cursor.fetchone()
+        stats["ausstehende_vorschlaege"] = row[0] if row else 0
+    except Exception:
+        stats["ausstehende_vorschlaege"] = 0
+
+    # Updates pro Fach (für Orbs)
+    try:
+        cursor = await db.execute(
+            """SELECT fach, COUNT(*) as cnt
+            FROM knowledge_updates
+            GROUP BY fach
+            ORDER BY cnt DESC"""
+        )
+        rows = await cursor.fetchall()
+        stats["fach_updates"] = {dict(r)["fach"]: dict(r)["cnt"] for r in rows}
+    except Exception:
+        stats["fach_updates"] = {}
+
+    return stats
