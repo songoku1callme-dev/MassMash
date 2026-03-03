@@ -1,17 +1,32 @@
 import { jwtDecode } from "jwt-decode";
 
-// URL-Sanitizer: Entfernt Credentials aus der URL (Browser blockiert fetch mit user:pass@)
-let API_URL = import.meta.env.VITE_API_URL || "";
-try {
-  if (API_URL) {
-    const url = new URL(API_URL);
+// URL-Sanitizer: Browser blockiert fetch() wenn die Origin credentials enthält (user:pass@host).
+// Das passiert bei Tunnel-URLs wie https://user:pass@host.devinapps.com.
+// Lösung: Immer eine saubere Base-URL ohne Credentials verwenden.
+function getCleanBaseUrl(): string {
+  const env = import.meta.env.VITE_API_URL;
+  if (env) {
+    try {
+      const url = new URL(env);
+      url.username = "";
+      url.password = "";
+      return url.toString().replace(/\/$/, "");
+    } catch {
+      return "";
+    }
+  }
+  // Kein VITE_API_URL → Origin ohne Credentials verwenden
+  try {
+    const url = new URL(window.location.href);
     url.username = "";
     url.password = "";
-    API_URL = url.toString().replace(/\/$/, "");
+    return url.origin;
+  } catch {
+    return "";
   }
-} catch {
-  // Fallback: leerer String = relative Pfade
 }
+
+const API_URL = getCleanBaseUrl();
 
 interface RequestOptions {
   method?: string;

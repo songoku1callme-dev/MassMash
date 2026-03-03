@@ -243,7 +243,16 @@ export default function AuthPage() {
                     setLoading(true);
                     try {
                       // Use the dev bypass token — backend recognizes this
-                      const res = await fetch(`/api/auth/dev-bypass`, {
+                      // Saubere Base-URL ohne Credentials (Tunnel hat user:pass@)
+                      const cleanOrigin = (() => {
+                        try {
+                          const u = new URL(window.location.href);
+                          u.username = "";
+                          u.password = "";
+                          return u.origin;
+                        } catch { return ""; }
+                      })();
+                      const res = await fetch(`${cleanOrigin}/api/auth/dev-bypass`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                       });
