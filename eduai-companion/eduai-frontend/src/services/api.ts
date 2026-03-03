@@ -1246,6 +1246,36 @@ export const api = {
   },
 };
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GAST-MODUS API (kein Auth nötig)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export interface GuestChatResponse {
+  response: string;
+  session_id: number;
+  subject: string;
+  detected_subject: string;
+  proficiency_level: string;
+  karteikarten: Karteikarte[];
+  zusammenfassung: string;
+  quellen: string[];
+  web_quellen: WebQuelle[];
+  internet_genutzt: boolean;
+  modell_genutzt: string;
+  multi_step: boolean;
+  is_verified: boolean;
+  confidence: number;
+  guest_remaining: number;
+}
+
+export const guestApi = {
+  chat: (data: { message: string; guest_session_id: string; subject?: string }) =>
+    request<GuestChatResponse>("/api/chat/guest", { method: "POST", body: data, skipAuth: true }),
+
+  remaining: (guestSessionId: string) =>
+    request<{ remaining: number; limit: number }>(`/api/chat/guest/remaining?guest_session_id=${guestSessionId}`, { skipAuth: true }),
+};
+
 // Supreme 12.0: Notification Bell API
 export const notificationBellApi = {
   bell: () => request<any>("/api/notifications/bell"),

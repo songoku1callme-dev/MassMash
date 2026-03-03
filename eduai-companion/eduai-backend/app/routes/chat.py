@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 import aiosqlite
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, get_optional_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
 from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
@@ -49,6 +49,119 @@ def remove_self_generated_sources(text: str) -> str:
     return cleaned.rstrip()
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# GAST-MODUS: Chat ohne Login (max 3 Nachrichten)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# In-memory guest message counter {guest_session_id: count}
+_guest_counters: dict[str, int] = {}
+GUEST_MESSAGE_LIMIT = 3
+
+
+@router.post("/guest")
+async def guest_chat(
+    request: Request,
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Guest chat endpoint — no auth required, max 3 messages per session.
+
+    Accepts same body as regular chat but with an extra `guest_session_id` field.
+    Returns 403 when guest limit is reached.
+    """
+    body = await request.json()
+    message = body.get("message", "").strip()
+    guest_session_id = body.get("guest_session_id", "")
+    subject_hint = body.get("subject", "")
+
+    if not message:
+        raise HTTPException(status_code=400, detail="Nachricht darf nicht leer sein.")
+    if not guest_session_id:
+        raise HTTPException(status_code=400, detail="guest_session_id erforderlich.")
+
+    # Check guest limit
+    count = _guest_counters.get(guest_session_id, 0)
+    if count >= GUEST_MESSAGE_LIMIT:
+        raise HTTPException(
+            status_code=403,
+            detail="Gast-Limit erreicht. Bitte registriere dich für LUMNOS Free/Pro.",
+        )
+
+    # Increment counter
+    _guest_counters[guest_session_id] = count + 1
+    remaining = GUEST_MESSAGE_LIMIT - (count + 1)
+
+    # Detect subject
+    user_fach = subject_hint if subject_hint and subject_hint not in ("general", "", "Alle", "Allgemein") else None
+    detected_subject = detect_subject(message, user_fach=user_fach)
+    subject = normalize_fach(detected_subject)
+
+    # Build a simple guest system prompt
+    combined_prompt = build_system_prompt(
+        subject=subject,
+        level="intermediate",
+        language="de",
+        detail_level="normal",
+        user_name="Gast",
+        klasse="10",
+        schultyp="Gymnasium",
+        bundesland="",
+        tutor_modus=False,
+        web_quellen="",
+    )
+    combined_prompt = get_prompt_for_fach(subject, combined_prompt)
+
+    # Use model router for guest (free tier)
+    routing = route_request(message, subject, "free")
+    routed_result = await execute_routed_chat(
+        frage=message,
+        fach=subject,
+        tier="free",
+        verlauf=[],
+        system_prompt=combined_prompt,
+    )
+
+    ai_response = routed_result.get("antwort", "")
+    if not ai_response:
+        ai_response = call_groq_llm(
+            prompt=message,
+            system_prompt=combined_prompt,
+            subject=subject,
+            level="intermediate",
+            language="de",
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+
+    # Clean response
+    ai_response = remove_self_generated_sources(ai_response)
+
+    return {
+        "response": ai_response,
+        "session_id": 0,
+        "subject": subject,
+        "detected_subject": subject,
+        "proficiency_level": "intermediate",
+        "karteikarten": [],
+        "zusammenfassung": "",
+        "quellen": [],
+        "web_quellen": routed_result.get("web_quellen", []),
+        "internet_genutzt": routed_result.get("internet_genutzt", False),
+        "modell_genutzt": routed_result.get("modell_genutzt", routing.modell),
+        "multi_step": routed_result.get("multi_step", False),
+        "is_verified": routed_result.get("is_verified", False),
+        "confidence": routed_result.get("confidence", 0),
+        "guest_remaining": remaining,
+    }
+
+
+@router.get("/guest/remaining")
+async def guest_remaining(guest_session_id: str):
+    """Return how many guest messages are left for this session."""
+    count = _guest_counters.get(guest_session_id, 0)
+    return {"remaining": max(0, GUEST_MESSAGE_LIMIT - count), "limit": GUEST_MESSAGE_LIMIT}
 
 
 @router.post("", response_model=ChatResponse)

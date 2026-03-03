@@ -126,3 +126,19 @@ async def get_current_user(
         raise credentials_exception
 
     return dict(user)
+
+
+async def get_optional_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
+    db: aiosqlite.Connection = Depends(get_db),
+) -> Optional[dict]:
+    """Like get_current_user but returns None instead of 401 if no/bad token.
+
+    Used for guest-accessible endpoints (e.g. guest chat).
+    """
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(credentials, db)
+    except HTTPException:
+        return None

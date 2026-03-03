@@ -29,7 +29,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
-  const { user, logout } = useAuthStore();
+  const { user, logout, isGuest, exitGuestMode } = useAuthStore();
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -131,39 +131,46 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Chat History */}
-      <div className="mt-4 px-3">
-        <p className="text-xs font-semibold text-lumnos-muted uppercase tracking-wider mb-2 px-3">
-          Letzte Chats
-        </p>
-      </div>
-      <ScrollArea className="flex-1 px-3">
-        <div className="space-y-1 pb-4">
-          {sessions.slice(0, 10).map((session) => (
-            <div
-              key={session.id}
-              className="group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-lumnos-surface transition-colors"
-              onClick={() => handleSessionClick(session.id)}
-            >
-              {SUBJECT_ICONS[session.subject] || SUBJECT_ICONS.general}
-              <span className="flex-1 truncate text-lumnos-muted">
-                {session.title}
-              </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
-                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-          {sessions.length === 0 && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">
-              Noch keine Chats vorhanden
+      {/* Chat History (nur für eingeloggte User) */}
+      {!isGuest && (
+        <>
+          <div className="mt-4 px-3">
+            <p className="text-xs font-semibold text-lumnos-muted uppercase tracking-wider mb-2 px-3">
+              Letzte Chats
             </p>
-          )}
-        </div>
-      </ScrollArea>
+          </div>
+          <ScrollArea className="flex-1 px-3">
+            <div className="space-y-1 pb-4">
+              {sessions.slice(0, 10).map((session) => (
+                <div
+                  key={session.id}
+                  className="group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-lumnos-surface transition-colors"
+                  onClick={() => handleSessionClick(session.id)}
+                >
+                  {SUBJECT_ICONS[session.subject] || SUBJECT_ICONS.general}
+                  <span className="flex-1 truncate text-lumnos-muted">
+                    {session.title}
+                  </span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); deleteSession(session.id); }}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+              {sessions.length === 0 && (
+                <p className="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">
+                  Noch keine Chats vorhanden
+                </p>
+              )}
+            </div>
+          </ScrollArea>
+        </>
+      )}
+
+      {/* Gast-Modus: Spacer wenn keine Chat-History */}
+      {isGuest && <div className="flex-1" />}
 
       {/* UPGRADE BANNER für Free-User */}
       {(!user?.subscription_tier || user.subscription_tier === "free") && (
@@ -188,30 +195,44 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         </div>
       )}
 
-      {/* User Profile & Logout */}
+      {/* User Profile & Logout / Gast-Anmelden */}
       <div className="p-3 border-t border-lumnos-border">
-        <div className="flex items-center gap-3 px-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-lumnos-gradient flex items-center justify-center text-white text-sm font-bold shadow-glow-sm">
-            {user?.full_name?.[0] || user?.username?.[0] || "?"}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-lumnos-text truncate flex items-center gap-1">
-              {user?.full_name || user?.username}
-              {user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
-              {user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
-            </p>
-            <p className="text-xs text-lumnos-muted">
-              {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
-            </p>
-          </div>
+        {isGuest ? (
           <button
-            onClick={logout}
-            className="text-gray-400 hover:text-red-500 transition-colors"
-            title="Abmelden"
+            onClick={() => { exitGuestMode(); window.location.reload(); }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all"
+            style={{
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              boxShadow: "0 0 20px rgba(99,102,241,0.4)",
+            }}
           >
-            <LogOut className="w-4 h-4" />
+            <GraduationCap className="w-5 h-5" />
+            Anmelden / Registrieren
           </button>
-        </div>
+        ) : (
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-8 h-8 rounded-full bg-lumnos-gradient flex items-center justify-center text-white text-sm font-bold shadow-glow-sm">
+              {user?.full_name?.[0] || user?.username?.[0] || "?"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-lumnos-text truncate flex items-center gap-1">
+                {user?.full_name || user?.username}
+                {user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
+                {user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
+              </p>
+              <p className="text-xs text-lumnos-muted">
+                {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
+              </p>
+            </div>
+            <button
+              onClick={logout}
+              className="text-gray-400 hover:text-red-500 transition-colors"
+              title="Abmelden"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

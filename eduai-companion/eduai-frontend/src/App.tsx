@@ -48,7 +48,7 @@ import NotificationBell from "./components/NotificationBell";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
-  const { isAuthenticated, isLoading, loadUser } = useAuthStore();
+  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode } = useAuthStore();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -101,13 +101,17 @@ function App() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isGuest) {
     if (showLanding) {
       return (
         <LandingPage
           onLogin={() => setShowLanding(false)}
           onRegister={() => setShowLanding(false)}
           onIQTest={() => setShowLanding(false)}
+          onGuestChat={() => {
+            enterGuestMode();
+            setCurrentPage("chat");
+          }}
         />
       );
     }

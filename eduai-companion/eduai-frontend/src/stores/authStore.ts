@@ -6,6 +6,8 @@ interface AuthState {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isGuest: boolean;
+  guestSessionId: string | null;
   login: (username: string, password: string) => Promise<void>;
   register: (data: {
     email: string;
@@ -19,6 +21,16 @@ interface AuthState {
   logout: () => void;
   loadUser: () => Promise<void>;
   updateUser: (data: { full_name?: string; school_grade?: string; school_type?: string; preferred_language?: string }) => Promise<void>;
+  enterGuestMode: () => void;
+  exitGuestMode: () => void;
+}
+
+function getOrCreateGuestId(): string {
+  const existing = localStorage.getItem("lumnos_guest_session_id");
+  if (existing) return existing;
+  const id = "guest_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+  localStorage.setItem("lumnos_guest_session_id", id);
+  return id;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -26,22 +38,27 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("lumnos_token"),
   isLoading: true,
   isAuthenticated: !!localStorage.getItem("lumnos_token"),
+  isGuest: false,
+  guestSessionId: localStorage.getItem("lumnos_guest_session_id"),
 
   login: async (username, password) => {
     const response = await authApi.login({ username, password });
     setTokens(response.access_token, response.refresh_token);
-    set({ user: response.user, token: response.access_token, isAuthenticated: true });
+    localStorage.removeItem("lumnos_guest_session_id");
+    set({ user: response.user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
   },
 
   register: async (data) => {
     const response = await authApi.register(data);
     setTokens(response.access_token, response.refresh_token);
-    set({ user: response.user, token: response.access_token, isAuthenticated: true });
+    localStorage.removeItem("lumnos_guest_session_id");
+    set({ user: response.user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
   },
 
   logout: () => {
     clearTokens();
-    set({ user: null, token: null, isAuthenticated: false });
+    localStorage.removeItem("lumnos_guest_session_id");
+    set({ user: null, token: null, isAuthenticated: false, isGuest: false, guestSessionId: null });
   },
 
   loadUser: async () => {
@@ -69,6 +86,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       clearTokens();
       set({ user: null, token: null, isLoading: false, isAuthenticated: false });
     }
+  },
+
+  enterGuestMode: () => {
+    const guestSessionId = getOrCreateGuestId();
+    set({ isGuest: true, guestSessionId, isLoading: false });
+  },
+
+  exitGuestMode: () => {
+    localStorage.removeItem("lumnos_guest_session_id");
+    set({ isGuest: false, guestSessionId: null });
   },
 
   updateUser: async (data) => {

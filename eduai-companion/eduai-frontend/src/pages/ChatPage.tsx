@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ocrApi, quizApi } from "../services/api";
+import { ocrApi, quizApi, guestApi } from "../services/api";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -48,8 +48,11 @@ export default function ChatPage() {
     sendMessage, sendMessageStream, setSubject, setLanguage, addMessage,
     isThinking, thinkingText,
   } = useChatStore();
-  const { user } = useAuthStore();
+  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
   const [input, setInput] = useState("");
+  const [guestRemaining, setGuestRemaining] = useState(3);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [guestSending, setGuestSending] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [expandedKarten, setExpandedKarten] = useState<Record<number, boolean>>({});
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
@@ -108,10 +111,52 @@ export default function ChatPage() {
     localStorage.setItem("lumnos_tutor_modus", String(next));
   }, [tutorModus]);
 
-  const handleSend = () => {
-    if (!input.trim() || isSending) return;
-    sendMessageStream(input.trim(), selectedPersonality, tutorModus, eli5);
+  const handleSend = async () => {
+    if (!input.trim() || isSending || guestSending) return;
+    const msg = input.trim();
     setInput("");
+
+    // Guest mode: use guest API endpoint
+    if (isGuest && guestSessionId) {
+      if (guestRemaining <= 0) {
+        setShowPaywall(true);
+        return;
+      }
+      setGuestSending(true);
+      addMessage({ role: "user", content: msg, timestamp: new Date().toISOString() });
+      try {
+        const res = await guestApi.chat({
+          message: msg,
+          guest_session_id: guestSessionId,
+          subject: currentSubject !== "general" ? currentSubject : undefined,
+        });
+        addMessage({
+          role: "assistant",
+          content: res.response,
+          subject: res.subject,
+          timestamp: new Date().toISOString(),
+          web_quellen: res.web_quellen || [],
+          internet_genutzt: res.internet_genutzt || false,
+          is_verified: res.is_verified || false,
+          confidence: res.confidence || 0,
+        });
+        setGuestRemaining(res.guest_remaining);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : "";
+        if (errorMsg.includes("Gast-Limit") || errorMsg.includes("403")) {
+          setGuestRemaining(0);
+          setShowPaywall(true);
+        } else {
+          addMessage({ role: "assistant", content: `Fehler: ${errorMsg || "Bitte versuche es erneut."}` });
+        }
+      } finally {
+        setGuestSending(false);
+      }
+      return;
+    }
+
+    // Authenticated mode: use streaming
+    sendMessageStream(msg, selectedPersonality, tutorModus, eli5);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -171,10 +216,66 @@ export default function ChatPage() {
     }
   }, [isListening, startListening, stopListening]);
 
-  const tierLabel = user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
+  const tierLabel = isGuest ? "Gast" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#0a0f1e" }}>
+      {/* ===== GAST-BANNER ===== */}
+      {isGuest && (
+        <div
+          className="px-4 py-2.5 text-center text-sm font-medium border-b border-emerald-500/20"
+          style={{ background: "linear-gradient(90deg, rgba(16,185,129,0.15), rgba(99,102,241,0.15))" }}
+        >
+          <span className="text-emerald-400">
+            {guestRemaining > 0
+              ? `\uD83D\uDC4B Gast-Modus: Du kannst noch ${guestRemaining} ${guestRemaining === 1 ? "Frage" : "Fragen"} stellen.`
+              : "\u26A0\uFE0F Gast-Limit erreicht! Melde dich an, um weiter zu lernen."}
+          </span>
+          <button
+            onClick={() => { exitGuestMode(); window.location.reload(); }}
+            className="ml-3 text-indigo-400 hover:text-indigo-300 underline text-xs font-bold"
+          >
+            Jetzt anmelden
+          </button>
+        </div>
+      )}
+
+      {/* ===== PAYWALL MODAL ===== */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)" }}>
+          <div
+            className="relative max-w-md w-full mx-4 p-8 rounded-2xl text-center"
+            style={{
+              background: "rgba(15,20,40,0.95)",
+              border: "1px solid rgba(99,102,241,0.4)",
+              boxShadow: "0 0 40px rgba(99,102,241,0.3)",
+            }}
+          >
+            <div className="text-4xl mb-4">{"\u2728"}</div>
+            <h2 className="text-xl font-bold text-white mb-2">Dein Probe-Limit ist erreicht!</h2>
+            <p className="text-slate-400 mb-6">
+              Melde dich kostenlos an, um LUMNOS weiter zu nutzen und deinen Fortschritt zu speichern.
+            </p>
+            <button
+              onClick={() => { exitGuestMode(); window.location.reload(); }}
+              className="w-full py-3 rounded-xl text-white font-bold text-base transition-all"
+              style={{
+                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                boxShadow: "0 0 25px rgba(99,102,241,0.5)",
+              }}
+            >
+              Jetzt kostenlos anmelden
+            </button>
+            <button
+              onClick={() => setShowPaywall(false)}
+              className="mt-3 text-sm text-slate-500 hover:text-slate-400"
+            >
+              Sp\u00e4ter
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ===== HEADER ===== */}
       <div
         className="border-b border-indigo-500/20 p-3 lg:p-4"

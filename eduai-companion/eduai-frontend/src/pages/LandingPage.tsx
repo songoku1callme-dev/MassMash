@@ -58,6 +58,7 @@ interface LandingPageProps {
   onLogin: () => void;
   onRegister: () => void;
   onIQTest: () => void;
+  onGuestChat?: () => void;
 }
 
 const FEATURES = [
@@ -102,7 +103,7 @@ const TESTIMONIALS = [
   { name: "Lisa W.", grade: "13. Klasse", text: "Die Abitur-Simulation hat mir mega geholfen. Ich fühle mich jetzt viel sicherer.", avatar: "L" },
 ];
 
-export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPageProps) {
+export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat }: LandingPageProps) {
   const liveStats = useLiveStats();
 
   const LIVE_STATS = [
@@ -157,6 +158,17 @@ export default function LandingPage({ onLogin, onRegister, onIQTest }: LandingPa
               <Brain className="w-5 h-5" />
               Gratis IQ-Test
             </Button>
+            {onGuestChat && (
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2 text-base border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10"
+                onClick={onGuestChat}
+              >
+                <MessageCircle className="w-5 h-5" />
+                Jetzt testen — ohne Anmeldung
+              </Button>
+            )}
           </div>
           <p className="mt-3 text-xs text-lumnos-muted">Keine Kreditkarte nötig. DSGVO-konform.</p>
         </div>
