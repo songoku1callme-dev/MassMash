@@ -42,7 +42,7 @@ ALLE_FAECHER: dict[str, dict] = {
     "Politik": {"kategorie": "Gesellschaft", "emoji": "\U0001f5f3\ufe0f", "pflicht": False},
     "Wirtschaft": {"kategorie": "Gesellschaft", "emoji": "\U0001f4c8", "pflicht": False},
     "Psychologie": {"kategorie": "Gesellschaft", "emoji": "\U0001f9e0", "pflicht": False},
-    "Paedagogik": {"kategorie": "Gesellschaft", "emoji": "\U0001f468\u200d\U0001f3eb", "pflicht": False},
+    "Pädagogik": {"kategorie": "Gesellschaft", "emoji": "\U0001f468\u200d\U0001f3eb", "pflicht": False},
     "Sozialwissenschaften": {"kategorie": "Gesellschaft", "emoji": "\U0001f465", "pflicht": False},
     "Philosophie": {"kategorie": "Gesellschaft", "emoji": "\U0001f4ad", "pflicht": False},
     "Recht": {"kategorie": "Gesellschaft", "emoji": "\u2696\ufe0f", "pflicht": False},
@@ -59,7 +59,7 @@ ALLE_FAECHER: dict[str, dict] = {
     "Sport": {"kategorie": "Kreativ", "emoji": "\u26bd", "pflicht": False},
     # ── HAUSHALT ──────────────────────────────────────────
     "Hauswirtschaft": {"kategorie": "Haushalt", "emoji": "\U0001f373", "pflicht": False},
-    "Ernaehrungslehre": {"kategorie": "Haushalt", "emoji": "\U0001f34e", "pflicht": False},
+    "Ernährungslehre": {"kategorie": "Haushalt", "emoji": "\U0001f34e", "pflicht": False},
 }
 
 KATEGORIEN = [

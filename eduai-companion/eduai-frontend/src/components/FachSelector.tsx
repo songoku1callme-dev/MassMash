@@ -22,12 +22,12 @@ export const ALLE_FAECHER: FachItem[] = [
   // Sprachen
   { id: "german", name: "Deutsch", emoji: "📖", kategorie: "Sprachen" },
   { id: "english", name: "Englisch", emoji: "🇬🇧", kategorie: "Sprachen" },
-  { id: "french", name: "Franzoesisch", emoji: "🇫🇷", kategorie: "Sprachen" },
+  { id: "french", name: "Französisch", emoji: "🇫🇷", kategorie: "Sprachen" },
   { id: "latin", name: "Latein", emoji: "🏛️", kategorie: "Sprachen" },
   { id: "spanish", name: "Spanisch", emoji: "🇪🇸", kategorie: "Sprachen" },
   { id: "italian", name: "Italienisch", emoji: "🇮🇹", kategorie: "Sprachen" },
   { id: "russian", name: "Russisch", emoji: "🇷🇺", kategorie: "Sprachen" },
-  { id: "turkish", name: "Tuerkisch", emoji: "🇹🇷", kategorie: "Sprachen" },
+  { id: "turkish", name: "Türkisch", emoji: "🇹🇷", kategorie: "Sprachen" },
   { id: "ancient_greek", name: "Altgriechisch", emoji: "🏺", kategorie: "Sprachen" },
 
   // MINT
@@ -46,7 +46,7 @@ export const ALLE_FAECHER: FachItem[] = [
   { id: "politics", name: "Politik", emoji: "🏛️", kategorie: "Gesellschaft" },
   { id: "social_studies", name: "Sozialkunde", emoji: "👥", kategorie: "Gesellschaft" },
   { id: "psychology", name: "Psychologie", emoji: "🧠", kategorie: "Gesellschaft" },
-  { id: "pedagogy", name: "Paedagogik", emoji: "📚", kategorie: "Gesellschaft" },
+  { id: "pedagogy", name: "Pädagogik", emoji: "📚", kategorie: "Gesellschaft" },
   { id: "social_science", name: "Sozialwissenschaften", emoji: "🔬", kategorie: "Gesellschaft" },
   { id: "law", name: "Recht", emoji: "⚖️", kategorie: "Gesellschaft" },
 
@@ -64,7 +64,7 @@ export const ALLE_FAECHER: FachItem[] = [
 
   // Haushalt
   { id: "home_economics", name: "Hauswirtschaft", emoji: "🍳", kategorie: "Haushalt" },
-  { id: "nutrition", name: "Ernaehrungslehre", emoji: "🥗", kategorie: "Haushalt" },
+  { id: "nutrition", name: "Ernährungslehre", emoji: "🥗", kategorie: "Haushalt" },
   { id: "wat", name: "WAT", emoji: "🔧", kategorie: "Haushalt" },
 ];
 

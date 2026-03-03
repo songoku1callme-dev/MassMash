@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/turnier", tags=["tournaments"])
 ALL_TOURNAMENT_SUBJECTS = [
     "Mathematik", "Deutsch", "Physik", "Englisch", "Geschichte",
     "Biologie", "Chemie", "Informatik", "Geographie", "Kunst",
-    "Musik", "Sport", "Philosophie", "Wirtschaft", "Politik", "Franzoesisch",
+    "Musik", "Sport", "Philosophie", "Wirtschaft", "Politik", "Französisch",
 ]
 
 # Themed topics per subject — ensures unique themes (no repeat in 60 days)

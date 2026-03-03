@@ -515,6 +515,38 @@ def inject_citations(antwort_text: str, web_quellen: list) -> str:
     return antwort_text
 
 
+def _adaptive_max_tokens(frage: str) -> int:
+    """Bestimmt max_tokens basierend auf Frage-Komplexität.
+
+    Simple Fragen (unter 30 Zeichen, keine Erklärwörter) → 300 tokens
+    Mittlere Fragen → 1200 tokens
+    Komplexe Fragen (Erklärungen, Beweise, Zusammenfassungen) → 2000 tokens
+    """
+    frage_lower = frage.lower().strip()
+    frage_len = len(frage_lower)
+
+    # Komplexe Schlüsselwörter → lange Antwort
+    complex_words = [
+        "erkläre", "erklär", "warum", "zusammenfassung", "beweise",
+        "beschreibe", "analysiere", "vergleiche", "erläutere",
+        "begründe", "diskutiere", "erörtere", "interpretiere",
+        "wie funktioniert", "was passiert wenn", "unterschied zwischen",
+    ]
+    if any(word in frage_lower for word in complex_words):
+        return 2000
+
+    # Sehr kurze Fragen → kurze Antwort
+    if frage_len < 30:
+        return 300
+
+    # Mittlere Fragen
+    if frage_len < 80:
+        return 1200
+
+    # Längere Fragen → etwas mehr Raum
+    return 1800
+
+
 async def execute_routed_chat(
     frage: str, fach: str, tier: str,
     verlauf: list, system_prompt: str
@@ -522,6 +554,7 @@ async def execute_routed_chat(
     """Führt den Chat mit der optimalen Strategie aus (non-streaming)."""
 
     decision = route_request(frage, fach, tier)
+    adaptive_tokens = _adaptive_max_tokens(frage)
     web_quellen = []
 
     # Internet-Recherche wenn nötig (Tavily Deep Search)
@@ -585,7 +618,7 @@ async def execute_routed_chat(
                     f"[Interne Analyse: {analyse_text}]\n\n"
                     "Basierend auf meiner Analyse:"}
             ],
-            temperature=0.5, max_tokens=1800,
+            temperature=0.5, max_tokens=max(adaptive_tokens, 1800),
         )
     else:
         antwort_text = await _groq_chat(
@@ -595,7 +628,7 @@ async def execute_routed_chat(
                 *verlauf[-4:],
                 {"role": "user", "content": frage}
             ],
-            temperature=0.7, max_tokens=1200,
+            temperature=0.7, max_tokens=adaptive_tokens,
         )
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -687,6 +720,7 @@ async def execute_routed_chat_stream(
     - {"type": "done"} — Stream beendet
     """
     decision = route_request(frage, fach, tier)
+    adaptive_tokens = _adaptive_max_tokens(frage)
     web_quellen = []
 
     # Phase 0: LLM-basierte Fach-Klassifikation (Fix für Fächer-Routing Bug)
@@ -782,7 +816,7 @@ async def execute_routed_chat_stream(
             {"role": "user", "content": frage}
         ],
         temperature=0.5 if decision.multi_step else 0.7,
-        max_tokens=2400,
+        max_tokens=max(adaptive_tokens, 1800),
     ):
         full_text += chunk
 
