@@ -29,7 +29,7 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
   return <>{count.toLocaleString("de-DE")}{suffix}</>;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 /** Supreme 13.0 Phase 9: Fetch real stats from backend, fallback to defaults */
 function useLiveStats() {

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Swords, Users, Trophy, Clock, CheckCircle, XCircle, Copy, Loader2 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.VITE_API_URL || "";
 
 interface Player { user_id: number; username: string; score: number; }
 interface Question { frage: string; optionen: string[]; }

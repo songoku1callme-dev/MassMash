@@ -1,6 +1,17 @@
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// URL-Sanitizer: Entfernt Credentials aus der URL (Browser blockiert fetch mit user:pass@)
+let API_URL = import.meta.env.VITE_API_URL || "";
+try {
+  if (API_URL) {
+    const url = new URL(API_URL);
+    url.username = "";
+    url.password = "";
+    API_URL = url.toString().replace(/\/$/, "");
+  }
+} catch {
+  // Fallback: leerer String = relative Pfade
+}
 
 interface RequestOptions {
   method?: string;

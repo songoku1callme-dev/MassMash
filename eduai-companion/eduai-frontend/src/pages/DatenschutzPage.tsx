@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Shield, FileText, Lock, Trash2, Cookie } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.VITE_API_URL || "";
 
 interface Section { title: string; content: string; }
 

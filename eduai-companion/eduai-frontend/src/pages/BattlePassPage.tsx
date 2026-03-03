@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getAccessToken } from "../services/api";
 import { Trophy, Star, Lock, Gift, Zap, Bot, Palette, Crown, Gem, Flame } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 interface Reward {
   level: number;

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame } from "lucide-react";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.VITE_API_URL || "";
 
 interface Student {
   id: number; username: string; full_name: string; grade: string;
