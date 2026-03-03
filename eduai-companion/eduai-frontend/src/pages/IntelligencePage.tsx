@@ -221,7 +221,7 @@ export default function IntelligencePage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-2 dark:text-white">Wissensluecken-Scanner</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
-            10 Diagnose-Fragen um deine Staerken und Schwaechen in einem Fach zu erkennen.
+            10 Diagnose-Fragen um deine Stärken und Schwächen in einem Fach zu erkennen.
           </p>
           {scanQuestions.length === 0 && !scanResult && (
             <div>
@@ -295,7 +295,7 @@ export default function IntelligencePage() {
               )}
               {scanResult.strengths.length > 0 && (
                 <div className="mb-3">
-                  <p className="font-medium text-green-600 dark:text-green-400 mb-1">Staerken:</p>
+                  <p className="font-medium text-green-600 dark:text-green-400 mb-1">Stärken:</p>
                   <div className="flex flex-wrap gap-2">
                     {scanResult.strengths.map((s: string, i: number) => (
                       <span key={i} className="px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 rounded-full text-sm">{s}</span>
@@ -317,7 +317,7 @@ export default function IntelligencePage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold mb-2 dark:text-white">Personalisierter Wochenplan</h2>
           <p className="text-gray-500 dark:text-gray-400 mb-4">
-            Basierend auf deinen Schwaechen und kommenden Klausuren erstellt die KI deinen optimalen Wochenplan.
+            Basierend auf deinen Schwächen und kommenden Klausuren erstellt die KI deinen optimalen Wochenplan.
           </p>
           <Button onClick={loadWeeklyPlan} disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Calendar className="w-4 h-4 mr-2" />}

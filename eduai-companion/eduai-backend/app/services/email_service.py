@@ -154,7 +154,7 @@ async def send_weekly_report_email(
     weak_html = "".join(
         f"<span style='background:#fee2e2;color:#991b1b;padding:4px 8px;border-radius:4px;margin:2px;display:inline-block;font-size:13px;'>{s.get('subject', '')}: {s.get('avg_score', 0)}%</span>"
         for s in weakest[:3]
-    ) or "<span style='color:#9ca3af;'>Keine Schwaechen erkannt</span>"
+    ) or "<span style='color:#9ca3af;'>Keine Schwächen erkannt</span>"
 
     content = f"""
     <h2 style="color: #1f2937;">Dein Wochen-Report</h2>

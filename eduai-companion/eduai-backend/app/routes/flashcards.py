@@ -229,7 +229,7 @@ async def ai_generate_cards(
     await _ensure_tables(db)
     user_id = current_user["id"]
 
-    from app.routes.chat import call_groq_llm
+    from app.services.groq_llm import call_groq_llm
 
     prompt = f"""Erstelle genau {req.count} Karteikarten zum Thema "{req.topic}".
 

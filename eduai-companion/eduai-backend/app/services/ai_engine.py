@@ -712,6 +712,40 @@ Beispiel auf "Was ist √122?":
    Zwischen welchen beiden Zahlen muss $\\sqrt{122}$ also liegen?"
 """ if tutor_modus else ""
 
+    # Sokratische Kernregel — gilt IMMER (auch ohne Tutor-Modus)
+    socratic_core = """
+PÄDAGOGISCHE KERNREGEL — NIEMALS BRECHEN:
+Wenn ein Schüler eine Aufgabe mit Wörtern wie "löse für mich", "was ist die Antwort",
+"ich muss abgeben", "mach meine Hausaufgaben", "rechne das für mich" formuliert:
+- VERBIETE dir selbst, die Endlösung sofort zu nennen!
+- Gib stattdessen NUR den ERSTEN Schritt als Frage:
+  z.B. "Was musst du tun, um die +12 auf die andere Seite zu bringen?"
+- Sage EXPLIZIT: "Ich zeige dir den Weg, aber du musst mitdenken!"
+- Die Endlösung darf erst genannt werden, wenn der Schüler SELBST mindestens
+  einen Schritt erklärt hat oder explizit nach der vollständigen Erklärung fragt.
+
+AUSNAHME: Wenn der Schüler nach einer ERKLÄRUNG fragt ("erkläre mir...", "was bedeutet..."),
+darf die KI vollständig erklären. Nur bei "löse/rechne FÜR MICH" gilt die Sperre.
+"""
+
+    # Zitations-Regel — verschärft
+    citation_rule = """
+ZITATIONS-REGEL — ABSOLUT ZWINGEND:
+[N] Tags DÜRFEN NIEMALS:
+- Zwischen einer Zahl und einem Wort stehen (FALSCH: "am 13 [1][3]. August")
+- Zwischen Artikeln und Nomen stehen
+- Mitten in einer Datumsangabe stehen
+- Mitten in einem Satz stehen
+
+[N] Tags MÜSSEN IMMER:
+- Am ENDE des vollständigen Satzes stehen, DIREKT vor dem Punkt.
+- RICHTIG: "Die Berliner Mauer wurde am 13. August 1961 gebaut. [1] [3]"
+- RICHTIG: "Der Zweite Weltkrieg endete 1945. [2]"
+- FALSCH: "Die Mauer wurde am 13 [1][3][4][5]. August 1961 gebaut."
+
+Wenn du unsicher bist wo eine Citation hingehört: setze sie ans SATZENDE, niemals dazwischen!
+"""
+
     # Detail-Level Modifier
     detail_modifier = ""
     if detail_level == "simpler":
@@ -776,6 +810,8 @@ Du bist kein reiner Lösungsautomat, sondern ein pädagogischer Mentor, der Sch�
 3. **Struktur**: Nutze Markdown. Verwende kurze Absätze. Nutze **Fett-Druck** für Schlüsselbegriffe.
 4. **Übungsaufgabe**: Beende komplexe Erklärungen immer mit EINER kurzen Kontrollfrage.
 {sokrates}
+{socratic_core}
+{citation_rule}
 # UMGANG MIT FAKTEN (NULL HALLUZINATIONEN)
 {quellen_block}
 
@@ -1273,6 +1309,32 @@ def generate_quiz(
     extra_prompt: str = "",
 ) -> list:
     """Generate quiz questions for a subject."""
+    # Bug-Fix 4: Fach-Routing — map German subject names to quiz bank keys
+    _FACH_TO_QUIZ_KEY: dict[str, str] = {
+        "Mathematik": "math", "Mathe": "math",
+        "Englisch": "english",
+        "Deutsch": "german",
+        "Geschichte": "history",
+        "Physik": "science", "Biologie": "science", "Chemie": "science",
+        "Naturwissenschaften": "science",
+        # All other subjects fall back to the closest match or general
+        "Ethik": "history", "Philosophie": "history", "Politik": "history",
+        "Geografie": "science", "Geographie": "science",
+        "Informatik": "math",
+        "Französisch": "german", "Spanisch": "german", "Latein": "german",
+        "Italienisch": "german", "Russisch": "german", "Türkisch": "german",
+        "Altgriechisch": "german",
+        "Wirtschaft": "history",
+        "Kunst": "history", "Musik": "history",
+        "Sport": "science",
+        "Astronomie": "science",
+        "Psychologie": "science",
+        "Pädagogik": "history",
+        "Sozialkunde": "history",
+        "Ernährungslehre": "science",
+    }
+    quiz_key = _FACH_TO_QUIZ_KEY.get(subject, subject.lower())
+
     quizzes = {
         "math": {
             "beginner": [
@@ -1421,7 +1483,8 @@ def generate_quiz(
         }
     }
 
-    subject_quizzes = quizzes.get(subject, quizzes["math"])
+    # Bug-Fix 4: Use mapped quiz_key instead of raw German subject name
+    subject_quizzes = quizzes.get(quiz_key, quizzes["math"])
     difficulty_quizzes = subject_quizzes.get(difficulty, subject_quizzes["intermediate"])
 
     # Shuffle and limit
@@ -1451,7 +1514,7 @@ def get_fach_regeln(fach: str) -> str:
         "Mathe": "Nutze konkrete Zahlen. Rechenweg als Erklärung. LaTeX für Formeln: $x^2$. Immer Probe angeben.",
         "Physik": "Formeln + Einheiten immer angeben. Realweltbezug herstellen. Rechenaufgaben bevorzugen.",
         "Chemie": "Reaktionsgleichungen ausgleichen. Stoffnamen + Formeln. Sicherheitshinweise erwähnen.",
-        "Biologie": "Fachbegriffe lateinisch + deutsch. Schaubilder beschreiben. Evolutionaere Zusammenhaenge.",
+        "Biologie": "Fachbegriffe lateinisch + deutsch. Schaubilder beschreiben. Evolutionäre Zusammenhänge.",
         "Deutsch": "Grammatik-Regeln mit Beispielsätzen. Literatur-Epochen nennen. Rechtschreibregeln erklären.",
         "Englisch": "Grammatik mit Signalwörtern. Vokabeln im Kontext. Übersetzungen Deutsch-Englisch.",
         "Französisch": "Grammatik mit Konjugationstabellen. Vokabeln mit Artikel. Aussprache-Hinweise.",
@@ -1466,7 +1529,7 @@ def get_fach_regeln(fach: str) -> str:
         "Politik": "Grundgesetz-Artikel zitieren. Institutionen erklären. Aktuelle Bezüge.",
         "Wirtschaft": "Formeln für Berechnungen. Grafiken beschreiben. Marktmodelle erklären.",
         "Informatik": "Code-Beispiele in Python/Java. Algorithmen Schritt-für-Schritt. Big-O-Notation.",
-        "Astronomie": "Groessenverhaeltnisse nennen. Formeln + Einheiten. Beobachtungstipps.",
+        "Astronomie": "Größenverhältnisse nennen. Formeln + Einheiten. Beobachtungstipps.",
         "Technik": "Schaltplaene beschreiben. Materialien + Eigenschaften. Sicherheitsregeln.",
         "Psychologie": "Studien zitieren. Fachbegriffe definieren. Alltags-Beispiele geben.",
         "Pädagogik": "Theorien + Vertreter nennen. Fallbeispiele konstruieren. Methodenvergleich.",
@@ -1475,14 +1538,14 @@ def get_fach_regeln(fach: str) -> str:
         "Recht": "Paragraphen zitieren. Fallbeispiele konstruieren. Rechtsgebiete abgrenzen.",
         "Religion (Kath.)": "Bibelstellen zitieren. Kirchengeschichte einbeziehen. Ethische Dilemmata.",
         "Religion (Ev.)": "Bibelstellen zitieren. Reformationsgeschichte. Ethische Reflexion.",
-        "Islamunterricht": "Koranverse zitieren. Islamische Geschichte. Interreligioeser Dialog.",
+        "Islamunterricht": "Koranverse zitieren. Islamische Geschichte. Interreligiöser Dialog.",
         "Ethik": "Philosophische Positionen vergleichen. Dilemmata konstruieren. Argumentation foerdern.",
         "Werte und Normen": "Fallbeispiele aus dem Alltag. Verschiedene Perspektiven zeigen. Reflexionsfragen.",
         "Kunst": "Epochen + Kuenstler zuordnen. Bildbeschreibung systematisch. Gestaltungsmittel benennen.",
         "Musik": "Notenlehre + Intervalle. Epochen + Komponisten. Hoerbeispiele beschreiben.",
         "Darstellendes Spiel": "Theaterbegriffe definieren. Szenenanalyse. Improvisationstechniken.",
         "Sport": "Regelkunde + Taktik. Anatomie-Bezug. Trainingslehre-Prinzipien.",
-        "Hauswirtschaft": "Naehrwerte + Ernaehrungsregeln. Hygiene-Standards. Rezept-Berechnungen.",
+        "Hauswirtschaft": "Nährwerte + Ernährungsregeln. Hygiene-Standards. Rezept-Berechnungen.",
         "Ernährungslehre": "Nährstoffe + Funktionen. Ernährungspyramide. Allergien + Unverträglichkeiten.",
     }
     return regeln.get(fach, "Stelle klare, präzise Fragen auf Deutsch. Gib hilfreiche Erklärungen.")

@@ -35,7 +35,7 @@ export default function OfflineBanner() {
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-orange-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
       <WifiOff className="w-4 h-4" />
-      Offline - Karteikarten und Notizen verfuegbar
+      Offline - Karteikarten und Notizen verfügbar
     </div>
   );
 }

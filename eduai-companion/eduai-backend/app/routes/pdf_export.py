@@ -190,7 +190,7 @@ async def export_lernplan_pdf(
         lines.append(f"  - {rd['subject']}: {rd['topic_name']}")
 
     if not weak_rows:
-        lines.append("  Keine Schwaechen erkannt. Weiter so!")
+        lines.append("  Keine Schwächen erkannt. Weiter so!")
 
     lines.extend([
         "",

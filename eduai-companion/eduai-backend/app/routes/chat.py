@@ -28,6 +28,22 @@ logger = logging.getLogger(__name__)
 # Bug-Fix 2: Doppelte Quellen entfernen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+def clean_ai_response(text: str) -> str:
+    """Remove <thinking> tags and their content from AI responses.
+
+    The LLM uses <thinking>...</thinking> for internal chain-of-thought,
+    but these must NEVER be visible to the user.
+    """
+    import re
+    # Remove complete <thinking>...</thinking> blocks
+    text = re.sub(r'<thinking>.*?</thinking>', '', text, flags=re.DOTALL)
+    # Remove unclosed <thinking> tags (LLM forgot to close)
+    text = re.sub(r'<thinking>.*', '', text, flags=re.DOTALL)
+    # Remove orphaned </thinking> tags
+    text = text.replace('</thinking>', '')
+    return text.strip()
+
+
 def remove_self_generated_sources(text: str) -> str:
     """Entfernt LLM-generierte Quellen-Blöcke aus der Antwort.
 
@@ -546,6 +562,9 @@ async def send_message(
     except Exception:
         pass  # Non-fatal
 
+    # Bug-Fix 3: <thinking> Tags aus der Antwort entfernen
+    ai_response = clean_ai_response(ai_response)
+
     # Bug-Fix 2: Quellen NICHT in die Antwort einbauen — separat zurückgeben
     # Entferne LLM-generierte Quellen-Blöcke aus der Antwort
     ai_response = remove_self_generated_sources(ai_response)
@@ -801,8 +820,9 @@ async def send_message_stream(
                 yield f"event: meta\ndata: {json.dumps({k: v for k, v in event.items() if k != 'type'}, ensure_ascii=False)}\n\n"
 
             elif event_type == "done":
-                # Session + DB speichern
-                cleaned = remove_self_generated_sources(final_text) if final_text else ""
+                # Session + DB speichern — Bug-Fix 3: <thinking> Tags entfernen
+                cleaned = clean_ai_response(final_text) if final_text else ""
+                cleaned = remove_self_generated_sources(cleaned) if cleaned else ""
                 assistant_msg = {
                     "role": "assistant",
                     "content": cleaned,

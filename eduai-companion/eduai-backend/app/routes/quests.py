@@ -27,7 +27,7 @@ _ALL_SUBJECTS = [
 
 _SOCIAL_QUESTS = [
     ("Duell gewinnen", "Gewinne ein Multiplayer-Quiz gegen einen anderen Schüler"),
-    ("Lernpartner finden", "Finde einen Lernpartner ueber die Matching-Seite"),
+    ("Lernpartner finden", "Finde einen Lernpartner über die Matching-Seite"),
     ("Gruppen-Chat", "Schreibe eine Nachricht in einem Gruppen-Chat"),
     ("Turnier-Teilnahme", "Nimm am täglichen Turnier teil"),
     ("Hilf einem Mitschüler", "Beantworte eine Frage in der Community"),
@@ -49,8 +49,8 @@ def _generate_daily_quests(user_id: int, user_stats: dict) -> list[dict]:
     weak = user_stats.get("weak_subject", "Mathematik")
     quests.append({
         "quest_id": f"weak_{today}",
-        "title": f"Schwaeche ueben: {weak}",
-        "description": f"Mache ein Quiz ueber {weak} um deine Schwaeche zu verbessern",
+        "title": f"Schwäche üben: {weak}",
+        "description": f"Mache ein Quiz über {weak} um deine Schwäche zu verbessern",
         "xp_reward": 50,
         "target": 1,
         "icon": "target",

@@ -120,7 +120,7 @@ async def create_checkout(
     elif req.plan == "eltern":
         price_cents = ELTERN_YEARLY_PRICE_CENTS if is_yearly else ELTERN_PRICE_CENTS
         plan_name = "Lumnos Eltern-Abo" + (" (Jahresabo)" if is_yearly else "")
-        plan_desc = "Lernfortschritt in Echtzeit, Woechentliche Reports, Streak-Alerts, Schwaechen-Analyse"
+        plan_desc = "Lernfortschritt in Echtzeit, Wöchentliche Reports, Streak-Alerts, Schwächen-Analyse"
         target_tier = "eltern"
     else:
         price_cents = PRO_YEARLY_PRICE_CENTS if is_yearly else PRO_PRICE_CENTS

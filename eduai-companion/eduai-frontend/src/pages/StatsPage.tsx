@@ -286,7 +286,7 @@ export default function StatsPage() {
             Zum Ueben
           </h3>
           {weakest.length === 0 ? (
-            <p className="text-gray-400 text-sm">Keine Schwaechen erkannt</p>
+            <p className="text-gray-400 text-sm">Keine Schwächen erkannt</p>
           ) : (
             weakest.map((s) => (
               <SubjectBar key={s.subject} subject={s.subject} score={s.avg_score} color="bg-red-500" />

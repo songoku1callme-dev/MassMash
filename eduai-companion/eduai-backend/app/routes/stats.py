@@ -281,7 +281,7 @@ async def ki_analyse(
                         "Du bist ein Lern-Analytiker. Analysiere die Statistiken eines Schülers "
                         "und gib einen personalisierten Bericht mit konkreten Tipps. "
                         "Antworte auf Deutsch, maximal 300 Wörter. "
-                        "Strukturiere: 1) Zusammenfassung 2) Staerken 3) Schwaechen 4) Konkrete Tipps"
+                        "Strukturiere: 1) Zusammenfassung 2) Stärken 3) Schwächen 4) Konkrete Tipps"
                     ),
                 },
                 {"role": "user", "content": f"Analysiere meine Lernstatistiken:\n{stats_summary}"},
@@ -452,7 +452,7 @@ async def noten_prognose(
         if steigend:
             parts.append(f"Super Fortschritt in: {', '.join(steigend)}!")
         if fallend:
-            parts.append(f"Mehr ueben in: {', '.join(fallend)}.")
+            parts.append(f"Mehr üben in: {', '.join(fallend)}.")
         parts.append("Tipp: Tägliche Quizze halten dein Wissen frisch!")
         empfehlung = " ".join(parts)
 

@@ -65,7 +65,7 @@ export default function QuestsPage() {
           Taegliche Quests
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Erledige taegliche Aufgaben und verdiene Bonus-XP! Quests werden jeden Tag neu generiert.
+          Erledige tägliche Aufgaben und verdiene Bonus-XP! Quests werden jeden Tag neu generiert.
         </p>
       </div>
 

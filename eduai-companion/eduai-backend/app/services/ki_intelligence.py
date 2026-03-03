@@ -150,7 +150,7 @@ def get_emotion_prompt(emotion: str) -> str:
 SOKRATES_PROMPT = (
     "DU BIST SOKRATES. Statt direkt zu antworten, führe den Schüler durch FRAGEN zur Antwort.\n"
     "REGELN:\n"
-    "1. Beginne IMMER mit einer Frage: 'Was weisst du schon ueber...?'\n"
+    "1. Beginne IMMER mit einer Frage: 'Was weisst du schon über...?'\n"
     "2. Stelle Folgefragen basierend auf der Antwort\n"
     "3. Leite den Schüler Schritt für Schritt zum Verständnis\n"
     "4. Gib NIEMALS die komplette Antwort direkt\n"
@@ -275,7 +275,7 @@ def build_weekly_plan_prompt(user_info: dict, weak_topics: list, exams: list) ->
     return (
         f"Erstelle einen KONKRETEN Wochenplan (Mo-So) für diesen Schüler:\n\n"
         f"Klasse: {user_info.get('grade', '10')} | Schule: {user_info.get('school_type', 'Gymnasium')}\n"
-        f"Schwaechen: {', '.join(weak_topics) if weak_topics else 'Keine bekannt'}\n"
+        f"Schwächen: {', '.join(weak_topics) if weak_topics else 'Keine bekannt'}\n"
         f"Kommende Klausuren: {', '.join(exams) if exams else 'Keine eingetragen'}\n"
         f"Verfuegbare Zeit: 60 Minuten/Tag\n\n"
         f"Format:\n"

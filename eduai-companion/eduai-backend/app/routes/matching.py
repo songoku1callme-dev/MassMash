@@ -39,7 +39,7 @@ async def find_lernpartner(
             my_weak_topics.add(rd["topic_name"])
 
     if not my_weak_subjects:
-        return {"partners": [], "message": "Keine Schwaechen erkannt. Mache mehr Quizze!"}
+        return {"partners": [], "message": "Keine Schwächen erkannt. Mache mehr Quizze!"}
 
     # Get current user's grade
     cursor = await db.execute("SELECT school_grade FROM users WHERE id = ?", (user_id,))

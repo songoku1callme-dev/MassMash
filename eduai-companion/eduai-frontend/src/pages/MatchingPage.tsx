@@ -20,7 +20,7 @@ export default function MatchingPage() {
       setPartners(data.partners);
       setMyWeakSubjects(data.my_weak_subjects || []);
       if (data.partners.length === 0) {
-        setMessage("Keine passenden Lernpartner gefunden. Mache mehr Quizze, damit die KI deine Schwaechen erkennt!");
+        setMessage("Keine passenden Lernpartner gefunden. Mache mehr Quizze, damit die KI deine Schwächen erkennt!");
       }
     } catch {
       setMessage("Fehler beim Laden der Lernpartner");
@@ -37,7 +37,7 @@ export default function MatchingPage() {
           Lernpartner finden
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
-          Die KI findet Schüler mit ähnlichen Schwaechen — gemeinsam lernt ihr besser!
+          Die KI findet Schüler mit ähnlichen Schwächen — gemeinsam lernt ihr besser!
         </p>
       </div>
 

@@ -15,7 +15,7 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   theme: "Themes",
-  ki: "KI-Persoenlichkeiten",
+  ki: "KI-Persönlichkeiten",
   frame: "Profilrahmen",
   boost: "Boosts",
 };
@@ -92,7 +92,7 @@ export default function ShopPage() {
         </div>
         <div className="text-right">
           <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{userXp}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Verfuegbare XP</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Verfügbare XP</p>
         </div>
       </div>
 
