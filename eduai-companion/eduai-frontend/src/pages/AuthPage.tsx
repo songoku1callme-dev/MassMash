@@ -231,40 +231,17 @@ export default function AuthPage() {
               </form>
             )}
 
-            {/* DEV BYPASS LOGIN — for testing without Clerk/OAuth */}
+            {/* DEV BYPASS LOGIN — server-side via proxy, no fetch() needed */}
             {import.meta.env.VITE_DEV_BYPASS === "true" && (
               <div className="mt-4 pt-4 border-t border-dashed border-red-300 dark:border-red-700">
                 <Button
                   variant="destructive"
                   className="w-full flex items-center gap-2"
                   size="lg"
-                  onClick={async () => {
-                    setError("");
-                    setLoading(true);
-                    try {
-                      // Use the dev bypass token — backend recognizes this
-                      // Saubere Base-URL ohne Credentials (Tunnel hat user:pass@)
-                      const cleanOrigin = (() => {
-                        try {
-                          const u = new URL(window.location.href);
-                          u.username = "";
-                          u.password = "";
-                          return u.origin;
-                        } catch { return ""; }
-                      })();
-                      const res = await fetch(`${cleanOrigin}/api/auth/dev-bypass`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                      });
-                      if (!res.ok) throw new Error("Dev Bypass fehlgeschlagen");
-                      const data = await res.json();
-                      setTokens(data.access_token, data.refresh_token);
-                      window.location.href = "/dashboard";
-                    } catch (err: unknown) {
-                      setError(err instanceof Error ? err.message : "Dev Bypass fehlgeschlagen");
-                    } finally {
-                      setLoading(false);
-                    }
+                  onClick={() => {
+                    // Navigate to /dev-bypass — proxy handles everything server-side
+                    // No fetch() needed, avoids credentials-in-URL browser block
+                    window.location.href = "/dev-bypass";
                   }}
                   disabled={loading}
                 >
