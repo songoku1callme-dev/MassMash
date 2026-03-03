@@ -3,7 +3,8 @@ import { useAuthStore } from "../stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BookOpen, GraduationCap, Chrome } from "lucide-react";
+import { BookOpen, GraduationCap, Chrome, Zap } from "lucide-react";
+import { setTokens } from "../services/api";
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -228,6 +229,41 @@ export default function AuthPage() {
                   {loading ? "Registrieren..." : "Konto erstellen"}
                 </Button>
               </form>
+            )}
+
+            {/* DEV BYPASS LOGIN — for testing without Clerk/OAuth */}
+            {import.meta.env.VITE_DEV_BYPASS === "true" && (
+              <div className="mt-4 pt-4 border-t border-dashed border-red-300 dark:border-red-700">
+                <Button
+                  variant="destructive"
+                  className="w-full flex items-center gap-2"
+                  size="lg"
+                  onClick={async () => {
+                    setError("");
+                    setLoading(true);
+                    try {
+                      // Use the dev bypass token — backend recognizes this
+                      const res = await fetch(`/api/auth/dev-bypass`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                      });
+                      if (!res.ok) throw new Error("Dev Bypass fehlgeschlagen");
+                      const data = await res.json();
+                      setTokens(data.access_token, data.refresh_token);
+                      window.location.href = "/dashboard";
+                    } catch (err: unknown) {
+                      setError(err instanceof Error ? err.message : "Dev Bypass fehlgeschlagen");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                >
+                  <Zap className="w-5 h-5" />
+                  DEV BYPASS LOGIN (Max-Tier Testing)
+                </Button>
+                <p className="text-xs text-red-400 text-center mt-1">Nur für Entwickler-Testing</p>
+              </div>
             )}
 
             <div className="mt-4 text-center">

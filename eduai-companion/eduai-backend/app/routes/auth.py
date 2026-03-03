@@ -249,6 +249,63 @@ async def refresh_access_token(
     return RefreshTokenResponse(access_token=new_access_token)
 
 
+@router.post("/dev-bypass")
+async def dev_bypass_login(db: aiosqlite.Connection = Depends(get_db)):
+    """DEV BYPASS: Instantly login as the test user (Max-Tier) for testing.
+
+    Only works when LUMNOS_DEV_MODE=1 or EDUAI_DEV_MODE=1 is set.
+    Returns a real JWT token for the 'qualitytest' user (or creates one).
+    """
+    dev_mode = os.getenv("LUMNOS_DEV_MODE", "") == "1" or os.getenv("EDUAI_DEV_MODE", "") == "1"
+    if not dev_mode:
+        raise HTTPException(status_code=403, detail="Dev bypass is disabled in production")
+
+    # Find or create the test user
+    cursor = await db.execute("SELECT * FROM users WHERE username = 'qualitytest'")
+    user = await cursor.fetchone()
+
+    if not user:
+        # Create test user with Max tier
+        hashed_pw = get_password_hash("Test1234!")
+        cursor = await db.execute(
+            """INSERT INTO users (email, username, hashed_password, full_name, school_grade,
+            school_type, preferred_language, subscription_tier, is_pro)
+            VALUES ('test@lumnos.de', 'qualitytest', ?, 'Quality Tester', '12', 'Gymnasium', 'de', 'max', 1)""",
+            (hashed_pw,),
+        )
+        await db.commit()
+        user_id = cursor.lastrowid
+        # Create learning profiles
+        for subject in SUBJECTS:
+            await db.execute(
+                "INSERT INTO learning_profiles (user_id, subject, proficiency_level, mastery_score) VALUES (?, ?, 'intermediate', 50.0)",
+                (user_id, subject),
+            )
+        await db.commit()
+    else:
+        user_dict = dict(user)
+        user_id = user_dict["id"]
+        # Ensure Max tier
+        await db.execute(
+            "UPDATE users SET subscription_tier = 'max', is_pro = 1 WHERE id = ?",
+            (user_id,),
+        )
+        await db.commit()
+
+    # Re-fetch user
+    cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user_dict = dict(await cursor.fetchone())
+
+    access_token = create_access_token(data={"sub": user_id})
+    refresh_token = create_refresh_token(data={"sub": user_id})
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user": _user_response_from_dict(user_dict),
+    }
+
+
 @router.get("/clerk-config")
 async def clerk_config():
     """Return Clerk OAuth configuration for the frontend.
