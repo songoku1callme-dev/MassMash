@@ -13,33 +13,237 @@ from datetime import datetime
 # BLOCK A: Fach-Normalisierung — English → Deutsch
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FACH_MAPPING: dict[str, str] = {
+    # Sprachen
     "german":      "Deutsch",
+    "english":     "Englisch",
+    "french":      "Französisch",
+    "spanish":     "Spanisch",
+    "latin":       "Latein",
+    "ancient greek": "Altgriechisch",
+    "russian":     "Russisch",
+    "italian":     "Italienisch",
+    "chinese":     "Chinesisch",
+    # MINT
     "math":        "Mathematik",
     "mathematics": "Mathematik",
     "physics":     "Physik",
     "chemistry":   "Chemie",
     "biology":     "Biologie",
-    "history":     "Geschichte",
-    "english":     "Englisch",
     "computer":    "Informatik",
+    "computer science": "Informatik",
     "science":     "Naturwissenschaft",
+    "astronomy":   "Astronomie",
+    "nut":         "Natur und Technik",
+    "natur und technik": "Natur und Technik",
+    # Gesellschaft
+    "history":     "Geschichte",
     "geography":   "Geografie",
-    "music":       "Musik",
-    "art":         "Kunst",
-    "ethics":      "Ethik",
-    "latin":       "Latein",
-    "french":      "Französisch",
-    "spanish":     "Spanisch",
     "economics":   "Wirtschaft",
     "politics":    "Politik",
-    "religion":    "Religion",
-    "philosophy":  "Philosophie",
-    "psychology":  "Psychologie",
     "sociology":   "Sozialkunde",
+    "gemeinschaftskunde": "Gemeinschaftskunde",
+    "philosophy":  "Philosophie",
+    "ethics":      "Ethik",
+    "religion":    "Religion",
+    "religion evangelisch": "Religion (Evangelisch)",
+    "religion katholisch": "Religion (Katholisch)",
+    "religion islamisch": "Religion (Islamisch)",
+    "religion jüdisch": "Religion (Jüdisch)",
+    # Kreativ/Sport
+    "art":         "Kunst",
+    "music":       "Musik",
     "sport":       "Sport",
     "physical education": "Sport",
+    "theater":     "Darstellendes Spiel",
+    "drama":       "Darstellendes Spiel",
+    # Pädagogik/Spezial
+    "psychology":  "Psychologie",
+    "pedagogy":    "Pädagogik",
+    "erziehungswissenschaften": "Pädagogik",
+    "nutrition":   "Ernährung und Gesundheit",
+    "media":       "Medieninformatik",
     "general":     "Allgemein",
 }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK 3: All-Germany Fächer Matrix (Quality Engine v2)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Alle 16 Bundesländer mit Lehrplan-Besonderheiten
+BUNDESLAND_LEHRPLAN: dict[str, dict] = {
+    "Bayern": {
+        "name": "Bayern",
+        "abitur": "G9 (seit 2025), LehrplanPLUS",
+        "besonderheiten": "Sehr anspruchsvolles Abitur, starker MINT-Fokus",
+    },
+    "Baden-Württemberg": {
+        "name": "Baden-Württemberg",
+        "abitur": "Bildungsplan 2016, kein Zentralabitur",
+        "besonderheiten": "Gemeinschaftskunde statt Sozialkunde, NwT als Profilfach",
+    },
+    "NRW": {
+        "name": "Nordrhein-Westfalen",
+        "abitur": "Zentralabitur, Kernlehrpläne MSB",
+        "besonderheiten": "Größtes Bundesland, breites Fächerangebot",
+    },
+    "Niedersachsen": {
+        "name": "Niedersachsen",
+        "abitur": "Kerncurriculum, zentrale Abituraufgaben",
+        "besonderheiten": "Werte und Normen als Ersatz für Religion",
+    },
+    "Hessen": {
+        "name": "Hessen",
+        "abitur": "Kerncurriculum, Zentralabitur (Landesabitur)",
+        "besonderheiten": "Politik und Wirtschaft als Kombinationsfach",
+    },
+    "Berlin": {
+        "name": "Berlin",
+        "abitur": "Rahmenlehrplan, Senat für Bildung",
+        "besonderheiten": "Ethik Pflichtfach, breites Sprachangebot",
+    },
+    "Hamburg": {
+        "name": "Hamburg",
+        "abitur": "Bildungsplan, Abitur zentral",
+        "besonderheiten": "Theater als reguläres Fach, PGW (Politik/Gesellschaft/Wirtschaft)",
+    },
+    "Sachsen": {
+        "name": "Sachsen",
+        "abitur": "Lehrpläne des SMK, zentrales Abitur",
+        "besonderheiten": "Starker MINT-Fokus, Informatik ab Klasse 7",
+    },
+    "Thüringen": {
+        "name": "Thüringen",
+        "abitur": "Thüringer Lehrpläne, zentral",
+        "besonderheiten": "Astronomie als eigenständiges Fach",
+    },
+    "Brandenburg": {
+        "name": "Brandenburg",
+        "abitur": "Rahmenlehrplan (gemeinsam mit Berlin)",
+        "besonderheiten": "LER (Lebensgestaltung-Ethik-Religionskunde)",
+    },
+    "Sachsen-Anhalt": {
+        "name": "Sachsen-Anhalt",
+        "abitur": "Fachlehrpläne, zentrale Prüfungen",
+        "besonderheiten": "Astronomie verfügbar, Ethik als Alternative",
+    },
+    "Mecklenburg-Vorpommern": {
+        "name": "Mecklenburg-Vorpommern",
+        "abitur": "Rahmenplan, zentrale Prüfungen",
+        "besonderheiten": "Philosophieren mit Kindern, AWT",
+    },
+    "Schleswig-Holstein": {
+        "name": "Schleswig-Holstein",
+        "abitur": "Fachanforderungen, zentral",
+        "besonderheiten": "WiPo (Wirtschaft/Politik) als Kombifach",
+    },
+    "Rheinland-Pfalz": {
+        "name": "Rheinland-Pfalz",
+        "abitur": "Lehrpläne RLP, dezentrales Abitur",
+        "besonderheiten": "Sozialkunde ab Klasse 7, dezentrales Abitur",
+    },
+    "Saarland": {
+        "name": "Saarland",
+        "abitur": "Lehrpläne, G9",
+        "besonderheiten": "Französisch ab Klasse 3, starker Frankreich-Bezug",
+    },
+    "Bremen": {
+        "name": "Bremen",
+        "abitur": "Bildungspläne, zentral",
+        "besonderheiten": "Gesamtschul-System, WAT (Wirtschaft-Arbeit-Technik)",
+    },
+}
+
+# Fach-spezifische Lehrplan-Expertise
+FACH_LEHRPLAN_EXPERTISE: dict[str, str] = {
+    "Mathematik": "Nutze LaTeX für alle Formeln ($..$ inline, $$...$$ Block). Zeige Rechenwege vollständig. Beachte CAS-Taschenrechner-Regelungen.",
+    "Physik": "Formeln mit Einheiten (SI-System). Realweltbeispiele. Experimente beschreiben.",
+    "Chemie": "Reaktionsgleichungen ausbalancieren. Periodensystem-Bezug. Stöchiometrie.",
+    "Biologie": "Fachbegriffe erklären + lateinische Namen. Evolutionärer Kontext. Ökosystem-Denken.",
+    "Geschichte": "Quellen nennen. Historische Einordnung. Kausalität. Multiperspektivität.",
+    "Deutsch": "Textanalyse nach Aufbau-Methode. Stilmittel benennen. Epochen-Kontext.",
+    "Englisch": "Grammatik mit Beispielen. Vokabeln im Kontext. British vs American English.",
+    "Französisch": "Grammatik (Subjonctif, Conditionnel). Kultur-Kontext. Aussprache-Tipps.",
+    "Spanisch": "Subjuntivo vs Indicativo. Lateinamerikanisches vs europäisches Spanisch.",
+    "Latein": "Stammformen bei Vokabeln. Kasus syntaktisch begründen. Übersetzungstechnik.",
+    "Altgriechisch": "Attisches Griechisch. Stammformen. Partizipialkonstruktionen.",
+    "Russisch": "Kyrillische Schrift erklären. Aspektpaare. Deklinationsmuster.",
+    "Italienisch": "Congiuntivo. Passato prossimo vs imperfetto. Aussprache.",
+    "Chinesisch": "Pinyin-Transkription. Schriftzeichen-Aufbau. Tonalität.",
+    "Informatik": "Code in Codeblöcken. Zeitkomplexität (O-Notation). Pseudocode + Python/Java.",
+    "Astronomie": "Keplersche Gesetze. Hertzsprung-Russell-Diagramm. Kosmologie-Grundlagen.",
+    "Natur und Technik": "Fächerübergreifend (Bio+Physik+Chemie). Alltagsbezug. Experimente.",
+    "Geografie": "Karten lesen. Klimazonen. Plattentektonik. Stadtgeografie.",
+    "Wirtschaft": "Angebot/Nachfrage. Konjunkturzyklus. Wirtschaftssysteme. Aktuelle Bezüge.",
+    "Politik": "Grundgesetz. Gewaltenteilung. EU-Institutionen. Aktuelle Politik.",
+    "Sozialkunde": "Gesellschaftsstrukturen. Soziale Ungleichheit. Medien. Demokratie.",
+    "Gemeinschaftskunde": "Politik + Wirtschaft + Gesellschaft integriert. BaWü-spezifisch.",
+    "Philosophie": "Logisch argumentieren. Philosophen zitieren. Gedankenexperimente.",
+    "Ethik": "Moralische Dilemmata. Wertesysteme. Religionsvergleich. Utilitarismus vs Deontologie.",
+    "Religion (Evangelisch)": "Lutherische Theologie. Bibelexegese. Kirchengeschichte.",
+    "Religion (Katholisch)": "Sakramente. Kirchenlehre. Sozialethik. Vatikan II.",
+    "Religion (Islamisch)": "Koran-Exegese. Fünf Säulen. Islamische Ethik. Hadith.",
+    "Religion (Jüdisch)": "Tora. Jüdische Feiertage. Holocaust-Erinnerung. Talmud.",
+    "Religion": "Interreligiöser Dialog. Weltreligionen vergleichen. Ethische Grundfragen.",
+    "Kunst": "Epochen (Barock, Impressionismus, etc.). Bildanalyse. Gestaltungsprinzipien.",
+    "Musik": "Notenlehre. Musikgeschichte. Harmonielehre. Werkanalyse.",
+    "Sport": "Trainingslehre. Bewegungsanalyse. Sportbiologie. Regelkunde.",
+    "Darstellendes Spiel": "Theaterpädagogik. Inszenierung. Rollenarbeit. Dramaturgie.",
+    "Psychologie": "Lerntheorien. Entwicklungspsychologie. Sozialpsychologie. Experimente.",
+    "Pädagogik": "Erziehungstheorien. Montessori, Piaget, Erikson. Bildungssystem.",
+    "Ernährung und Gesundheit": "Nährstoffe. Verdauung. Gesunde Ernährung. Essstörungen.",
+    "Medieninformatik": "Webentwicklung. Datenbanken. UX-Design. Digitale Medien.",
+}
+
+
+def get_lehrplan_context(fach: str, bundesland: str = "", klasse: str = "10") -> str:
+    """Generiert Lehrplan-Kontext für ein Fach basierend auf Bundesland und Klasse.
+
+    Block 3 der Quality Engine v2: Jedes Fach bekommt spezifischen
+    Lehrplan-Kontext injiziert.
+    """
+    parts = []
+
+    # Fach-spezifische Expertise
+    expertise = FACH_LEHRPLAN_EXPERTISE.get(fach, "")
+    if expertise:
+        parts.append(f"Fach-Expertise: {expertise}")
+
+    # Bundesland-spezifischer Kontext
+    bl_info = BUNDESLAND_LEHRPLAN.get(bundesland, {})
+    if bl_info:
+        parts.append(
+            f"Bundesland: {bl_info['name']} — {bl_info['abitur']}. "
+            f"{bl_info['besonderheiten']}."
+        )
+    elif bundesland:
+        parts.append(f"Bundesland: {bundesland} — Nationaler Lehrplan.")
+
+    # Klassen-spezifischer Kontext
+    klasse_int = 10
+    try:
+        klasse_int = int(klasse)
+    except (ValueError, TypeError):
+        pass
+
+    if klasse_int <= 6:
+        parts.append("Niveau: Unterstufe — Grundlagen, einfache Sprache, viele Beispiele.")
+    elif klasse_int <= 9:
+        parts.append("Niveau: Mittelstufe — Vertiefung, erste Fachbegriffe, Zusammenhänge.")
+    elif klasse_int <= 10:
+        parts.append("Niveau: Oberstufe-Übergang — MSA/Realschulabschluss, komplexere Aufgaben.")
+    elif klasse_int <= 12:
+        parts.append("Niveau: Oberstufe/Abitur — Wissenschaftspropädeutisch, Analyse, Erörterung.")
+    else:
+        parts.append("Niveau: Abitur-Vorbereitung — Höchstes Niveau, Prüfungsformat.")
+
+    # Rahmenlehrplan-Injection
+    parts.append(
+        f"Du erklärst {fach} nach dem Rahmenlehrplan für "
+        f"{bundesland or 'Deutschland'} Klasse {klasse}."
+    )
+
+    return "\n".join(parts)
 
 
 def normalize_fach(fach_raw: str) -> str:
@@ -218,16 +422,58 @@ FACH_KEYWORDS: list[tuple[str, str, int]] = [
     ("konjugation",      "Latein",       90),
     ("deklinieren",      "Latein",      100),
 
-    # ═══ WEITERE ═══
+    # ═══ WIRTSCHAFT ═══
     ("volkswirtschaft",  "Wirtschaft",  100),
+    ("betriebswirtschaft", "Wirtschaft", 100),
     ("angebot",          "Wirtschaft",   85),
     ("nachfrage",        "Wirtschaft",   85),
     ("markt",            "Wirtschaft",   80),
+    ("konjunktur",       "Wirtschaft",   90),
+    ("inflation",        "Wirtschaft",   90),
+
+    # ═══ PSYCHOLOGIE ═══
     ("psychologie",      "Psychologie", 100),
     ("verhalten",        "Psychologie",  75),
+    ("konditionierung",  "Psychologie", 100),
+    ("freud",            "Psychologie",  95),
+
+    # ═══ GEOGRAFIE ═══
     ("erdkunde",         "Geografie",    90),
     ("klima",            "Geografie",    85),
+    ("kontinent",        "Geografie",    85),
+    ("plattentektonik",  "Geografie",   100),
     ("land",             "Geografie",    60),
+
+    # ═══ NEUE FÄCHER (Quality Engine v2 Block 3) ═══
+    ("altgriechisch",    "Altgriechisch", 100),
+    ("homer",            "Altgriechisch", 90),
+    ("platon",           "Altgriechisch", 90),
+    ("russisch",         "Russisch",    100),
+    ("kyrillisch",       "Russisch",     95),
+    ("italienisch",      "Italienisch", 100),
+    ("chinesisch",       "Chinesisch",  100),
+    ("mandarin",         "Chinesisch",  100),
+    ("astronomie",       "Astronomie",  100),
+    ("planet",           "Astronomie",   80),
+    ("stern",            "Astronomie",   75),
+    ("galaxie",          "Astronomie",  100),
+    ("natur und technik", "Natur und Technik", 100),
+    ("gemeinschaftskunde", "Gemeinschaftskunde", 100),
+    ("pädagogik",        "Pädagogik",   100),
+    ("erziehungswissensch", "Pädagogik", 100),
+    ("montessori",       "Pädagogik",    95),
+    ("ernährung",        "Ernährung und Gesundheit", 90),
+    ("nährstoff",        "Ernährung und Gesundheit", 90),
+    ("medieninformatik",  "Medieninformatik", 100),
+    ("darstellendes spiel", "Darstellendes Spiel", 100),
+    ("theater",          "Darstellendes Spiel", 90),
+    ("schauspiel",       "Darstellendes Spiel", 90),
+    ("evangelisch",      "Religion (Evangelisch)", 95),
+    ("katholisch",       "Religion (Katholisch)", 95),
+    ("islamisch",        "Religion (Islamisch)", 95),
+    ("jüdisch",          "Religion (Jüdisch)", 95),
+    ("ethik",            "Ethik",       100),
+    ("moral",            "Ethik",        85),
 ]
 
 # Kombinierte Phrases die Priorität erzwingen

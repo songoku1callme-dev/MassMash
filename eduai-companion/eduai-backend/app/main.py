@@ -108,6 +108,16 @@ async def lifespan(app: FastAPI):
                 id="prompt_optimization", replace_existing=True,
             )
 
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            # Quality Engine v2 Block 4: Self-Learning Nightly Cron
+            # Analysiert negative Feedbacks und verbessert Fach-Prompts
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            scheduler.add_job(
+                _nightly_self_learning_job,
+                CronTrigger(hour=2, minute=0, timezone=tz_berlin),
+                id="self_learning", replace_existing=True,
+            )
+
             # Load approved prompts on startup
             try:
                 import asyncio
@@ -239,6 +249,131 @@ async def _daily_tournament_job():
             logger.info("Daily tournament created: %s", result.get("subject", "unknown"))
     except Exception as exc:
         logger.error("Daily tournament job failed: %s", exc)
+
+
+async def _nightly_self_learning_job():
+    """Quality Engine v2 Block 4: Self-Learning Nightly Cron.
+
+    Analysiert alle negativ bewerteten Antworten des Tages,
+    lässt 70b analysieren warum sie schlecht waren,
+    und speichert Verbesserungsvorschläge für Fach-Prompts.
+    """
+    logger.info("Running nightly self-learning job (Quality Engine v2 Block 4)")
+    try:
+        import aiosqlite
+        import httpx
+        db_path = os.getenv("DATABASE_PATH", "app.db")
+        groq_key = os.getenv("GROQ_API_KEY", "")
+
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+
+            # Hole alle negativen Feedbacks von heute
+            cursor = await db.execute(
+                """SELECT cf.session_id, cf.message_index, cf.reason,
+                          cs.subject, cs.messages
+                FROM chat_feedback cf
+                LEFT JOIN chat_sessions cs ON cf.session_id = cs.id
+                WHERE cf.rating = 'negative'
+                AND DATE(cf.created_at) = DATE('now')
+                ORDER BY cf.id DESC
+                LIMIT 20"""
+            )
+            rows = await cursor.fetchall()
+            if not rows:
+                logger.info("Keine negativen Feedbacks heute — nichts zu lernen.")
+                return
+
+            # Sammle Fehler-Muster pro Fach
+            fach_fehler: dict[str, list[str]] = {}
+            for r in rows:
+                rd = dict(r)
+                fach = rd.get("subject", "Allgemein") or "Allgemein"
+                reason = rd.get("reason", "") or "unbekannt"
+                msg_idx = rd.get("message_index", 0)
+
+                # Extrahiere die problematische Antwort
+                try:
+                    import json as _json
+                    msgs = _json.loads(rd.get("messages", "[]"))
+                    if msg_idx < len(msgs):
+                        antwort = msgs[msg_idx].get("content", "")[:200]
+                    else:
+                        antwort = ""
+                except Exception:
+                    antwort = ""
+
+                fehler_text = f"Grund: {reason}"
+                if antwort:
+                    fehler_text += f" | Antwort-Auszug: {antwort}"
+                fach_fehler.setdefault(fach, []).append(fehler_text)
+
+            # Für jedes Fach: 70b analysieren lassen
+            if not groq_key:
+                logger.warning("GROQ_API_KEY nicht gesetzt — Self-Learning übersprungen")
+                return
+
+            for fach, fehler_liste in fach_fehler.items():
+                analyse_prompt = (
+                    f"Du bist ein Bildungsexperte für das Fach '{fach}'.\n"
+                    f"Folgende KI-Antworten wurden von Schülern als schlecht bewertet:\n\n"
+                    + "\n".join([f"- {f}" for f in fehler_liste[:10]])
+                    + "\n\nAnalysiere die Muster und gib KONKRETE Verbesserungsvorschläge "
+                    "für den System-Prompt des Fachs. Maximal 3 Sätze."
+                )
+
+                try:
+                    async with httpx.AsyncClient(timeout=30.0) as client:
+                        resp = await client.post(
+                            "https://api.groq.com/openai/v1/chat/completions",
+                            headers={"Authorization": f"Bearer {groq_key}"},
+                            json={
+                                "model": "llama-3.3-70b-versatile",
+                                "messages": [{"role": "user", "content": analyse_prompt}],
+                                "temperature": 0.2,
+                                "max_tokens": 300,
+                            },
+                        )
+                        if resp.status_code == 200:
+                            analyse = resp.json()["choices"][0]["message"]["content"]
+                        else:
+                            analyse = f"Groq-API-Fehler: {resp.status_code}"
+                except Exception as api_err:
+                    analyse = f"API-Fehler: {api_err}"
+
+                # Speichere Verbesserungsvorschlag in DB
+                await db.execute(
+                    """INSERT OR REPLACE INTO prompt_improvements
+                    (fach, verbesserung, fehler_count, created_at)
+                    VALUES (?, ?, ?, datetime('now'))""",
+                    (fach, analyse, len(fehler_liste)),
+                )
+                logger.info(
+                    "Self-Learning [%s]: %d Fehler analysiert → %s",
+                    fach, len(fehler_liste), analyse[:100],
+                )
+
+            await db.commit()
+
+            # Erstelle prompt_improvements Tabelle falls nicht vorhanden
+            await db.execute(
+                """CREATE TABLE IF NOT EXISTS prompt_improvements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fach TEXT NOT NULL,
+                    verbesserung TEXT NOT NULL,
+                    fehler_count INTEGER DEFAULT 0,
+                    applied INTEGER DEFAULT 0,
+                    created_at TEXT DEFAULT (datetime('now'))
+                )"""
+            )
+            await db.commit()
+
+            logger.info(
+                "Self-Learning abgeschlossen: %d Fächer analysiert",
+                len(fach_fehler),
+            )
+    except Exception as exc:
+        logger.error("Self-Learning job failed: %s", exc)
 
 
 async def _proactive_tips_job():

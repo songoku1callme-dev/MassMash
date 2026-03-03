@@ -42,8 +42,8 @@ interface Msg {
 
 export default function ChatPage() {
   const {
-    messages, isSending, currentSubject, language,
-    sendMessage, setSubject, setLanguage, addMessage
+    messages, isSending, isStreaming, streamStatus, currentSubject, language,
+    sendMessage, sendMessageStream, setSubject, setLanguage, addMessage
   } = useChatStore();
   const { user } = useAuthStore();
   const [input, setInput] = useState("");
@@ -106,7 +106,7 @@ export default function ChatPage() {
 
   const handleSend = () => {
     if (!input.trim() || isSending) return;
-    sendMessage(input.trim(), selectedPersonality, tutorModus, eli5);
+    sendMessageStream(input.trim(), selectedPersonality, tutorModus, eli5);
     setInput("");
   };
 
@@ -131,7 +131,7 @@ export default function ChatPage() {
       aufgabe: "Gib mir eine \u00dcbungsaufgabe zu diesem Thema mit L\u00f6sung.",
     };
     if (prompts[action]) {
-      sendMessage(prompts[action], selectedPersonality, tutorModus, eli5);
+      sendMessageStream(prompts[action], selectedPersonality, tutorModus, eli5);
     }
   };
 
@@ -329,6 +329,40 @@ export default function ChatPage() {
         ) : (
           /* === MESSAGE LIST === */
           <div className="space-y-4 max-w-4xl mx-auto">
+            {/* SSE Status Chips (Quality Engine v2 Block 1) */}
+            {isStreaming && streamStatus && (
+              <div className="flex justify-start">
+                <div
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium animate-pulse"
+                  style={{
+                    background: streamStatus.includes("Durchsuche") ? "rgba(59,130,246,0.15)" :
+                               streamStatus.includes("Prüfe") || streamStatus.includes("Verifiziere") ? "rgba(245,158,11,0.15)" :
+                               streamStatus.includes("Schreibe") || streamStatus.includes("Generiere") ? "rgba(16,185,129,0.15)" :
+                               streamStatus.includes("Korrigiere") ? "rgba(239,68,68,0.15)" :
+                               "rgba(99,102,241,0.15)",
+                    border: streamStatus.includes("Durchsuche") ? "1px solid rgba(59,130,246,0.3)" :
+                            streamStatus.includes("Prüfe") || streamStatus.includes("Verifiziere") ? "1px solid rgba(245,158,11,0.3)" :
+                            streamStatus.includes("Schreibe") || streamStatus.includes("Generiere") ? "1px solid rgba(16,185,129,0.3)" :
+                            streamStatus.includes("Korrigiere") ? "1px solid rgba(239,68,68,0.3)" :
+                            "1px solid rgba(99,102,241,0.3)",
+                    color: streamStatus.includes("Durchsuche") ? "#60a5fa" :
+                           streamStatus.includes("Prüfe") || streamStatus.includes("Verifiziere") ? "#fbbf24" :
+                           streamStatus.includes("Schreibe") || streamStatus.includes("Generiere") ? "#34d399" :
+                           streamStatus.includes("Korrigiere") ? "#f87171" :
+                           "#818cf8",
+                  }}
+                >
+                  <span className="inline-block w-2 h-2 rounded-full animate-ping" style={{
+                    background: streamStatus.includes("Durchsuche") ? "#3b82f6" :
+                                streamStatus.includes("Prüfe") || streamStatus.includes("Verifiziere") ? "#f59e0b" :
+                                streamStatus.includes("Schreibe") || streamStatus.includes("Generiere") ? "#10b981" :
+                                streamStatus.includes("Korrigiere") ? "#ef4444" :
+                                "#6366f1",
+                  }} />
+                  {streamStatus}
+                </div>
+              </div>
+            )}
             {messages.map((msg: Msg, idx: number) => (
               <div
                 key={idx}

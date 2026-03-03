@@ -4,12 +4,13 @@ import logging
 import os
 import re
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -17,7 +18,7 @@ from app.services.ki_intelligence import detect_lernstil, get_lernstil_prompt, d
 from app.services.latein_modus import get_spezial_system_prompt, is_latein_modus_fach
 from app.services.internet_ki import chat_mit_internet
 from app.core.bundesland import get_bundesland_prompt
-from app.services.model_router import route_request, execute_routed_chat
+from app.services.model_router import route_request, execute_routed_chat, execute_routed_chat_stream
 from app.services.prompt_optimizer import get_prompt_for_fach
 
 logger = logging.getLogger(__name__)
@@ -504,6 +505,224 @@ async def send_message(
         multi_step=router_multi_step,
         is_verified=is_verified,
         confidence=confidence,
+    )
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# BLOCK 1: SSE Streaming Endpoint (Quality Engine v2)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+@router.post("/stream")
+async def send_message_stream(
+    request: ChatRequest,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db)
+):
+    """SSE Streaming chat endpoint — Perplexity-Style token-by-token.
+
+    Returns Server-Sent Events:
+    - event: status  → UI-Status-Chips (Suche, Prüfe, Schreibe)
+    - event: token   → Antwort-Token für Token
+    - event: correction → Antwort wird korrigiert (Verifier RETRY)
+    - event: meta    → Badges, Quellen, Confidence
+    - event: done    → Stream beendet
+    """
+    user_id = current_user["id"]
+
+    # Fach erkennen + normalisieren
+    user_fach = request.subject if request.subject and request.subject not in ("general", "", "Alle", "Allgemein") else None
+    detected_subject = detect_subject(request.message, user_fach=user_fach)
+    subject = normalize_fach(detected_subject)
+
+    # Proficiency
+    cursor = await db.execute(
+        "SELECT proficiency_level FROM learning_profiles WHERE user_id = ? AND subject = ?",
+        (user_id, subject)
+    )
+    profile = await cursor.fetchone()
+    level = dict(profile)["proficiency_level"] if profile else "intermediate"
+
+    # User tier + personality
+    cursor = await db.execute(
+        "SELECT is_pro, subscription_tier, ki_personality_id FROM users WHERE id = ?",
+        (user_id,),
+    )
+    pro_row = await cursor.fetchone()
+    pro_dict = dict(pro_row) if pro_row else {}
+    user_tier = pro_dict.get("subscription_tier", "free") or "free"
+
+    personality_id = request.personality_id or pro_dict.get("ki_personality_id", 1) or 1
+    personality = get_personality_by_id(personality_id)
+    personality_prompt = ""
+    if personality and is_personality_accessible(personality_id, user_tier):
+        personality_prompt = personality["system_prompt"]
+
+    # Session
+    session_id = request.session_id
+    if session_id:
+        cursor = await db.execute(
+            "SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?",
+            (session_id, user_id)
+        )
+        session = await cursor.fetchone()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        messages = json.loads(dict(session)["messages"])
+    else:
+        title = request.message[:50] + ("..." if len(request.message) > 50 else "")
+        cursor = await db.execute(
+            """INSERT INTO chat_sessions (user_id, subject, title, language, messages)
+            VALUES (?, ?, ?, ?, '[]')""",
+            (user_id, subject, title, request.language)
+        )
+        await db.commit()
+        session_id = cursor.lastrowid
+        messages = []
+
+    # User message
+    user_msg = {
+        "role": "user",
+        "content": request.message,
+        "subject": subject,
+        "timestamp": datetime.now().isoformat()
+    }
+    messages.append(user_msg)
+
+    # User profile for system prompt
+    display_name = current_user.get("full_name", "") or current_user.get("username", "Schüler")
+    school_grade = current_user.get("school_grade", "10") or "10"
+    school_type = current_user.get("school_type", "Gymnasium") or "Gymnasium"
+
+    user_bundesland = ""
+    try:
+        bl_cursor = await db.execute(
+            "SELECT bundesland FROM users WHERE id = ?", (user_id,)
+        )
+        bl_row = await bl_cursor.fetchone()
+        user_bundesland = dict(bl_row).get("bundesland", "") if bl_row else ""
+    except Exception:
+        pass
+
+    # Block 3: Lehrplan-Kontext injizieren
+    lehrplan_ctx = get_lehrplan_context(subject, user_bundesland, school_grade)
+
+    combined_prompt = build_system_prompt(
+        subject=subject,
+        level=level,
+        language=request.language,
+        detail_level=request.detail_level,
+        user_name=display_name,
+        klasse=str(school_grade),
+        schultyp=school_type,
+        bundesland=user_bundesland,
+        tutor_modus=request.tutor_modus,
+    )
+
+    # Lehrplan-Kontext anhängen
+    if lehrplan_ctx:
+        combined_prompt += f"\n\nLEHRPLAN-KONTEXT:\n{lehrplan_ctx}\n"
+
+    if personality_prompt:
+        combined_prompt += f"\nPERSÖNLICHKEIT: {personality_prompt}\n"
+
+    # Detect emotion
+    emotion = detect_emotion(request.message)
+    emotion_prompt = get_emotion_prompt(emotion)
+    if emotion_prompt:
+        combined_prompt += f"\n{emotion_prompt}"
+
+    # Latein/Altgriechisch Spezial-Modus
+    if is_latein_modus_fach(subject):
+        spezial_prompt = get_spezial_system_prompt(subject)
+        if spezial_prompt:
+            combined_prompt += f"\n{spezial_prompt}\n"
+
+    # ELI5
+    if request.eli5:
+        combined_prompt += (
+            "\n\nELI5-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
+            "Nutze: Einfachste Wörter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
+            "KEINE Fachbegriffe. Maximal 3 kurze Sätze pro Absatz.\n"
+        )
+
+    # Prompt optimizer
+    combined_prompt = get_prompt_for_fach(subject, combined_prompt)
+
+    # Verlauf für Streaming
+    verlauf = [{"role": m.get("role", "user"), "content": m.get("content", "")}
+               for m in messages[-8:] if m.get("content")]
+
+    async def sse_generator():
+        """SSE Event Generator."""
+        final_text = ""
+        meta_data = {}
+
+        async for event in execute_routed_chat_stream(
+            frage=request.message,
+            fach=subject,
+            tier=user_tier,
+            verlauf=verlauf,
+            system_prompt=combined_prompt,
+        ):
+            event_type = event.get("type", "")
+
+            if event_type == "status":
+                yield f"event: status\ndata: {json.dumps({'text': event['text']}, ensure_ascii=False)}\n\n"
+
+            elif event_type == "token":
+                yield f"event: token\ndata: {json.dumps({'text': event['text']}, ensure_ascii=False)}\n\n"
+
+            elif event_type == "correction":
+                yield f"event: correction\ndata: {{}}\n\n"
+
+            elif event_type == "meta":
+                meta_data = event
+                final_text = event.get("final_text", "")
+                yield f"event: meta\ndata: {json.dumps({k: v for k, v in event.items() if k != 'type'}, ensure_ascii=False)}\n\n"
+
+            elif event_type == "done":
+                # Session + DB speichern
+                cleaned = remove_self_generated_sources(final_text) if final_text else ""
+                assistant_msg = {
+                    "role": "assistant",
+                    "content": cleaned,
+                    "subject": subject,
+                    "timestamp": datetime.now().isoformat()
+                }
+                messages.append(assistant_msg)
+
+                await db.execute(
+                    "UPDATE chat_sessions SET messages = ?, subject = ?, updated_at = datetime('now') WHERE id = ?",
+                    (json.dumps(messages, ensure_ascii=False), subject, session_id)
+                )
+                await db.commit()
+
+                # Activity log
+                await db.execute(
+                    """INSERT INTO activity_log (user_id, activity_type, subject, description)
+                    VALUES (?, 'chat', ?, ?)""",
+                    (user_id, subject, f"Asked about: {request.message[:100]}")
+                )
+                await db.commit()
+
+                # XP
+                try:
+                    from app.routes.gamification import add_xp
+                    await add_xp(user_id, 5, "chat", db)
+                except Exception:
+                    pass
+
+                yield f"event: done\ndata: {json.dumps({'session_id': session_id, 'subject': subject}, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        sse_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
 
 

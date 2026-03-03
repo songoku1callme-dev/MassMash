@@ -175,6 +175,36 @@ export const chatApi = {
   session: (id: number) => request<ChatSessionDetail>(`/api/chat/sessions/${id}`),
 
   deleteSession: (id: number) => request<void>(`/api/chat/sessions/${id}`, { method: "DELETE" }),
+
+  /**
+   * SSE Streaming Chat — Quality Engine v2 Block 1
+   * Returns a ReadableStream of SSE events for token-by-token streaming.
+   */
+  stream: async (data: {
+    message: string;
+    session_id?: number | null;
+    subject?: string;
+    language?: string;
+    detail_level?: string;
+    personality_id?: number;
+    tutor_modus?: boolean;
+    eli5?: boolean;
+  }): Promise<Response> => {
+    let token = getAccessToken();
+    if (token && isTokenExpiringSoon(120)) {
+      try { token = await refreshAccessToken(); } catch { /* use current */ }
+    }
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    return fetch(`${API_URL}/api/chat/stream`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 // Quiz
