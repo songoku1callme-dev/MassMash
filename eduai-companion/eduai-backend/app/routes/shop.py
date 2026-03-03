@@ -25,7 +25,7 @@ SHOP_ITEMS = [
     {"id": "frame_diamond", "name": "Diamant Profilrahmen", "category": "frame", "price": 1500, "icon": "gem"},
     {"id": "boost_double_xp", "name": "Doppel-XP (1 Stunde)", "category": "boost", "price": 200, "icon": "zap"},
     {"id": "boost_hint", "name": "Hint-Token für IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb"},
-    {"id": "boost_skip", "name": "Frage-Ueberspringen Token", "category": "boost", "price": 150, "icon": "skip-forward"},
+    {"id": "boost_skip", "name": "Frage-Überspringen Token", "category": "boost", "price": 150, "icon": "skip-forward"},
 ]
 
 

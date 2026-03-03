@@ -63,7 +63,7 @@ async def send_welcome_email(to: str, username: str) -> bool:
     content = f"""
     <h2 style="color: #1f2937;">Willkommen bei Lumnos, {username}!</h2>
     <p style="color: #4b5563; line-height: 1.6;">
-      Schoen, dass du dabei bist! Mit Lumnos hast du jetzt Zugang zu:
+      Schön, dass du dabei bist! Mit Lumnos hast du jetzt Zugang zu:
     </p>
     <ul style="color: #4b5563; line-height: 2;">
       <li>20 KI-Persönlichkeiten die dir alles erklären</li>
@@ -221,7 +221,7 @@ async def send_otp_code_email(to: str, code: str) -> bool:
     content = f"""
     <h2 style="color: #1f2937;">Dein Anmeldecode</h2>
     <p style="color: #4b5563; line-height: 1.6;">
-      Hier ist dein Einmal-Code fuer LUMNOS. Gib diesen Code in der App ein:
+      Hier ist dein Einmal-Code für LUMNOS. Gib diesen Code in der App ein:
     </p>
     <div style="background: linear-gradient(135deg, #eff6ff, #f0fdf4); padding: 24px; border-radius: 12px;
                 text-align: center; margin: 20px 0; border: 2px dashed #6366f1;">

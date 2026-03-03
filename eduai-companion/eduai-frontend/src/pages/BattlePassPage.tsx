@@ -144,7 +144,7 @@ export default function BattlePassPage() {
         {[
           { label: "Quiz", xp: "+50 XP", icon: "zap", color: "bg-blue-500" },
           { label: "Turnier", xp: "+100 XP", icon: "trophy", color: "bg-orange-500" },
-          { label: "Taeglich lernen", xp: "+25 XP", icon: "star", color: "bg-green-500" },
+          { label: "Täglich lernen", xp: "+25 XP", icon: "star", color: "bg-green-500" },
           { label: "Feynman-Test", xp: "+75 XP", icon: "award", color: "bg-purple-500" },
         ].map((src) => (
           <div key={src.label} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 text-center">

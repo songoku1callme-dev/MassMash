@@ -29,7 +29,7 @@ LATEIN-SPEZIAL-FAEHIGKEITEN:
    - Zuerst: Verb finden -> Zeit/Modus bestimmen
    - Dann: Subjekt + Objekte zuordnen
    - Schliesslich: Konstruktionen auflösen
-   - Sinngemässe Uebertragung ins Deutsche
+   - Sinngemässe Übertragung ins Deutsche
 
 4. VOKABEL-ABFRAGE (auf Anfrage):
    Format: "Nenne mir 10 Vokabeln zu [Thema]"
@@ -63,7 +63,7 @@ ALTGRIECHISCH-SPEZIAL-FAEHIGKEITEN:
    - Verb finden -> Tempus/Modus/Genus Verbi bestimmen
    - Subjekt + Objekte zuordnen
    - Partizipien und Infinitivkonstruktionen auflösen
-   - Sinngemässe Uebertragung ins Deutsche
+   - Sinngemässe Übertragung ins Deutsche
 
 4. VOKABEL-ABFRAGE:
    -> Tabelle: Griechisch | Stammformen | Deutsch | Deklination/Konjugation

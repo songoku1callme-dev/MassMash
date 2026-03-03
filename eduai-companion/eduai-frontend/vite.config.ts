@@ -35,7 +35,7 @@ export default defineConfig({
       manifest: {
         name: "Lumnos Tutor - Dein KI-Lernbegleiter",
         short_name: "Lumnos",
-        description: "KI-Tutor fuer deutsche Schüler: Mathe, Englisch, Deutsch, Geschichte, Naturwissenschaften",
+        description: "KI-Tutor für deutsche Schüler: Mathe, Englisch, Deutsch, Geschichte, Naturwissenschaften",
         theme_color: "#3B82F6",
         background_color: "#F9FAFB",
         display: "standalone",

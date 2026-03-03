@@ -475,7 +475,7 @@ async def verify_code(req: OTPVerifyRequest, db: aiosqlite.Connection = Depends(
     # Look up OTP
     entry = _otp_store.get(email)
     if not entry:
-        raise HTTPException(status_code=404, detail="Kein Code fuer diese E-Mail gefunden. Fordere einen neuen an.")
+        raise HTTPException(status_code=404, detail="Kein Code für diese E-Mail gefunden. Fordere einen neuen an.")
 
     # Check expiry
     if time.time() > entry["expires"]:

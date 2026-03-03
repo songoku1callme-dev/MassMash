@@ -62,7 +62,7 @@ export default function QuestsPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Target className="w-7 h-7 text-yellow-600" />
-          Taegliche Quests
+          Tägliche Quests
         </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Erledige tägliche Aufgaben und verdiene Bonus-XP! Quests werden jeden Tag neu generiert.

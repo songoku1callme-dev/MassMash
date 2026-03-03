@@ -38,7 +38,7 @@ async def datenschutzerklärung():
             },
             {
                 "title": "5. Zahlungsdaten (Stripe)",
-                "content": "Zahlungen werden ueber Stripe abgewickelt. Wir speichern keine Kreditkartendaten. Stripe ist PCI-DSS zertifiziert."
+                "content": "Zahlungen werden über Stripe abgewickelt. Wir speichern keine Kreditkartendaten. Stripe ist PCI-DSS zertifiziert."
             },
             {
                 "title": "6. Cookies",
