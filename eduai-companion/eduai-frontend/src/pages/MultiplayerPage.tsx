@@ -22,6 +22,7 @@ export default function MultiplayerPage() {
   const [result, setResult] = useState<{ correct: boolean; points: number; erklaerung: string } | null>(null);
   const [scores, setScores] = useState<{ username: string; score: number }[]>([]);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
   const wsRef = useRef<WebSocket | null>(null);
   const timerRef = useRef(0);
   const token = localStorage.getItem("lumnos_token");
@@ -46,19 +47,44 @@ export default function MultiplayerPage() {
     wsRef.current = ws;
   };
 
+  // Fix 8: Timeout + Fehlerbehandlung für Raum-Erstellung
   const createRoom = async () => {
     setLoading(true);
-    const data = await apiCall(`/api/multiplayer/create-room?subject=${subject}&num_questions=10`);
-    setRoomCode(data.room_code); setPlayers(data.players || []); setIsHost(true); setGameStatus("waiting");
-    connectWS(data.room_code); setLoading(false);
+    setError("");
+    const timeout = setTimeout(() => {
+      setLoading(false);
+      setError("Server antwortet nicht. Ist das Backend gestartet?");
+    }, 5000);
+    try {
+      const data = await apiCall(`/api/multiplayer/create-room?subject=${subject}&num_questions=10`);
+      clearTimeout(timeout);
+      if (data.room_code) {
+        setRoomCode(data.room_code); setPlayers(data.players || []); setIsHost(true); setGameStatus("waiting");
+        connectWS(data.room_code);
+      } else {
+        setError(data.detail || "Raum konnte nicht erstellt werden.");
+      }
+    } catch (err) {
+      clearTimeout(timeout);
+      setError("Verbindung fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const joinRoom = async () => {
     if (!joinCode.trim()) return;
     setLoading(true);
-    const data = await apiCall(`/api/multiplayer/join/${joinCode.trim().toUpperCase()}`);
-    if (data.room_code) { setRoomCode(data.room_code); setPlayers(data.players || []); setGameStatus("waiting"); connectWS(data.room_code); }
-    setLoading(false);
+    setError("");
+    try {
+      const data = await apiCall(`/api/multiplayer/join/${joinCode.trim().toUpperCase()}`);
+      if (data.room_code) { setRoomCode(data.room_code); setPlayers(data.players || []); setGameStatus("waiting"); connectWS(data.room_code); }
+      else { setError(data.detail || "Raum nicht gefunden."); }
+    } catch (err) {
+      setError("Verbindung fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const startQuiz = async () => { await apiCall(`/api/multiplayer/start/${roomCode}`); };
@@ -103,6 +129,7 @@ export default function MultiplayerPage() {
             <Button onClick={createRoom} disabled={loading} className="w-full">
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Swords className="w-4 h-4 mr-2" />} Raum erstellen
             </Button>
+            {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Raum beitreten</h2>

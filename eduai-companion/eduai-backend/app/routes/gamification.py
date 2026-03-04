@@ -19,14 +19,17 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/gamification", tags=["gamification"])
 
-# Level thresholds
+# Level thresholds — Fix 4: Rebalanciert damit Progression sich verdient anfühlt
 LEVELS = [
     {"level": 1, "name": "Neuling", "min_xp": 0, "emoji": "🌱"},
     {"level": 2, "name": "Lernender", "min_xp": 100, "emoji": "📚"},
-    {"level": 3, "name": "Fortgeschritten", "min_xp": 500, "emoji": "⭐"},
-    {"level": 4, "name": "Experte", "min_xp": 1500, "emoji": "🏆"},
-    {"level": 5, "name": "Profi", "min_xp": 5000, "emoji": "💎"},
-    {"level": 6, "name": "Meister", "min_xp": 15000, "emoji": "👑"},
+    {"level": 3, "name": "Fortgeschritten", "min_xp": 300, "emoji": "⭐"},
+    {"level": 4, "name": "Experte", "min_xp": 600, "emoji": "🏆"},
+    {"level": 5, "name": "Profi", "min_xp": 1000, "emoji": "💎"},
+    {"level": 6, "name": "Meister", "min_xp": 3000, "emoji": "👑"},
+    {"level": 7, "name": "Großmeister", "min_xp": 10000, "emoji": "🌟"},
+    {"level": 8, "name": "Legende", "min_xp": 50000, "emoji": "🔥"},
+    {"level": 9, "name": "Unsterblich", "min_xp": 200000, "emoji": "♾️"},
 ]
 
 # Achievement definitions

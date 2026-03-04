@@ -30,7 +30,7 @@ DEFAULT_MODEL = "llama-3.3-70b-versatile"
 FALLBACK_MODEL = "llama-3.1-8b-instant"
 FAST_MODEL = "llama-3.1-8b-instant"
 MAX_HISTORY_MESSAGES = 12  # Keep last 12 messages for context (GDPR: minimize data)
-MAX_TOKENS = 1200
+MAX_TOKENS = 2048
 
 # Nuclear Reset Block A: Forbidden phrases that indicate generic theme lists
 VERBOTENE_PHRASEN = [
@@ -202,15 +202,32 @@ def call_groq_llm(
     chosen_model = model or route_model(task_type)
 
     try:
-        completion = client.chat.completions.create(
-            model=chosen_model,
-            messages=messages,
-            max_tokens=MAX_TOKENS,
-            temperature=temperature_override if temperature_override is not None else (0.7 if is_pro else 0.3),
-            top_p=0.9,
-            stream=False,
-        )
-        response_text = completion.choices[0].message.content
+        # Retry-Logik: bis zu 3 Versuche bei Timeout/Fehlern
+        response_text = None
+        last_err = None
+        for attempt in range(3):
+            try:
+                completion = client.chat.completions.create(
+                    model=chosen_model,
+                    messages=messages,
+                    max_tokens=MAX_TOKENS,
+                    temperature=temperature_override if temperature_override is not None else (0.7 if is_pro else 0.3),
+                    top_p=0.9,
+                    stream=False,
+                    timeout=30.0,
+                )
+                response_text = completion.choices[0].message.content
+                if response_text:
+                    break
+            except Exception as retry_err:
+                last_err = retry_err
+                logger.warning("Groq attempt %d failed: %s", attempt + 1, retry_err)
+                import asyncio
+                import time
+                time.sleep(1 * (attempt + 1))
+        
+        if not response_text and last_err:
+            raise last_err  # type: ignore
         if response_text:
             cleaned = response_text.strip()
             # Nuclear Reset Block A: Check for forbidden generic theme lists

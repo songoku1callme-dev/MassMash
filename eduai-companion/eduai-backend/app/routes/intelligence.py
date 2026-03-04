@@ -41,9 +41,26 @@ async def get_lernstil(
         except Exception:
             pass
 
+    # Fix 6: Fallback-Demo-Ergebnis wenn keine Chat-Historie vorhanden
+    if not all_messages or len(all_messages) < 3:
+        return {
+            "lernstil": "auditiv",
+            "ist_demo": True,
+            "hinweis": "Noch nicht genug Daten für eine genaue Analyse. Chatte mehr mit der KI, damit wir deinen Lernstil besser erkennen können!",
+            "beschreibung": "Du lernst am besten durch Zuhören und ausführliche Erklärungen. (Vorläufiges Ergebnis)",
+            "tipps": ["Erkläre Themen laut", "Nutze die TTS-Funktion", "Diskutiere in Gruppen-Chats"],
+            "alle_stile": {
+                "visuell": 20,
+                "auditiv": 35,
+                "kinesthetisch": 25,
+                "lesen": 20,
+            },
+        }
+
     lernstil = await detect_lernstil(all_messages)
     return {
         "lernstil": lernstil,
+        "ist_demo": False,
         "beschreibung": {
             "visuell": "Du lernst am besten mit Bildern, Diagrammen und visuellen Darstellungen.",
             "auditiv": "Du lernst am besten durch Zuhören und ausführliche Erklärungen.",

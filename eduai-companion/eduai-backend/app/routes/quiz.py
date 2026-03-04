@@ -147,20 +147,10 @@ async def generate_quiz_endpoint(
         except Exception:
             pass  # Non-fatal, use existing difficulty
 
-    # Determine topic: custom topic has priority over preset (Pro+ only)
+    # Determine topic: custom topic has priority over preset
+    # Fix 2: Alle Nutzer dürfen eigene Themen eingeben (nicht nur Pro+)
     effective_topic = request.topic
     if request.thema_custom and request.thema_custom.strip():
-        # Check tier for custom topics (Pro+ feature)
-        cursor2 = await db.execute(
-            "SELECT subscription_tier FROM users WHERE id = ?", (user_id,)
-        )
-        tier_row = await cursor2.fetchone()
-        user_tier = (dict(tier_row).get("subscription_tier", "free") or "free") if tier_row else "free"
-        if user_tier == "free":
-            raise HTTPException(
-                status_code=403,
-                detail="Eigene Themen sind nur für Pro/Max-Abonnenten verfügbar.",
-            )
         effective_topic = request.thema_custom.strip()
 
     # Supreme 13.0: Enhanced Anti-Repetition with 5 question angles (MD5, 90 days)

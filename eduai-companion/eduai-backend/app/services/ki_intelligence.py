@@ -24,7 +24,7 @@ def _get_client() -> Optional[Groq]:
 
 LERNSTIL_DESCRIPTIONS = {
     "visuell": "Diagramme, Tabellen, Schritt-für-Schritt mit Pfeilen, ASCII-Art",
-    "auditiv": "Ausführliche Erklärungen, Analogien, Geschichten, als würdest du es erzaehlen",
+    "auditiv": "Ausführliche Erklärungen, Analogien, Geschichten, als würdest du es erzählen",
     "kinesthetisch": "Sofort Übungsaufgabe geben, 'Probiere es selbst', interaktiv",
     "lesen": "Stichpunkte, nummerierte Listen, Zusammenfassung, strukturierter Text",
 }
