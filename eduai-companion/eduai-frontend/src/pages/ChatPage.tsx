@@ -26,11 +26,22 @@ import { userMessageVariants, aiMessageVariants, staggerContainer } from "../lib
  */
 function cleanThinkingTags(text: string): string {
   if (!text) return "";
+
+  let cleaned = text;
+
+  // 1a. UNWRAP <output> tags — keep content, remove tags only.
+  //     LLMs (e.g. DeepSeek) wrap the actual answer in <output>...</output>
+  //     after their <thinking> block. We must preserve this content.
+  //     Also: <output> is a valid HTML5 element, so ReactMarkdown would
+  //     swallow it if left in place.
+  cleaned = cleaned.replace(/<output>([\s\S]*?)<\/output>/gi, '$1');
+  cleaned = cleaned.replace(/<\/?output>/gi, '');
+
+  // 1b. Remove ALL known internal tag blocks (complete pairs)
   const internalTags = [
     'thinking', 'reasoning', 'internal', 'scratchpad',
     'reflection', 'critique', 'analysis', 'planning',
   ];
-  let cleaned = text;
   for (const tag of internalTags) {
     // Remove complete <tag>...</tag> blocks
     cleaned = cleaned.replace(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'gi'), '');

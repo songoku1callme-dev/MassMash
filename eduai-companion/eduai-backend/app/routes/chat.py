@@ -38,10 +38,16 @@ def clean_ai_response(text: str) -> str:
     if not text:
         return ""
 
-    # 1. Remove ALL known internal tag blocks (complete pairs)
+    # 1a. UNWRAP <output> tags — keep content, remove tags only.
+    #     LLMs (e.g. DeepSeek) wrap the actual answer in <output>...</output>
+    #     after their <thinking> block.  We must preserve this content.
+    text = re.sub(r'<output>(.*?)</output>', r'\1', text, flags=re.DOTALL)
+    text = text.replace('<output>', '').replace('</output>', '')
+
+    # 1b. Remove ALL known internal tag blocks (complete pairs)
     internal_tags = [
         'thinking', 'reasoning', 'internal', 'scratchpad',
-        'reflection', 'critique', 'output', 'analysis',
+        'reflection', 'critique', 'analysis',
         'planning', 'step_by_step', 'chain_of_thought',
     ]
     for tag in internal_tags:
