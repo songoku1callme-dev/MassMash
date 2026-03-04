@@ -68,7 +68,7 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening } = useSpeechRecognition(language);
+  const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening, clearError } = useSpeechRecognition(language);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -825,10 +825,20 @@ export default function ChatPage() {
 
       {/* Speech error / listening indicator */}
       {(speechError || isListening) && (
-        <div className={`px-4 py-1.5 text-center text-xs ${
+        <div className={`px-4 py-1.5 text-center text-xs flex items-center justify-center gap-2 ${
           speechError ? "text-red-400" : "text-cyan-400"
         }`} style={{ background: speechError ? "rgba(239,68,68,0.1)" : "rgba(6,182,212,0.1)" }}>
-          {speechError || (language === "de" ? "Spracherkennung aktiv... Sprich jetzt!" : "Listening... Speak now!")}
+          {speechError ? (
+            <>
+              {speechError}
+              <button onClick={clearError} className="ml-2 text-red-400 hover:text-red-300 font-bold">&#10005;</button>
+            </>
+          ) : (
+            <>
+              <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              {language === "de" ? "Spracherkennung aktiv... Sprich jetzt!" : "Listening... Speak now!"}
+            </>
+          )}
         </div>
       )}
 
@@ -872,25 +882,31 @@ export default function ChatPage() {
             )}
           </button>
 
-          {/* Mic Button */}
-          {speechSupported && (
-            <button
-              onClick={handleMicToggle}
-              disabled={isSending}
-              className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 ${
-                isListening
-                  ? "text-red-400 border-red-500/50"
-                  : "text-slate-400 hover:text-white border-slate-600 hover:border-indigo-500/50"
-              }`}
-              style={isListening
-                ? { background: "rgba(239,68,68,0.15)", boxShadow: "0 0 12px rgba(239,68,68,0.3)" }
-                : { background: "rgba(30,41,59,0.5)" }
-              }
-              title={language === "de" ? "Spracheingabe" : "Voice input"}
-            >
-              <span style={{ fontSize: "16px" }}>{isListening ? "\u23F9" : "\uD83C\uDF99"}</span>
-            </button>
-          )}
+          {/* Mic Button — always show, with tooltip if unsupported */}
+          <button
+            onClick={speechSupported ? handleMicToggle : () => {}}
+            disabled={isSending || !speechSupported}
+            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 ${
+              isListening
+                ? "text-red-400 border-red-500/50 animate-pulse"
+                : !speechSupported
+                ? "text-slate-600 border-slate-700 cursor-not-allowed"
+                : "text-slate-400 hover:text-white border-slate-600 hover:border-indigo-500/50"
+            }`}
+            style={isListening
+              ? { background: "rgba(239,68,68,0.15)", boxShadow: "0 0 12px rgba(239,68,68,0.3)" }
+              : { background: "rgba(30,41,59,0.5)" }
+            }
+            title={
+              !speechSupported
+                ? "Spracheingabe nur in Chrome/Edge verfuegbar"
+                : isListening
+                ? (language === "de" ? "Aufnahme stoppen" : "Stop recording")
+                : (language === "de" ? "Spracheingabe starten" : "Start voice input")
+            }
+          >
+            <span style={{ fontSize: "16px" }}>{isListening ? "\u23F9" : "\uD83C\uDF99"}</span>
+          </button>
 
           {/* Text Input */}
           <input
