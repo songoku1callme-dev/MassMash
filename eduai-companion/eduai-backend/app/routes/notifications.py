@@ -36,7 +36,7 @@ async def get_notification_bell(
 
     # Get last 20 notifications
     cursor = await db.execute(
-        """SELECT id, title, message, notification_type, is_read, created_at
+        """SELECT id, title, message, type, is_read, created_at
         FROM notifications WHERE user_id = ?
         ORDER BY created_at DESC LIMIT 20""",
         (user_id,),
@@ -49,7 +49,7 @@ async def get_notification_bell(
             "id": rd["id"],
             "title": rd.get("title", ""),
             "message": rd.get("message", ""),
-            "type": rd.get("notification_type", "info"),
+            "type": rd.get("type", "info"),
             "is_read": bool(rd.get("is_read", 0)),
             "created_at": rd.get("created_at", ""),
         })

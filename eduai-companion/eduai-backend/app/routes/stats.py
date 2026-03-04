@@ -101,29 +101,29 @@ async def get_stats_overview(
 
     # Longest streak
     cursor = await db.execute(
-        "SELECT streak_days, longest_streak FROM users WHERE id = ?", (user_id,)
+        "SELECT streak_days FROM gamification WHERE user_id = ?", (user_id,)
     )
     row = await cursor.fetchone()
     rd = dict(row) if row else {}
     current_streak = rd.get("streak_days", 0) or 0
-    longest_streak = rd.get("longest_streak", current_streak) or current_streak
+    longest_streak = current_streak  # Use current streak as longest
 
     # XP / IQ
     cursor = await db.execute(
-        "SELECT total_xp, level FROM gamification WHERE user_id = ?", (user_id,)
+        "SELECT xp, level FROM gamification WHERE user_id = ?", (user_id,)
     )
     row = await cursor.fetchone()
     rd = dict(row) if row else {}
-    total_xp = rd.get("total_xp", 0) or 0
+    total_xp = rd.get("xp", 0) or 0
     level = rd.get("level", 1) or 1
 
     # IQ score
     cursor = await db.execute(
-        "SELECT score FROM iq_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+        "SELECT iq_score FROM iq_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
         (user_id,),
     )
     row = await cursor.fetchone()
-    iq_score = dict(row)["score"] if row else None
+    iq_score = dict(row)["iq_score"] if row else None
 
     return {
         "total_learning_minutes": total_minutes,

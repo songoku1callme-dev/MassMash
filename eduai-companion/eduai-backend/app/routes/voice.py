@@ -6,11 +6,18 @@ import io
 import os
 import logging
 import tempfile
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, UploadFile, File, HTTPException
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
+
+
+class TTSRequest(BaseModel):
+    text: str = ""
+    lang: str = "de"
 
 logger = logging.getLogger(__name__)
 
@@ -55,18 +62,21 @@ async def transcribe_audio(
 
 @router.post("/tts")
 async def text_to_speech(
-    text: str,
-    lang: str = "de",
+    text: Optional[str] = Query(None),
+    lang: str = Query("de"),
+    body: Optional[TTSRequest] = None,
     current_user: dict = Depends(get_current_user),
 ):
-    """Convert text to speech using gTTS."""
-    if not text or len(text) > 5000:
+    """Convert text to speech using gTTS. Accepts both query params and JSON body."""
+    tts_text = text or (body.text if body else None)
+    tts_lang = lang or (body.lang if body else "de") or "de"
+    if not tts_text or len(tts_text) > 5000:
         raise HTTPException(status_code=400, detail="Text muss zwischen 1 und 5000 Zeichen sein")
 
     try:
         from gtts import gTTS
 
-        tts = gTTS(text=text, lang=lang, slow=False)
+        tts = gTTS(text=tts_text, lang=tts_lang, slow=False)
         audio_buffer = io.BytesIO()
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)

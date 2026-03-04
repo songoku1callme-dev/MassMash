@@ -37,8 +37,16 @@ async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
         return True
     if user.get("username", "") == "admin":
         return True
+    # Dev token user (id=999) is always admin
+    if user.get("id") == 999 and user.get("auth_provider") == "dev":
+        return True
+    # Max-tier users are admins
+    if user.get("subscription_tier") == "max":
+        return True
     user_email = user.get("email", "")
     if is_admin_email(user_email):
+        return True
+    if user_email == "admin@lumnos.de":
         return True
     try:
         cursor = await db.execute(
