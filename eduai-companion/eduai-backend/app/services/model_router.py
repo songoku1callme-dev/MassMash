@@ -872,6 +872,7 @@ async def execute_routed_chat_stream(
         yield {"type": "token", "text": chunk}
 
     # Fallback: Wenn keine Chunks empfangen wurden, Fehlermeldung senden
+    is_error_fallback = False
     if not full_text:
         error_msg = (
             "⚠️ Die KI konnte gerade nicht antworten. "
@@ -880,17 +881,18 @@ async def execute_routed_chat_stream(
         logger.warning("Stream produced 0 chunks — sending error fallback to user")
         yield {"type": "token", "text": error_msg}
         full_text = error_msg
+        is_error_fallback = True
 
     # Falls kein thinking erkannt wurde, trotzdem strip
     _, visible_text = strip_thinking_tags(full_text)
     full_text = visible_text
 
-    # Phase D: Dual-Verifier
+    # Phase D: Dual-Verifier (skip if error fallback)
     is_verified = False
     confidence = 85
     verifier_reason = ""
 
-    if full_text:
+    if full_text and not is_error_fallback:
         yield {"type": "status", "text": "Prüfe Fakten..."}
         try:
             verify_result = await _dual_verify(
