@@ -54,6 +54,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [showLanding, setShowLanding] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [devBypassFailed, setDevBypassFailed] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("lumnos_dark") === "true" ||
@@ -71,8 +72,14 @@ function App() {
     if (devBypass && !hasToken) {
       // Kein Token vorhanden → sofort dev-bypass aufrufen
       devBypassLogin().then(() => {
-        setShowLanding(false);
-        setCurrentPage("chat");
+        const isAuth = !!localStorage.getItem("lumnos_token");
+        if (isAuth) {
+          setShowLanding(false);
+          setCurrentPage("chat");
+        } else {
+          // Dev bypass failed (e.g. backend unreachable) — show landing page
+          setDevBypassFailed(true);
+        }
       });
     } else {
       loadUser();
@@ -115,9 +122,9 @@ function App() {
   }
 
   if (!isAuthenticated && !isGuest) {
-    // Wenn dev bypass aktiv ist und noch lädt, zeige Loading statt Landing
+    // Wenn dev bypass aktiv ist und noch lädt (nicht fehlgeschlagen), zeige Loading
     const devBypass = import.meta.env.VITE_DEV_BYPASS === "true";
-    if (devBypass) {
+    if (devBypass && !devBypassFailed) {
       // Dev bypass läuft noch — Loading anzeigen statt Landing/Auth
       return (
         <div className="min-h-screen cyber-bg flex items-center justify-center">
