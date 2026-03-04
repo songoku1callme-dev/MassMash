@@ -29,19 +29,109 @@ logger = logging.getLogger(__name__)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def clean_ai_response(text: str) -> str:
-    """Remove <thinking> tags and their content from AI responses.
+    """Remove ALL internal LLM tags from AI responses.
 
-    The LLM uses <thinking>...</thinking> for internal chain-of-thought,
-    but these must NEVER be visible to the user.
+    The LLM uses <thinking>...</thinking> and other internal tags for
+    chain-of-thought reasoning. These must NEVER be visible to the user.
+    Also cleans up source hallucinations and excessive whitespace.
     """
-    import re
-    # Remove complete <thinking>...</thinking> blocks
-    text = re.sub(r'<thinking>.*?</thinking>', '', text, flags=re.DOTALL)
-    # Remove unclosed <thinking> tags (LLM forgot to close)
-    text = re.sub(r'<thinking>.*', '', text, flags=re.DOTALL)
-    # Remove orphaned </thinking> tags
-    text = text.replace('</thinking>', '')
+    if not text:
+        return ""
+
+    # 1. Remove ALL known internal tag blocks (complete pairs)
+    internal_tags = [
+        'thinking', 'reasoning', 'internal', 'scratchpad',
+        'reflection', 'critique', 'output', 'analysis',
+        'planning', 'step_by_step', 'chain_of_thought',
+    ]
+    for tag in internal_tags:
+        # Remove complete <tag>...</tag> blocks
+        text = re.sub(rf'<{tag}>.*?</{tag}>', '', text, flags=re.DOTALL)
+        # Remove unclosed <tag> (LLM forgot to close)
+        text = re.sub(rf'<{tag}>.*', '', text, flags=re.DOTALL)
+        # Remove orphaned closing tags
+        text = text.replace(f'</{tag}>', '')
+        # Remove orphaned opening tags (edge case)
+        text = text.replace(f'<{tag}>', '')
+
+    # 2. Remove source hallucinations (LLM invents fake URLs)
+    text = re.sub(
+        r'\[(?:Quelle|Source|Ref):\s*https?://[^\]]*\]',
+        '', text, flags=re.IGNORECASE,
+    )
+
+    # 3. Clean up excessive newlines (max 2 in a row)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+
+    # 4. Strip leading/trailing whitespace
     return text.strip()
+
+
+def calculate_precision_score(user_message: str, ai_response: str, fach: str = "") -> tuple[int, list[str]]:
+    """Calculate a quality precision score for an AI response.
+
+    Returns (score, deductions_list) where score is 0-100.
+    The badge should ONLY be shown to the user if score < 80%.
+    At 100% (perfect) — no badge shown (unlike ChatGPT).
+
+    Deduction rules:
+    - Visible internal tags (<thinking>, etc.): -30
+    - Unnecessary backquestions when input is clear: -20
+    - Response too short (< 20 chars for non-trivial questions): -15
+    - Response too long (> 2000 chars for simple questions): -10
+    """
+    score = 100
+    deductions: list[str] = []
+
+    # 1. Check for visible internal tags (-30 each, max once)
+    internal_tag_patterns = [
+        r'<thinking>', r'</thinking>', r'<reasoning>', r'</reasoning>',
+        r'<internal>', r'</internal>', r'<scratchpad>', r'</scratchpad>',
+    ]
+    for pattern in internal_tag_patterns:
+        if re.search(pattern, ai_response, re.IGNORECASE):
+            score -= 30
+            deductions.append(f"Sichtbare interne Tags gefunden: {pattern}")
+            break  # Only deduct once for tags
+
+    # 2. Check for unnecessary backquestions (-20)
+    backquestion_patterns = [
+        r'könntest du mir mehr',
+        r'was genau meinst du',
+        r'ich bräuchte mehr informationen',
+        r'meinst du vielleicht',
+        r'kannst du deine frage präzisieren',
+        r'um dir besser helfen zu können',
+        r'könntest du mir sagen',
+        r'was möchtest du genau',
+    ]
+    response_lower = ai_response.lower()
+    # Only penalize if the user's input was clear (> 3 chars, not just "?")
+    user_input_clear = len(user_message.strip()) > 3
+    if user_input_clear:
+        for pattern in backquestion_patterns:
+            if re.search(pattern, response_lower):
+                score -= 20
+                deductions.append(f"Unnötige Rückfrage: '{pattern}'")
+                break
+
+    # 3. Check for too-short responses (-15)
+    # Only for non-trivial questions (> 10 chars)
+    clean_response = re.sub(r'<[^>]+>', '', ai_response).strip()
+    if len(user_message.strip()) > 10 and len(clean_response) < 20:
+        score -= 15
+        deductions.append("Antwort zu kurz für die Frage")
+
+    # 4. Check for too-long responses for simple questions (-10)
+    # Simple = user message < 20 chars (e.g. "√144", "3+4")
+    if len(user_message.strip()) < 20 and len(clean_response) > 2000:
+        score -= 10
+        deductions.append("Antwort zu lang für eine simple Frage")
+
+    # Clamp score
+    score = max(0, min(100, score))
+
+    return score, deductions
 
 
 def remove_self_generated_sources(text: str) -> str:
@@ -151,7 +241,8 @@ async def guest_chat(
             is_pro=False,
         )
 
-    # Clean response
+    # Clean response — Bug-Fix 1: strip ALL internal tags
+    ai_response = clean_ai_response(ai_response)
     ai_response = remove_self_generated_sources(ai_response)
 
     return {
@@ -622,6 +713,18 @@ async def send_message(
                 "titel": wq.get("title", wq.get("titel", "")),
             })
 
+    # Bug-Fix 3: Echte Präzisions-Messung statt Router-Confidence
+    # Badge wird NUR angezeigt wenn score < 80% (nicht bei 100% wie ChatGPT)
+    precision_score, precision_deductions = calculate_precision_score(
+        user_message=request.message,
+        ai_response=ai_response,
+        fach=subject,
+    )
+    # Use precision score as confidence; only expose if < 80%
+    final_confidence = precision_score if precision_score < 80 else 0
+    if precision_deductions:
+        logger.info("Präzisions-Abzüge: %s (Score: %d%%)", precision_deductions, precision_score)
+
     return ChatResponse(
         response=ai_response,
         session_id=session_id,
@@ -636,7 +739,7 @@ async def send_message(
         modell_genutzt=modell_genutzt,
         multi_step=router_multi_step,
         is_verified=is_verified,
-        confidence=confidence,
+        confidence=final_confidence,
     )
 
 

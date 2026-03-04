@@ -19,6 +19,43 @@ import { userMessageVariants, aiMessageVariants, staggerContainer } from "../lib
    Action-Buttons, Welcome Message, Tutor-Modus Toggle
    ============================================================ */
 
+/**
+ * Client-side safety net: Strip <thinking> and other internal tags
+ * from AI responses before rendering. Backend should already clean these,
+ * but this ensures they NEVER reach the user even if backend fails.
+ */
+function cleanThinkingTags(text: string): string {
+  if (!text) return "";
+  const internalTags = [
+    'thinking', 'reasoning', 'internal', 'scratchpad',
+    'reflection', 'critique', 'analysis', 'planning',
+  ];
+  let cleaned = text;
+  for (const tag of internalTags) {
+    // Remove complete <tag>...</tag> blocks
+    cleaned = cleaned.replace(new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`, 'gi'), '');
+    // Remove unclosed <tag>...
+    cleaned = cleaned.replace(new RegExp(`<${tag}>[\\s\\S]*`, 'gi'), '');
+    // Remove orphaned closing/opening tags
+    cleaned = cleaned.replace(new RegExp(`</?${tag}>`, 'gi'), '');
+  }
+  // Clean excessive newlines
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  return cleaned.trim();
+}
+
+/**
+ * Extract thinking text from raw AI response BEFORE cleaning.
+ * Returns [thinkingContent, cleanedResponse].
+ */
+function extractThinking(text: string): [string, string] {
+  if (!text) return ["", ""];
+  const match = text.match(/<thinking>([\s\S]*?)<\/thinking>/);
+  const thinking = match ? match[1].trim() : "";
+  const cleaned = cleanThinkingTags(text);
+  return [thinking, cleaned];
+}
+
 interface Karteikarte {
   frage: string;
   antwort: string;
@@ -595,7 +632,7 @@ export default function ChatPage() {
                         <ReactMarkdown
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
-                        >{msg.content}</ReactMarkdown>
+                        >{cleanThinkingTags(msg.content)}</ReactMarkdown>
                       </div>
                     </>
                   ) : (
@@ -663,10 +700,12 @@ export default function ChatPage() {
                           </div>
                         )}
 
-                        {/* Präzisions-Score */}
-                        {typeof msg.confidence === "number" && msg.confidence > 0 && (
-                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-                            <span className="text-blue-400 text-[11px] font-medium">
+                        {/* Präzisions-Score — NUR anzeigen wenn < 80% (Bug-Fix 3) */}
+                        {typeof msg.confidence === "number" && msg.confidence > 0 && msg.confidence < 80 && (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+                            <span className={`text-[11px] font-medium ${
+                              msg.confidence >= 60 ? "text-amber-400" : "text-red-400"
+                            }`}>
                               Präzision: {msg.confidence}%
                             </span>
                           </div>
