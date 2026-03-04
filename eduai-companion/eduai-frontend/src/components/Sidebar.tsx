@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GlobalSearch from "./GlobalSearch";
+import { sidebarItem, mobileOverlay, mobileSidebarSlide, APPLE_EASE } from "../lib/animations";
 import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
   BrainCircuit, BookOpen, Settings, LogOut, Trash2, Menu, X,
@@ -115,9 +117,15 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="px-3 space-y-1">
-        {navItems.map((item) => (
-          <button
+        {navItems.map((item, i) => (
+          <motion.button
             key={item.id}
+            custom={i}
+            variants={sidebarItem}
+            initial="initial"
+            animate="animate"
+            whileHover={{ x: 6, backgroundColor: "rgba(99,102,241,0.08)", transition: { duration: 0.2, ease: APPLE_EASE } }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => { onPageChange(item.id); setMobileOpen(false); }}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               currentPage === item.id
@@ -127,7 +135,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           >
             {item.icon}
             {item.label}
-          </button>
+          </motion.button>
         ))}
       </nav>
 
@@ -248,21 +256,38 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </button>
 
       {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/50"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            key="sidebar-overlay"
+            initial={mobileOverlay.initial}
+            animate={mobileOverlay.animate}
+            exit={mobileOverlay.exit}
+            transition={mobileOverlay.transition}
+            className="lg:hidden fixed inset-0 z-40 bg-black/50"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-72 bg-lumnos-bg border-r border-lumnos-border transform transition-transform lg:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+      {/* Sidebar — Desktop: always visible, Mobile: animated slide */}
+      <aside className="hidden lg:block w-72 bg-lumnos-bg border-r border-lumnos-border">
         {sidebarContent}
       </aside>
+
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.aside
+            key="mobile-sidebar"
+            initial={mobileSidebarSlide.initial}
+            animate={mobileSidebarSlide.animate}
+            exit={mobileSidebarSlide.exit}
+            className="lg:hidden fixed inset-y-0 left-0 z-40 w-72 bg-lumnos-bg border-r border-lumnos-border"
+          >
+            {sidebarContent}
+          </motion.aside>
+        )}
+      </AnimatePresence>
     </>
   );
 }

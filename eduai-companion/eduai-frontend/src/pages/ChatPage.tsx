@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
 import ReactMarkdown from "react-markdown";
@@ -10,6 +11,7 @@ import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
 import LumnosOrb from "../components/LumnosOrb";
+import { userMessageVariants, aiMessageVariants, staggerContainer } from "../lib/animations";
 
 /* ============================================================
    LUMNOS 1.0 — BLOCK B: Chat UI (Nuclear Reset)
@@ -486,8 +488,11 @@ export default function ChatPage() {
               </div>
             )}
             {messages.map((msg: Msg, idx: number) => (
-              <div
+              <motion.div
                 key={idx}
+                variants={msg.role === "user" ? userMessageVariants : aiMessageVariants}
+                initial="initial"
+                animate="animate"
                 className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 {/* KI Avatar */}
@@ -773,7 +778,7 @@ export default function ChatPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
 
             {/* Typing indicator with KI avatar */}

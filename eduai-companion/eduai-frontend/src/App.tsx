@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
+import { pageVariants } from "./lib/animations";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import ChatPage from "./pages/ChatPage";
@@ -231,7 +233,18 @@ function App() {
           <div className="absolute top-4 right-4 z-30">
             <NotificationBell />
           </div>
-          {renderPage()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="h-full"
+            >
+              {renderPage()}
+            </motion.div>
+          </AnimatePresence>
         </main>
         <PWAInstallBanner />
         <CookieBanner />

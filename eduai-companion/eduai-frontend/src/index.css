@@ -81,6 +81,61 @@ body {
   padding: 0.25rem 0;
 }
 
+/* ===== APPLE-LEVEL ANIMATION POLISH ===== */
+
+/* Smooth scrolling */
+html { scroll-behavior: smooth; }
+
+/* Enhanced Scrollbar */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* Focus Rings — Apple-style */
+*:focus-visible {
+  outline: 2px solid rgba(168,85,247,0.6);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* Glassmorphism utility */
+.glass-blur {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Glow effects */
+.glow-sm { box-shadow: 0 0 10px rgba(99,102,241,0.2), 0 0 20px rgba(139,92,246,0.1); }
+.glow-md { box-shadow: 0 0 20px rgba(99,102,241,0.3), 0 0 40px rgba(139,92,246,0.15); }
+.glow-lg { box-shadow: 0 0 30px rgba(99,102,241,0.4), 0 0 60px rgba(139,92,246,0.2); }
+
+/* Smooth transitions for all interactive elements */
+button, a, input, select, textarea, [role="button"] {
+  transition-property: background-color, border-color, color, box-shadow, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Remove tap highlight on mobile */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Font smoothing */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduced motion — respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -88,6 +143,16 @@ body {
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Shimmer effect for XP bar */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite 1.5s;
 }
 

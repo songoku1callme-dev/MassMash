@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/authStore";
 import BentoTile from "../components/BentoTile";
 import LumnosOrb from "../components/LumnosOrb";
 import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
+import { APPLE_EASE, staggerContainer, staggerItem } from "../lib/animations";
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
@@ -110,8 +111,12 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
       </motion.div>
 
       {/* ORB + BENTO GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3"
-           style={{ perspective: "1000px" }}>
+      <motion.div
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="grid grid-cols-2 md:grid-cols-4 gap-3"
+        style={{ perspective: "1000px" }}>
 
         {/* KI-Tutor Haupt-Kachel mit Orb */}
         <BentoTile col={2} row={2} color="#6366f1"
@@ -164,18 +169,24 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
             <div className="text-xs text-slate-400">
               {userXp} XP
             </div>
-            <div className="mt-2 h-1.5 rounded-full w-full"
+            <div className="mt-2 h-1.5 rounded-full w-full overflow-hidden relative"
                  style={{ background: "#334155" }}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{
                   width: `${(userXp % 1000) / 10}%`
                 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="h-full rounded-full"
+                transition={{ duration: 1.2, ease: APPLE_EASE, delay: 0.3 }}
+                className="h-full rounded-full relative overflow-hidden"
                 style={{
                   background: "linear-gradient(90deg, #8b5cf6, #a78bfa)"
+                }}>
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 animate-shimmer" style={{
+                  background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+                  width: "50%"
                 }} />
+              </motion.div>
             </div>
           </div>
         </BentoTile>
@@ -270,7 +281,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
           </div>
         </BentoTile>
 
-      </div>
+      </motion.div>
 
       {/* Blind-Spot Heatmap */}
       {blindSpots.length > 0 && (
