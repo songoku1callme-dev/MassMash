@@ -227,9 +227,27 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="flex h-screen cyber-bg text-lumnos-text">
+      <div
+        style={{
+          display: "flex",
+          height: "100dvh",
+          width: "100vw",
+          overflow: "hidden",
+          backgroundColor: "#0a0f1e",
+        }}
+        className="text-lumnos-text"
+      >
         <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
-        <main className="flex-1 overflow-auto relative">
+        <main
+          style={{
+            flex: 1,
+            height: "100dvh",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            position: "relative",
+          }}
+        >
           <div className="absolute top-4 right-4 z-30">
             <NotificationBell />
           </div>
@@ -240,7 +258,7 @@ function App() {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="h-full"
+              style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
             >
               {renderPage()}
             </motion.div>

@@ -90,64 +90,71 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      {/* Brand */}
-      <div className="p-4 flex items-center gap-3 border-b border-lumnos-border">
-        <div className="w-10 h-10 rounded-xl bg-lumnos-gradient flex items-center justify-center text-white shadow-glow-sm animate-pulse-glow">
-          <span className="text-lg font-bold">{"\u2726"}</span>
+    <nav style={{
+      height: "100dvh",
+      display: "flex",
+      flexDirection: "column",
+      overflow: "hidden",
+    }}>
+      {/* ===== OBEN: Logo + Buttons (fixiert) ===== */}
+      <div style={{ flexShrink: 0, padding: "20px 16px 12px" }}>
+        {/* Brand */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-lumnos-gradient flex items-center justify-center text-white shadow-glow-sm animate-pulse-glow">
+            <span className="text-lg font-bold">{"\u2726"}</span>
+          </div>
+          <div>
+            <h2 className="font-bold text-lumnos-text text-sm">Lumnos</h2>
+            <p className="text-xs text-lumnos-muted">KI-Lerncoach</p>
+          </div>
         </div>
-        <div>
-          <h2 className="font-bold text-lumnos-text text-sm">Lumnos</h2>
-          <p className="text-xs text-lumnos-muted">KI-Lerncoach</p>
-        </div>
-      </div>
 
-      {/* New Chat */}
-      <div className="p-3">
-        <Button onClick={handleNewChat} className="w-full gap-2 lumnos-btn-primary border-0" size="sm">
+        {/* New Chat */}
+        <Button onClick={handleNewChat} className="w-full gap-2 lumnos-btn-primary border-0 mb-2" size="sm">
           <MessageSquarePlus className="w-4 h-4" />
           Neuer Chat
         </Button>
-      </div>
 
-      {/* Global Search (Cmd/Ctrl+K) */}
-      <div className="px-3 pb-2">
+        {/* Global Search (Cmd/Ctrl+K) */}
         <GlobalSearch onNavigate={onPageChange} />
       </div>
 
-      {/* Navigation */}
-      <nav className="px-3 space-y-1">
-        {navItems.map((item, i) => (
-          <motion.button
-            key={item.id}
-            custom={i}
-            variants={sidebarItem}
-            initial="initial"
-            animate="animate"
-            whileHover={{ x: 6, backgroundColor: "rgba(99,102,241,0.08)", transition: { duration: 0.2, ease: APPLE_EASE } }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => { onPageChange(item.id); setMobileOpen(false); }}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-              currentPage === item.id
-                ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium"
-                : "text-lumnos-muted hover:bg-lumnos-surface hover:text-lumnos-text"
-            }`}
-          >
-            {item.icon}
-            {item.label}
-          </motion.button>
-        ))}
-      </nav>
+      {/* ===== MITTE: Navigation (scrollbar fuer sich) ===== */}
+      <div className="scrollable" style={{
+        flex: 1,
+        overflowY: "auto",
+        overflowX: "hidden",
+        padding: "0 8px",
+      }}>
+        <div className="space-y-1 px-2">
+          {navItems.map((item, i) => (
+            <motion.button
+              key={item.id}
+              custom={i}
+              variants={sidebarItem}
+              initial="initial"
+              animate="animate"
+              whileHover={{ x: 6, backgroundColor: "rgba(99,102,241,0.08)", transition: { duration: 0.2, ease: APPLE_EASE } }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { onPageChange(item.id); setMobileOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                currentPage === item.id
+                  ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium"
+                  : "text-lumnos-muted hover:bg-lumnos-surface hover:text-lumnos-text"
+              }`}
+            >
+              {item.icon}
+              {item.label}
+            </motion.button>
+          ))}
+        </div>
 
-      {/* Chat History (nur für eingeloggte User) */}
-      {!isGuest && (
-        <>
-          <div className="mt-4 px-3">
+        {/* Chat History (nur fuer eingeloggte User) */}
+        {!isGuest && (
+          <div className="mt-4 px-2">
             <p className="text-xs font-semibold text-lumnos-muted uppercase tracking-wider mb-2 px-3">
               Letzte Chats
             </p>
-          </div>
-          <ScrollArea className="flex-1 px-3">
             <div className="space-y-1 pb-4">
               {sessions.slice(0, 10).map((session) => (
                 <div
@@ -173,38 +180,39 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                 </p>
               )}
             </div>
-          </ScrollArea>
-        </>
-      )}
+          </div>
+        )}
+      </div>
 
-      {/* Gast-Modus: Spacer wenn keine Chat-History */}
-      {isGuest && <div className="flex-1" />}
-
-      {/* UPGRADE BANNER für Free-User */}
-      {(!user?.subscription_tier || user.subscription_tier === "free") && (
-        <div className="mx-3 mb-3 rounded-xl p-3 cursor-pointer"
-             style={{
-               background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
-               border: "1px solid rgba(99,102,241,0.4)",
-               boxShadow: "0 0 15px rgba(99,102,241,0.1)"
-             }}
-             onClick={() => { onPageChange("pricing"); setMobileOpen(false); }}>
-          <div className="flex items-center gap-2">
-            <span className="text-lg">{"\u26A1"}</span>
-            <div className="flex-1">
-              <div className="font-bold text-white text-xs">Pro upgraden</div>
-              <div className="text-[10px] text-slate-400">Ab 4,99€/Monat</div>
-            </div>
-            <div className="px-2 py-1 rounded-lg text-[10px] font-bold text-white"
-                 style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
-              Upgrade
+      {/* ===== UNTEN: User-Profil (fixiert) ===== */}
+      <div style={{
+        flexShrink: 0,
+        padding: "12px 16px",
+        borderTop: "1px solid rgba(255,255,255,0.06)",
+      }}>
+        {/* UPGRADE BANNER fuer Free-User */}
+        {(!user?.subscription_tier || user.subscription_tier === "free") && (
+          <div className="mb-3 rounded-xl p-3 cursor-pointer"
+               style={{
+                 background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
+                 border: "1px solid rgba(99,102,241,0.4)",
+                 boxShadow: "0 0 15px rgba(99,102,241,0.1)"
+               }}
+               onClick={() => { onPageChange("pricing"); setMobileOpen(false); }}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{"\u26A1"}</span>
+              <div className="flex-1">
+                <div className="font-bold text-white text-xs">Pro upgraden</div>
+                <div className="text-[10px] text-slate-400">Ab 4,99&euro;/Monat</div>
+              </div>
+              <div className="px-2 py-1 rounded-lg text-[10px] font-bold text-white"
+                   style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+                Upgrade
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* User Profile & Logout / Gast-Anmelden */}
-      <div className="p-3 border-t border-lumnos-border">
         {isGuest ? (
           <button
             onClick={() => { exitGuestMode(); window.location.reload(); }}
@@ -218,7 +226,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             Anmelden / Registrieren
           </button>
         ) : (
-          <div className="flex items-center gap-3 px-3 py-2">
+          <div className="flex items-center gap-3 px-1 py-2">
             <div className="w-8 h-8 rounded-full bg-lumnos-gradient flex items-center justify-center text-white text-sm font-bold shadow-glow-sm">
               {user?.full_name?.[0] || user?.username?.[0] || "?"}
             </div>
@@ -242,7 +250,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           </div>
         )}
       </div>
-    </div>
+    </nav>
   );
 
   return (
@@ -271,7 +279,18 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       </AnimatePresence>
 
       {/* Sidebar — Desktop: always visible, Mobile: animated slide */}
-      <aside className="hidden lg:block w-72 bg-lumnos-bg border-r border-lumnos-border">
+      <aside
+        className="hidden lg:block bg-lumnos-bg"
+        style={{
+          width: "260px",
+          minWidth: "260px",
+          height: "100dvh",
+          flexShrink: 0,
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          overflowX: "hidden",
+          overflowY: "hidden",
+        }}
+      >
         {sidebarContent}
       </aside>
 

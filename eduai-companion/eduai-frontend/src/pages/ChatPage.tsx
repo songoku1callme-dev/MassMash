@@ -67,14 +67,18 @@ export default function ChatPage() {
   const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("lumnos_tutor_modus") === "true");
   const [eli5, setEli5] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening, clearError } = useSpeechRecognition(language);
 
+  // Auto-scroll ans Ende wenn neue Nachricht kommt
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages, isSending, isStreaming]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -220,8 +224,23 @@ export default function ChatPage() {
 
   const tierLabel = isGuest ? "Gast" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
 
+  // Textarea auto-resize handler
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    const ta = e.target;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
+  };
+
   return (
-    <div className="flex flex-col h-full" style={{ background: "#0a0f1e" }}>
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      overflow: "hidden",
+      position: "relative",
+      background: "#0a0f1e",
+    }}>
       {/* ===== GAST-BANNER ===== */}
       {isGuest && (
         <div
@@ -278,10 +297,16 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* ===== HEADER ===== */}
+      {/* ===== HEADER (fixiert, scrollt nicht mit) ===== */}
       <div
-        className="border-b border-indigo-500/20 p-3 lg:p-4"
-        style={{ background: "rgba(10,15,30,0.85)", backdropFilter: "blur(20px)" }}
+        style={{
+          flexShrink: 0,
+          borderBottom: "1px solid rgba(99,102,241,0.2)",
+          background: "rgba(10,15,30,0.95)",
+          backdropFilter: "blur(20px)",
+          zIndex: 10,
+          padding: "12px 16px",
+        }}
       >
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex-1 min-w-0">
@@ -395,8 +420,22 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* ===== MESSAGES ===== */}
-      <div className="flex-1 overflow-y-auto p-4 lg:p-6" style={{ scrollbarWidth: "thin", scrollbarColor: "#6366f1 transparent" }}>
+      {/* ===== MESSAGES (einziger scrollbarer Bereich!) ===== */}
+      <div
+        ref={messagesContainerRef}
+        className="scrollable"
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          padding: "24px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "16px",
+          scrollbarWidth: "thin",
+          scrollbarColor: "#6366f1 transparent",
+        }}
+      >
         {messages.length === 0 ? (
           /* === WELCOME MESSAGE === */
           <div className="flex flex-col items-center justify-center h-full text-center py-20">
@@ -808,75 +847,67 @@ export default function ChatPage() {
         )}
       </div>
 
-      {/* Rate limit warning for Free users */}
-      {user?.subscription_tier === "free" && messages.length >= 8 && (
-        <div
-          className="mx-4 mb-2 p-3 rounded-xl text-center text-xs"
-          style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)" }}
-        >
-          <span className="text-indigo-300">
-            {language === "de"
-              ? "Free-Limit fast erreicht (10 Nachrichten/Tag). "
-              : "Free limit almost reached (10 messages/day). "}
-          </span>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
-            className="font-bold text-indigo-400 hover:text-indigo-300 underline"
-          >
-            {language === "de" ? "Upgrade auf Pro" : "Upgrade to Pro"}
-          </button>
-        </div>
-      )}
-
-      {/* Speech error / listening indicator */}
-      {(speechError || isListening) && (
-        <div className={`px-4 py-1.5 text-center text-xs flex items-center justify-center gap-2 ${
-          speechError ? "text-red-400" : "text-cyan-400"
-        }`} style={{ background: speechError ? "rgba(239,68,68,0.1)" : "rgba(6,182,212,0.1)" }}>
-          {speechError ? (
-            <>
-              {speechError}
-              <button onClick={clearError} className="ml-2 text-red-400 hover:text-red-300 font-bold">&#10005;</button>
-            </>
-          ) : (
-            <>
-              <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              {language === "de" ? "Spracherkennung aktiv... Sprich jetzt!" : "Listening... Speak now!"}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* OCR loading indicator */}
-      {isOcrLoading && (
-        <div
-          className="px-4 py-1.5 text-center text-xs text-amber-400 flex items-center justify-center gap-2"
-          style={{ background: "rgba(245,158,11,0.1)" }}
-        >
-          <span className="animate-spin inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full" />
-          {language === "de" ? "Bild wird analysiert..." : "Analyzing image..."}
-        </div>
-      )}
-
-      {/* ===== INPUT AREA ===== */}
+      {/* ===== INPUT AREA (IMMER am Boden, NIEMALS bewegt!) ===== */}
       <div
-        className="border-t border-indigo-500/20 p-3 lg:p-4"
-        style={{ background: "rgba(10,15,30,0.9)", backdropFilter: "blur(20px)" }}
+        style={{
+          flexShrink: 0,
+          padding: "16px 20px 20px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(10,15,30,0.98)",
+          backdropFilter: "blur(20px)",
+        }}
       >
-        <div className="flex items-center gap-2 max-w-4xl mx-auto">
+        {/* Speech error / listening indicator */}
+        {(speechError || isListening) && (
+          <div className={`mb-2 px-3 py-1.5 rounded-lg text-center text-xs flex items-center justify-center gap-2 ${
+            speechError ? "text-red-400" : "text-cyan-400"
+          }`} style={{ background: speechError ? "rgba(239,68,68,0.1)" : "rgba(6,182,212,0.1)" }}>
+            {speechError ? (
+              <>
+                {speechError}
+                <button onClick={clearError} className="ml-2 text-red-400 hover:text-red-300 font-bold">&#10005;</button>
+              </>
+            ) : (
+              <>
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                {language === "de" ? "Spracherkennung aktiv... Sprich jetzt!" : "Listening... Speak now!"}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* OCR loading indicator */}
+        {isOcrLoading && (
+          <div className="mb-2 px-3 py-1.5 rounded-lg text-center text-xs text-amber-400 flex items-center justify-center gap-2"
+               style={{ background: "rgba(245,158,11,0.1)" }}>
+            <span className="animate-spin inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full" />
+            {language === "de" ? "Bild wird analysiert..." : "Analyzing image..."}
+          </div>
+        )}
+
+        {/* Rate limit warning for Free users */}
+        {user?.subscription_tier === "free" && messages.length >= 8 && (
+          <div className="mb-2 p-3 rounded-xl text-center text-xs"
+               style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)" }}>
+            <span className="text-indigo-300">
+              {language === "de"
+                ? "Free-Limit fast erreicht (10 Nachrichten/Tag). "
+                : "Free limit almost reached (10 messages/day). "}
+            </span>
+            <button onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
+                    className="font-bold text-indigo-400 hover:text-indigo-300 underline">
+              {language === "de" ? "Upgrade auf Pro" : "Upgrade to Pro"}
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2 max-w-4xl mx-auto">
           {/* Camera/OCR Button */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleOcrUpload}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleOcrUpload} />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending || isOcrLoading}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
             style={{ background: "rgba(30,41,59,0.5)" }}
             title={language === "de" ? "Mathe-Foto hochladen" : "Upload math photo"}
           >
@@ -887,11 +918,11 @@ export default function ChatPage() {
             )}
           </button>
 
-          {/* Mic Button — always show, with tooltip if unsupported */}
+          {/* Mic Button */}
           <button
             onClick={speechSupported ? handleMicToggle : () => {}}
             disabled={isSending || !speechSupported}
-            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 ${
+            className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 flex-shrink-0 ${
               isListening
                 ? "text-red-400 border-red-500/50 animate-pulse"
                 : !speechSupported
@@ -913,11 +944,11 @@ export default function ChatPage() {
             <span style={{ fontSize: "16px" }}>{isListening ? "\u23F9" : "\uD83C\uDF99"}</span>
           </button>
 
-          {/* Text Input */}
-          <input
+          {/* Textarea (auto-resize, max 5 Zeilen) */}
+          <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             placeholder={
               isListening
@@ -927,10 +958,14 @@ export default function ChatPage() {
                 : (language === "de" ? "Stelle eine Frage..." : "Ask a question...")
             }
             disabled={isSending}
-            className="flex-1 h-10 px-4 rounded-xl text-sm text-white placeholder-slate-500 outline-none transition-all disabled:opacity-50"
+            rows={1}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500 outline-none disabled:opacity-50 resize-none"
             style={{
               background: "rgba(30,41,59,0.5)",
               border: "1px solid rgba(99,102,241,0.2)",
+              maxHeight: "120px",
+              minHeight: "40px",
+              lineHeight: "1.5",
             }}
           />
 
@@ -938,7 +973,7 @@ export default function ChatPage() {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className="flex items-center justify-center w-10 h-10 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100"
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0"
             style={{
               background: input.trim() && !isSending
                 ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
