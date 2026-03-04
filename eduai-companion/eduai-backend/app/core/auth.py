@@ -74,6 +74,25 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
+    # --- Dev-Token Bypass --- immer zuerst pruefen
+    if token == "dev-max-token-lumnos":
+        return {
+            "id": 999,
+            "username": "TestAdmin",
+            "email": "admin@lumnos.de",
+            "full_name": "Test Admin",
+            "school_grade": "12",
+            "school_type": "Gymnasium",
+            "preferred_language": "de",
+            "is_pro": 1,
+            "subscription_tier": "max",
+            "ki_personality_id": 1,
+            "ki_personality_name": "Mentor",
+            "avatar_url": "",
+            "auth_provider": "dev",
+            "created_at": "2024-01-01T00:00:00",
+        }
+
     # --- Attempt 1: Clerk OAuth JWT (RS256) ---
     try:
         from app.core.clerk import verify_clerk_token, CLERK_ENABLED

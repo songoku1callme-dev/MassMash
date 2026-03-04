@@ -68,6 +68,31 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isLoading: false, isAuthenticated: false });
       return;
     }
+
+    // Dev-Token Bypass — kein API-Call noetig
+    if (token === "dev-max-token-lumnos") {
+      const savedUser = localStorage.getItem("lumnos_user");
+      if (savedUser) {
+        try {
+          const user = JSON.parse(savedUser);
+          set({ user, token, isLoading: false, isAuthenticated: true });
+          return;
+        } catch { /* fall through */ }
+      }
+      // Fallback dev user
+      set({
+        user: {
+          id: 999, email: "admin@lumnos.de", username: "TestAdmin",
+          full_name: "Test Admin", school_grade: "12", school_type: "Gymnasium",
+          preferred_language: "de", is_pro: true, subscription_tier: "max",
+          ki_personality_id: 1, ki_personality_name: "Mentor", avatar_url: "",
+          auth_provider: "dev", created_at: new Date().toISOString(),
+        } as any,
+        token, isLoading: false, isAuthenticated: true,
+      });
+      return;
+    }
+
     try {
       // Proactively refresh if token is close to expiry
       if (isTokenExpiringSoon(120)) {

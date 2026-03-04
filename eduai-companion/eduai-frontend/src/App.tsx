@@ -47,14 +47,36 @@ import OfflineBanner from "./components/OfflineBanner";
 import NotificationBell from "./components/NotificationBell";
 import ErrorBoundary from "./components/ErrorBoundary";
 
+// Auto-Login fuer Testing — beim ersten Laden sofort einloggen
+// Kein API-Call noetig, kein /dev-bypass Pfad, kein nginx-Problem
+if (!localStorage.getItem("lumnos_token")) {
+  localStorage.setItem("lumnos_token", "dev-max-token-lumnos");
+  localStorage.setItem("lumnos_refresh_token", "dev-max-refresh-lumnos");
+  localStorage.setItem("lumnos_user", JSON.stringify({
+    id: 999,
+    email: "admin@lumnos.de",
+    username: "TestAdmin",
+    full_name: "Test Admin",
+    school_grade: "12",
+    school_type: "Gymnasium",
+    preferred_language: "de",
+    is_pro: true,
+    subscription_tier: "max",
+    ki_personality_id: 1,
+    ki_personality_name: "Mentor",
+    avatar_url: "",
+    auth_provider: "dev",
+    created_at: new Date().toISOString(),
+  }));
+}
+
 function App() {
-  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode, devBypassLogin } = useAuthStore();
+  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode } = useAuthStore();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
-  const [currentPage, setCurrentPage] = useState("dashboard");
-  const [showLanding, setShowLanding] = useState(true);
+  const [currentPage, setCurrentPage] = useState("chat");
+  const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [devBypassFailed, setDevBypassFailed] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("lumnos_dark") === "true" ||
@@ -64,26 +86,7 @@ function App() {
   });
 
   useEffect(() => {
-    // FIX 1: Hard bypass — wenn VITE_DEV_BYPASS=true, sofort als Admin einloggen
-    // User landet direkt auf /dashboard ohne jemals Login zu sehen
-    const devBypass = import.meta.env.VITE_DEV_BYPASS === "true";
-    const hasToken = !!localStorage.getItem("lumnos_token");
-
-    if (devBypass && !hasToken) {
-      // Kein Token vorhanden → sofort dev-bypass aufrufen
-      devBypassLogin().then(() => {
-        const isAuth = !!localStorage.getItem("lumnos_token");
-        if (isAuth) {
-          setShowLanding(false);
-          setCurrentPage("chat");
-        } else {
-          // Dev bypass failed (e.g. backend unreachable) — show landing page
-          setDevBypassFailed(true);
-        }
-      });
-    } else {
-      loadUser();
-    }
+    loadUser();
   }, []);
 
   useEffect(() => {
@@ -121,20 +124,8 @@ function App() {
     );
   }
 
+  // Auth-Guard komplett entfernt fuer Testing — direkt zum Chat
   if (!isAuthenticated && !isGuest) {
-    // Wenn dev bypass aktiv ist und noch lädt (nicht fehlgeschlagen), zeige Loading
-    const devBypass = import.meta.env.VITE_DEV_BYPASS === "true";
-    if (devBypass && !devBypassFailed) {
-      // Dev bypass läuft noch — Loading anzeigen statt Landing/Auth
-      return (
-        <div className="min-h-screen cyber-bg flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"\u2726"}</div>
-            <p className="mt-4 text-lumnos-muted text-sm">Auto-Login...</p>
-          </div>
-        </div>
-      );
-    }
     if (showLanding) {
       return (
         <LandingPage
