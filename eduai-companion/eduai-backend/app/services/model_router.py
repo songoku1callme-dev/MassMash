@@ -128,6 +128,7 @@ async def _groq_chat(model: str, messages: list, temperature: float = 0.5,
     """Groq chat completion helper."""
     groq_key = _get_groq_key()
     if not groq_key:
+        logger.warning("Groq chat: NO API KEY available!")
         return ""
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -144,6 +145,11 @@ async def _groq_chat(model: str, messages: list, temperature: float = 0.5,
             if resp.status_code == 200:
                 data = resp.json()
                 return data["choices"][0]["message"]["content"].strip()
+            else:
+                logger.error(
+                    "Groq chat HTTP %d for model=%s: %s",
+                    resp.status_code, model, resp.text[:500],
+                )
     except Exception as exc:
         logger.warning("Groq chat failed: %s", exc)
     return ""
@@ -154,6 +160,7 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
     """Groq streaming chat completion — yields text chunks."""
     groq_key = _get_groq_key()
     if not groq_key:
+        logger.warning("Groq stream: NO API KEY available!")
         return
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -170,7 +177,19 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
                 },
             ) as resp:
                 if resp.status_code != 200:
+                    # Read the error body for debugging
+                    error_body = ""
+                    try:
+                        await resp.aread()
+                        error_body = resp.text[:500]
+                    except Exception:
+                        pass
+                    logger.error(
+                        "Groq stream HTTP %d for model=%s: %s",
+                        resp.status_code, model, error_body,
+                    )
                     return
+                chunk_count = 0
                 async for line in resp.aiter_lines():
                     if not line.startswith("data: "):
                         continue
@@ -182,9 +201,12 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
                         delta = chunk["choices"][0].get("delta", {})
                         text = delta.get("content", "")
                         if text:
+                            chunk_count += 1
                             yield text
                     except Exception:
                         continue
+                if chunk_count == 0:
+                    logger.warning("Groq stream: 0 chunks received for model=%s", model)
     except Exception as exc:
         logger.warning("Groq stream failed: %s", exc)
 
@@ -848,6 +870,16 @@ async def execute_routed_chat_stream(
 
         # Normaler Token (nach thinking oder wenn kein thinking)
         yield {"type": "token", "text": chunk}
+
+    # Fallback: Wenn keine Chunks empfangen wurden, Fehlermeldung senden
+    if not full_text:
+        error_msg = (
+            "⚠️ Die KI konnte gerade nicht antworten. "
+            "Bitte versuche es in wenigen Minuten erneut."
+        )
+        logger.warning("Stream produced 0 chunks — sending error fallback to user")
+        yield {"type": "token", "text": error_msg}
+        full_text = error_msg
 
     # Falls kein thinking erkannt wurde, trotzdem strip
     _, visible_text = strip_thinking_tags(full_text)
