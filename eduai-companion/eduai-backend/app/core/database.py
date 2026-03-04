@@ -744,6 +744,23 @@ async def init_db():
         except Exception:
             pass  # Column already exists
 
+    # --- Dev user for testing (id=999) ---
+    # Ensures the dev-max-token-lumnos bypass user exists in the DB
+    # so foreign key constraints don't fail.
+    try:
+        await db.execute(
+            """INSERT OR IGNORE INTO users
+            (id, email, username, hashed_password, full_name, school_grade,
+             school_type, preferred_language, is_pro, subscription_tier,
+             ki_personality_id, ki_personality_name, auth_provider)
+            VALUES (999, 'admin@lumnos.de', 'TestAdmin', 'dev-no-login',
+                    'Test Admin', '12', 'Gymnasium', 'de', 1, 'max',
+                    1, 'Mentor', 'dev')""",
+        )
+        await db.commit()
+    except Exception:
+        pass  # User already exists or table not ready
+
     # Sync subscription_tier with is_pro for existing users
     try:
         await db.execute(
