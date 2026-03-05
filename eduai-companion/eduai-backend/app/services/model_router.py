@@ -269,34 +269,35 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 def strip_thinking_tags(text: str) -> tuple[str, str]:
-    """Extrahiert <thinking>...</thinking> und gibt (thinking_text, visible_text) zurück.
+    """Extrahiert <thinking>...</thinking> bzw. <think>...</think> und gibt (thinking_text, visible_text) zurück.
 
-    Handles both closed and unclosed <thinking> tags:
+    Handles both closed and unclosed tags, including qwen3's <think> format:
     - <thinking>content</thinking> → extracts content, removes tags
-    - <thinking>content (no closing tag) → extracts everything after <thinking>
-    - <thinking> content\n\nvisible → extracts thinking, returns visible part
+    - <think>content</think> → same (qwen3 format)
+    - <thinking>content (no closing tag) → extracts everything after tag
+    - <think>content (no closing tag) → same
     """
-    # Case 1: Properly closed <thinking>...</thinking>
-    thinking_match = _re.search(r'<thinking>(.*?)</thinking>', text, _re.DOTALL)
+    # Case 1: Properly closed <thinking>...</thinking> or <think>...</think>
+    thinking_match = _re.search(r'<think(?:ing)?>(.*?)</think(?:ing)?>', text, _re.DOTALL)
     if thinking_match:
         thinking_text = thinking_match.group(1).strip()
         visible_text = text[:thinking_match.start()] + text[thinking_match.end():]
         return thinking_text, visible_text.strip()
 
-    # Case 2: Unclosed <thinking> tag (LLM forgot to close it)
-    unclosed_match = _re.search(r'<thinking>\s*', text, _re.DOTALL)
+    # Case 2: Unclosed <thinking> or <think> tag (LLM forgot to close it)
+    unclosed_match = _re.search(r'<think(?:ing)?>\s*', text, _re.DOTALL)
     if unclosed_match:
-        # Everything after <thinking> is thinking content
+        # Everything after <thinking>/<think> is thinking content
         thinking_text = text[unclosed_match.end():].strip()
         visible_text = text[:unclosed_match.start()].strip()
-        # If there's no visible text, the entire response was thinking
-        # In that case, return empty visible text (will trigger retry)
         return thinking_text, visible_text
 
-    # Case 3: Stray </thinking> tag without opening
-    if "</thinking>" in text:
-        parts = text.split("</thinking>", 1)
-        return parts[0].strip(), parts[1].strip() if len(parts) > 1 else ""
+    # Case 3: Stray </thinking> or </think> tag without opening
+    close_match = _re.search(r'</think(?:ing)?>', text)
+    if close_match:
+        before = text[:close_match.start()].strip()
+        after = text[close_match.end():].strip()
+        return before, after
 
     return "", text
 
@@ -875,7 +876,7 @@ async def execute_routed_chat_stream(
         )
 
     # Phase C: Streaming der Antwort mit Chain-of-Thought Parsing
-    # AUFGABE 2 FIX: Buffer initial tokens to detect <thinking> before yielding
+    # AUFGABE 2 FIX: Buffer initial tokens to detect <thinking>/<think> before yielding
     yield {"type": "status", "text": "Schreibe Antwort..."}
 
     full_text = ""
@@ -883,10 +884,14 @@ async def execute_routed_chat_stream(
     in_thinking = False
     thinking_sent = False
     thinking_complete = False
-    # Buffer initial tokens until we can determine if response starts with <thinking
+    # Buffer initial tokens until we can determine if response starts with <thinking/<think
     initial_buffer = ""
     buffer_flushed = False
     BUFFER_THRESHOLD = 15  # chars to buffer before deciding (len('<thinking>') = 10)
+    # Regex patterns for both <thinking> and <think> tags (qwen3 uses <think>)
+    _THINK_OPEN = _re.compile(r'<think(?:ing)?>')
+    _THINK_CLOSE = _re.compile(r'</think(?:ing)?>')
+    _THINK_PARTIAL = _re.compile(r'<think(?:ing)?$|<think$|<thinkin$|<$')
 
     async for chunk in _groq_chat_stream(
         decision.modell,
@@ -900,22 +905,22 @@ async def execute_routed_chat_stream(
     ):
         full_text += chunk
 
-        # Phase 1: Buffer initial tokens to detect <thinking> tag
+        # Phase 1: Buffer initial tokens to detect <thinking>/<think> tag
         if not buffer_flushed and not thinking_complete:
             initial_buffer += chunk
             # Check if we have enough data to decide
-            if len(initial_buffer) >= BUFFER_THRESHOLD or \
-               "<thinking>" in initial_buffer or \
-               (len(initial_buffer) > 1 and not initial_buffer.lstrip().startswith("<")):
+            has_think_open = bool(_THINK_OPEN.search(initial_buffer))
+            starts_non_tag = len(initial_buffer) > 1 and not initial_buffer.lstrip().startswith("<")
+            if len(initial_buffer) >= BUFFER_THRESHOLD or has_think_open or starts_non_tag:
                 # Decide: is this a thinking block?
-                if "<thinking>" in initial_buffer:
+                if has_think_open:
                     in_thinking = True
                     thinking_sent = True
                     yield {"type": "thinking_start", "text": ""}
                     buffer_flushed = True
                     continue
-                elif initial_buffer.lstrip().startswith("<thinking"):
-                    # Partial <thinking tag — keep buffering
+                elif _THINK_PARTIAL.search(initial_buffer.lstrip()):
+                    # Partial <thinking or <think tag — keep buffering
                     continue
                 else:
                     # Not a thinking block — flush buffer as tokens
@@ -928,16 +933,17 @@ async def execute_routed_chat_stream(
 
         # Phase 2: Handle thinking block content
         if not thinking_complete and in_thinking:
-            if "</thinking>" in full_text:
+            close_match = _THINK_CLOSE.search(full_text)
+            if close_match:
                 # Thinking abgeschlossen
-                thinking_match = _re.search(r'<thinking>(.*?)</thinking>', full_text, _re.DOTALL)
-                if thinking_match:
-                    thinking_buffer = thinking_match.group(1).strip()
+                open_match = _THINK_OPEN.search(full_text)
+                if open_match:
+                    thinking_buffer = full_text[open_match.end():close_match.start()].strip()
                 in_thinking = False
                 thinking_complete = True
                 yield {"type": "thinking_end", "text": thinking_buffer}
-                # Sende den Rest nach </thinking> als Token
-                rest_after = full_text[full_text.index("</thinking>") + len("</thinking>"):]
+                # Sende den Rest nach </thinking>/</think> als Token
+                rest_after = full_text[close_match.end():]
                 if rest_after.strip():
                     yield {"type": "token", "text": rest_after.strip()}
             # Still inside thinking block — don't yield
@@ -946,23 +952,32 @@ async def execute_routed_chat_stream(
         # Phase 3: Normal token (nach thinking oder wenn kein thinking)
         yield {"type": "token", "text": chunk}
 
-    # Flush any remaining buffer that wasn't flushed
-    if not buffer_flushed and initial_buffer:
+    # ── End of stream: flush remaining buffers ──
+
+    # Case A: Stream ended while still in thinking mode (unclosed <thinking>/<think>)
+    if in_thinking and not thinking_complete:
+        open_match = _THINK_OPEN.search(full_text)
+        if open_match:
+            thinking_buffer = full_text[open_match.end():].strip()
+        thinking_complete = True
+        yield {"type": "thinking_end", "text": thinking_buffer}
+        # The entire response was a thinking block — use it as visible text
+        # Strip thinking tags and yield the content so user sees something
+        _, visible = strip_thinking_tags(full_text)
+        if not visible and thinking_buffer:
+            # No visible text after thinking — use the thinking content as the answer
+            visible = thinking_buffer
+        if visible:
+            yield {"type": "token", "text": visible}
+            full_text = visible  # Update full_text for downstream processing
+
+    # Case B: Buffer was never flushed (very short response)
+    elif not buffer_flushed and initial_buffer:
         # Check one last time if it was a thinking block
-        if "<thinking>" in initial_buffer and "</thinking>" in initial_buffer:
-            thinking_match = _re.search(r'<thinking>(.*?)</thinking>', initial_buffer, _re.DOTALL)
-            if thinking_match:
-                thinking_buffer = thinking_match.group(1).strip()
-            rest = _re.sub(r'<thinking>.*?</thinking>', '', initial_buffer, flags=_re.DOTALL).strip()
-            if rest:
-                yield {"type": "token", "text": rest}
-            thinking_complete = True
-        elif "<thinking" in initial_buffer:
-            # Malformed thinking tag — strip it and yield clean text
-            cleaned = _re.sub(r'<thinking[^>]*>?.*', '', initial_buffer, flags=_re.DOTALL).strip()
-            if cleaned:
-                yield {"type": "token", "text": cleaned}
-        else:
+        _, visible = strip_thinking_tags(initial_buffer)
+        if visible:
+            yield {"type": "token", "text": visible}
+        elif initial_buffer.strip():
             yield {"type": "token", "text": initial_buffer}
 
     # Fallback: Wenn keine Chunks empfangen wurden, Fehlermeldung senden
@@ -1002,10 +1017,11 @@ async def execute_routed_chat_stream(
                     f"{erweiterter_prompt}\n\n"
                     f"⚠️ KORREKTUR-MODUS: Vorherige Antwort enthielt Fehler!\n"
                     f"Feedback des Prüfers: \"{verifier_reason}\"\n\n"
-                    f"Schreibe die Antwort KOMPLETT NEU und behebe ALLE Fehler!"
+                    f"Schreibe die Antwort KOMPLETT NEU und behebe ALLE Fehler!\n"
+                    f"WICHTIG: Antworte DIREKT ohne <think>, <thinking> oder andere interne Tags."
                 )
                 yield {"type": "correction", "text": ""}
-                full_text = ""
+                correction_raw = ""
                 async for chunk in _groq_chat_stream(
                     "llama-3.3-70b-versatile",
                     [
@@ -1015,8 +1031,17 @@ async def execute_routed_chat_stream(
                     ],
                     temperature=0.3, max_tokens=2000,
                 ):
-                    full_text += chunk
-                    yield {"type": "token", "text": chunk}
+                    correction_raw += chunk
+                # Strip thinking tags from correction response before yielding
+                _, correction_visible = strip_thinking_tags(correction_raw)
+                if correction_visible:
+                    full_text = correction_visible
+                    yield {"type": "token", "text": correction_visible}
+                elif correction_raw:
+                    full_text = correction_raw
+                    yield {"type": "token", "text": correction_raw}
+                else:
+                    full_text = ""
                 confidence = max(confidence, 70)
                 is_verified = True
         except Exception as verify_err:
@@ -1027,6 +1052,10 @@ async def execute_routed_chat_stream(
     if full_text:
         is_verified = True
 
+    # Strip any remaining thinking tags from full_text before building final_text
+    _, full_text_clean = strip_thinking_tags(full_text)
+    if full_text_clean:
+        full_text = full_text_clean
     final_text = inject_citations(full_text, web_quellen) if web_quellen else full_text
 
     structured_quellen = []
