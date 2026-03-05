@@ -24,6 +24,7 @@ interface AuthState {
   enterGuestMode: () => void;
   exitGuestMode: () => void;
   devBypassLogin: () => Promise<void>;
+  loginWithClerk: (clerkToken: string, clerkUser: { id: string; email: string; firstName: string; lastName: string; imageUrl: string }) => Promise<void>;
 }
 
 function getOrCreateGuestId(): string {
@@ -122,6 +123,56 @@ export const useAuthStore = create<AuthState>((set) => ({
   exitGuestMode: () => {
     localStorage.removeItem("lumnos_guest_session_id");
     set({ isGuest: false, guestSessionId: null });
+  },
+
+  loginWithClerk: async (clerkToken, clerkUser) => {
+    // Clerk-Token als Bearer an unser Backend senden
+    // Das Backend verifiziert den Token via JWKS und erstellt/findet den User
+    setTokens(clerkToken, clerkToken); // Clerk tokens don't have separate refresh
+    localStorage.removeItem("lumnos_guest_session_id");
+    try {
+      const baseUrl = import.meta.env.VITE_API_URL || "";
+      const res = await fetch(`${baseUrl}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${clerkToken}` },
+      });
+      if (res.ok) {
+        const user = await res.json();
+        set({
+          user,
+          token: clerkToken,
+          isAuthenticated: true,
+          isLoading: false,
+          isGuest: false,
+          guestSessionId: null,
+        });
+        return;
+      }
+    } catch { /* fall through */ }
+    // Even if /me fails (first-time user), mark as authenticated
+    // The backend will auto-create the user on the next API call
+    set({
+      user: {
+        id: 0,
+        email: clerkUser.email || "",
+        username: clerkUser.firstName || clerkUser.email?.split("@")[0] || "User",
+        full_name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
+        school_grade: "10",
+        school_type: "Gymnasium",
+        preferred_language: "de",
+        is_pro: false,
+        subscription_tier: "free",
+        ki_personality_id: 1,
+        ki_personality_name: "Mentor",
+        avatar_url: clerkUser.imageUrl || "",
+        auth_provider: "clerk",
+        created_at: new Date().toISOString(),
+      } as any,
+      token: clerkToken,
+      isAuthenticated: true,
+      isLoading: false,
+      isGuest: false,
+      guestSessionId: null,
+    });
   },
 
   devBypassLogin: async () => {

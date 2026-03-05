@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { SignIn, SignUp } from "@clerk/clerk-react";
 import { useAuthStore } from "../stores/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BookOpen, GraduationCap, Chrome, Zap } from "lucide-react";
-import { setTokens } from "../services/api";
+import { BookOpen, Zap } from "lucide-react";
+
+const CLERK_ENABLED = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -75,199 +77,202 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
-            <CardTitle>{isLogin ? "Anmelden" : "Registrieren"}</CardTitle>
-            <CardDescription>
-              {isLogin
-                ? "Melde dich an, um weiterzulernen"
-                : "Erstelle ein Konto und starte deine Lernreise"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {error && (
-              <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Perfect School 4.1 Block 3.3: Google OAuth via Clerk */}
-            <Button
-              variant="outline"
-              className="w-full mb-4 flex items-center gap-2"
-              size="lg"
-              onClick={() => {
-                const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-                if (clerkKey) {
-                  // FIX 2: Clerk Redirect mit aktueller Domain (nicht localhost!)
-                  // Decode base64 part of clerk key to get the frontend API domain
-                  const keyBody = clerkKey.replace("pk_test_", "").replace("pk_live_", "").replace(/\$.*/, "");
-                  // Use current origin for redirect so it works on any domain (localhost, tunnel, production)
-                  const afterSignInUrl = import.meta.env.VITE_CLERK_AFTER_SIGN_IN_URL || "/dashboard";
-                  const redirectUrl = window.location.origin + afterSignInUrl;
-                  window.location.href = `https://${keyBody}.clerk.accounts.dev/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`;
-                } else {
-                  setError("Google OAuth erfordert Clerk-Konfiguration. Kontaktiere den Admin.");
-                }
-              }}
-            >
-              <Chrome className="w-5 h-5 text-blue-500" />
-              Mit Google anmelden
-            </Button>
-
-            <div className="relative mb-4">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-gray-900 px-2 text-gray-500">oder</span>
-              </div>
-            </div>
-
+        {/* Clerk OAuth Login/Register */}
+        {CLERK_ENABLED ? (
+          <div className="flex flex-col items-center">
             {isLogin ? (
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Benutzername</label>
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Dein Benutzername"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Passwort</label>
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Dein Passwort"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? "Anmelden..." : "Anmelden"}
-                </Button>
-              </form>
+              <SignIn
+                routing="hash"
+                appearance={{
+                  elements: {
+                    rootBox: "w-full",
+                    card: "shadow-xl border-0 bg-[#0f1729] text-white",
+                  },
+                }}
+              />
             ) : (
-              <form onSubmit={handleRegister} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Name</label>
-                    <Input
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Vor- und Nachname"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Benutzername</label>
-                    <Input
-                      value={regUsername}
-                      onChange={(e) => setRegUsername(e.target.value)}
-                      placeholder="Benutzername"
-                      required
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">E-Mail</label>
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="deine@email.de"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Passwort</label>
-                  <Input
-                    type="password"
-                    value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Mindestens 6 Zeichen"
-                    required
-                    minLength={6}
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Klasse</label>
-                    <select
-                      value={schoolGrade}
-                      onChange={(e) => setSchoolGrade(e.target.value)}
-                      className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                    >
-                      {["5", "6", "7", "8", "9", "10", "11", "12", "13"].map((g) => (
-                        <option key={g} value={g}>{g}. Klasse</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Schulart</label>
-                    <select
-                      value={schoolType}
-                      onChange={(e) => setSchoolType(e.target.value)}
-                      className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                    >
-                      <option value="Gymnasium">Gymnasium</option>
-                      <option value="Realschule">Realschule</option>
-                      <option value="Gesamtschule">Gesamtschule</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Sprache</label>
-                    <select
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                    >
-                      <option value="de">Deutsch</option>
-                      <option value="en">English</option>
-                    </select>
-                  </div>
-                </div>
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
-                  {loading ? "Registrieren..." : "Konto erstellen"}
-                </Button>
-              </form>
+              <SignUp
+                routing="hash"
+                appearance={{
+                  elements: {
+                    rootBox: "w-full",
+                    card: "shadow-xl border-0 bg-[#0f1729] text-white",
+                  },
+                }}
+              />
             )}
-
-            {/* DEV BYPASS LOGIN — server-side via proxy, no fetch() needed */}
-            {import.meta.env.VITE_DEV_BYPASS === "true" && (
-              <div className="mt-4 pt-4 border-t border-dashed border-red-300 dark:border-red-700">
-                <Button
-                  variant="destructive"
-                  className="w-full flex items-center gap-2"
-                  size="lg"
-                  onClick={() => {
-                    // Navigate to /dev-bypass — proxy handles everything server-side
-                    // No fetch() needed, avoids credentials-in-URL browser block
-                    window.location.href = "/dev-bypass";
-                  }}
-                  disabled={loading}
-                >
-                  <Zap className="w-5 h-5" />
-                  DEV BYPASS LOGIN (Max-Tier Testing)
-                </Button>
-                <p className="text-xs text-red-400 text-center mt-1">Nur für Entwickler-Testing</p>
-              </div>
-            )}
-
             <div className="mt-4 text-center">
               <button
-                onClick={() => { setIsLogin(!isLogin); setError(""); }}
-                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-sm text-blue-400 hover:text-blue-300"
               >
                 {isLogin
                   ? "Noch kein Konto? Jetzt registrieren"
                   : "Bereits registriert? Jetzt anmelden"}
               </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        ) : (
+          /* Fallback: Manual Login/Register when Clerk is not configured */
+          <Card className="shadow-xl border-0">
+            <CardHeader className="text-center pb-2">
+              <CardTitle>{isLogin ? "Anmelden" : "Registrieren"}</CardTitle>
+              <CardDescription>
+                {isLogin
+                  ? "Melde dich an, um weiterzulernen"
+                  : "Erstelle ein Konto und starte deine Lernreise"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {isLogin ? (
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Benutzername</label>
+                    <Input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Dein Benutzername"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Passwort</label>
+                    <Input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Dein Passwort"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Anmelden..." : "Anmelden"}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Name</label>
+                      <Input
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="Vor- und Nachname"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Benutzername</label>
+                      <Input
+                        value={regUsername}
+                        onChange={(e) => setRegUsername(e.target.value)}
+                        placeholder="Benutzername"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">E-Mail</label>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="deine@email.de"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Passwort</label>
+                    <Input
+                      type="password"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      placeholder="Mindestens 6 Zeichen"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Klasse</label>
+                      <select
+                        value={schoolGrade}
+                        onChange={(e) => setSchoolGrade(e.target.value)}
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        {["5", "6", "7", "8", "9", "10", "11", "12", "13"].map((g) => (
+                          <option key={g} value={g}>{g}. Klasse</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Schulart</label>
+                      <select
+                        value={schoolType}
+                        onChange={(e) => setSchoolType(e.target.value)}
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="Gymnasium">Gymnasium</option>
+                        <option value="Realschule">Realschule</option>
+                        <option value="Gesamtschule">Gesamtschule</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Sprache</label>
+                      <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                      >
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                      </select>
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                    {loading ? "Registrieren..." : "Konto erstellen"}
+                  </Button>
+                </form>
+              )}
+
+              {/* DEV BYPASS LOGIN */}
+              {import.meta.env.VITE_DEV_BYPASS === "true" && (
+                <div className="mt-4 pt-4 border-t border-dashed border-red-300 dark:border-red-700">
+                  <Button
+                    variant="destructive"
+                    className="w-full flex items-center gap-2"
+                    size="lg"
+                    onClick={() => {
+                      window.location.href = "/dev-bypass";
+                    }}
+                    disabled={loading}
+                  >
+                    <Zap className="w-5 h-5" />
+                    DEV BYPASS LOGIN (Max-Tier Testing)
+                  </Button>
+                  <p className="text-xs text-red-400 text-center mt-1">Nur fuer Entwickler-Testing</p>
+                </div>
+              )}
+
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => { setIsLogin(!isLogin); setError(""); }}
+                  className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  {isLogin
+                    ? "Noch kein Konto? Jetzt registrieren"
+                    : "Bereits registriert? Jetzt anmelden"}
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-600 mt-4">
           DSGVO-konform. Deine Daten sind sicher.

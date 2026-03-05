@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
@@ -49,31 +50,11 @@ import OfflineBanner from "./components/OfflineBanner";
 import NotificationBell from "./components/NotificationBell";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// Auto-Login fuer Testing — beim ersten Laden sofort einloggen
-// Kein API-Call noetig, kein /dev-bypass Pfad, kein nginx-Problem
-if (!localStorage.getItem("lumnos_token")) {
-  localStorage.setItem("lumnos_token", "dev-max-token-lumnos");
-  localStorage.setItem("lumnos_refresh_token", "dev-max-refresh-lumnos");
-  localStorage.setItem("lumnos_user", JSON.stringify({
-    id: 999,
-    email: "admin@lumnos.de",
-    username: "TestAdmin",
-    full_name: "Test Admin",
-    school_grade: "12",
-    school_type: "Gymnasium",
-    preferred_language: "de",
-    is_pro: true,
-    subscription_tier: "max",
-    ki_personality_id: 1,
-    ki_personality_name: "Mentor",
-    avatar_url: "",
-    auth_provider: "dev",
-    created_at: new Date().toISOString(),
-  }));
-}
-
 function App() {
-  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode } = useAuthStore();
+  const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode, loginWithClerk } = useAuthStore();
+  // Clerk auth state
+  const clerkAuth = useClerkAuth();
+  const clerkUser = useClerkUser();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
   const [currentPage, setCurrentPage] = useState("chat");
@@ -86,6 +67,23 @@ function App() {
     }
     return false;
   });
+
+  // Clerk → AuthStore sync: when Clerk signs in, get token and sync
+  useEffect(() => {
+    if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {
+      clerkAuth.getToken().then((token) => {
+        if (token) {
+          loginWithClerk(token, {
+            id: clerkUser.user!.id,
+            email: clerkUser.user!.primaryEmailAddress?.emailAddress || "",
+            firstName: clerkUser.user!.firstName || "",
+            lastName: clerkUser.user!.lastName || "",
+            imageUrl: clerkUser.user!.imageUrl || "",
+          });
+        }
+      });
+    }
+  }, [clerkAuth.isSignedIn, clerkUser.user]);
 
   useEffect(() => {
     loadUser();

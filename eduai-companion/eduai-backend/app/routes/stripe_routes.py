@@ -29,15 +29,15 @@ STRIPE_WEBHOOK_SECRET_1 = os.getenv("STRIPE_WEBHOOK_SECRET_1", "")
 STRIPE_WEBHOOK_SECRET_2 = os.getenv("STRIPE_WEBHOOK_SECRET_2", "")
 STRIPE_ENABLED = bool(STRIPE_SECRET_KEY)
 
-# Price tiers in cents
-PRO_PRICE_CENTS = 499
-PRO_PRICE_EUR = "4.99"
-MAX_PRICE_CENTS = 999
-MAX_PRICE_EUR = "9.99"
-PRO_YEARLY_PRICE_CENTS = 3999
-PRO_YEARLY_PRICE_EUR = "39.99"
-MAX_YEARLY_PRICE_CENTS = 7999
-MAX_YEARLY_PRICE_EUR = "79.99"
+# Price tiers in cents (Pro 6.99€/month, Max 14.99€/month)
+PRO_PRICE_CENTS = 699
+PRO_PRICE_EUR = "6.99"
+MAX_PRICE_CENTS = 1499
+MAX_PRICE_EUR = "14.99"
+PRO_YEARLY_PRICE_CENTS = 5999
+PRO_YEARLY_PRICE_EUR = "59.99"
+MAX_YEARLY_PRICE_CENTS = 11999
+MAX_YEARLY_PRICE_EUR = "119.99"
 # Eltern-Abo prices
 ELTERN_PRICE_CENTS = 299
 ELTERN_PRICE_EUR = "2.99"
@@ -228,7 +228,7 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
 
 def _tier_from_amount(amount_cents: int) -> str:
     """Determine subscription tier from price amount."""
-    if amount_cents >= 999:  # Max tier (9.99/month or 79.99/year)
+    if amount_cents >= 1499:  # Max tier (14.99/month or 119.99/year)
         return "max"
     elif amount_cents >= PRO_PRICE_CENTS:
         return "pro"
