@@ -19,10 +19,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/audio", tags=["audio"])
 
 ERLAUBTE_AUDIO_FORMATE = [
-    "audio/mpeg", "audio/mp3", "audio/wav", "audio/wave",
-    "audio/mp4", "audio/m4a", "audio/ogg", "audio/webm",
-    "audio/flac", "audio/x-flac", "video/webm",
+    "audio/mpeg", "audio/mp3", "audio/wav", "audio/wave", "audio/x-wav",
+    "audio/mp4", "audio/m4a", "audio/x-m4a", "audio/aac",
+    "audio/ogg", "audio/vorbis", "audio/opus",
+    "audio/webm", "audio/flac", "audio/x-flac",
+    "video/webm", "video/mp4",
+    "application/octet-stream",  # Fallback für unbekannte MIME-Types
 ]
+
+ERLAUBTE_AUDIO_ENDUNGEN = {
+    ".mp3", ".wav", ".m4a", ".ogg", ".flac", ".webm", ".aac", ".opus", ".wma",
+}
 
 MAX_AUDIO_MB = 25  # Groq Whisper limit
 
@@ -69,11 +76,18 @@ async def audio_transkribieren(
         )
 
     content_type = file.content_type or "audio/mpeg"
-    if content_type not in ERLAUBTE_AUDIO_FORMATE:
+    # Prüfe MIME-Type ODER Dateiendung (robuster)
+    dateiname = (file.filename or "").lower()
+    endung = "." + dateiname.rsplit(".", 1)[-1] if "." in dateiname else ""
+    mime_ok = content_type in ERLAUBTE_AUDIO_FORMATE or content_type.startswith("audio/")
+    endung_ok = endung in ERLAUBTE_AUDIO_ENDUNGEN
+    if not mime_ok and not endung_ok:
+        logger.warning("[AUDIO] Abgelehnt: MIME=%s, Datei=%s", content_type, dateiname)
         raise HTTPException(
             status_code=400,
-            detail="Format nicht unterstützt. Erlaubt: MP3, WAV, M4A, OGG, FLAC, WebM",
+            detail=f"Format nicht unterstützt (MIME: {content_type}). Erlaubt: MP3, WAV, M4A, OGG, FLAC, WebM",
         )
+    logger.info("[AUDIO] Akzeptiert: MIME=%s, Datei=%s, Größe=%.1fMB", content_type, dateiname, size_mb)
 
     groq_key = _get_groq_key()
     if not groq_key:

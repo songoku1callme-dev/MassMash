@@ -20,9 +20,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/vision", tags=["vision"])
 
-# Vision-fähige Modelle (Groq)
+# Vision-fähige Modelle (Groq) — mit Fallback-Kette
+# NOTE: llama-3.2-*-vision-preview models are DECOMMISSIONED (as of 2026)
 GROQ_VISION_MODELS = [
-    "meta-llama/llama-4-scout-17b-16e-instruct",    # Primär
+    "meta-llama/llama-4-scout-17b-16e-instruct",      # Primär
     "meta-llama/llama-4-maverick-17b-128e-instruct",  # Fallback
 ]
 
@@ -122,10 +123,12 @@ async def analyse_bild(
     if not groq_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY nicht konfiguriert")
 
-    # Groq Vision API aufrufen (mit Fallback)
+    # Groq Vision API aufrufen (mit Fallback-Kette + detailliertes Logging)
+    logger.info("[VISION] Start — Datei: %s, Größe: %d bytes, MIME: %s", file.filename, len(bild_bytes), content_type)
+    last_error = ""
     for model in GROQ_VISION_MODELS:
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={
@@ -154,9 +157,12 @@ async def analyse_bild(
                     },
                 )
 
+                # Detailliertes Logging pro Modell
+                logger.info("[VISION] Model: %s", model)
+                logger.info("[VISION] Status: %d", response.status_code)
+
                 if response.status_code == 200:
                     data = response.json()
-                    # Track tokens
                     usage = data.get("usage", {})
                     if usage:
                         track_tokens(
@@ -165,28 +171,41 @@ async def analyse_bild(
                         )
                     analyse = data["choices"][0]["message"]["content"]
                     analyse = _clean_vision_response(analyse)
-
+                    logger.info("[VISION] Erfolg mit %s — %d Zeichen", model, len(analyse))
                     return {
                         "analyse": analyse,
                         "model": model,
                         "dateiname": file.filename,
                         "fach": fach,
                     }
+                elif response.status_code == 400:
+                    error_body = response.text[:500]
+                    logger.error("[VISION] 400 Bad Request — %s: %s", model, error_body)
+                    last_error = f"400: {error_body}"
+                    continue
+                elif response.status_code == 404:
+                    logger.error("[VISION] 404 — Modell %s existiert nicht!", model)
+                    last_error = f"404: Modell {model} nicht verfügbar"
+                    continue
                 elif response.status_code == 429:
-                    logger.warning("[RATE LIMIT] Vision %s → nächstes Modell...", model)
+                    logger.warning("[VISION] 429 — Rate Limit auf %s", model)
+                    last_error = f"429: Rate Limit auf {model}"
                     continue
                 else:
-                    error_detail = response.text[:200]
-                    logger.error("[ERROR] Vision %s: %d — %s", model, response.status_code, error_detail)
+                    error_detail = response.text[:500]
+                    logger.error("[VISION] %d Error — %s: %s", response.status_code, model, error_detail)
+                    last_error = f"{response.status_code}: {error_detail}"
                     continue
 
         except Exception as e:
-            logger.error("[ERROR] Vision %s: %s", model, e)
+            logger.error("[VISION ERROR] %s: %s: %s", model, type(e).__name__, e)
+            last_error = f"{type(e).__name__}: {e}"
             continue
 
+    logger.error("[VISION] Alle Modelle fehlgeschlagen. Letzter Fehler: %s", last_error)
     raise HTTPException(
         status_code=503,
-        detail="Bild konnte nicht analysiert werden. Bitte versuche es erneut.",
+        detail=f"Bild konnte nicht analysiert werden. Fehler: {last_error[:200]}",
     )
 
 
@@ -248,11 +267,12 @@ async def analyse_bild_stream(
                             "temperature": 0.1,
                         },
                     ) as resp:
+                        logger.info("[VISION STREAM] Model: %s, Status: %d", model, resp.status_code)
                         if resp.status_code == 429:
-                            logger.warning("[RATE LIMIT] Vision stream %s → nächstes Modell", model)
+                            logger.warning("[VISION STREAM] 429 Rate Limit auf %s", model)
                             continue
                         if resp.status_code != 200:
-                            logger.error("Vision stream %s HTTP %d", model, resp.status_code)
+                            logger.error("[VISION STREAM] %d Error auf %s", resp.status_code, model)
                             continue
 
                         total_chars = 0
