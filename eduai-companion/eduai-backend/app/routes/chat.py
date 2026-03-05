@@ -1347,9 +1347,9 @@ async def ki_qualitaet(
     - Feedback nach Fach
     - Letzte negative Feedbacks
     """
-    # Admin-Check
-    user_email = current_user.get("email", "")
-    if user_email not in ADMIN_EMAILS:
+    # Admin-Check (case-insensitive)
+    user_email = current_user.get("email", "").lower()
+    if user_email not in [e.lower() for e in ADMIN_EMAILS]:
         raise HTTPException(status_code=403, detail="Nur für Admins")
 
     # Gesamt-Statistik
