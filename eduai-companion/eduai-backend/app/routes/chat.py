@@ -10,7 +10,7 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_optional_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -661,6 +661,24 @@ async def send_message(
 
     # Bug-Fix 3: <thinking> Tags aus der Antwort entfernen
     ai_response = clean_ai_response(ai_response)
+
+    # Qualitäts-Check: Prüfe Antwort auf offensichtliche Fehler
+    quality_check = check_antwort_qualitaet(request.message, ai_response)
+    if not quality_check["ok"] and quality_check.get("antwort_ersetzen"):
+        logger.warning("[QUALITY] Antwort wird ersetzt! Grund: %s", quality_check["warnung"])
+        # Retry mit einfacherem Modell
+        retry_response = call_groq_llm(
+            prompt=request.message,
+            system_prompt=combined_prompt,
+            subject=subject,
+            level=level,
+            language=request.language,
+            chat_history=messages,
+            rag_context=rag_context,
+            is_pro=is_pro,
+        )
+        if retry_response:
+            ai_response = clean_ai_response(retry_response)
 
     # Bug-Fix 2: Quellen NICHT in die Antwort einbauen — separat zurückgeben
     # Entferne LLM-generierte Quellen-Blöcke aus der Antwort

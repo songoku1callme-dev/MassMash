@@ -89,6 +89,145 @@ _COMPLEX_PATTERNS = [
 ]
 
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ABSOLUTER KERN-PROMPT — wird IMMER angehängt, kann NICHT überschrieben werden
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ABSOLUTER_KERN_PROMPT = """
+═══════════════════════════════════════
+KRITISCHE REGELN — NIEMALS BRECHEN:
+═══════════════════════════════════════
+
+REGEL 1 — FAKTENTREUE (HÖCHSTE PRIORITÄT):
+Du bist ein Lerncoach für Schüler. Falsche Informationen
+können Noten ruinieren. Deshalb:
+- Wenn du dir bei einer Antwort NICHT 100% sicher bist →
+  sage: "Für diese Antwort solltest du zusätzlich dein
+  Schulbuch oder deinen Lehrer befragen."
+- Gib NIEMALS eine Formel aus dem Gedächtnis ohne sie zu
+  überprüfen (Vorzeichen, Exponenten, Konstanten)
+- Bei historischen Jahreszahlen: Nur angeben wenn 100% sicher
+- Bei wissenschaftlichen Konstanten: Exakt angeben
+  (g = 9,81 m/s², c = 3×10⁸ m/s, π ≈ 3,14159)
+
+REGEL 2 — MATHE IMMER MIT RECHENWEG:
+Jede Mathe-Antwort MUSS enthalten:
+1. Gegebene Werte aufschreiben
+2. Formel nennen (in LaTeX)
+3. Werte einsetzen (in LaTeX)
+4. Schritt-für-Schritt rechnen
+5. Ergebnis mit Einheit
+
+RICHTIG:
+"Gegeben: a = 3, b = 4
+Gesucht: c (Hypotenuse)
+Formel: $c = \\sqrt{a^2 + b^2}$
+Rechnung: $c = \\sqrt{3^2 + 4^2} = \\sqrt{9 + 16} = \\sqrt{25} = 5$
+Ergebnis: $c = 5$"
+
+FALSCH: "c ist 5" (ohne Rechenweg)
+
+REGEL 3 — STRUKTURIERTE ANTWORTEN:
+Nutze IMMER diese Struktur:
+• Kurze direkte Antwort (1 Satz)
+• Ausführliche Erklärung mit Struktur
+• Beispiel (wenn hilfreich)
+• Merksatz am Ende wenn möglich
+
+REGEL 4 — SPRACHE:
+- IMMER auf Deutsch antworten
+- Fachbegriffe beim ersten Mal erklären:
+  "Die Ableitung (= Steigung der Funktion) von..."
+- LaTeX für ALLE Mathe-Ausdrücke ($...$)
+
+REGEL 5 — BEI UNSICHERHEIT:
+Sage klar: "Ich bin mir bei diesem Detail nicht 100%
+sicher — bitte verifiziere das in deinem [Fachbuch]."
+Besser ehrlich unsicher als selbstbewusst falsch!
+═══════════════════════════════════════
+"""
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ANTWORT-QUALITÄTS-CHECKER (AUFGABE 3)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEKANNTE_KORREKTE_ANTWORTEN = {
+    # Mathe-Grundlagen
+    "2+2": "4", "√144": "12", "√169": "13", "√25": "5",
+    # Physik-Konstanten
+    "lichtgeschwindigkeit": "299.792.458 m/s",
+    "erdbeschleunigung": "9,81 m/s²",
+    # Geschichte
+    "berliner mauer": "1989",
+    "zweiter weltkrieg ende": "1945",
+    "zweiter weltkrieg beginn": "1939",
+    "erster weltkrieg beginn": "1914",
+    "erster weltkrieg ende": "1918",
+    # Chemie
+    "h2o": "Wasser",
+    "co2": "Kohlenstoffdioxid",
+    "nacl": "Natriumchlorid",
+}
+
+HALLUZINATIONS_MUSTER = [
+    "im jahr 2024 wurde",
+    "im jahr 2025 wurde",
+    "im jahr 2026 wurde",
+    "laut einer studie von 2025",
+    "laut einer studie von 2026",
+    "kürzlich hat",
+    "neueste forschungen zeigen",
+]
+
+
+def check_antwort_qualitaet(frage: str, antwort: str) -> dict:
+    """Prüft ob die Antwort offensichtlich falsche Fakten enthält.
+
+    Returns: {"ok": bool, "warnung": str | None, "antwort_ersetzen": bool}
+    """
+    frage_lower = frage.lower()
+    antwort_lower = antwort.lower()
+
+    warnungen = []
+
+    # Bekannte korrekte Antworten prüfen
+    for schluessel, korrekt in BEKANNTE_KORREKTE_ANTWORTEN.items():
+        if schluessel in frage_lower:
+            if korrekt.lower() not in antwort_lower:
+                warnungen.append(
+                    f"Erwartete '{korrekt}' bei Frage zu '{schluessel}'"
+                )
+
+    # Typische Halluzinationen erkennen
+    for muster in HALLUZINATIONS_MUSTER:
+        if muster in antwort_lower:
+            warnungen.append(f"Mögliche Halluzination: '{muster}'")
+
+    # Error-Fallback noch sichtbar?
+    if "die ki konnte gerade nicht antworten" in antwort_lower:
+        logger.error("[QUALITY CRITICAL] Error-Fallback in Antwort sichtbar!")
+        return {
+            "ok": False,
+            "warnung": "Error-Fallback in Antwort!",
+            "antwort_ersetzen": True,
+        }
+
+    # Thinking-Tags noch sichtbar?
+    if "<thinking>" in antwort or "<think>" in antwort:
+        logger.error("[QUALITY CRITICAL] Thinking-Tags nicht entfernt!")
+        return {
+            "ok": False,
+            "warnung": "Thinking-Tags nicht entfernt!",
+            "antwort_ersetzen": True,
+        }
+
+    if warnungen:
+        for w in warnungen:
+            logger.warning("[QUALITY WARN] %s", w)
+        return {"ok": True, "warnung": str(warnungen), "antwort_ersetzen": False}
+
+    return {"ok": True, "warnung": None, "antwort_ersetzen": False}
+
+
 def smart_model_selection(prompt: str) -> str:
     """Select optimal model based on question complexity.
 
@@ -1038,7 +1177,8 @@ RICHTIG: Interpretiere die wahrscheinlichste Bedeutung und antworte direkt. Am E
 - Antworte IMMER auf Deutsch, auch wenn die Frage auf Englisch ist.
 - Bei Mathe: IMMER LaTeX verwenden ($...$). NIEMALS Plaintext-Formeln!
 - Antworte NIEMALS mit internen Tags wie <think>, <thinking>, <output>.
-{detail_modifier}"""
+{detail_modifier}
+{ABSOLUTER_KERN_PROMPT}"""
     else:
         return f"""You are LUMNOS — Germany's most elite AI learning platform.
 You are a pedagogical mentor, not a solution machine.
