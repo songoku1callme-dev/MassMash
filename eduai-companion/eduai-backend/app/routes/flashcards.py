@@ -53,10 +53,10 @@ async def _ensure_tables(db: aiosqlite.Connection) -> None:
     await db.execute("""
         CREATE TABLE IF NOT EXISTS flashcards (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            deck_id INTEGER NOT NULL,
+            deck_id INTEGER,
             user_id INTEGER NOT NULL,
-            front TEXT NOT NULL,
-            back TEXT NOT NULL,
+            front TEXT NOT NULL DEFAULT '',
+            back TEXT NOT NULL DEFAULT '',
             easiness REAL DEFAULT 2.5,
             interval INTEGER DEFAULT 1,
             repetitions INTEGER DEFAULT 0,
@@ -66,6 +66,18 @@ async def _ensure_tables(db: aiosqlite.Connection) -> None:
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
+    # Migrate old schema: add deck_id column if missing
+    try:
+        cursor = await db.execute("PRAGMA table_info(flashcards)")
+        columns = [row[1] for row in await cursor.fetchall()]
+        if "deck_id" not in columns:
+            await db.execute("ALTER TABLE flashcards ADD COLUMN deck_id INTEGER REFERENCES flashcard_decks(id)")
+        if "easiness" not in columns and "ease_factor" in columns:
+            await db.execute("ALTER TABLE flashcards RENAME COLUMN ease_factor TO easiness")
+        if "interval" not in columns and "interval_days" in columns:
+            await db.execute("ALTER TABLE flashcards RENAME COLUMN interval_days TO interval")
+    except Exception:
+        pass  # Table just created with correct schema
     await db.commit()
 
 

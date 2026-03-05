@@ -4,7 +4,7 @@ Supreme 9.0 Phase 7: Foto-Solver Upgrade - OCR + Klassifizierung + intelligentes
 """
 import os
 import logging
-from fastapi import APIRouter, Depends, File, Form, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.core.auth import get_current_user
@@ -120,24 +120,17 @@ async def solve_from_image(
 @router.post("/solve-text")
 async def solve_from_text(
     body: Optional[SolveTextRequest] = None,
-    equation: Optional[str] = Form(None),
-    text: Optional[str] = Form(None),
     _user: dict = Depends(get_current_user),
 ) -> dict:
     """Solve a math equation provided as text (no OCR needed).
 
-    Accepts both JSON body (text/equation fields) and Form data.
+    Accepts JSON body with text and/or equation fields.
     Input: equation string like "2x + 3 = 7" or "x^2 - 4 = 0".
     Returns: step-by-step solution in Markdown+KaTeX.
     """
-    # Accept from JSON body or Form data
     eq = ""
     if body:
         eq = body.content
-    if not eq and equation:
-        eq = equation
-    if not eq and text:
-        eq = text
 
     if not eq or not eq.strip():
         raise HTTPException(status_code=400, detail="Gleichung darf nicht leer sein")

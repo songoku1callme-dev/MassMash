@@ -222,7 +222,7 @@ async def get_xp_history(
     user_id = current_user["id"]
 
     cursor = await db.execute(
-        """SELECT DATE(created_at) as day, SUM(xp_earned) as xp
+        """SELECT DATE(created_at) as day, SUM(amount) as xp
         FROM xp_log WHERE user_id = ?
         AND created_at >= date('now', '-30 days')
         GROUP BY day ORDER BY day""",
