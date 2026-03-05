@@ -1,7 +1,7 @@
+@import './styles/glass.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import './styles/glass.css';
 
 /* ===== THEME CSS VARIABLES ===== */
 :root, :root[data-theme="dark"] {
@@ -193,6 +193,52 @@ body {
 :root[data-theme="dark"] .text-gray-800 { color: #e2e8f0 !important; }
 :root[data-theme="dark"] .border-gray-200 { border-color: rgba(99,102,241,0.2) !important; }
 :root[data-theme="dark"] .border-gray-300 { border-color: rgba(99,102,241,0.15) !important; }
+
+/* ===== BLOCK E: Light mode overrides for dark-optimized Tailwind classes ===== */
+/* Text colors: dark-mode white/light text → dark text in light mode */
+:root[data-theme="light"] .text-white { color: #0f172a !important; }
+:root[data-theme="light"] .text-slate-100 { color: #1e293b !important; }
+:root[data-theme="light"] .text-slate-200 { color: #334155 !important; }
+:root[data-theme="light"] .text-slate-300 { color: #475569 !important; }
+:root[data-theme="light"] .text-slate-400 { color: #64748b !important; }
+:root[data-theme="light"] .text-slate-500 { color: #94a3b8 !important; }
+:root[data-theme="light"] .text-gray-400 { color: #64748b !important; }
+
+/* Background colors: dark surfaces → light surfaces in light mode */
+:root[data-theme="light"] .bg-slate-700 { background-color: #e2e8f0 !important; }
+:root[data-theme="light"] .bg-slate-800 { background-color: #f1f5f9 !important; }
+:root[data-theme="light"] .bg-slate-900 { background-color: #f8fafc !important; }
+:root[data-theme="light"] .bg-gray-800 { background-color: #f1f5f9 !important; }
+:root[data-theme="light"] .bg-gray-900 { background-color: #f8fafc !important; }
+
+/* Border colors: dark borders → light borders */
+:root[data-theme="light"] .border-slate-600 { border-color: #cbd5e1 !important; }
+:root[data-theme="light"] .border-slate-700 { border-color: #e2e8f0 !important; }
+
+/* Hover states: dark hover → light hover */
+:root[data-theme="light"] .hover\:bg-slate-700:hover { background-color: #e2e8f0 !important; }
+:root[data-theme="light"] .hover\:text-slate-200:hover { color: #1e293b !important; }
+:root[data-theme="light"] .hover\:text-slate-300:hover { color: #334155 !important; }
+:root[data-theme="light"] .hover\:text-slate-400:hover { color: #475569 !important; }
+
+/* Prose/Code in light mode */
+:root[data-theme="light"] .prose pre { background-color: #f1f5f9 !important; }
+:root[data-theme="light"] .prose pre code { color: #334155 !important; }
+:root[data-theme="light"] .katex,
+:root[data-theme="light"] .katex .mord,
+:root[data-theme="light"] .katex .mbin,
+:root[data-theme="light"] .katex .mrel,
+:root[data-theme="light"] .katex .mopen,
+:root[data-theme="light"] .katex .mclose,
+:root[data-theme="light"] .katex .mpunct,
+:root[data-theme="light"] .katex .minner { color: #1e293b !important; }
+
+/* Special: keep white text on gradient/colored buttons */
+:root[data-theme="light"] .lumnos-btn-primary,
+:root[data-theme="light"] [style*="linear-gradient(135deg, #6366f1"] { color: #ffffff !important; }
+:root[data-theme="light"] .lumnos-btn-primary .text-white,
+:root[data-theme="light"] .bg-indigo-500 .text-white,
+:root[data-theme="light"] .bg-indigo-600 .text-white { color: #ffffff !important; }
 
 /* Prose styles for markdown */
 .prose pre {
