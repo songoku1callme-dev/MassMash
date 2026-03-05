@@ -10,7 +10,7 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_optional_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet, ist_sinnlose_frage, SINNLOSE_ANTWORT
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet, ist_sinnlose_frage, SINNLOSE_ANTWORT, deep_thinking_response, fast_response
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -575,46 +575,83 @@ async def send_message(
     # Optimierten Prompt verwenden (falls vorhanden)
     combined_prompt = get_prompt_for_fach(subject, combined_prompt)
 
-    # Model Router entscheidet: 8b-instant vs 70b-versatile vs Internet
-    routing = route_request(request.message, subject, user_tier)
-    logger.info(
-        "Model-Routing: %s | multi_step=%s | internet=%s | %s",
-        routing.modell, routing.multi_step, routing.internet, routing.begründung,
-    )
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # MODUS-HANDLING: deep | fast | normal
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    modus = getattr(request, "modus", "normal") or "normal"
+    modus_label = ""
 
-    # Routed Chat ausführen (Internet + Multi-Step + Qualitäts-Check)
-    routed_result = await execute_routed_chat(
-        frage=request.message,
-        fach=subject,
-        tier=user_tier,
-        verlauf=[{"role": m.get("role", "user"), "content": m.get("content", "")}
-                 for m in messages[-8:] if m.get("content")],
-        system_prompt=combined_prompt,
-    )
-
-    ai_response = routed_result.get("antwort", "")
-    modell_genutzt = routed_result.get("modell_genutzt", routing.modell)
-    router_internet = routed_result.get("internet_genutzt", False)
-    router_multi_step = routed_result.get("multi_step", False)
-    router_web_quellen = routed_result.get("web_quellen", [])
-    is_verified = routed_result.get("is_verified", False)
-    confidence = routed_result.get("confidence", 0)
-
-    # Fallback: wenn Router keine Antwort liefert, Standard-Pfad
-    if not ai_response:
-        logger.warning("Router lieferte leere Antwort — Fallback auf call_groq_llm")
-        ai_response = call_groq_llm(
-            prompt=request.message,
+    if modus == "deep":
+        logger.info("DEEP THINKING Modus aktiviert für: %s", request.message[:60])
+        ai_response, modell_genutzt = await deep_thinking_response(
+            frage=request.message,
             system_prompt=combined_prompt,
-            subject=subject,
-            level=level,
-            language=request.language,
-            chat_history=messages,
-            rag_context=rag_context,
-            is_pro=is_pro,
-            temperature_override=personality_temperature,
-            web_context=web_context,
+            fach=subject,
         )
+        modus_label = "\U0001f9e0 Deep Thinking"
+        router_internet = False
+        router_multi_step = False
+        router_web_quellen = []
+        is_verified = True  # Doppelt geprüft
+        confidence = 0
+        routing = None  # Skip normal routing
+
+    elif modus == "fast":
+        logger.info("FAST Modus aktiviert für: %s", request.message[:60])
+        ai_response, modell_genutzt = await fast_response(
+            frage=request.message,
+            system_prompt=combined_prompt,
+        )
+        modus_label = "\u26a1 Fast"
+        router_internet = False
+        router_multi_step = False
+        router_web_quellen = []
+        is_verified = False
+        confidence = 0
+        routing = None  # Skip normal routing
+
+    else:
+        # Normal mode — use Model Router
+        modus_label = "\u2728 Standard"
+        routing = route_request(request.message, subject, user_tier)
+        logger.info(
+            "Model-Routing: %s | multi_step=%s | internet=%s | %s",
+            routing.modell, routing.multi_step, routing.internet, routing.begründung,
+        )
+
+        # Routed Chat ausführen (Internet + Multi-Step + Qualitäts-Check)
+        routed_result = await execute_routed_chat(
+            frage=request.message,
+            fach=subject,
+            tier=user_tier,
+            verlauf=[{"role": m.get("role", "user"), "content": m.get("content", "")}
+                     for m in messages[-8:] if m.get("content")],
+            system_prompt=combined_prompt,
+        )
+
+        ai_response = routed_result.get("antwort", "")
+        modell_genutzt = routed_result.get("modell_genutzt", routing.modell)
+        router_internet = routed_result.get("internet_genutzt", False)
+        router_multi_step = routed_result.get("multi_step", False)
+        router_web_quellen = routed_result.get("web_quellen", [])
+        is_verified = routed_result.get("is_verified", False)
+        confidence = routed_result.get("confidence", 0)
+
+        # Fallback: wenn Router keine Antwort liefert, Standard-Pfad
+        if not ai_response:
+            logger.warning("Router lieferte leere Antwort — Fallback auf call_groq_llm")
+            ai_response = call_groq_llm(
+                prompt=request.message,
+                system_prompt=combined_prompt,
+                subject=subject,
+                level=level,
+                language=request.language,
+                chat_history=messages,
+                rag_context=rag_context,
+                is_pro=is_pro,
+                temperature_override=personality_temperature,
+                web_context=web_context,
+            )
 
     # Internet-Status aus Router übernehmen
     if router_internet:
@@ -929,6 +966,82 @@ async def send_message_stream(
     verlauf = [{"role": m.get("role", "user"), "content": m.get("content", "")}
                for m in messages[-8:] if m.get("content")]
 
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # MODUS-HANDLING für Streaming: deep | fast | normal
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    modus = getattr(request, "modus", "normal") or "normal"
+
+    if modus in ("deep", "fast"):
+        # Deep/Fast Modus: Kein Streaming, direkte Antwort als SSE
+        async def modus_sse_generator():
+            if modus == "deep":
+                yield f"event: status\ndata: {json.dumps({'text': '\U0001f9e0 Deep Thinking läuft...'}, ensure_ascii=False)}\n\n"
+                yield f"event: thinking_start\ndata: {{}}\n\n"
+                antwort, modell = await deep_thinking_response(
+                    frage=request.message,
+                    system_prompt=combined_prompt,
+                    fach=subject,
+                )
+                yield f"event: thinking_end\ndata: {json.dumps({'text': 'Doppelte Verifikation abgeschlossen'}, ensure_ascii=False)}\n\n"
+                is_verified = True
+                modus_label = "\U0001f9e0 Deep Thinking"
+            else:
+                yield f"event: status\ndata: {json.dumps({'text': '\u26a1 Fast Mode...'}, ensure_ascii=False)}\n\n"
+                antwort, modell = await fast_response(
+                    frage=request.message,
+                    system_prompt=combined_prompt,
+                )
+                is_verified = False
+                modus_label = "\u26a1 Fast"
+
+            # Clean response
+            antwort = clean_ai_response(antwort) if antwort else ""
+            antwort = remove_self_generated_sources(antwort) if antwort else ""
+
+            # Stream tokens
+            yield f"event: token\ndata: {json.dumps({'text': antwort}, ensure_ascii=False)}\n\n"
+
+            # Meta
+            yield f"event: meta\ndata: {json.dumps({'final_text': antwort, 'is_verified': is_verified, 'confidence': 0, 'modus': modus_label}, ensure_ascii=False)}\n\n"
+
+            # Save to DB
+            assistant_msg = {
+                "role": "assistant",
+                "content": antwort,
+                "subject": subject,
+                "timestamp": datetime.now().isoformat()
+            }
+            messages.append(assistant_msg)
+
+            await db.execute(
+                "UPDATE chat_sessions SET messages = ?, subject = ?, updated_at = datetime('now') WHERE id = ?",
+                (json.dumps(messages, ensure_ascii=False), subject, session_id)
+            )
+            await db.commit()
+
+            await db.execute(
+                """INSERT INTO activity_log (user_id, activity_type, subject, description)
+                VALUES (?, 'chat', ?, ?)""",
+                (user_id, subject, f"[{modus_label}] {request.message[:100]}")
+            )
+            await db.commit()
+
+            try:
+                from app.routes.gamification import add_xp
+                xp = 10 if modus == "deep" else 3
+                await add_xp(user_id, xp, "chat", db)
+            except Exception:
+                pass
+
+            yield f"event: done\ndata: {json.dumps({'session_id': session_id, 'subject': subject}, ensure_ascii=False)}\n\n"
+
+        return StreamingResponse(
+            modus_sse_generator(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+        )
+
+    # Normal mode — use full streaming pipeline
     async def sse_generator():
         """SSE Event Generator."""
         final_text = ""

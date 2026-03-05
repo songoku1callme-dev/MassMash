@@ -196,6 +196,7 @@ export const chatApi = {
     personality_id?: number;
     tutor_modus?: boolean;
     eli5?: boolean;
+    modus?: string;
   }) => request<ChatResponse>("/api/chat", { method: "POST", body: data }),
 
   sessions: () => request<ChatSession[]>("/api/chat/sessions"),
@@ -217,6 +218,7 @@ export const chatApi = {
     personality_id?: number;
     tutor_modus?: boolean;
     eli5?: boolean;
+    modus?: string;
   }): Promise<Response> => {
     let token = getAccessToken();
     if (token && isTokenExpiringSoon(120)) {

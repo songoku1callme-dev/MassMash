@@ -77,6 +77,7 @@ class ChatRequest(BaseModel):
     personality_id: Optional[int] = None  # KI-Persoenlichkeit ID (1-5)
     tutor_modus: bool = False  # Perfect School 4.1: Socratic method toggle
     eli5: bool = False  # Perfect School 4.1: Explain Like I'm 5
+    modus: str = "normal"  # "normal" | "deep" | "fast"
 
 
 class Karteikarte(BaseModel):

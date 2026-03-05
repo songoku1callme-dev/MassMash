@@ -18,8 +18,8 @@ interface ChatState {
 
   loadSessions: () => Promise<void>;
   loadSession: (id: number) => Promise<void>;
-  sendMessage: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean) => Promise<void>;
-  sendMessageStream: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean) => Promise<void>;
+  sendMessage: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean, modus?: string) => Promise<void>;
+  sendMessageStream: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean, modus?: string) => Promise<void>;
   newChat: () => void;
   setSubject: (subject: string) => void;
   setLanguage: (lang: string) => void;
@@ -69,7 +69,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
-  sendMessage: async (message, personalityId, tutorModus, eli5) => {
+  sendMessage: async (message, personalityId, tutorModus, eli5, modus) => {
     const { currentSessionId, messages, currentSubject, language, detailLevel } = get();
 
     const userMsg: ChatMessage = {
@@ -89,6 +89,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         personality_id: personalityId,
         tutor_modus: tutorModus,
         eli5,
+        modus,
       });
 
       const assistantMsg: ChatMessage = {
@@ -124,7 +125,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
    * SSE Streaming Chat — Quality Engine v2 Block 1
    * Sends message via SSE stream, updates UI token-by-token.
    */
-  sendMessageStream: async (message, personalityId, tutorModus, eli5) => {
+  sendMessageStream: async (message, personalityId, tutorModus, eli5, modus) => {
     const { currentSessionId, messages, currentSubject, language, detailLevel } = get();
 
     const userMsg: ChatMessage = {
@@ -136,7 +137,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [...messages, userMsg],
       isSending: true,
       isStreaming: true,
-      streamStatus: "Verbinde...",
+      streamStatus: modus === "deep" ? "🧠 Deep Thinking l\u00e4uft..." : "Verbinde...",
       streamingText: "",
       thinkingText: "",
       isThinking: false,
@@ -152,6 +153,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         personality_id: personalityId,
         tutor_modus: tutorModus,
         eli5,
+        modus,
       });
 
       if (!response.ok || !response.body) {

@@ -357,6 +357,209 @@ def check_antwort_qualitaet(frage: str, antwort: str) -> dict:
     return {"ok": True, "warnung": None, "antwort_ersetzen": False}
 
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# DEEP THINKING MODUS — Doppelte Prüfung für maximale Präzision
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async def deep_thinking_response(
+    frage: str,
+    system_prompt: str,
+    fach: str = "Allgemein",
+) -> tuple[str, str]:
+    """Deep Thinking: Runde 1 → Antwort, Runde 2 → Selbst-Verifikation.
+
+    Returns (finale_antwort, model_name).
+    """
+    from app.services.groq_llm import call_groq_llm, _get_client, DEFAULT_MODEL
+
+    client = _get_client()
+    if client is None:
+        # Kein API Key → Standard-Antwort
+        antwort = call_groq_llm(
+            prompt=frage,
+            system_prompt=system_prompt,
+            subject=fach,
+            level="intermediate",
+            language="de",
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+        return antwort, "template"
+
+    model = "llama-3.3-70b-versatile"
+
+    # RUNDE 1: Erste Antwort generieren
+    runde1_prompt = system_prompt + """
+WICHTIG: Du bist jetzt im DEEP THINKING Modus.
+Denke besonders sorgfältig nach. Gib deine beste
+erste Antwort — vollständig und präzise.
+"""
+    try:
+        r1 = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": runde1_prompt},
+                {"role": "user", "content": frage},
+            ],
+            max_tokens=800,
+            temperature=0.1,
+            stream=False,
+            timeout=30.0,
+        )
+        antwort1 = (r1.choices[0].message.content or "").strip()
+    except Exception as e:
+        logger.warning("Deep Thinking Runde 1 fehlgeschlagen: %s", e)
+        antwort1 = ""
+
+    if not antwort1:
+        # Fallback auf Standard
+        antwort = call_groq_llm(
+            prompt=frage,
+            system_prompt=system_prompt,
+            subject=fach,
+            level="intermediate",
+            language="de",
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+        return antwort, model
+
+    # Interne Tags entfernen
+    import re as _re
+    for tag in ["thinking", "reasoning", "output", "internal"]:
+        antwort1 = _re.sub(rf'<{tag}>.*?</{tag}>', '', antwort1, flags=_re.DOTALL)
+        antwort1 = _re.sub(rf'<{tag}>.*', '', antwort1, flags=_re.DOTALL)
+        antwort1 = antwort1.replace(f'</{tag}>', '').replace(f'<{tag}>', '')
+    antwort1 = _re.sub(r'\n{3,}', '\n\n', antwort1).strip()
+
+    # RUNDE 2: Selbst-Verifikation und Verbesserung
+    verifikations_prompt = f"""Du bist ein Qualitätsprüfer für Lern-Antworten.
+Prüfe diese Antwort auf:
+1. Faktische Korrektheit (100% muss stimmen)
+2. Vollständigkeit (fehlt etwas Wichtiges?)
+3. Klarheit (ist es für Schüler verständlich?)
+4. LaTeX (sind alle Formeln korrekt?)
+
+URSPRÜNGLICHE FRAGE: {frage}
+FACH: {fach}
+
+ERSTE ANTWORT:
+{antwort1}
+
+Wenn die Antwort perfekt ist → gib sie leicht poliert zurück.
+Wenn Fehler oder Lücken → korrigiere sie vollständig.
+Gib NUR die finale, verbesserte Antwort zurück.
+Keine Erklärung was du geändert hast."""
+
+    try:
+        r2 = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "Du bist ein präziser Qualitätsprüfer für Bildungsantworten. Antworte auf Deutsch."},
+                {"role": "user", "content": verifikations_prompt},
+            ],
+            max_tokens=800,
+            temperature=0.05,
+            stream=False,
+            timeout=30.0,
+        )
+        antwort2 = (r2.choices[0].message.content or "").strip()
+    except Exception as e:
+        logger.warning("Deep Thinking Runde 2 fehlgeschlagen: %s — nutze Runde 1", e)
+        return antwort1, model
+
+    if not antwort2:
+        return antwort1, model
+
+    # Tags bereinigen
+    for tag in ["thinking", "reasoning", "output", "internal"]:
+        antwort2 = _re.sub(rf'<{tag}>.*?</{tag}>', '', antwort2, flags=_re.DOTALL)
+        antwort2 = _re.sub(rf'<{tag}>.*', '', antwort2, flags=_re.DOTALL)
+        antwort2 = antwort2.replace(f'</{tag}>', '').replace(f'<{tag}>', '')
+    antwort2 = _re.sub(r'\n{3,}', '\n\n', antwort2).strip()
+
+    # Längere Antwort nehmen (mehr Inhalt = besser), außer Runde 2 ist viel kürzer
+    finale = antwort2 if len(antwort2) > len(antwort1) * 0.7 else antwort1
+
+    return finale, model
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FAST MODUS — Blitzschnelle Antworten (<2 Sekunden)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async def fast_response(
+    frage: str,
+    system_prompt: str,
+) -> tuple[str, str]:
+    """Fast Mode: llama-3.1-8b-instant, max 200 tokens, <2s Antwort.
+
+    Returns (antwort, model_name).
+    """
+    from app.services.groq_llm import call_groq_llm, _get_client
+
+    model = "llama-3.1-8b-instant"
+
+    fast_system = system_prompt + """
+FAST MODE: Antworte in maximal 3 Sätzen.
+Nur das Wesentliche — kein Beispiel nötig außer bei Mathe-Aufgaben.
+Direkt zur Antwort. Keine Einleitung, keine Rückfragen.
+"""
+
+    client = _get_client()
+    if client is None:
+        antwort = call_groq_llm(
+            prompt=frage,
+            system_prompt=fast_system,
+            subject="Allgemein",
+            level="intermediate",
+            language="de",
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+        return antwort, "template"
+
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": fast_system},
+                {"role": "user", "content": frage},
+            ],
+            max_tokens=200,
+            temperature=0.3,
+            stream=False,
+            timeout=10.0,
+        )
+        antwort = (completion.choices[0].message.content or "").strip()
+        if not antwort:
+            raise ValueError("Leere Antwort")
+    except Exception as e:
+        logger.warning("Fast Mode fehlgeschlagen: %s — Fallback", e)
+        antwort = call_groq_llm(
+            prompt=frage,
+            system_prompt=fast_system,
+            subject="Allgemein",
+            level="intermediate",
+            language="de",
+            chat_history=[],
+            rag_context="",
+            is_pro=False,
+        )
+        return antwort, model
+
+    # Tags bereinigen
+    import re as _re
+    for tag in ["thinking", "reasoning", "output", "internal"]:
+        antwort = _re.sub(rf'<{tag}>.*?</{tag}>', '', antwort, flags=_re.DOTALL)
+        antwort = _re.sub(rf'<{tag}>.*', '', antwort, flags=_re.DOTALL)
+        antwort = antwort.replace(f'</{tag}>', '').replace(f'<{tag}>', '')
+    antwort = _re.sub(r'\n{3,}', '\n\n', antwort).strip()
+
+    return antwort, model
+
+
 def smart_model_selection(prompt: str) -> str:
     """Select optimal model based on question complexity.
 

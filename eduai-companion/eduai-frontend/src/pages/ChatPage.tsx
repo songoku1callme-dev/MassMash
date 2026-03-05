@@ -116,6 +116,7 @@ export default function ChatPage() {
   const [showPersonalities, setShowPersonalities] = useState(false);
   const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("lumnos_tutor_modus") === "true");
   const [eli5, setEli5] = useState(false);
+  const [modus, setModus] = useState<"normal" | "deep" | "fast">("normal");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -213,7 +214,7 @@ export default function ChatPage() {
     }
 
     // Authenticated mode: use streaming
-    sendMessageStream(msg, selectedPersonality, tutorModus, eli5);
+    sendMessageStream(msg, selectedPersonality, tutorModus, eli5, modus);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -237,7 +238,7 @@ export default function ChatPage() {
       aufgabe: "Gib mir eine \u00dcbungsaufgabe zu diesem Thema mit L\u00f6sung.",
     };
     if (prompts[action]) {
-      sendMessageStream(prompts[action], selectedPersonality, tutorModus, eli5);
+      sendMessageStream(prompts[action], selectedPersonality, tutorModus, eli5, modus);
     }
   };
 
@@ -1048,6 +1049,46 @@ export default function ChatPage() {
                     className="font-bold text-indigo-400 hover:text-indigo-300 underline">
               {language === "de" ? "Upgrade auf Pro" : "Upgrade to Pro"}
             </button>
+          </div>
+        )}
+
+        {/* ===== KI-MODUS BUTTONS (Fast / Standard / Deep) ===== */}
+        <div className="flex gap-2 mb-2 max-w-4xl mx-auto">
+          {([
+            { id: "fast" as const, label: "\u26a1 Fast", desc: "Blitzschnell \u2014 1-2 Sek", color: "text-yellow-400 border-yellow-400/30", activeColor: "bg-yellow-400/20 border-yellow-400", activeBg: "rgba(250,204,21,0.15)" },
+            { id: "normal" as const, label: "\u2728 Standard", desc: "Ausgewogen \u2014 3-5 Sek", color: "text-blue-400 border-blue-400/30", activeColor: "bg-blue-400/20 border-blue-400", activeBg: "rgba(96,165,250,0.15)" },
+            { id: "deep" as const, label: "\ud83e\udde0 Deep", desc: "Pr\u00e4zision \u2014 15-30 Sek", color: "text-purple-400 border-purple-400/30", activeColor: "bg-purple-400/20 border-purple-400", activeBg: "rgba(192,132,252,0.15)" },
+          ]).map(m => (
+            <button
+              key={m.id}
+              onClick={() => setModus(m.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+                modus === m.id
+                  ? m.activeColor
+                  : m.color + " opacity-60 hover:opacity-100"
+              }`}
+              style={modus === m.id ? { background: m.activeBg, boxShadow: `0 0 10px ${m.activeBg}` } : { background: "rgba(30,41,59,0.3)" }}
+              title={m.desc}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Deep Thinking loading animation */}
+        {isSending && modus === "deep" && (
+          <div className="flex items-center gap-2 mb-2 max-w-4xl mx-auto text-purple-400 text-sm animate-pulse">
+            <span>\ud83e\udde0</span>
+            <span>Deep Thinking l&auml;uft... (bis 30s)</span>
+            <div className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <span
+                  key={i}
+                  className="inline-block w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
+              ))}
+            </div>
           </div>
         )}
 
