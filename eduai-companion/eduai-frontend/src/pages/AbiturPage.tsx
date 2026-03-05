@@ -9,6 +9,7 @@ import {
   Loader2, Lock, CheckCircle2, XCircle, BarChart3,
   Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb
 } from "lucide-react";
+import ErklaerButton from "../components/ui/ErklaerButton";
 
 const SUBJECTS = [
   { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" /> },
@@ -330,7 +331,16 @@ export default function AbiturPage() {
         {!isPaused && question && (
           <Card className="shadow-lg">
             <CardContent className="p-6">
-              <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">{question.question}</p>
+              <div className="flex items-start justify-between gap-3 mb-6">
+                <p className="text-lg font-medium text-gray-900 dark:text-white">{question.question}</p>
+                <ErklaerButton
+                  thema={question.question}
+                  fach={SUBJECTS.find(s => s.id === subject)?.name || "Allgemein"}
+                  kontext="Abitur-Niveau"
+                  variant="inline"
+                  className="shrink-0 mt-1"
+                />
+              </div>
               {question.options && question.options.length > 0 ? (
                 <div className="space-y-3">
                   {question.options.map((opt, idx) => (

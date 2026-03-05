@@ -1284,4 +1284,39 @@ export const notificationBellApi = {
   markRead: (id: number) => request<any>(`/api/notifications/mark-read/${id}`, { method: "POST" }),
   markAllRead: () => request<any>("/api/notifications/mark-all-read", { method: "POST" }),
 };
+
+// Erklärungs-System API
+export interface SchnellErklaerung {
+  erklaerung: string;
+  thema: string;
+  fach: string;
+}
+
+export interface StufenweiseErklaerung {
+  thema: string;
+  fach: string;
+  stufen: {
+    einfach: string;
+    normal: string;
+    profi: string;
+  };
+}
+
+export interface QuizErklaerung {
+  erklaerung: string;
+  war_richtig: boolean;
+  frage: string;
+  richtige_antwort: string;
+}
+
+export const erklaerungApi = {
+  schnell: (data: { thema: string; fach?: string; kontext?: string }) =>
+    request<SchnellErklaerung>("/api/erklaerung/schnell", { method: "POST", body: data }),
+
+  stufenweise: (data: { thema: string; fach?: string }) =>
+    request<StufenweiseErklaerung>("/api/erklaerung/stufenweise", { method: "POST", body: data }),
+
+  quiz: (data: { frage: string; richtige_antwort: string; schueler_antwort: string; fach?: string; war_richtig: boolean }) =>
+    request<QuizErklaerung>("/api/erklaerung/quiz", { method: "POST", body: data }),
+};
 /* eslint-enable @typescript-eslint/no-explicit-any */

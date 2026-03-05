@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { intelligenceApi } from "../services/api";
+import { intelligenceApi, erklaerungApi } from "../services/api";
 import { Button } from "@/components/ui/button";
-import { Brain, BookOpen, HelpCircle, Search, Calendar, Loader2 } from "lucide-react";
+import { Brain, BookOpen, HelpCircle, Search, Calendar, Loader2, GraduationCap } from "lucide-react";
 
-type Tab = "lernstil" | "feynman" | "sokrates" | "wissensscan" | "wochenplan";
+type Tab = "lernstil" | "feynman" | "sokrates" | "wissensscan" | "wochenplan" | "erklaerer";
 
 export default function IntelligencePage() {
   const [tab, setTab] = useState<Tab>("lernstil");
@@ -31,6 +31,12 @@ export default function IntelligencePage() {
 
   // Wochenplan
   const [weeklyPlan, setWeeklyPlan] = useState<string | null>(null);
+
+  // Erklärer
+  const [erklaererThema, setErklaererThema] = useState("");
+  const [erklaererFach, setErklaererFach] = useState("Allgemein");
+  const [erklaererStufe, setErklaererStufe] = useState<"einfach" | "normal" | "profi">("normal");
+  const [erklaererResult, setErklaererResult] = useState<{ einfach: string; normal: string; profi: string } | null>(null);
 
   const detectLernstil = async () => {
     setLoading(true);
@@ -102,12 +108,26 @@ export default function IntelligencePage() {
     setLoading(false);
   };
 
+  const submitErklaerer = async () => {
+    if (!erklaererThema.trim()) return;
+    setLoading(true);
+    setErklaererResult(null);
+    try {
+      const data = await erklaerungApi.stufenweise({ thema: erklaererThema, fach: erklaererFach });
+      setErklaererResult(data.stufen);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "lernstil", label: "Lernstil", icon: <Brain className="w-4 h-4" /> },
     { id: "feynman", label: "Feynman", icon: <BookOpen className="w-4 h-4" /> },
     { id: "sokrates", label: "Sokrates", icon: <HelpCircle className="w-4 h-4" /> },
     { id: "wissensscan", label: "Wissens-Scan", icon: <Search className="w-4 h-4" /> },
     { id: "wochenplan", label: "Wochenplan", icon: <Calendar className="w-4 h-4" /> },
+    { id: "erklaerer", label: "Erklärer", icon: <GraduationCap className="w-4 h-4" /> },
   ];
 
   return (
@@ -326,6 +346,91 @@ export default function IntelligencePage() {
           {weeklyPlan && (
             <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-200">{weeklyPlan}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Erklärer */}
+      {tab === "erklaerer" && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold mb-2 dark:text-white flex items-center gap-2">
+            <GraduationCap className="w-5 h-5" /> Erklärer
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">
+            Gib ein Thema ein und erhalte Erklärungen auf drei Schwierigkeitsstufen.
+          </p>
+          <div className="flex gap-3 mb-4">
+            <input
+              value={erklaererThema}
+              onChange={(e) => setErklaererThema(e.target.value)}
+              placeholder="Thema eingeben (z.B. Fotosynthese, Pythagoras, Gedichtanalyse)"
+              className="flex-1 p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              onKeyDown={(e) => e.key === "Enter" && submitErklaerer()}
+            />
+            <select
+              value={erklaererFach}
+              onChange={(e) => setErklaererFach(e.target.value)}
+              className="p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            >
+              <option value="Allgemein">Allgemein</option>
+              <option value="Mathematik">Mathematik</option>
+              <option value="Deutsch">Deutsch</option>
+              <option value="Englisch">Englisch</option>
+              <option value="Physik">Physik</option>
+              <option value="Chemie">Chemie</option>
+              <option value="Biologie">Biologie</option>
+              <option value="Geschichte">Geschichte</option>
+              <option value="Informatik">Informatik</option>
+            </select>
+          </div>
+          <Button onClick={submitErklaerer} disabled={loading || !erklaererThema.trim()}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <GraduationCap className="w-4 h-4 mr-2" />}
+            Erklärung generieren
+          </Button>
+
+          {erklaererResult && (
+            <div className="mt-6">
+              {/* Level Buttons */}
+              <div className="flex gap-2 mb-4">
+                {([
+                  { key: "einfach" as const, label: "Einfach", emoji: "\uD83E\uDDD2" },
+                  { key: "normal" as const, label: "Normal", emoji: "\uD83D\uDCDA" },
+                  { key: "profi" as const, label: "Profi", emoji: "\uD83D\uDD2C" },
+                ]).map((s) => (
+                  <button
+                    key={s.key}
+                    onClick={() => setErklaererStufe(s.key)}
+                    className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
+                      erklaererStufe === s.key
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                    }`}
+                  >
+                    <span className="text-lg mr-1">{s.emoji}</span> {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Explanation Display */}
+              <div className={`p-5 rounded-xl border-2 transition-all ${
+                erklaererStufe === "einfach" ? "bg-green-50 border-green-300 dark:bg-green-900/20 dark:border-green-600" :
+                erklaererStufe === "normal" ? "bg-blue-50 border-blue-300 dark:bg-blue-900/20 dark:border-blue-600" :
+                "bg-purple-50 border-purple-300 dark:bg-purple-900/20 dark:border-purple-600"
+              }`}>
+                <p className={`text-sm font-bold mb-2 ${
+                  erklaererStufe === "einfach" ? "text-green-700 dark:text-green-300" :
+                  erklaererStufe === "normal" ? "text-blue-700 dark:text-blue-300" :
+                  "text-purple-700 dark:text-purple-300"
+                }`}>
+                  {erklaererStufe === "einfach" ? "\uD83E\uDDD2 Einfach erklärt" :
+                   erklaererStufe === "normal" ? "\uD83D\uDCDA Normal" :
+                   "\uD83D\uDD2C Profi-Level"}
+                </p>
+                <p className="text-gray-700 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                  {erklaererResult[erklaererStufe]}
+                </p>
+              </div>
             </div>
           )}
         </div>

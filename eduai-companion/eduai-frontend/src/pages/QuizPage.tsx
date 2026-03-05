@@ -11,6 +11,7 @@ import {
   Atom, Leaf, Globe, Landmark, Brain, Palette, Music, Users, Code, BookOpen,
   AlertTriangle, Lightbulb, Lock
 } from "lucide-react";
+import ErklaerButton from "../components/ui/ErklaerButton";
 
 const SUBJECTS = [
   { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
@@ -345,9 +346,17 @@ export default function QuizPage() {
         {/* Question */}
         <Card className="shadow-lg">
           <CardContent className="p-6">
-            <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">
-              {question.question}
-            </p>
+            <div className="flex items-start justify-between gap-3 mb-6">
+              <p className="text-lg font-medium text-gray-900 dark:text-white">
+                {question.question}
+              </p>
+              <ErklaerButton
+                thema={question.question}
+                fach={SUBJECTS.find(s => s.id === quiz.subject)?.name || "Allgemein"}
+                variant="inline"
+                className="shrink-0 mt-1"
+              />
+            </div>
 
             {/* MCQ Options */}
             {hasOptions ? (

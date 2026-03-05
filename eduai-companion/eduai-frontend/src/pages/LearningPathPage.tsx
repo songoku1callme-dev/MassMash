@@ -7,6 +7,7 @@ import {
   BookOpen, CheckCircle2, Circle, Star, ArrowRight, Loader2,
   Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Target
 } from "lucide-react";
+import ErklaerButton from "../components/ui/ErklaerButton";
 
 const SUBJECTS = [
   { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
@@ -169,15 +170,22 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
                             <Badge variant="secondary" className="text-xs capitalize">{topic.difficulty}</Badge>
                           </div>
                         </div>
-                        {topic.recommended && !topic.mastered && (
-                          <Button
-                            size="sm"
-                            className="shrink-0 gap-1"
-                            onClick={() => onNavigate("chat")}
-                          >
-                            Lernen <ArrowRight className="w-3 h-3" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <ErklaerButton
+                            thema={topic.topic}
+                            fach={SUBJECTS.find(s => s.id === selectedSubject)?.name || "Allgemein"}
+                            variant="minimal"
+                          />
+                          {topic.recommended && !topic.mastered && (
+                            <Button
+                              size="sm"
+                              className="shrink-0 gap-1"
+                              onClick={() => onNavigate("chat")}
+                            >
+                              Lernen <ArrowRight className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
