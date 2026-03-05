@@ -162,12 +162,14 @@ export default function AuthPage() {
         >
           {/* Clerk OAuth Login/Register */}
           {CLERK_ENABLED ? (
-            <div className="flex flex-col items-center">
-              {isLogin ? (
-                <SignIn routing="hash" appearance={clerkAppearance} />
-              ) : (
-                <SignUp routing="hash" appearance={clerkAppearance} />
-              )}
+            <div className="flex flex-col items-center justify-center w-full">
+              <div className="w-full flex justify-center [&_.cl-rootBox]:w-full [&_.cl-card]:w-full [&_.cl-card]:mx-auto">
+                {isLogin ? (
+                  <SignIn routing="hash" appearance={clerkAppearance} />
+                ) : (
+                  <SignUp routing="hash" appearance={clerkAppearance} />
+                )}
+              </div>
               <div className="mt-4 text-center">
                 <button
                   onClick={() => setIsLogin(!isLogin)}
