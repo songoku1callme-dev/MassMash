@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ocrApi, quizApi, guestApi } from "../services/api";
+import { ocrApi, quizApi, guestApi, visionApi, audioApi } from "../services/api";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -109,6 +109,8 @@ export default function ChatPage() {
   const [feedbackGiven, setFeedbackGiven] = useState<Record<number, string>>({});
   const [expandedThinking, setExpandedThinking] = useState<Record<number, boolean>>({});
   const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<{ file: File; type: 'image' | 'audio'; preview?: string } | null>(null);
+  const [isAnalysing, setIsAnalysing] = useState(false);
   const [personalities, setPersonalities] = useState<KIPersonality[]>([]);
   const [selectedPersonality, setSelectedPersonality] = useState<number>(user?.ki_personality_id || 1);
   const [showPersonalities, setShowPersonalities] = useState(false);
@@ -118,6 +120,7 @@ export default function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
 
   const { isListening, transcript, error: speechError, isSupported: speechSupported, startListening, stopListening, clearError } = useSpeechRecognition(language);
 
@@ -258,6 +261,74 @@ export default function ChatPage() {
       setIsOcrLoading(false);
     }
   }, [addMessage]);
+
+  // ===== MEDIA UPLOAD (Bild + Audio) =====
+  const handleMediaSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+
+    const isImage = file.type.startsWith("image/");
+    const isAudio = file.type.startsWith("audio/") || file.type === "video/webm";
+
+    if (!isImage && !isAudio) {
+      addMessage({ role: "assistant", content: "Nur Bild- und Audio-Dateien werden unterstützt (JPG, PNG, GIF, WebP, MP3, WAV, M4A, OGG, FLAC, WebM)." });
+      return;
+    }
+
+    // Size validation
+    const maxMB = isImage ? 10 : 25;
+    if (file.size > maxMB * 1024 * 1024) {
+      addMessage({ role: "assistant", content: `Datei zu groß (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum: ${maxMB}MB` });
+      return;
+    }
+
+    if (isImage) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setUploadedFile({ file, type: "image", preview: ev.target?.result as string });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setUploadedFile({ file, type: "audio" });
+    }
+  }, [addMessage]);
+
+  const handleMediaUploadSend = useCallback(async () => {
+    if (!uploadedFile) return;
+    const { file, type, preview } = uploadedFile;
+    const fach = currentSubject !== "general" ? currentSubject : undefined;
+    const frage = input.trim() || undefined;
+
+    setIsAnalysing(true);
+    setUploadedFile(null);
+
+    if (type === "image") {
+      // Show user message with image
+      addMessage({ role: "user", content: `📷 **Bild hochgeladen:** ${file.name}${frage ? `\n\n${frage}` : ""}` });
+      try {
+        const result = await visionApi.analyse(file, frage, fach);
+        addMessage({ role: "assistant", content: result.analyse, subject: fach });
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Bild-Analyse fehlgeschlagen";
+        addMessage({ role: "assistant", content: `Fehler: ${errorMsg}` });
+      }
+    } else {
+      // Audio
+      addMessage({ role: "user", content: `🎙️ **Audio hochgeladen:** ${file.name}${frage ? `\n\n${frage}` : ""}` });
+      try {
+        const result = await audioApi.transkribieren(file, frage, fach);
+        const content = `**Transkription** (${result.dauer_sekunden}s):\n> ${result.transkription}\n\n---\n\n${result.ki_antwort}`;
+        addMessage({ role: "assistant", content, subject: fach });
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Audio-Analyse fehlgeschlagen";
+        addMessage({ role: "assistant", content: `Fehler: ${errorMsg}` });
+      }
+    }
+
+    setInput("");
+    setIsAnalysing(false);
+  }, [uploadedFile, input, currentSubject, addMessage]);
 
   const handleMicToggle = useCallback(() => {
     if (isListening) {
@@ -926,12 +997,41 @@ export default function ChatPage() {
           </div>
         )}
 
-        {/* OCR loading indicator */}
-        {isOcrLoading && (
+        {/* OCR / Vision / Audio loading indicator */}
+        {(isOcrLoading || isAnalysing) && (
           <div className="mb-2 px-3 py-1.5 rounded-lg text-center text-xs text-amber-400 flex items-center justify-center gap-2"
                style={{ background: "rgba(245,158,11,0.1)" }}>
             <span className="animate-spin inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full" />
-            {language === "de" ? "Bild wird analysiert..." : "Analyzing image..."}
+            {isAnalysing
+              ? (uploadedFile?.type === "audio" ? "Audio wird transkribiert..." : "Bild wird analysiert...")
+              : (language === "de" ? "Bild wird analysiert..." : "Analyzing image...")}
+          </div>
+        )}
+
+        {/* Uploaded file preview */}
+        {uploadedFile && (
+          <div className="mb-2 mx-auto max-w-4xl">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)" }}>
+              {uploadedFile.type === "image" && uploadedFile.preview ? (
+                <img src={uploadedFile.preview} alt="Vorschau" className="w-12 h-12 rounded-lg object-cover" />
+              ) : (
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl" style={{ background: "rgba(99,102,241,0.2)" }}>
+                  {uploadedFile.type === "audio" ? "\uD83C\uDFB5" : "\uD83D\uDDBC"}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm text-white font-medium truncate">{uploadedFile.file.name}</div>
+                <div className="text-xs text-slate-400">
+                  {uploadedFile.type === "image" ? "Bild" : "Audio"} &middot; {(uploadedFile.file.size / 1024 / 1024).toFixed(1)}MB
+                </div>
+              </div>
+              <button
+                onClick={() => setUploadedFile(null)}
+                className="text-slate-400 hover:text-red-400 transition-colors text-lg font-bold"
+              >
+                &#10005;
+              </button>
+            </div>
           </div>
         )}
 
@@ -952,14 +1052,30 @@ export default function ChatPage() {
         )}
 
         <div className="flex items-end gap-2 max-w-4xl mx-auto">
+          {/* Media Upload Button (Bild + Audio) */}
+          <input ref={mediaInputRef} type="file" accept="image/*,audio/*,video/webm" className="hidden" onChange={handleMediaSelect} />
+          <button
+            onClick={() => mediaInputRef.current?.click()}
+            disabled={isSending || isOcrLoading || isAnalysing}
+            className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
+            style={{ background: "rgba(30,41,59,0.5)" }}
+            title="Bild oder Audio hochladen"
+          >
+            {isAnalysing ? (
+              <span className="animate-spin inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full" />
+            ) : (
+              <span style={{ fontSize: "16px" }}>&#128206;</span>
+            )}
+          </button>
+
           {/* Camera/OCR Button */}
           <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleOcrUpload} />
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={isSending || isOcrLoading}
+            disabled={isSending || isOcrLoading || isAnalysing}
             className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
             style={{ background: "rgba(30,41,59,0.5)" }}
-            title={language === "de" ? "Mathe-Foto hochladen" : "Upload math photo"}
+            title={language === "de" ? "Kamera / Mathe-Foto" : "Camera / math photo"}
           >
             {isOcrLoading ? (
               <span className="animate-spin inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full" />
@@ -999,9 +1115,20 @@ export default function ChatPage() {
             ref={inputRef}
             value={input}
             onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                if (uploadedFile) {
+                  handleMediaUploadSend();
+                } else {
+                  handleSend();
+                }
+              }
+            }}
             placeholder={
-              isListening
+              uploadedFile
+                ? (uploadedFile.type === "image" ? "Optionale Frage zum Bild..." : "Optionale Frage zur Audio...")
+                : isListening
                 ? (language === "de" ? "Sprich jetzt..." : "Speak now...")
                 : tutorModus
                 ? (language === "de" ? "Stelle eine Frage \u2014 die KI antwortet nur mit Gegenfragen..." : "Ask \u2014 AI responds with guiding questions only...")
@@ -1021,17 +1148,17 @@ export default function ChatPage() {
 
           {/* Send Button */}
           <button
-            onClick={handleSend}
-            disabled={!input.trim() || isSending}
+            onClick={uploadedFile ? handleMediaUploadSend : handleSend}
+            disabled={(!input.trim() && !uploadedFile) || isSending || isAnalysing}
             className="flex items-center justify-center w-10 h-10 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0"
             style={{
-              background: input.trim() && !isSending
+              background: (input.trim() || uploadedFile) && !isSending && !isAnalysing
                 ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
                 : "rgba(30,41,59,0.5)",
-              boxShadow: input.trim() && !isSending ? "0 0 15px rgba(99,102,241,0.4)" : "none",
+              boxShadow: (input.trim() || uploadedFile) && !isSending && !isAnalysing ? "0 0 15px rgba(99,102,241,0.4)" : "none",
             }}
           >
-            {isSending ? (
+            {isSending || isAnalysing ? (
               <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
             ) : (
               <span style={{ fontSize: "18px" }}>&#8594;</span>

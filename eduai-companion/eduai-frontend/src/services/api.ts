@@ -1319,4 +1319,81 @@ export const erklaerungApi = {
   quiz: (data: { frage: string; richtige_antwort: string; schueler_antwort: string; fach?: string; war_richtig: boolean }) =>
     request<QuizErklaerung>("/api/erklaerung/quiz", { method: "POST", body: data }),
 };
+
+// Vision API (Bild-Analyse mit Groq Vision)
+export interface VisionAnalyseResult {
+  analyse: string;
+  model: string;
+  dateiname: string;
+  fach: string;
+}
+
+export const visionApi = {
+  analyse: async (file: File, frage?: string, fach?: string): Promise<VisionAnalyseResult> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    if (frage) formData.append("frage", frage);
+    if (fach) formData.append("fach", fach);
+    const res = await fetch(`${API_URL}/api/vision/analyse`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Bild-Analyse fehlgeschlagen" }));
+      throw new Error(err.detail || "Bild-Analyse fehlgeschlagen");
+    }
+    return res.json();
+  },
+
+  analyseStream: async (file: File, frage?: string, fach?: string): Promise<Response> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    if (frage) formData.append("frage", frage);
+    if (fach) formData.append("fach", fach);
+    const res = await fetch(`${API_URL}/api/vision/analyse-stream`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Bild-Analyse fehlgeschlagen" }));
+      throw new Error(err.detail || "Bild-Analyse fehlgeschlagen");
+    }
+    return res;
+  },
+};
+
+// Audio API (Whisper Transkription + KI-Analyse)
+export interface AudioTranskriptionResult {
+  transkription: string;
+  dauer_sekunden: number;
+  ki_antwort: string;
+  dateiname: string;
+  fach: string;
+  model_used: string;
+}
+
+export const audioApi = {
+  transkribieren: async (file: File, frage?: string, fach?: string, sprache?: string): Promise<AudioTranskriptionResult> => {
+    const token = getAccessToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    if (frage) formData.append("frage", frage);
+    if (fach) formData.append("fach", fach);
+    if (sprache) formData.append("sprache", sprache);
+    const res = await fetch(`${API_URL}/api/audio/transkribieren`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: "Audio-Transkription fehlgeschlagen" }));
+      throw new Error(err.detail || "Audio-Transkription fehlgeschlagen");
+    }
+    return res.json();
+  },
+};
 /* eslint-enable @typescript-eslint/no-explicit-any */
