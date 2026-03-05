@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET_2: str = ""
     CLERK_SECRET_KEY: str = ""
     CLERK_PUBLISHABLE_KEY: str = ""
+    # Tavily (Internet-Recherche)
+    TAVILY_API_KEY: str = ""
+    # Resend (E-Mail Service)
+    RESEND_API_KEY: str = ""
     # Perfect School 4.1 Block 6: PostgreSQL + Redis scaffolding
     POSTGRES_URL: str = ""  # e.g. postgresql+asyncpg://user:pass@host/db
     REDIS_URL: str = ""  # e.g. redis://localhost:6379/0

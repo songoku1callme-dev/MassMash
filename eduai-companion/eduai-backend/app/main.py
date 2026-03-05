@@ -3,6 +3,10 @@ import logging
 import secrets as _secrets
 from datetime import datetime, timedelta
 
+# Load .env BEFORE any other imports so os.getenv() works everywhere
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
