@@ -18,6 +18,7 @@ from app.services.ai_engine import (
     build_system_prompt,
     detect_subject,
     generate_ai_response as template_response,
+    get_max_tokens,
 )
 
 logger = logging.getLogger(__name__)
@@ -212,7 +213,11 @@ def call_groq_llm(
     chosen_model = model or route_model(task_type)
 
     # AUFGABE 3: Task-spezifische max_tokens für Performance
-    effective_max_tokens = TASK_MAX_TOKENS.get(task_type, MAX_TOKENS)
+    # AUFGABE 2: Für Chat-Fragen dynamisch per get_max_tokens bestimmen
+    if task_type == "explanation":
+        effective_max_tokens = get_max_tokens(prompt)
+    else:
+        effective_max_tokens = TASK_MAX_TOKENS.get(task_type, MAX_TOKENS)
 
     try:
         # Retry-Logik: bis zu 3 Versuche bei Timeout/Fehlern

@@ -488,7 +488,8 @@ async def send_message(
     except Exception:
         pass
 
-    # Nuclear Reset Block A: Build the NEW Perplexity-standard system prompt
+    # Nuclear Reset Block A: Build the NEW system prompt with personality addon
+    personality_name_str = personality["name"].lower() if personality else "max"
     combined_prompt = build_system_prompt(
         subject=subject,
         level=level,
@@ -500,11 +501,8 @@ async def send_message(
         bundesland=user_bundesland,
         tutor_modus=request.tutor_modus,
         web_quellen=web_context,
+        personality_name=personality_name_str,
     )
-
-    # Add personality if available
-    if personality_prompt:
-        combined_prompt += f"\nPERSÖNLICHKEIT: {personality_prompt}\n"
     # Add KI-Memory context
     if ki_memory_prompt:
         combined_prompt += ki_memory_prompt
@@ -866,6 +864,7 @@ async def send_message_stream(
     # Block 3: Lehrplan-Kontext injizieren
     lehrplan_ctx = get_lehrplan_context(subject, user_bundesland, school_grade)
 
+    personality_name_str = personality["name"].lower() if personality else "max"
     combined_prompt = build_system_prompt(
         subject=subject,
         level=level,
@@ -876,14 +875,12 @@ async def send_message_stream(
         schultyp=school_type,
         bundesland=user_bundesland,
         tutor_modus=request.tutor_modus,
+        personality_name=personality_name_str,
     )
 
     # Lehrplan-Kontext anhängen
     if lehrplan_ctx:
         combined_prompt += f"\n\nLEHRPLAN-KONTEXT:\n{lehrplan_ctx}\n"
-
-    if personality_prompt:
-        combined_prompt += f"\nPERSÖNLICHKEIT: {personality_prompt}\n"
 
     # Detect emotion
     emotion = detect_emotion(request.message)
