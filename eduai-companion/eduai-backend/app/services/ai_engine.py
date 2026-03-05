@@ -150,6 +150,87 @@ def ist_sinnlose_frage(frage: str) -> bool:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ANTWORT-TYP-ERKENNUNG: Automatisch den Schüler-Intent erkennen
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+def erkenne_antwort_typ(frage: str) -> str:
+    """
+    Erkennt was der Schüler wirklich will.
+    Returns: 'kurz' | 'schritt_fuer_schritt' | 'aufgabe_loesen' | 'standard'
+    """
+    frage_lower = frage.lower()
+
+    # Schritt-für-Schritt gewünscht
+    schritt_keywords = [
+        "schritt für schritt", "schritt-für-schritt",
+        "erkläre wie", "wie funktioniert",
+        "zeig mir wie", "wie löse ich",
+        "rechenweg", "weg dazu", "erklär mir",
+        "erklärung", "erklären",
+    ]
+
+    # Aufgabe lösen
+    aufgabe_keywords = [
+        "löse", "berechne", "bestimme",
+        "vereinfache", "leite ab", "deriviere",
+        "integriere", "beweise", "zeige dass",
+    ]
+
+    # Kurze Antwort gewünscht
+    kurz_keywords = [
+        "kurz", "schnell", "einfach nur",
+        "nur das ergebnis", "was ist",
+        "wann", "wer ist", "hauptstadt",
+        "definition von", "bedeutet",
+    ]
+
+    if any(k in frage_lower for k in schritt_keywords):
+        return "schritt_fuer_schritt"
+    elif any(k in frage_lower for k in aufgabe_keywords):
+        return "aufgabe_loesen"
+    elif any(k in frage_lower for k in kurz_keywords):
+        return "kurz"
+    elif len(frage.split()) <= 5:
+        return "kurz"  # Kurze Frage → kurze Antwort
+    else:
+        return "standard"
+
+
+ANTWORT_TYP_PROMPTS = {
+    "kurz": """
+ANTWORT-STIL: KURZ & PRÄZISE
+- Maximal 3 Sätze
+- Nur die direkte Antwort
+- Bei Mathe: Ergebnis + eine Zeile Rechenweg
+- Kein Beispiel nötig
+- Format: **Antwort:** [Antwort]
+""",
+    "schritt_fuer_schritt": """
+ANTWORT-STIL: SCHRITT FÜR SCHRITT
+- Nummerierte Schritte (1. 2. 3. ...)
+- Jeden Schritt einzeln erklären
+- Zwischenergebnisse zeigen
+- Am Ende: Zusammenfassung in 1 Satz
+- LaTeX für jeden Rechenschritt
+""",
+    "aufgabe_loesen": """
+ANTWORT-STIL: AUFGABE LÖSEN
+- Struktur: Gegeben → Gesucht → Formel → Rechnung → Ergebnis
+- Jeden Schritt in LaTeX
+- Einheiten nicht vergessen
+- Probe wenn möglich
+""",
+    "standard": """
+ANTWORT-STIL: STANDARD
+- Direkte Antwort (1 Satz)
+- Erklärung (2-3 Sätze)
+- Beispiel wenn hilfreich
+- Merksatz am Ende
+""",
+}
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # FINAL SYSTEM PROMPT — geprüft, optimiert, wird IMMER verwendet
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL_SYSTEM_PROMPT = """

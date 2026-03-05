@@ -10,7 +10,7 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_optional_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet, ist_sinnlose_frage, SINNLOSE_ANTWORT, deep_thinking_response, fast_response
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet, ist_sinnlose_frage, SINNLOSE_ANTWORT, deep_thinking_response, fast_response, erkenne_antwort_typ, ANTWORT_TYP_PROMPTS
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -576,6 +576,15 @@ async def send_message(
     combined_prompt = get_prompt_for_fach(subject, combined_prompt)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # ANTWORT-TYP-ERKENNUNG: Automatisch Schüler-Intent erkennen
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    antwort_typ = erkenne_antwort_typ(request.message)
+    typ_prompt = ANTWORT_TYP_PROMPTS.get(antwort_typ, "")
+    if typ_prompt:
+        combined_prompt += typ_prompt
+        logger.info("Antwort-Typ erkannt: %s für: %s", antwort_typ, request.message[:60])
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # MODUS-HANDLING: deep | fast | normal
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     modus = getattr(request, "modus", "normal") or "normal"
@@ -961,6 +970,15 @@ async def send_message_stream(
 
     # Prompt optimizer
     combined_prompt = get_prompt_for_fach(subject, combined_prompt)
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # ANTWORT-TYP-ERKENNUNG: Automatisch Schüler-Intent erkennen
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    antwort_typ = erkenne_antwort_typ(request.message)
+    typ_prompt = ANTWORT_TYP_PROMPTS.get(antwort_typ, "")
+    if typ_prompt:
+        combined_prompt += typ_prompt
+        logger.info("Antwort-Typ erkannt (stream): %s für: %s", antwort_typ, request.message[:60])
 
     # Verlauf für Streaming
     verlauf = [{"role": m.get("role", "user"), "content": m.get("content", "")}
