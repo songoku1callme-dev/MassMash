@@ -24,6 +24,15 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# AUFGABE 1: Automatischer Modell-Fallback bei Rate Limit
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MODELL_REIHENFOLGE = [
+    "llama-3.3-70b-versatile",   # Primär (beste Qualität)
+    "llama-3.1-8b-instant",      # Fallback bei Rate Limit
+    "qwen/qwen3-32b",            # Not-Fallback (gemma2-9b-it decommissioned)
+]
+
 
 def _get_groq_key() -> str:
     return settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
@@ -125,90 +134,134 @@ def route_request(
 
 async def _groq_chat(model: str, messages: list, temperature: float = 0.5,
                       max_tokens: int = 1200) -> str:
-    """Groq chat completion helper."""
+    """Groq chat completion helper with automatic fallback on rate limit."""
     groq_key = _get_groq_key()
     if not groq_key:
         logger.warning("Groq chat: NO API KEY available!")
         return ""
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {groq_key}"},
-                json={
-                    "model": model,
-                    "messages": messages,
-                    "temperature": temperature,
-                    "max_tokens": max_tokens,
-                },
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                return data["choices"][0]["message"]["content"].strip()
-            else:
-                logger.error(
-                    "Groq chat HTTP %d for model=%s: %s",
-                    resp.status_code, model, resp.text[:500],
+
+    # Build model list: requested model first, then fallbacks
+    models_to_try = [model] + [m for m in MODELL_REIHENFOLGE if m != model]
+
+    for try_model in models_to_try:
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {groq_key}"},
+                    json={
+                        "model": try_model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
+                    },
                 )
-    except Exception as exc:
-        logger.warning("Groq chat failed: %s", exc)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    result = data["choices"][0]["message"]["content"].strip()
+                    if try_model != model:
+                        logger.info("Groq fallback success: %s → %s", model, try_model)
+                    return result
+                elif resp.status_code == 429:
+                    logger.warning(
+                        "[RATE LIMIT] %s → versuche nächstes Modell...",
+                        try_model,
+                    )
+                    continue  # Try next model
+                else:
+                    logger.error(
+                        "Groq chat HTTP %d for model=%s: %s",
+                        resp.status_code, try_model, resp.text[:500],
+                    )
+        except Exception as exc:
+            if "429" in str(exc) or "rate_limit" in str(exc).lower():
+                logger.warning(
+                    "[RATE LIMIT] %s Exception → versuche nächstes Modell...",
+                    try_model,
+                )
+                continue
+            logger.warning("Groq chat failed for %s: %s", try_model, exc)
     return ""
 
 
 async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5,
                              max_tokens: int = 1800):
-    """Groq streaming chat completion — yields text chunks."""
+    """Groq streaming chat completion — yields text chunks.
+
+    Automatically falls back to next model on 429 rate limit.
+    """
     groq_key = _get_groq_key()
     if not groq_key:
         logger.warning("Groq stream: NO API KEY available!")
         return
-    try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            async with client.stream(
-                "POST",
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {groq_key}"},
-                json={
-                    "model": model,
-                    "messages": messages,
-                    "temperature": temperature,
-                    "max_tokens": max_tokens,
-                    "stream": True,
-                },
-            ) as resp:
-                if resp.status_code != 200:
-                    # Read the error body for debugging
-                    error_body = ""
-                    try:
-                        await resp.aread()
-                        error_body = resp.text[:500]
-                    except Exception:
-                        pass
-                    logger.error(
-                        "Groq stream HTTP %d for model=%s: %s",
-                        resp.status_code, model, error_body,
-                    )
-                    return
-                chunk_count = 0
-                async for line in resp.aiter_lines():
-                    if not line.startswith("data: "):
+
+    # Build model list: requested model first, then fallbacks
+    models_to_try = [model] + [m for m in MODELL_REIHENFOLGE if m != model]
+
+    for try_model in models_to_try:
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                async with client.stream(
+                    "POST",
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {groq_key}"},
+                    json={
+                        "model": try_model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
+                        "stream": True,
+                    },
+                ) as resp:
+                    if resp.status_code == 429:
+                        # Rate limited — try next model
+                        logger.warning(
+                            "[RATE LIMIT] Stream %s → versuche nächstes Modell...",
+                            try_model,
+                        )
                         continue
-                    payload = line[6:]
-                    if payload.strip() == "[DONE]":
-                        break
-                    try:
-                        chunk = _json.loads(payload)
-                        delta = chunk["choices"][0].get("delta", {})
-                        text = delta.get("content", "")
-                        if text:
-                            chunk_count += 1
-                            yield text
-                    except Exception:
-                        continue
-                if chunk_count == 0:
-                    logger.warning("Groq stream: 0 chunks received for model=%s", model)
-    except Exception as exc:
-        logger.warning("Groq stream failed: %s", exc)
+                    if resp.status_code != 200:
+                        error_body = ""
+                        try:
+                            await resp.aread()
+                            error_body = resp.text[:500]
+                        except Exception:
+                            pass
+                        logger.error(
+                            "Groq stream HTTP %d for model=%s: %s",
+                            resp.status_code, try_model, error_body,
+                        )
+                        return
+                    chunk_count = 0
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        payload = line[6:]
+                        if payload.strip() == "[DONE]":
+                            break
+                        try:
+                            chunk = _json.loads(payload)
+                            delta = chunk["choices"][0].get("delta", {})
+                            text = delta.get("content", "")
+                            if text:
+                                chunk_count += 1
+                                yield text
+                        except Exception:
+                            continue
+                    if chunk_count == 0:
+                        logger.warning("Groq stream: 0 chunks received for model=%s", try_model)
+                    if try_model != model and chunk_count > 0:
+                        logger.info("Groq stream fallback success: %s → %s", model, try_model)
+                    return  # Successfully streamed (or got 0 chunks), don't try next model
+        except Exception as exc:
+            if "429" in str(exc) or "rate_limit" in str(exc).lower():
+                logger.warning(
+                    "[RATE LIMIT] Stream %s Exception → versuche nächstes Modell...",
+                    try_model,
+                )
+                continue
+            logger.warning("Groq stream failed for %s: %s", try_model, exc)
+            return
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -822,6 +875,7 @@ async def execute_routed_chat_stream(
         )
 
     # Phase C: Streaming der Antwort mit Chain-of-Thought Parsing
+    # AUFGABE 2 FIX: Buffer initial tokens to detect <thinking> before yielding
     yield {"type": "status", "text": "Schreibe Antwort..."}
 
     full_text = ""
@@ -829,6 +883,10 @@ async def execute_routed_chat_stream(
     in_thinking = False
     thinking_sent = False
     thinking_complete = False
+    # Buffer initial tokens until we can determine if response starts with <thinking
+    initial_buffer = ""
+    buffer_flushed = False
+    BUFFER_THRESHOLD = 15  # chars to buffer before deciding (len('<thinking>') = 10)
 
     async for chunk in _groq_chat_stream(
         decision.modell,
@@ -842,34 +900,70 @@ async def execute_routed_chat_stream(
     ):
         full_text += chunk
 
-        # Chain-of-Thought: Parse <thinking> tags im Stream
-        if not thinking_complete:
-            if "<thinking>" in full_text and not in_thinking:
-                in_thinking = True
-                if not thinking_sent:
-                    yield {"type": "thinking_start", "text": ""}
+        # Phase 1: Buffer initial tokens to detect <thinking> tag
+        if not buffer_flushed and not thinking_complete:
+            initial_buffer += chunk
+            # Check if we have enough data to decide
+            if len(initial_buffer) >= BUFFER_THRESHOLD or \
+               "<thinking>" in initial_buffer or \
+               (len(initial_buffer) > 1 and not initial_buffer.lstrip().startswith("<")):
+                # Decide: is this a thinking block?
+                if "<thinking>" in initial_buffer:
+                    in_thinking = True
                     thinking_sent = True
-                continue
-            if in_thinking:
-                if "</thinking>" in full_text:
-                    # Thinking abgeschlossen
-                    thinking_match = _re.search(r'<thinking>(.*?)</thinking>', full_text, _re.DOTALL)
-                    if thinking_match:
-                        thinking_buffer = thinking_match.group(1).strip()
-                    in_thinking = False
-                    thinking_complete = True
-                    yield {"type": "thinking_end", "text": thinking_buffer}
-                    # Sende den Rest nach </thinking> als Token
-                    rest_after = full_text[full_text.index("</thinking>") + len("</thinking>"):]
-                    if rest_after.strip():
-                        yield {"type": "token", "text": rest_after.strip()}
+                    yield {"type": "thinking_start", "text": ""}
+                    buffer_flushed = True
+                    continue
+                elif initial_buffer.lstrip().startswith("<thinking"):
+                    # Partial <thinking tag — keep buffering
+                    continue
                 else:
-                    # Noch im Thinking-Block — kein Token senden
-                    pass
+                    # Not a thinking block — flush buffer as tokens
+                    buffer_flushed = True
+                    yield {"type": "token", "text": initial_buffer}
+                    continue
+            else:
+                # Not enough data yet, keep buffering
                 continue
 
-        # Normaler Token (nach thinking oder wenn kein thinking)
+        # Phase 2: Handle thinking block content
+        if not thinking_complete and in_thinking:
+            if "</thinking>" in full_text:
+                # Thinking abgeschlossen
+                thinking_match = _re.search(r'<thinking>(.*?)</thinking>', full_text, _re.DOTALL)
+                if thinking_match:
+                    thinking_buffer = thinking_match.group(1).strip()
+                in_thinking = False
+                thinking_complete = True
+                yield {"type": "thinking_end", "text": thinking_buffer}
+                # Sende den Rest nach </thinking> als Token
+                rest_after = full_text[full_text.index("</thinking>") + len("</thinking>"):]
+                if rest_after.strip():
+                    yield {"type": "token", "text": rest_after.strip()}
+            # Still inside thinking block — don't yield
+            continue
+
+        # Phase 3: Normal token (nach thinking oder wenn kein thinking)
         yield {"type": "token", "text": chunk}
+
+    # Flush any remaining buffer that wasn't flushed
+    if not buffer_flushed and initial_buffer:
+        # Check one last time if it was a thinking block
+        if "<thinking>" in initial_buffer and "</thinking>" in initial_buffer:
+            thinking_match = _re.search(r'<thinking>(.*?)</thinking>', initial_buffer, _re.DOTALL)
+            if thinking_match:
+                thinking_buffer = thinking_match.group(1).strip()
+            rest = _re.sub(r'<thinking>.*?</thinking>', '', initial_buffer, flags=_re.DOTALL).strip()
+            if rest:
+                yield {"type": "token", "text": rest}
+            thinking_complete = True
+        elif "<thinking" in initial_buffer:
+            # Malformed thinking tag — strip it and yield clean text
+            cleaned = _re.sub(r'<thinking[^>]*>?.*', '', initial_buffer, flags=_re.DOTALL).strip()
+            if cleaned:
+                yield {"type": "token", "text": cleaned}
+        else:
+            yield {"type": "token", "text": initial_buffer}
 
     # Fallback: Wenn keine Chunks empfangen wurden, Fehlermeldung senden
     is_error_fallback = False

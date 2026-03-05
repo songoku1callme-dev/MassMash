@@ -86,11 +86,11 @@ async def feynman_test(
     """Feynman-Technik: Student explains a topic, KI evaluates understanding."""
     response = call_groq_llm(
         prompt=f"Thema: {thema}\n\nMeine Erklärung:\n{erklärung}",
-        system_prompt=FEYNMAN_SYSTEM_PROMPT,
+        system_prompt=FEYNMAN_SYSTEM_PROMPT + "\n\nAntworte KURZ und PRÄGNANT (max 3 Absätze).",
         subject="general",
         level="intermediate",
         language="de",
-        task_type="explanation",
+        task_type="feedback",
     )
 
     # Award XP for using Feynman technique
@@ -112,11 +112,11 @@ async def sokrates_dialog(
     """Sokrates-Methode: KI asks guiding questions instead of giving direct answers."""
     response = call_groq_llm(
         prompt=frage,
-        system_prompt=SOKRATES_PROMPT,
+        system_prompt=SOKRATES_PROMPT + "\n\nStelle maximal 2-3 kurze Leitfragen. Halte dich KURZ.",
         subject="general",
         level="intermediate",
         language="de",
-        task_type="explanation",
+        task_type="feedback",
     )
 
     return {"antwort": response, "methode": "sokrates"}
@@ -219,11 +219,11 @@ async def get_weekly_plan(
     prompt = build_weekly_plan_prompt(user_info, weak_topics, exams)
     plan = call_groq_llm(
         prompt=prompt,
-        system_prompt="Du bist ein Lerncoach. Erstelle einen konkreten, motivierenden Wochenplan.",
+        system_prompt="Du bist ein Lerncoach. Erstelle einen KOMPAKTEN Wochenplan (max 7 Tage, je 2-3 Zeilen).",
         subject="general",
         level="intermediate",
         language="de",
-        task_type="explanation",
+        task_type="feedback",
     )
 
     return {"plan": plan, "weak_topics": weak_topics, "upcoming_exams": exams}

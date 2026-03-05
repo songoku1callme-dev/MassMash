@@ -250,10 +250,11 @@ FORMAT: Antworte NUR mit einem JSON-Array:
 
 REGELN:
 - Kurze, prägnante Fragen auf der Vorderseite
-- Klare, vollständige Antworten auf der Rückseite
+- Klare, vollständige Antworten auf der Rückseite (max 2 Sätze)
 - Für deutsche Schüler (Klasse 5-13)
 - Schwierigkeit variieren
-- Keine Duplikate"""
+- Keine Duplikate
+- KEIN Markdown, KEINE Erklärungen — NUR das JSON-Array"""
 
     try:
         response = call_groq_llm(
@@ -264,6 +265,7 @@ REGELN:
             language="de",
             is_pro=True,
             temperature_override=0.3,
+            task_type="quiz_generation",
         )
 
         # Parse JSON

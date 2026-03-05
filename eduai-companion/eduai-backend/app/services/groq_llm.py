@@ -28,9 +28,19 @@ logger = logging.getLogger(__name__)
 # - mixtral-8x7b-32768      : good multilingual, large context
 DEFAULT_MODEL = "llama-3.3-70b-versatile"
 FALLBACK_MODEL = "llama-3.1-8b-instant"
+NOTFALLBACK_MODEL = "qwen/qwen3-32b"  # Not-Fallback bei TPD-Limit (gemma2-9b-it decommissioned)
 FAST_MODEL = "llama-3.1-8b-instant"
 MAX_HISTORY_MESSAGES = 12  # Keep last 12 messages for context (GDPR: minimize data)
 MAX_TOKENS = 2048
+
+# AUFGABE 3: Task-spezifische Token-Limits für Performance
+TASK_MAX_TOKENS = {
+    "feedback": 500,        # Feynman, Sokrates, Wochenplan (kurze Dialoge)
+    "quiz_generation": 600, # Karteikarten-Generierung
+    "classification": 200,  # Fach-Klassifikation
+    "simple_question": 800, # Einfache Fragen
+    "explanation": 2048,    # Volle Erklärungen
+}
 
 # Nuclear Reset Block A: Forbidden phrases that indicate generic theme lists
 VERBOTENE_PHRASEN = [
@@ -201,6 +211,9 @@ def call_groq_llm(
     # Model routing based on task type
     chosen_model = model or route_model(task_type)
 
+    # AUFGABE 3: Task-spezifische max_tokens für Performance
+    effective_max_tokens = TASK_MAX_TOKENS.get(task_type, MAX_TOKENS)
+
     try:
         # Retry-Logik: bis zu 3 Versuche bei Timeout/Fehlern
         response_text = None
@@ -210,7 +223,7 @@ def call_groq_llm(
                 completion = client.chat.completions.create(
                     model=chosen_model,
                     messages=messages,
-                    max_tokens=MAX_TOKENS,
+                    max_tokens=effective_max_tokens,
                     temperature=temperature_override if temperature_override is not None else (0.7 if is_pro else 0.3),
                     top_p=0.9,
                     stream=False,
@@ -261,21 +274,26 @@ def call_groq_llm(
         logger.warning("Groq returned empty response, falling back to template engine")
 
     except RateLimitError:
-        logger.warning("Groq rate limit hit, trying fallback model")
-        try:
-            completion = client.chat.completions.create(
-                model=FALLBACK_MODEL,
-                messages=messages,
-                max_tokens=MAX_TOKENS,
-                temperature=0.7,
-                top_p=0.9,
-                stream=False,
-            )
-            response_text = completion.choices[0].message.content
-            if response_text:
-                return response_text.strip()
-        except Exception as fallback_err:
-            logger.error("Fallback model also failed: %s", fallback_err)
+        logger.warning("Groq rate limit hit, trying fallback models")
+        # Try FALLBACK_MODEL and NOTFALLBACK_MODEL in sequence
+        for fb_model in [FALLBACK_MODEL, NOTFALLBACK_MODEL]:
+            try:
+                logger.info("[RATE LIMIT] Versuche %s...", fb_model)
+                completion = client.chat.completions.create(
+                    model=fb_model,
+                    messages=messages,
+                    max_tokens=effective_max_tokens,
+                    temperature=0.7,
+                    top_p=0.9,
+                    stream=False,
+                )
+                response_text = completion.choices[0].message.content
+                if response_text:
+                    logger.info("Fallback success: %s → %s", chosen_model, fb_model)
+                    return response_text.strip()
+            except Exception as fallback_err:
+                logger.warning("Fallback %s failed: %s", fb_model, fallback_err)
+                continue
 
     except (APIError, APIConnectionError) as api_err:
         logger.error("Groq API error: %s", api_err)
