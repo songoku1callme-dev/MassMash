@@ -21,6 +21,7 @@ import asyncio
 import httpx
 
 from app.core.config import settings
+from app.services.ai_engine import track_tokens, smart_model_selection
 
 logger = logging.getLogger(__name__)
 
@@ -108,11 +109,12 @@ def route_request(
         len(frage) > 150  # Lange Fragen = komplex
     ) and multi_step_erlaubt
 
-    # Modell wählen
+    # Modell wählen — smart_model_selection für Token-Optimierung
     if fach in PRÄZISIONS_FÄCHER or ist_komplex:
         modell = "llama-3.3-70b-versatile"
     else:
-        modell = "llama-3.1-8b-instant"
+        # Smart selection: einfache Fragen → 8b, komplexe → 70b
+        modell = smart_model_selection(frage)
 
     # Max-Tier: immer bestes Modell
     if tier == "max":
@@ -159,6 +161,13 @@ async def _groq_chat(model: str, messages: list, temperature: float = 0.5,
                 if resp.status_code == 200:
                     data = resp.json()
                     result = data["choices"][0]["message"]["content"].strip()
+                    # Track token usage from Groq response
+                    usage = data.get("usage", {})
+                    if usage:
+                        track_tokens(
+                            usage.get("prompt_tokens", 0),
+                            usage.get("completion_tokens", 0),
+                        )
                     if try_model != model:
                         logger.info("Groq fallback success: %s → %s", model, try_model)
                     return result
@@ -233,6 +242,7 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
                         )
                         return
                     chunk_count = 0
+                    total_chars = 0
                     async for line in resp.aiter_lines():
                         if not line.startswith("data: "):
                             continue
@@ -241,13 +251,26 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
                             break
                         try:
                             chunk = _json.loads(payload)
+                            # Check for usage in final chunk (Groq includes it)
+                            usage = chunk.get("x_groq", {}).get("usage", {}) or chunk.get("usage", {})
+                            if usage:
+                                track_tokens(
+                                    usage.get("prompt_tokens", 0),
+                                    usage.get("completion_tokens", 0),
+                                )
                             delta = chunk["choices"][0].get("delta", {})
                             text = delta.get("content", "")
                             if text:
                                 chunk_count += 1
+                                total_chars += len(text)
                                 yield text
                         except Exception:
                             continue
+                    # Estimate token usage if not reported (~ 4 chars per token)
+                    if chunk_count > 0 and total_chars > 0:
+                        est_prompt = len(str(messages)) // 4
+                        est_completion = total_chars // 4
+                        track_tokens(est_prompt, est_completion)
                     if chunk_count == 0:
                         logger.warning("Groq stream: 0 chunks received for model=%s", try_model)
                     if try_model != model and chunk_count > 0:

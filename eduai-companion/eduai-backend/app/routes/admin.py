@@ -88,6 +88,24 @@ async def check_is_admin(
     return {"is_admin": admin}
 
 
+@router.get("/token-usage")
+async def get_token_usage_endpoint(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Return current Groq token usage stats (admin only).
+
+    Shows daily token budget consumption for the Groq Free Tier (100K TPD).
+    Helps admins monitor API usage and plan for scaling.
+    """
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+
+    from app.services.ai_engine import get_token_usage
+    usage = get_token_usage()
+    return usage
+
+
 @router.get("/stats")
 async def get_stats(
     current_user: dict = Depends(get_current_user),

@@ -1,13 +1,127 @@
 """AI Engine - Core intelligence for Lumnos Companion.
 
 Handles subject detection, adaptive prompting, proficiency-aware responses,
-quiz generation, and learning path recommendations.
+quiz generation, learning path recommendations, and token budget management.
 """
 import json
+import logging
 import re
 import random
+import threading
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# TOKEN BUDGET MANAGEMENT (Groq Free Tier: 100K TPD)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+_token_lock = threading.Lock()
+
+token_usage: dict = {
+    "used": 0,
+    "limit": 95000,  # 95K of 100K — 5K safety buffer
+    "reset_at": None,  # UTC midnight
+    "last_reset_date": None,
+}
+
+
+def _check_daily_reset() -> None:
+    """Reset token counter at midnight UTC."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    if token_usage["last_reset_date"] != today:
+        token_usage["used"] = 0
+        token_usage["last_reset_date"] = today
+        # Next reset at midnight UTC
+        token_usage["reset_at"] = f"{today}T00:00:00Z"
+        logger.info("[TOKEN] Daily reset: %s → 0/%d", today, token_usage["limit"])
+
+
+def track_tokens(prompt_tokens: int, completion_tokens: int) -> None:
+    """Track token usage (thread-safe). Call after each Groq API response."""
+    with _token_lock:
+        _check_daily_reset()
+        total = prompt_tokens + completion_tokens
+        token_usage["used"] += total
+
+        pct = round(token_usage["used"] / token_usage["limit"] * 100)
+        if pct >= 90:
+            logger.warning(
+                "[TOKEN] KRITISCH: %d/%d (%d%%) — Token-Budget fast erschöpft!",
+                token_usage["used"], token_usage["limit"], pct,
+            )
+        elif pct >= 80:
+            logger.warning(
+                "[TOKEN] Warnung: %d/%d (%d%%) — über 80%% verbraucht",
+                token_usage["used"], token_usage["limit"], pct,
+            )
+
+
+def get_token_usage() -> dict:
+    """Return current token usage stats."""
+    with _token_lock:
+        _check_daily_reset()
+        used = token_usage["used"]
+        limit = token_usage["limit"]
+        return {
+            "used": used,
+            "limit": limit,
+            "percent": round(used / limit * 100) if limit > 0 else 0,
+            "remaining": limit - used,
+            "reset_at": token_usage["reset_at"],
+            "budget_ok": used < limit,
+        }
+
+
+# Simple keywords that indicate a short, easy question
+_SIMPLE_PATTERNS = [
+    "was ist", "wann", "wo ist", "wer ist", "wer war",
+    "wie viel", "hauptstadt", "wie heißt", "wie heisst",
+    "definiere", "nenne", "was bedeutet",
+]
+
+# Complex keywords that need the powerful 70b model
+_COMPLEX_PATTERNS = [
+    "erkläre", "erklare", "beschreibe", "analysiere", "vergleiche",
+    "beweise", "leite her", "interpretiere", "erörtere", "diskutiere",
+    "warum", "zusammenfassung", "aufsatz", "essay", "abitur",
+]
+
+
+def smart_model_selection(prompt: str) -> str:
+    """Select optimal model based on question complexity.
+
+    Simple, short questions → llama-3.1-8b-instant (fast, saves tokens)
+    Complex, long questions → llama-3.3-70b-versatile (best quality)
+
+    Returns the recommended model name.
+    """
+    prompt_lower = prompt.strip().lower()
+    prompt_len = len(prompt_lower)
+
+    # Very short arithmetic/factual questions → always 8b
+    if prompt_len < 20:
+        # Pure math expressions
+        if re.match(r'^[\d\s+\-*/^√().=?x]+$', prompt_lower):
+            return "llama-3.1-8b-instant"
+
+    # Check for complex patterns → 70b
+    has_complex = any(p in prompt_lower for p in _COMPLEX_PATTERNS)
+    if has_complex:
+        return "llama-3.3-70b-versatile"
+
+    # Check for simple patterns AND short prompt → 8b
+    is_simple = any(p in prompt_lower for p in _SIMPLE_PATTERNS)
+    if is_simple and prompt_len < 50:
+        return "llama-3.1-8b-instant"
+
+    # Short prompts without clear complexity → 8b (save tokens)
+    if prompt_len < 30:
+        return "llama-3.1-8b-instant"
+
+    # Default → 70b for quality
+    return "llama-3.3-70b-versatile"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # BLOCK A: Fach-Normalisierung — English → Deutsch
@@ -840,14 +954,17 @@ Starte IMMER sofort mit der inhaltlichen Antwort!
 
 # PÄDAGOGISCHE REGELN
 1. **Sokratischer Ansatz**: Bei Hausaufgaben erkläre den Weg, gib Hinweise und stelle EINE Gegenfrage am Ende.
-2. **Adaptive Länge** (KRITISCH WICHTIG):
-   - Simpel ("√144", "Hauptstadt von Frankreich?"): Max 2-3 Sätze. KEINE langen Vorträge!
-   - Mittel ("Erkläre Ohmsches Gesetz"): Strukturiert, max 200 Wörter.
-   - Komplex ("Erkläre komplett die Quantenmechanik"): Ausführlich mit Überschriften, Formeln, Beispielen.
+2. **Adaptive Länge** (KRITISCH WICHTIG — STRENG EINHALTEN!):
+   - **Reine Rechenaufgaben** ("2+2", "√144", "3*7"): MAXIMAL 1-2 Zeilen! Ergebnis in LaTeX + 1 Satz Erklärung. FERTIG!
+   - **Wissensfragen** ("Hauptstadt von X?", "Wann war Y?"): Max 2-3 Sätze. Fakt + kurze Einordnung.
+   - **Mittlere Erklärungen** ("Erkläre Ohmsches Gesetz"): Strukturiert, max 200 Wörter.
+   - **Komplexe Themen** ("Erkläre Quantenmechanik"): Ausführlich mit Überschriften, Formeln, Beispielen.
+   - **Gleichungen lösen** ("3x+12=27, löse für x"): Rechenweg Schritt für Schritt in LaTeX zeigen, Ergebnis hervorheben.
 3. **Altersgerechte Sprache**: Passe Komplexität an {klasse}. Klasse an.
    - Klasse 5-7: Einfache Sprache, Alltagsbeispiele
    - Klasse 8-10: Fachbegriffe einführen, mittlere Komplexität
    - Klasse 11-13: Abitur-Niveau, Fachsprache, tiefere Analyse
+4. **Fach-Erkennung**: Wenn das Fach "Allgemein" oder unklar ist, erkenne SELBST das passende Fach aus der Frage und wende die fachspezifischen Regeln an.
 
 # FORMATIERUNG & STRUKTUR
 1. **Chain-of-Thought**: Du MUSST mit einem `<thinking>` Block beginnen.
@@ -892,17 +1009,35 @@ RICHTIG: "Hier sind die wichtigsten Formeln mit **V**:
 - **Volumen Zylinder**: $V = \\pi r^2 h$
 - **Spannung (Physik)**: $V = R \\cdot I$ (Ohmsches Gesetz)"
 
+**Eingabe: "2+2"**
+FALSCH: "Die Addition von 2 und 2 ist ein grundlegendes Konzept der Arithmetik..."
+RICHTIG: "$2 + 2 = 4$"
+
 **Eingabe: "√144"**
 FALSCH: "Möchtest du die Quadratwurzel berechnet haben oder die Herleitung sehen?"
 RICHTIG: "$\\sqrt{{144}} = 12$, denn $12 \\times 12 = 144$."
 
+**Eingabe: "3x + 12 = 27, löse für x"**
+RICHTIG:
+"$$3x + 12 = 27$$
+$$3x = 27 - 12 = 15$$
+$$x = \\frac{{15}}{{3}} = 5$$
+**Ergebnis:** $x = 5$"
+
 **Eingabe: "Was ist Fotosynthese?"**
 RICHTIG: Direkte Erklärung in 3-5 Sätzen mit Formel $6CO_2 + 6H_2O \\rightarrow C_6H_{{12}}O_6 + 6O_2$.
 
+**Eingabe: "Erkläre das" (vage Eingabe)**
+FALSCH: "Was genau meinst du? Könntest du deine Frage präzisieren?"
+RICHTIG: Interpretiere die wahrscheinlichste Bedeutung und antworte direkt. Am Ende optional: "Falls du etwas anderes meintest, frag gerne nochmal!"
+
+# ABSOLUTE REGELN (NIEMALS BRECHEN!)
 - Erfinde NIEMALS Jahreszahlen, Formeln oder historische Begebenheiten.
 - Verwende IMMER echte Umlaute (ä, ö, ü, ß). NIEMALS ae, oe, ue.
-- Schreibe KEINE Romane bei simplen Fragen.
+- Schreibe KEINE Romane bei simplen Fragen. "2+2" → "$2+2=4$" — FERTIG!
 - Antworte IMMER auf Deutsch, auch wenn die Frage auf Englisch ist.
+- Bei Mathe: IMMER LaTeX verwenden ($...$). NIEMALS Plaintext-Formeln!
+- Antworte NIEMALS mit internen Tags wie <think>, <thinking>, <output>.
 {detail_modifier}"""
     else:
         return f"""You are LUMNOS — Germany's most elite AI learning platform.
