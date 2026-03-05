@@ -73,7 +73,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  transition={{ duration: 0.35, ease: "easeOut" }}
  className="min-h-screen p-4 md:p-6"
  style={{
- background: "#0a0f1e",
+ background: "var(--lumnos-bg)",
  backgroundImage:
  "linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px)," +
  "linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px)",

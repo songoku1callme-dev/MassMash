@@ -197,7 +197,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       <div style={{
         flexShrink: 0,
         padding: "12px 16px",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderTop: "1px solid var(--border-color)",
       }}>
         {/* UPGRADE BANNER fuer Free-User */}
         {(!user?.subscription_tier || user.subscription_tier === "free") && (
@@ -301,7 +301,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           minWidth: "260px",
           height: "100dvh",
           flexShrink: 0,
-          borderRight: "1px solid rgba(255,255,255,0.06)",
+          borderRight: "1px solid var(--border-color)",
           overflowX: "hidden",
           overflowY: "hidden",
         }}

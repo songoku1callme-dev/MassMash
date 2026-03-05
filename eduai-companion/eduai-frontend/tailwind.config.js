@@ -11,15 +11,15 @@ export default {
   		},
   		colors: {
   			lumnos: {
-  				bg:        "#0a0f1e",
-  				surface:   "#0f172a",
-  				card:      "#1e293b",
-  				border:    "#334155",
+  				bg:        "var(--lumnos-bg)",
+  				surface:   "var(--lumnos-surface)",
+  				card:      "var(--lumnos-card)",
+  				border:    "var(--lumnos-border)",
   				glow:      "#6366f1",
   				"glow-2":  "#8b5cf6",
   				"glow-3":  "#06b6d4",
-  				text:      "#f1f5f9",
-  				muted:     "#94a3b8",
+  				text:      "var(--lumnos-text)",
+  				muted:     "var(--lumnos-muted)",
   			}
   		},
   		backgroundImage: {

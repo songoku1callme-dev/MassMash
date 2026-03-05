@@ -95,7 +95,7 @@ export default function DatenschutzPage() {
  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
  view === "datenschutz"
  ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
- : "text-slate-400 hover:text-slate-300 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)]"
+ : "text-slate-400 hover:text-slate-300 bg-[var(--input-bg)] border border-[var(--border-color)]"
  }`}
  >
  <Lock className="w-4 h-4" /> Datenschutz
@@ -105,7 +105,7 @@ export default function DatenschutzPage() {
  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
  view === "impressum"
  ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
- : "text-slate-400 hover:text-slate-300 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)]"
+ : "text-slate-400 hover:text-slate-300 bg-[var(--input-bg)] border border-[var(--border-color)]"
  }`}
  >
  <FileText className="w-4 h-4" /> Impressum
@@ -119,8 +119,8 @@ export default function DatenschutzPage() {
  key={i}
  className="rounded-xl p-5"
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(10px)",
  }}
  >
@@ -138,8 +138,8 @@ export default function DatenschutzPage() {
  <div
  className="rounded-xl p-6 space-y-4"
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(10px)",
  }}
  >

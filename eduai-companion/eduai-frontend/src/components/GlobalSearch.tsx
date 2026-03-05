@@ -91,7 +91,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                    text-sm text-slate-400 transition-all w-full
                    hover:text-slate-200"
         style={{
-          background: "rgba(30,41,59,0.5)",
+          background: "rgba(var(--surface-rgb),0.5)",
           border: "1px solid rgba(99,102,241,0.2)",
         }}
       >

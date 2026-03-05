@@ -359,7 +359,7 @@ export default function ChatPage() {
  height: "100%",
  overflow: "hidden",
  position: "relative",
- background: "#0a0f1e",
+ background: "var(--lumnos-bg)",
  }}>
  {/* ===== GAST-BANNER ===== */}
  {isGuest && (
@@ -387,7 +387,7 @@ export default function ChatPage() {
  <div
  className="relative max-w-md w-full mx-4 p-8 rounded-2xl text-center"
  style={{
- background: "rgba(15,20,40,0.95)",
+ background: "rgba(var(--modal-rgb),0.95)",
  border: "1px solid rgba(99,102,241,0.4)",
  boxShadow: "0 0 40px rgba(99,102,241,0.3)",
  }}
@@ -422,7 +422,7 @@ export default function ChatPage() {
  style={{
  flexShrink: 0,
  borderBottom: "1px solid rgba(99,102,241,0.2)",
- background: "rgba(10,15,30,0.95)",
+ background: "rgba(var(--overlay-rgb),0.95)",
  backdropFilter: "blur(20px)",
  zIndex: 10,
  padding: "12px 16px",
@@ -441,7 +441,7 @@ export default function ChatPage() {
  ? "text-emerald-300 border-emerald-500/50"
  : "text-slate-400 border-slate-600 hover:border-slate-500"
  }`}
- style={tutorModus ? { background: "rgba(16,185,129,0.15)", boxShadow: "0 0 12px rgba(16,185,129,0.3)" } : { background: "rgba(30,41,59,0.5)" }}
+ style={tutorModus ? { background: "rgba(16,185,129,0.15)", boxShadow: "0 0 12px rgba(16,185,129,0.3)" } : { background: "rgba(var(--surface-rgb),0.5)" }}
  title="Tutor-Modus: KI stellt nur Gegenfragen (Sokratische Methode)"
  >
  Tutor {tutorModus ? "AN" : "AUS"}
@@ -455,7 +455,7 @@ export default function ChatPage() {
  ? "text-pink-300 border-pink-500/50"
  : "text-slate-400 border-slate-600 hover:border-slate-500"
  }`}
- style={eli5 ? { background: "rgba(236,72,153,0.15)", boxShadow: "0 0 12px rgba(236,72,153,0.3)" } : { background: "rgba(30,41,59,0.5)" }}
+ style={eli5 ? { background: "rgba(236,72,153,0.15)", boxShadow: "0 0 12px rgba(236,72,153,0.3)" } : { background: "rgba(var(--surface-rgb),0.5)" }}
  >
  ELI5 {eli5 ? "AN" : "AUS"}
  </button>
@@ -496,7 +496,7 @@ export default function ChatPage() {
  {showPersonalities && (
  <div
  className="absolute top-full right-12 mt-1 w-72 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto border border-indigo-500/20"
- style={{ background: "rgba(30,41,59,0.95)", backdropFilter: "blur(20px)" }}
+ style={{ background: "rgba(var(--surface-rgb),0.95)", backdropFilter: "blur(20px)" }}
  >
  <div className="p-2 border-b border-indigo-500/10">
  <p className="text-xs font-semibold text-slate-400 px-2">KI-Pers\u00f6nlichkeit</p>
@@ -532,7 +532,7 @@ export default function ChatPage() {
  <button
  onClick={() => setLanguage(language === "de" ? "en" : "de")}
  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium hover:bg-slate-700 transition-colors text-slate-300 border border-slate-600"
- style={{ background: "rgba(30,41,59,0.5)" }}
+ style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  >
  {language === "de" ? "DE" : "EN"}
  </button>
@@ -582,7 +582,7 @@ export default function ChatPage() {
  onClick={() => { setInput(q.text); inputRef.current?.focus(); }}
  className="p-3 rounded-xl text-left text-sm text-slate-300 transition-all hover:scale-[1.02]"
  style={{
- background: "rgba(30,41,59,0.5)",
+ background: "rgba(var(--surface-rgb),0.5)",
  border: "1px solid rgba(99,102,241,0.2)",
  backdropFilter: "blur(10px)",
  }}
@@ -669,7 +669,7 @@ export default function ChatPage() {
  }`}
  style={msg.role === "user"
  ? { background: "linear-gradient(135deg, #6366f1, #8b5cf6)", boxShadow: "0 0 15px rgba(99,102,241,0.3)" }
- : { background: "rgba(30,41,59,0.6)", border: "1px solid rgba(99,102,241,0.15)", backdropFilter: "blur(10px)" }
+ : { background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(99,102,241,0.15)", backdropFilter: "blur(10px)" }
  }
  >
  {msg.role === "assistant" ? (
@@ -953,7 +953,7 @@ export default function ChatPage() {
  </div>
  <div
  className="rounded-2xl rounded-bl-md px-4 py-3"
- style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(99,102,241,0.2)" }}
+ style={{ background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(99,102,241,0.2)" }}
  >
  <div className="flex items-center gap-1.5">
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#6366f1", animationDelay: "0ms" }} />
@@ -974,8 +974,8 @@ export default function ChatPage() {
  style={{
  flexShrink: 0,
  padding: "16px 20px 20px",
- borderTop: "1px solid rgba(255,255,255,0.06)",
- background: "rgba(10,15,30,0.98)",
+ borderTop: "1px solid var(--border-color)",
+ background: "rgba(var(--overlay-rgb),0.98)",
  backdropFilter: "blur(20px)",
  }}
  >
@@ -1067,7 +1067,7 @@ export default function ChatPage() {
  ? m.activeColor
  : m.color + " opacity-60 hover:opacity-100"
  }`}
- style={modus === m.id ? { background: m.activeBg, boxShadow: `0 0 10px ${m.activeBg}` } : { background: "rgba(30,41,59,0.3)" }}
+ style={modus === m.id ? { background: m.activeBg, boxShadow: `0 0 10px ${m.activeBg}` } : { background: "rgba(var(--surface-rgb),0.3)" }}
  title={m.desc}
  >
  {m.label}
@@ -1099,7 +1099,7 @@ export default function ChatPage() {
  onClick={() => mediaInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
  className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
- style={{ background: "rgba(30,41,59,0.5)" }}
+ style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  title="Bild oder Audio hochladen"
  >
  {isAnalysing ? (
@@ -1115,7 +1115,7 @@ export default function ChatPage() {
  onClick={() => fileInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
  className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
- style={{ background: "rgba(30,41,59,0.5)" }}
+ style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  title={language === "de" ? "Kamera / Mathe-Foto" : "Camera / math photo"}
  >
  {isOcrLoading ? (
@@ -1138,7 +1138,7 @@ export default function ChatPage() {
  }`}
  style={isListening
  ? { background: "rgba(239,68,68,0.15)", boxShadow: "0 0 12px rgba(239,68,68,0.3)" }
- : { background: "rgba(30,41,59,0.5)" }
+ : { background: "rgba(var(--surface-rgb),0.5)" }
  }
  title={
  !speechSupported
@@ -1179,7 +1179,7 @@ export default function ChatPage() {
  rows={1}
  className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500 outline-none disabled:opacity-50 resize-none"
  style={{
- background: "rgba(30,41,59,0.5)",
+ background: "rgba(var(--surface-rgb),0.5)",
  border: "1px solid rgba(99,102,241,0.2)",
  maxHeight: "120px",
  minHeight: "40px",
@@ -1195,7 +1195,7 @@ export default function ChatPage() {
  style={{
  background: (input.trim() || uploadedFile) && !isSending && !isAnalysing
  ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
- : "rgba(30,41,59,0.5)",
+ : "rgba(var(--surface-rgb),0.5)",
  boxShadow: (input.trim() || uploadedFile) && !isSending && !isAnalysing ? "0 0 15px rgba(99,102,241,0.4)" : "none",
  }}
  >

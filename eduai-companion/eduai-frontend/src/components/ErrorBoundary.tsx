@@ -44,12 +44,12 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div
           className="min-h-screen flex items-center justify-center p-6"
-          style={{ background: "#0a0f1e" }}
+          style={{ background: "var(--lumnos-bg)" }}
         >
           <div
             className="max-w-md w-full text-center p-8 rounded-2xl"
             style={{
-              background: "rgba(30,41,59,0.6)",
+              background: "rgba(var(--surface-rgb),0.6)",
               border: "1px solid rgba(239,68,68,0.3)",
               backdropFilter: "blur(20px)",
               boxShadow: "0 0 40px rgba(239,68,68,0.15)",

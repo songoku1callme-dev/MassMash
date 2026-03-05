@@ -310,7 +310,7 @@ export default function VoiceExamPage() {
  <span>Frage {frageNr} von {MAX_FRAGEN}</span>
  <span>{Math.round((frageNr / MAX_FRAGEN) * 100)}%</span>
  </div>
- <div className="h-2 rounded-full" style={{ background: "rgba(30,41,59,0.8)" }}>
+ <div className="h-2 rounded-full" style={{ background: "rgba(var(--surface-rgb),0.8)" }}>
  <motion.div
  className="h-full rounded-full"
  style={{ background: "linear-gradient(90deg, #6366f1, #8b5cf6)" }}
@@ -369,7 +369,7 @@ export default function VoiceExamPage() {
  style={{
  background: fach === f
  ? "linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.2))"
- : "rgba(30,41,59,0.5)",
+ : "rgba(var(--surface-rgb),0.5)",
  border: fach === f
  ? "1px solid rgba(99,102,241,0.5)"
  : "1px solid rgba(99,102,241,0.15)",
@@ -405,7 +405,7 @@ export default function VoiceExamPage() {
  >
  {/* Aktuelle Frage */}
  <div className="p-4 rounded-2xl" style={{
- background: "rgba(30,41,59,0.6)",
+ background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
  <p className="text-xs text-indigo-400 mb-1 font-medium">Frage {frageNr}:</p>
@@ -534,7 +534,7 @@ function ExamResults({
  >
  {/* Note */}
  <div className="text-center p-6 rounded-2xl" style={{
- background: "rgba(30,41,59,0.6)",
+ background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
  <div className="text-6xl font-black mb-2" style={{ color: noteColors[result.note] || "#fff" }}>
@@ -585,7 +585,7 @@ function ExamResults({
  <p className="text-xs text-slate-500 font-medium">Detaillierter Verlauf:</p>
  {verlauf.map((v, i) => (
  <div key={i} className="p-3 rounded-xl text-sm" style={{
- background: "rgba(30,41,59,0.4)",
+ background: "rgba(var(--surface-rgb),0.4)",
  border: "1px solid rgba(99,102,241,0.1)",
  }}>
  <div className="flex justify-between items-center mb-1">

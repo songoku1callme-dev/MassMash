@@ -103,14 +103,14 @@ export default function AuthPage() {
 
  /* ── Shared input classes (Cyber-Zen) ── */
  const inputClass =
- "w-full h-11 rounded-xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] " +
+ "w-full h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] " +
  "text-white placeholder-slate-500 px-4 text-sm focus:outline-none focus:border-indigo-500/50 " +
  "focus:ring-1 focus:ring-indigo-500/30 transition-all";
 
  const labelClass = "text-sm font-medium text-slate-300 mb-1.5 block";
 
  const selectClass =
- "w-full h-11 rounded-xl bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] " +
+ "w-full h-11 rounded-xl bg-[var(--input-bg)] border border-[var(--input-border)] " +
  "text-white px-3 text-sm focus:outline-none focus:border-indigo-500/50 " +
  "focus:ring-1 focus:ring-indigo-500/30 transition-all appearance-none cursor-pointer";
 
@@ -152,8 +152,8 @@ export default function AuthPage() {
  {/* Main Card — Glassmorphismus */}
  <div
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(20px)",
  WebkitBackdropFilter: "blur(20px)",
  borderRadius: "24px",
@@ -185,7 +185,7 @@ export default function AuthPage() {
  /* Fallback: Manual Login/Register when Clerk is not configured */
  <>
  {/* Tab Switcher */}
- <div className="flex gap-1 p-1 rounded-xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] mb-6">
+ <div className="flex gap-1 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] mb-6">
  <button
  onClick={() => { setIsLogin(true); setError(""); }}
  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -406,16 +406,16 @@ export default function AuthPage() {
  {/* Google Login Button */}
  <div className="mt-5">
  <div className="flex items-center gap-3 mb-4">
- <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+ <div className="flex-1 h-px bg-[var(--border-color)]" />
  <span className="text-slate-500 text-xs">oder</span>
- <div className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" />
+ <div className="flex-1 h-px bg-[var(--border-color)]" />
  </div>
  <button
  type="button"
- className="w-full h-11 rounded-xl font-medium text-white flex items-center justify-center gap-3 transition-all hover:bg-[rgba(255,255,255,0.08)]"
+ className="w-full h-11 rounded-xl font-medium text-white flex items-center justify-center gap-3 transition-all hover:bg-[var(--border-color)]"
  style={{
- background: "rgba(255,255,255,0.05)",
- border: "1px solid rgba(255,255,255,0.1)",
+ background: "var(--input-bg)",
+ border: "1px solid var(--input-border)",
  }}
  onClick={() => {
  // Will be handled by Clerk in production

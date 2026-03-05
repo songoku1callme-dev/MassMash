@@ -43,6 +43,25 @@
   --error-text: #f87171;
   --warning-bg: rgba(245,158,11,0.15);
   --warning-text: #fbbf24;
+  /* Lumnos design system tokens (dark) */
+  --lumnos-bg: #0a0f1e;
+  --lumnos-surface: #0f172a;
+  --lumnos-card: #1e293b;
+  --lumnos-border: #334155;
+  --lumnos-text: #f1f5f9;
+  --lumnos-muted: #94a3b8;
+  /* RGB tokens for inline style rgba() */
+  --surface-rgb: 30,41,59;
+  --overlay-rgb: 10,15,30;
+  --modal-rgb: 15,20,40;
+  /* Glass effects (dark) */
+  --glass-bg: rgba(15, 23, 42, 0.7);
+  --glass-card-bg: rgba(30, 41, 59, 0.6);
+  --glass-border: rgba(99, 102, 241, 0.15);
+  --glass-card-border: rgba(99, 102, 241, 0.2);
+  --glass-card-border-hover: rgba(99, 102, 241, 0.5);
+  --glass-card-shadow-hover: 0 0 20px rgba(99, 102, 241, 0.2);
+  --cyber-bg-color: #0a0f1e;
 }
 
 :root[data-theme="light"] {
@@ -84,6 +103,25 @@
   --error-text: #dc2626;
   --warning-bg: rgba(245,158,11,0.1);
   --warning-text: #d97706;
+  /* Lumnos design system tokens (light) */
+  --lumnos-bg: #f8fafc;
+  --lumnos-surface: #f1f5f9;
+  --lumnos-card: #ffffff;
+  --lumnos-border: #e2e8f0;
+  --lumnos-text: #0f172a;
+  --lumnos-muted: #64748b;
+  /* RGB tokens for inline style rgba() */
+  --surface-rgb: 226,232,240;
+  --overlay-rgb: 248,250,252;
+  --modal-rgb: 241,245,249;
+  /* Glass effects (light) */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-card-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(99, 102, 241, 0.15);
+  --glass-card-border: rgba(99, 102, 241, 0.2);
+  --glass-card-border-hover: rgba(99, 102, 241, 0.4);
+  --glass-card-shadow-hover: 0 0 20px rgba(99, 102, 241, 0.15);
+  --cyber-bg-color: #f8fafc;
 }
 
 * {

@@ -166,7 +166,7 @@ export default function SchoolPage() {
  className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
  view === "create"
  ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
- : "text-slate-400 hover:text-slate-300 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)]"
+ : "text-slate-400 hover:text-slate-300 bg-[var(--input-bg)] border border-[var(--border-color)]"
  }`}
  >
  <Plus className="w-4 h-4" /> Klasse erstellen
@@ -176,7 +176,7 @@ export default function SchoolPage() {
  className={`flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
  view === "join"
  ? "bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/25"
- : "text-slate-400 hover:text-slate-300 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)]"
+ : "text-slate-400 hover:text-slate-300 bg-[var(--input-bg)] border border-[var(--border-color)]"
  }`}
  >
  <Users className="w-4 h-4" /> Klasse beitreten
@@ -188,8 +188,8 @@ export default function SchoolPage() {
  <div
  className="rounded-xl p-6 max-w-md mx-auto"
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(10px)",
  }}
  >
@@ -201,8 +201,8 @@ export default function SchoolPage() {
  onKeyDown={(e) => e.key === "Enter" && createClass()}
  className="w-full mb-4 px-4 py-3 rounded-xl text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
  style={{
- background: "rgba(255,255,255,0.05)",
- border: "1px solid rgba(255,255,255,0.1)",
+ background: "var(--input-bg)",
+ border: "1px solid var(--input-border)",
  }}
  />
  <button
@@ -226,8 +226,8 @@ export default function SchoolPage() {
  <div
  className="rounded-xl p-6 max-w-md mx-auto"
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(10px)",
  }}
  >
@@ -239,8 +239,8 @@ export default function SchoolPage() {
  onKeyDown={(e) => e.key === "Enter" && joinClass()}
  className="w-full mb-4 px-4 py-3 rounded-xl text-white text-center font-mono tracking-widest placeholder-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
  style={{
- background: "rgba(255,255,255,0.05)",
- border: "1px solid rgba(255,255,255,0.1)",
+ background: "var(--input-bg)",
+ border: "1px solid var(--input-border)",
  }}
  />
  <button
@@ -267,8 +267,8 @@ export default function SchoolPage() {
  key={c.id}
  className="rounded-xl p-5"
  style={{
- background: "rgba(255,255,255,0.03)",
- border: "1px solid rgba(255,255,255,0.08)",
+ background: "var(--bg-card)",
+ border: "1px solid var(--border-color)",
  backdropFilter: "blur(10px)",
  }}
  >
@@ -296,7 +296,7 @@ export default function SchoolPage() {
  <div
  key={s.id}
  className="grid grid-cols-5 gap-2 items-center p-2 rounded-lg text-sm"
- style={{ background: "rgba(255,255,255,0.03)" }}
+ style={{ background: "var(--bg-card)" }}
  >
  <span className="font-medium text-white truncate">{s.full_name || s.username}</span>
  <span className="text-indigo-400 font-mono">Lv.{s.level}</span>
@@ -319,8 +319,8 @@ export default function SchoolPage() {
  <div
  className="rounded-xl p-6"
  style={{
- background: "rgba(255,255,255,0.02)",
- border: "1px solid rgba(255,255,255,0.06)",
+ background: "var(--table-row-alt)",
+ border: "1px solid var(--border-color)",
  }}
  >
  <h2 className="text-lg font-semibold text-white mb-6 text-center">Schul-Pakete</h2>
@@ -346,7 +346,7 @@ export default function SchoolPage() {
  )}
  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-3 ${
  selectedPackage === pkg.id ? "text-indigo-400" : "text-slate-400"
- }`} style={{ background: "rgba(255,255,255,0.05)" }}>
+ }`} style={{ background: "var(--input-bg)" }}>
  {pkg.icon}
  </div>
  <h3 className="font-semibold text-white text-sm">{pkg.name}</h3>

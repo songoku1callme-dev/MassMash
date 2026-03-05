@@ -14,7 +14,7 @@ export function BlindSpotHeatmap({ fächer }: { fächer: BlindSpotFach[] }) {
     <div
       className="rounded-2xl p-4"
       style={{
-        background: "rgba(30,41,59,0.6)",
+        background: "rgba(var(--surface-rgb),0.6)",
         border: "1px solid rgba(99,102,241,0.2)",
       }}
     >

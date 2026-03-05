@@ -1,23 +1,23 @@
 /* Lumnos Glassmorphism System */
 .glass {
-    background: rgba(15, 23, 42, 0.7);
+    background: var(--glass-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(99, 102, 241, 0.15);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
 }
 
 .glass-card {
-    background: rgba(30, 41, 59, 0.6);
+    background: var(--glass-card-bg);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    border: 1px solid var(--glass-card-border);
     border-radius: 20px;
     transition: all 0.3s ease;
 }
 
 .glass-card:hover {
-    border-color: rgba(99, 102, 241, 0.5);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    border-color: var(--glass-card-border-hover);
+    box-shadow: var(--glass-card-shadow-hover);
     transform: translateY(-2px);
 }
 
@@ -44,7 +44,7 @@
 }
 
 .cyber-bg {
-    background-color: #0a0f1e;
+    background-color: var(--cyber-bg-color);
     background-image:
         linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
