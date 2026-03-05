@@ -5,6 +5,7 @@ import { useChatStore } from "../stores/chatStore";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import GlobalSearch from "./GlobalSearch";
+import ThemeToggle from "./ThemeToggle";
 import { sidebarItem, mobileOverlay, mobileSidebarSlide, APPLE_EASE } from "../lib/animations";
 import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
@@ -183,7 +184,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                 </div>
               ))}
               {sessions.length === 0 && (
-                <p className="text-xs text-gray-400 dark:text-gray-500 px-3 py-2">
+                <p className="text-xs theme-text-secondary px-3 py-2">
                   Noch keine Chats vorhanden
                 </p>
               )}
@@ -222,7 +223,11 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         )}
 
         {isGuest ? (
-          <button
+          <div className="space-y-3">
+            <div className="flex justify-center">
+              <ThemeToggle compact />
+            </div>
+            <button
             onClick={() => { exitGuestMode(); window.location.reload(); }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-white transition-all"
             style={{
@@ -233,8 +238,9 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             <GraduationCap className="w-5 h-5" />
             Anmelden / Registrieren
           </button>
+          </div>
         ) : (
-          <div className="flex items-center gap-3 px-1 py-2">
+          <div className="flex items-center gap-2 px-1 py-2">
             <div className="w-8 h-8 rounded-full bg-lumnos-gradient flex items-center justify-center text-white text-sm font-bold shadow-glow-sm">
               {user?.full_name?.[0] || user?.username?.[0] || "?"}
             </div>
@@ -248,6 +254,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                 {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
               </p>
             </div>
+            <ThemeToggle compact />
             <button
               onClick={logout}
               className="text-gray-400 hover:text-red-500 transition-colors"

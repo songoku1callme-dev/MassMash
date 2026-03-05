@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
+import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { pageVariants } from "./lib/animations";
 import AuthPage from "./pages/AuthPage";
@@ -60,13 +61,8 @@ function App() {
   const [currentPage, setCurrentPage] = useState("chat");
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("lumnos_dark") === "true" ||
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-    return false;
-  });
+  // Ensure theme store is initialized + subscribed
+  useThemeStore((s) => s.resolvedTheme);
 
   // Clerk → AuthStore sync: when Clerk signs in, get token and sync
   useEffect(() => {
@@ -95,10 +91,6 @@ function App() {
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    localStorage.setItem("lumnos_dark", String(darkMode));
-  }, [darkMode]);
 
   // Allow navigation from pages that don't receive onNavigate props (e.g. Chat header upgrade button)
   useEffect(() => {
@@ -217,7 +209,7 @@ function App() {
       case "pricing":
         return <PricingPage />;
       case "settings":
-        return <SettingsPage darkMode={darkMode} onDarkModeToggle={() => setDarkMode(!darkMode)} />;
+        return <SettingsPage />;
       default:
         return <DashboardPage onNavigate={setCurrentPage} />;
     }
@@ -231,7 +223,7 @@ function App() {
           height: "100dvh",
           width: "100vw",
           overflow: "hidden",
-          backgroundColor: "#0a0f1e",
+          background: "var(--gradient-bg)",
           position: "relative",
         }}
         className="text-lumnos-text"
