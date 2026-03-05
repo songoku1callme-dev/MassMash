@@ -167,7 +167,7 @@ export default function TurnierPage() {
  <span className={`text-sm px-3 py-1 rounded-full ${
  tournament.status === "active"
  ? "bg-emerald-100 text-emerald-700"
- : "bg-gray-100 text-gray-600"
+ : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>
  {tournament.status === "active" ? "Aktiv" : "Beendet"}
  </span>
@@ -289,7 +289,7 @@ export default function TurnierPage() {
  r.rank === 1 ? "bg-yellow-100 text-yellow-700" :
  r.rank === 2 ? "bg-gray-200 text-gray-700" :
  r.rank === 3 ? "bg-orange-100 text-orange-700" :
- "bg-gray-100 text-gray-600"
+ "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>
  {r.rank}
  </span>

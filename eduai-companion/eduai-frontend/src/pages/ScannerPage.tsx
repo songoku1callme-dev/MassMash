@@ -74,7 +74,7 @@ export default function ScannerPage() {
  // Free-user upsell modal
  if (showUpsell) {
  return (
- <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+ <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "var(--lumnos-bg)" }}>
  <Card className="max-w-md w-full shadow-xl">
  <CardContent className="p-8 text-center space-y-6">
  <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
@@ -110,7 +110,7 @@ export default function ScannerPage() {
  }
 
  return (
- <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+ <div className="min-h-screen p-4 md:p-8" style={{ background: "var(--lumnos-bg)" }}>
  <div className="max-w-2xl mx-auto space-y-6">
  <div className="text-center">
  <h1 className="text-3xl font-bold theme-text flex items-center justify-center gap-3">

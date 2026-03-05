@@ -241,7 +241,7 @@ export default function AdminPage() {
  <span className={`text-xs px-2 py-0.5 rounded ${
  u.subscription_tier === "max" ? "bg-purple-100 text-purple-700" :
  u.subscription_tier === "pro" ? "bg-blue-100 text-blue-700" :
- "bg-gray-100 text-gray-700"
+ "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>{u.subscription_tier}</span>
  </div>
  ))}
@@ -261,12 +261,12 @@ export default function AdminPage() {
  onChange={(e) => setGrantUserId(e.target.value)} type="number" />
  <div className="flex gap-2">
  <select value={grantTier} onChange={(e) => setGrantTier(e.target.value)}
- className="flex h-10 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ">
+ className="flex h-10 rounded-lg border border-[var(--border-color)] bg-[var(--lumnos-surface)] px-3 py-2 text-sm theme-text">
  <option value="pro">Pro</option>
  <option value="max">Max</option>
  </select>
  <select value={grantDays} onChange={(e) => setGrantDays(e.target.value)}
- className="flex h-10 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ">
+ className="flex h-10 rounded-lg border border-[var(--border-color)] bg-[var(--lumnos-surface)] px-3 py-2 text-sm theme-text">
  <option value="30">1 Monat</option>
  <option value="90">3 Monate</option>
  <option value="365">1 Jahr</option>
@@ -294,7 +294,7 @@ export default function AdminPage() {
  onChange={(e) => setCouponCode(e.target.value.toUpperCase())} />
  <div className="flex gap-2">
  <select value={couponTier} onChange={(e) => setCouponTier(e.target.value)}
- className="flex h-10 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ">
+ className="flex h-10 rounded-lg border border-[var(--border-color)] bg-[var(--lumnos-surface)] px-3 py-2 text-sm theme-text">
  <option value="pro">Pro</option>
  <option value="max">Max</option>
  </select>

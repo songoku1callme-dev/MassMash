@@ -144,7 +144,7 @@ export default function IntelligencePage() {
  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
  tab === t.id
  ? "bg-blue-600 text-white"
- : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+ : "bg-[var(--bg-surface)] theme-text-secondary hover:opacity-80"
  }`}
  >
  {t.icon}
@@ -282,7 +282,7 @@ export default function IntelligencePage() {
  className={`p-2 rounded-lg text-sm text-left transition-colors ${
  scanAnswers[qi] === oi
  ? "bg-blue-600 text-white"
- : "bg-white text-gray-700 hover:bg-blue-50"
+ : "bg-[var(--lumnos-surface)] theme-text-secondary hover:opacity-80"
  }`}
  >
  {opt}
@@ -404,7 +404,7 @@ export default function IntelligencePage() {
  className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all ${
  erklaererStufe === s.key
  ? "bg-blue-600 text-white shadow-md"
- : "bg-gray-100 text-gray-600 hover:bg-[var(--progress-bg)]"
+ : "bg-[var(--bg-surface)] theme-text-secondary hover:opacity-80"
  }`}
  >
  <span className="text-lg mr-1">{s.emoji}</span> {s.label}

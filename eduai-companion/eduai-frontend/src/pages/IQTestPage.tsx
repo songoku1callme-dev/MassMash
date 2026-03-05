@@ -338,7 +338,7 @@ export default function IQTestPage() {
  className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
  selectedAnswer === index
  ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
- : "border-[var(--border-color)] hover:border-gray-300 hover:bg-gray-50"
+ : "border-[var(--border-color)] hover:border-[var(--border-color)] hover:bg-[var(--bg-surface)]"
  }`}
  >
  <div className="flex items-center gap-3">

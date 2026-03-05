@@ -41,7 +41,7 @@ export default function EventsPage() {
  const statusColors: Record<string, string> = {
  active: "bg-green-100 text-green-700",
  upcoming: "bg-blue-100 text-blue-700",
- ended: "bg-gray-100 text-gray-500",
+ ended: "bg-[var(--bg-surface)] theme-text-secondary",
  };
 
  const statusLabels: Record<string, string> = {

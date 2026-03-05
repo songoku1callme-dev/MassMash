@@ -81,7 +81,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all ${
  selectedSubject === s.id
  ? "bg-blue-600 text-white shadow-md"
- : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+ : "bg-[var(--bg-surface)] theme-text-secondary hover:opacity-80"
  }`}
  >
  {s.icon}

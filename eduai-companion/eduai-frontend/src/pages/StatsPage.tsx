@@ -190,7 +190,7 @@ export default function StatsPage() {
  <div className={`mb-3 px-3 py-2 rounded-lg text-sm font-medium ${
  prognoseTrend === "steigend" ? "bg-green-50 text-green-700" :
  prognoseTrend === "fallend" ? "bg-red-50 text-red-700" :
- "bg-gray-50 text-gray-700"
+ "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>
  Gesamt-Trend: {prognoseTrend === "steigend" ? "Aufwaerts" : prognoseTrend === "fallend" ? "Abwaerts" : "Stabil"}
  </div>
