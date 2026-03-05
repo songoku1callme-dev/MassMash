@@ -74,7 +74,7 @@ export default function DatenschutzPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6 overflow-y-auto" style={{ maxHeight: "100vh" }}>
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
       <div className="text-center">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"

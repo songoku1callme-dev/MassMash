@@ -111,7 +111,7 @@ export default function SchoolPage() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6 overflow-y-auto" style={{ maxHeight: "100vh" }}>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center">
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"

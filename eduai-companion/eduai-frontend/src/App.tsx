@@ -232,6 +232,7 @@ function App() {
           width: "100vw",
           overflow: "hidden",
           backgroundColor: "#0a0f1e",
+          position: "relative",
         }}
         className="text-lumnos-text"
       >
@@ -244,6 +245,7 @@ function App() {
             display: "flex",
             flexDirection: "column",
             position: "relative",
+            minWidth: 0,
           }}
         >
           <div className="absolute top-4 right-4 z-30">
@@ -256,7 +258,8 @@ function App() {
               initial="initial"
               animate="animate"
               exit="exit"
-              style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}
+              style={{ flex: 1, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column" }}
+              className="scrollable"
             >
               {renderPage()}
             </motion.div>
