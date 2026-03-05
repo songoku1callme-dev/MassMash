@@ -101,7 +101,7 @@ export default function PricingPage() {
  ];
 
  return (
- <div className="min-h-screen bg-[#0a0f1e] p-4 lg:p-6 max-w-6xl mx-auto space-y-8">
+ <div className="min-h-screen p-4 lg:p-6 max-w-6xl mx-auto space-y-8" style={{ background: "var(--lumnos-bg)" }}>
  {/* Header */}
  <div className="text-center">
  <h1 className="text-3xl font-bold text-white">
@@ -158,7 +158,7 @@ export default function PricingPage() {
  {/* Pricing Cards - 4 Tiers */}
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  {/* Free Plan */}
- <Card className="relative border border-indigo-500/20 bg-[#0f172a]">
+ <Card className="relative border border-indigo-500/20 bg-[var(--lumnos-surface)]">
  <CardHeader>
  <CardTitle className="text-xl text-white">Kostenlos</CardTitle>
  <CardDescription className="text-slate-400">Perfekt zum Ausprobieren</CardDescription>
@@ -183,7 +183,7 @@ export default function PricingPage() {
  </Card>
 
  {/* Pro Plan */}
- <Card className="relative border-2 border-indigo-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(99,102,241,0.2)" }}>
+ <Card className="relative border-2 border-indigo-500 bg-[var(--lumnos-surface)]" style={{ boxShadow: "0 0 30px rgba(99,102,241,0.2)" }}>
  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 text-white text-xs font-bold rounded-full uppercase tracking-wider" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
  Beliebt
  </div>
@@ -233,7 +233,7 @@ export default function PricingPage() {
  </Card>
 
  {/* Max Plan */}
- <Card className="relative border-2 border-purple-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(139,92,246,0.2)" }}>
+ <Card className="relative border-2 border-purple-500 bg-[var(--lumnos-surface)]" style={{ boxShadow: "0 0 30px rgba(139,92,246,0.2)" }}>
  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">
  Premium
  </div>
@@ -283,7 +283,7 @@ export default function PricingPage() {
  </Card>
 
  {/* Eltern-Abo Plan - Supreme 11.0 Phase 10 */}
- <Card className="relative border-2 border-pink-500 bg-[#0f172a]" style={{ boxShadow: "0 0 30px rgba(236,72,153,0.15)" }}>
+ <Card className="relative border-2 border-pink-500 bg-[var(--lumnos-surface)]" style={{ boxShadow: "0 0 30px rgba(236,72,153,0.15)" }}>
  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-pink-500 text-white text-xs font-bold rounded-full uppercase tracking-wider">
  Für Eltern
  </div>
@@ -334,7 +334,7 @@ export default function PricingPage() {
  </div>
 
  {/* Feature Comparison */}
- <Card className="border border-indigo-500/20 bg-[#0f172a]">
+ <Card className="border border-indigo-500/20 bg-[var(--lumnos-surface)]">
  <CardHeader>
  <CardTitle className="text-lg text-white">Alle Features im Überblick</CardTitle>
  </CardHeader>

@@ -169,13 +169,13 @@ export default function SettingsPage() {
  <Moon className="w-5 h-5" style={{ color: "var(--icon-color)" }} />
  <CardTitle className="text-base">Erscheinungsbild</CardTitle>
  </div>
- <CardDescription>Dark / Light / System</CardDescription>
+ <CardDescription>Wähle dein bevorzugtes Design</CardDescription>
  </CardHeader>
  <CardContent>
  <div className="flex items-center justify-between gap-4 flex-wrap">
  <div>
  <p className="font-medium theme-text">Theme</p>
- <p className="text-sm theme-text-secondary">Wähle Dark, Light oder System</p>
+ <p className="text-sm theme-text-secondary">System — passt sich automatisch deinem Gerät an (Standard)</p>
  </div>
  <ThemeToggle />
  </div>

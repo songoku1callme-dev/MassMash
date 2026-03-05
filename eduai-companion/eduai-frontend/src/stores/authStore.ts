@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           preferred_language: "de", is_pro: true, subscription_tier: "max",
           ki_personality_id: 1, ki_personality_name: "Mentor", avatar_url: "",
           auth_provider: "dev", created_at: new Date().toISOString(),
-        } as any,
+        } as User,
         token, isLoading: false, isAuthenticated: true,
       });
       return;
@@ -166,7 +166,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         avatar_url: clerkUser.imageUrl || "",
         auth_provider: "clerk",
         created_at: new Date().toISOString(),
-      } as any,
+      } as User,
       token: clerkToken,
       isAuthenticated: true,
       isLoading: false,

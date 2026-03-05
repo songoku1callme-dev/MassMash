@@ -64,7 +64,7 @@ export default function MultiplayerPage() {
  } else {
  setError(data.detail || "Raum konnte nicht erstellt werden.");
  }
- } catch (err) {
+ } catch {
  clearTimeout(timeout);
  setError("Verbindung fehlgeschlagen. Bitte versuche es erneut.");
  } finally {
@@ -80,7 +80,7 @@ export default function MultiplayerPage() {
  const data = await apiCall(`/api/multiplayer/join/${joinCode.trim().toUpperCase()}`);
  if (data.room_code) { setRoomCode(data.room_code); setPlayers(data.players || []); setGameStatus("waiting"); connectWS(data.room_code); }
  else { setError(data.detail || "Raum nicht gefunden."); }
- } catch (err) {
+ } catch {
  setError("Verbindung fehlgeschlagen. Bitte versuche es erneut.");
  } finally {
  setLoading(false);

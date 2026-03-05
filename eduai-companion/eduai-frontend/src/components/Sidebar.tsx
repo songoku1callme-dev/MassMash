@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import GlobalSearch from "./GlobalSearch";
 import ThemeToggle from "./ThemeToggle";
 import { sidebarItem, mobileOverlay, mobileSidebarSlide, APPLE_EASE } from "../lib/animations";

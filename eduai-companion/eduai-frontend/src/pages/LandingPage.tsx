@@ -212,7 +212,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  </section>
 
  {/* Features */}
- <section className="py-20 bg-[#0a0f1e] px-4">
+ <section className="py-20 bg-[var(--lumnos-bg)] px-4">
  <div className="max-w-7xl mx-auto">
  <div className="text-center mb-12">
  <h2 className="text-3xl font-bold text-white">Alles was du zum Lernen brauchst</h2>
@@ -220,7 +220,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
  {FEATURES.map((f, i) => (
- <Card key={i} className="hover:shadow-lg transition-shadow border border-indigo-500/20 bg-[#0f172a]" style={{ backdropFilter: "blur(12px)" }}>
+ <Card key={i} className="hover:shadow-lg transition-shadow border border-indigo-500/20 bg-[var(--lumnos-surface)]" style={{ backdropFilter: "blur(12px)" }}>
  <CardContent className="p-6">
  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white mb-4 shadow-md`}>
  {f.icon}
@@ -242,7 +242,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  </div>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  {TESTIMONIALS.map((t, i) => (
- <Card key={i} className="border border-indigo-500/20 bg-[#0f172a]">
+ <Card key={i} className="border border-indigo-500/20 bg-[var(--lumnos-surface)]">
  <CardContent className="p-6">
  <div className="flex items-center gap-1 mb-3">
  {[...Array(5)].map((_, j) => (
@@ -267,7 +267,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  </section>
 
  {/* Pricing */}
- <section className="py-20 bg-[#0a0f1e] px-4">
+ <section className="py-20 bg-[var(--lumnos-bg)] px-4">
  <div className="max-w-5xl mx-auto">
  <div className="text-center mb-12">
  <h2 className="text-3xl font-bold text-white">Einfache Preise</h2>
@@ -277,7 +277,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  {PRICING.map((p, i) => (
  <Card
  key={i}
- className={`relative border border-indigo-500/20 bg-[#0f172a] ${p.popular ? "ring-2 ring-indigo-500 shadow-xl" : ""}`}
+ className={`relative border border-indigo-500/20 bg-[var(--lumnos-surface)] ${p.popular ? "ring-2 ring-indigo-500 shadow-xl" : ""}`}
  >
  {p.popular && (
  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 text-white text-xs font-medium rounded-full" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
@@ -365,7 +365,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  </section>
 
  {/* FAQ */}
- <section className="py-20 bg-[#0a0f1e] px-4">
+ <section className="py-20 bg-[var(--lumnos-bg)] px-4">
  <div className="max-w-3xl mx-auto">
  <div className="text-center mb-12">
  <h2 className="text-3xl font-bold text-white">Häufige Fragen</h2>
@@ -378,7 +378,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  { q: "Sind meine Daten sicher?", a: "Absolut. Lumnos ist DSGVO-konform. Deine Daten werden in Europa gespeichert und niemals an Dritte weitergegeben." },
  { q: "Kann ich Lumnos auf dem Handy nutzen?", a: "Ja! Lumnos ist eine Progressive Web App (PWA) und funktioniert auf jedem Gerät mit Browser - auch offline für Karteikarten und Quizzes." },
  ].map((faq, i) => (
- <details key={i} className="bg-[#0f172a] rounded-xl border border-indigo-500/20 overflow-hidden">
+ <details key={i} className="bg-[var(--lumnos-surface)] rounded-xl border border-indigo-500/20 overflow-hidden">
  <summary className="p-4 font-medium text-white cursor-pointer hover:bg-indigo-500/10">
  {faq.q}
  </summary>

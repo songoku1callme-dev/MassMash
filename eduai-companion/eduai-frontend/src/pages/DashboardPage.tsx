@@ -5,7 +5,7 @@ import { useAuthStore } from "../stores/authStore";
 import BentoTile from "../components/BentoTile";
 import LumnosOrb from "../components/LumnosOrb";
 import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
-import { APPLE_EASE, staggerContainer, staggerItem } from "../lib/animations";
+import { APPLE_EASE, staggerContainer } from "../lib/animations";
 
 interface DashboardProps {
  onNavigate: (page: string) => void;
@@ -48,7 +48,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
 
  if (loading) {
  return (
- <div className="flex items-center justify-center h-full min-h-screen bg-[#0a0f1e]">
+ <div className="flex items-center justify-center h-full min-h-screen" style={{ background: "var(--lumnos-bg)" }}>
  <LumnosOrb size="lg" isTyping />
  </div>
  );
@@ -170,7 +170,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {userXp} XP
  </div>
  <div className="mt-2 h-1.5 rounded-full w-full overflow-hidden relative"
- style={{ background: "#334155" }}>
+ style={{ background: "rgba(var(--surface-rgb),0.6)" }}>
  <motion.div
  initial={{ width: 0 }}
  animate={{

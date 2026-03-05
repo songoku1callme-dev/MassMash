@@ -11,7 +11,7 @@ import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
 import LumnosOrb from "../components/LumnosOrb";
-import { userMessageVariants, aiMessageVariants, staggerContainer } from "../lib/animations";
+import { userMessageVariants, aiMessageVariants } from "../lib/animations";
 
 /* ============================================================
  LUMNOS 1.0 — BLOCK B: Chat UI (Nuclear Reset)
@@ -59,14 +59,6 @@ function cleanThinkingTags(text: string): string {
  * Extract thinking text from raw AI response BEFORE cleaning.
  * Returns [thinkingContent, cleanedResponse].
  */
-function extractThinking(text: string): [string, string] {
- if (!text) return ["", ""];
- const match = text.match(/<thinking>([\s\S]*?)<\/thinking>/);
- const thinking = match ? match[1].trim() : "";
- const cleaned = cleanThinkingTags(text);
- return [thinking, cleaned];
-}
-
 interface Karteikarte {
  frage: string;
  antwort: string;
@@ -95,7 +87,7 @@ interface Msg {
 export default function ChatPage() {
  const {
  messages, isSending, isStreaming, streamStatus, currentSubject, language,
- sendMessage, sendMessageStream, setSubject, setLanguage, addMessage,
+ sendMessageStream, setSubject, setLanguage, addMessage,
  isThinking, thinkingText,
  } = useChatStore();
  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
@@ -217,13 +209,6 @@ export default function ChatPage() {
  sendMessageStream(msg, selectedPersonality, tutorModus, eli5, modus);
  };
 
- const handleKeyDown = (e: React.KeyboardEvent) => {
- if (e.key === "Enter" && !e.shiftKey) {
- e.preventDefault();
- handleSend();
- }
- };
-
  const copyToClipboard = (text: string, idx: number) => {
  navigator.clipboard.writeText(text);
  setCopiedIdx(idx);
@@ -297,7 +282,7 @@ export default function ChatPage() {
 
  const handleMediaUploadSend = useCallback(async () => {
  if (!uploadedFile) return;
- const { file, type, preview } = uploadedFile;
+ const { file, type } = uploadedFile;
  const fach = currentSubject !== "general" ? currentSubject : undefined;
  const frage = input.trim() || undefined;
 

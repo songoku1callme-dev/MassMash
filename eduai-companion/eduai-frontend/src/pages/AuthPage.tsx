@@ -118,7 +118,7 @@ export default function AuthPage() {
  <div
  className="min-h-screen flex items-center justify-center p-4"
  style={{
- background: "linear-gradient(135deg, #0a0a1a 0%, #0d0d2b 50%, #0a0a1a 100%)",
+ background: "var(--lumnos-bg)",
  }}
  >
  {/* Subtle background glow */}
@@ -352,7 +352,7 @@ export default function AuthPage() {
  className={selectClass}
  >
  {["5", "6", "7", "8", "9", "10", "11", "12", "13"].map((g) => (
- <option key={g} value={g} className="bg-[#0d0d2b] text-white">
+ <option key={g} value={g} className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">
  {g}. Klasse
  </option>
  ))}
@@ -365,9 +365,9 @@ export default function AuthPage() {
  onChange={(e) => setSchoolType(e.target.value)}
  className={selectClass}
  >
- <option value="Gymnasium" className="bg-[#0d0d2b] text-white">Gymnasium</option>
- <option value="Realschule" className="bg-[#0d0d2b] text-white">Realschule</option>
- <option value="Gesamtschule" className="bg-[#0d0d2b] text-white">Gesamtschule</option>
+ <option value="Gymnasium" className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">Gymnasium</option>
+ <option value="Realschule" className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">Realschule</option>
+ <option value="Gesamtschule" className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">Gesamtschule</option>
  </select>
  </div>
  <div>
@@ -377,8 +377,8 @@ export default function AuthPage() {
  onChange={(e) => setLanguage(e.target.value)}
  className={selectClass}
  >
- <option value="de" className="bg-[#0d0d2b] text-white">Deutsch</option>
- <option value="en" className="bg-[#0d0d2b] text-white">English</option>
+ <option value="de" className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">Deutsch</option>
+ <option value="en" className="bg-[var(--lumnos-bg)] text-[var(--text-primary)]">English</option>
  </select>
  </div>
  </div>
