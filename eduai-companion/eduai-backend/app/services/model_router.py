@@ -271,12 +271,17 @@ async def _groq_chat_stream(model: str, messages: list, temperature: float = 0.5
 def strip_thinking_tags(text: str) -> tuple[str, str]:
     """Extrahiert <thinking>...</thinking> bzw. <think>...</think> und gibt (thinking_text, visible_text) zurück.
 
-    Handles both closed and unclosed tags, including qwen3's <think> format:
+    Handles both closed and unclosed tags, including qwen3's <think> format,
+    and markdown-wrapped variants like **<thinking>**:
     - <thinking>content</thinking> → extracts content, removes tags
     - <think>content</think> → same (qwen3 format)
+    - **<thinking>**content**</thinking>** → same (markdown-wrapped)
     - <thinking>content (no closing tag) → extracts everything after tag
     - <think>content (no closing tag) → same
     """
+    # Pre-clean: Remove markdown bold around thinking tags: **<thinking>** → <thinking>
+    text = _re.sub(r'\*\*<(/?think(?:ing)?)>\*\*', r'<\1>', text)
+
     # Case 1: Properly closed <thinking>...</thinking> or <think>...</think>
     thinking_match = _re.search(r'<think(?:ing)?>(.*?)</think(?:ing)?>', text, _re.DOTALL)
     if thinking_match:

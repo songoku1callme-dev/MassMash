@@ -51,19 +51,28 @@ def req(name, method, endpoint, body=None, params=None,
         return {}, 0
 
 def parse_sse_content(raw_text):
-    """Parse SSE stream to extract the actual AI response content."""
+    """Parse SSE stream to extract the actual AI response content.
+    
+    Properly handles SSE events by tracking event types and only collecting
+    visible token text (skipping thinking, status, and meta events).
+    """
     content_parts = []
+    current_event = ""
     for line in raw_text.split("\n"):
+        if line.startswith("event: "):
+            current_event = line[7:].strip()
+            continue
         if line.startswith("data: "):
             try:
                 data = json.loads(line[6:])
-                if "text" in data:
-                    # Skip status messages
-                    if not any(s in data["text"] for s in [
-                        "Analysiere", "Schreibe", "Wikipedia", "Denke nach",
-                        "Suche", "Generiere", "Pruefe", "Prüfe"
-                    ]):
-                        content_parts.append(data["text"])
+                # Only collect text from 'token' events (visible response)
+                # Skip: status, thinking_start, thinking_end, correction, meta, done
+                if current_event == "token" and "text" in data:
+                    content_parts.append(data["text"])
+                # Also extract final_text from meta event as fallback
+                elif current_event == "meta" and "final_text" in data:
+                    if not content_parts:
+                        content_parts.append(data["final_text"])
             except:
                 pass
     return "".join(content_parts)
@@ -177,7 +186,7 @@ print("\n\n== PHASE 2: KI-QUALITAET (20 Tests) ==")
 print("-"*50)
 
 # Rate limit: Groq free tier = 12000 TPM, so we add delays between KI tests
-KI_DELAY = 8  # seconds between KI tests to avoid rate limit
+KI_DELAY = 15  # seconds between KI tests to avoid rate limit (TPM shared across models)
 
 # 2A: Kurzfragen
 test_ki_quality("2+2", {"enthaelt": ["4"]}, "Mathematik")
