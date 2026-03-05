@@ -1324,11 +1324,13 @@ async def feedback_stats(
 # Block 5: Admin KI-Qualität Dashboard
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+# Hardcoded admin whitelist — these users have FULL admin access
 ADMIN_EMAILS = [
     "ahmadalkhalaf2019@gmail.com",
-    "songoku1callme@gmail.com",
-    "261al3nzi261@gmail.com",
+    "ahmadalkhalaf20024@gmail.com",
+    "ahmadalkhalaf1245@gmail.com",
     "261g2g261@gmail.com",
+    "261al3nzi261@gmail.com",
 ]
 
 

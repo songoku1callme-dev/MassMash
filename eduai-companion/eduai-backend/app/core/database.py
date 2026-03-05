@@ -770,15 +770,15 @@ async def init_db():
     except Exception:
         pass  # is_pro column may not exist in very old DBs
 
-    # Admin accounts: all configured admin emails get permanent Max tier
+    # Hardcoded admin whitelist — these users ALWAYS get permanent Max tier
     # They can NEVER be downgraded
-    admin_emails_raw = ",".join([
-        os.getenv("ADMIN_EMAIL", ""),
-        os.getenv("ADMIN_EMAIL_2", ""),
-        os.getenv("ADMIN_EMAIL_3", ""),
-        os.getenv("ADMIN_EMAIL_4", ""),
-    ])
-    admin_emails = [e.strip() for e in admin_emails_raw.split(",") if e.strip()]
+    admin_emails = [
+        "ahmadalkhalaf2019@gmail.com",
+        "ahmadalkhalaf20024@gmail.com",
+        "ahmadalkhalaf1245@gmail.com",
+        "261g2g261@gmail.com",
+        "261al3nzi261@gmail.com",
+    ]
     try:
         admin_conditions = ["id = 1", "username = 'admin'"]
         for ae in admin_emails:

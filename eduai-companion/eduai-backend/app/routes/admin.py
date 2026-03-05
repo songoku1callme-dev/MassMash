@@ -18,17 +18,19 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-ADMIN_EMAILS = ",".join(filter(None, [
-    os.getenv("ADMIN_EMAIL", ""),
-    os.getenv("ADMIN_EMAIL_2", ""),
-    os.getenv("ADMIN_EMAIL_3", ""),
-    os.getenv("ADMIN_EMAIL_4", ""),
-]))
+# Hardcoded admin whitelist — these users have FULL admin access
+ADMIN_EMAILS = [
+    "ahmadalkhalaf2019@gmail.com",
+    "ahmadalkhalaf20024@gmail.com",
+    "ahmadalkhalaf1245@gmail.com",
+    "261g2g261@gmail.com",
+    "261al3nzi261@gmail.com",
+]
 
 
 def is_admin_email(email: str) -> bool:
     """Check if email is in the admin list."""
-    return email in [e.strip() for e in ADMIN_EMAILS.split(",") if e.strip()]
+    return email.lower() in [e.lower() for e in ADMIN_EMAILS]
 
 
 async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
@@ -40,9 +42,7 @@ async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
     # Dev token user (id=999) is always admin
     if user.get("id") == 999 and user.get("auth_provider") == "dev":
         return True
-    # Max-tier users are admins
-    if user.get("subscription_tier") == "max":
-        return True
+    # Note: Max-tier users are NOT automatically admins anymore
     user_email = user.get("email", "")
     if is_admin_email(user_email):
         return True

@@ -35,7 +35,15 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = user?.username === "admin" || user?.is_admin || user?.subscription_tier === "max";
+  // Hardcoded admin whitelist — must match backend
+  const ADMIN_EMAILS = [
+    "ahmadalkhalaf2019@gmail.com",
+    "ahmadalkhalaf20024@gmail.com",
+    "ahmadalkhalaf1245@gmail.com",
+    "261g2g261@gmail.com",
+    "261al3nzi261@gmail.com",
+  ];
+  const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === (user?.email || "").toLowerCase());
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },

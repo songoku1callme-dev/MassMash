@@ -1,12 +1,22 @@
 import { useState, useEffect } from "react";
 import { adminApi } from "../services/api";
+import { useAuthStore } from "../stores/authStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Shield, Users, BarChart3, Ticket, Search, Gift, Loader2, Crown, Star,
-  TrendingUp, DollarSign, Brain
+  TrendingUp, DollarSign, Brain, ShieldOff
 } from "lucide-react";
+
+// Hardcoded admin whitelist — must match backend
+const ADMIN_EMAILS = [
+  "ahmadalkhalaf2019@gmail.com",
+  "ahmadalkhalaf20024@gmail.com",
+  "ahmadalkhalaf1245@gmail.com",
+  "261g2g261@gmail.com",
+  "261al3nzi261@gmail.com",
+];
 
 interface AdminStats {
   total_users: number;
@@ -50,6 +60,10 @@ interface AnalyticsData {
 }
 
 export default function AdminPage() {
+  const { user } = useAuthStore();
+  const userEmail = (user?.email || "").toLowerCase();
+  const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [users, setUsers] = useState<SearchUser[]>([]);
@@ -68,7 +82,7 @@ export default function AdminPage() {
   const [creatingCoupon, setCreatingCoupon] = useState(false);
   const [message, setMessage] = useState("");
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { if (isAdmin) loadData(); }, [isAdmin]);
 
   const loadData = async () => {
     setLoading(true);
@@ -134,6 +148,17 @@ export default function AdminPage() {
       setCreatingCoupon(false);
     }
   };
+
+  // Access control: only whitelisted admin emails can see the admin panel
+  if (!isAdmin) {
+    return (
+      <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] text-center">
+        <ShieldOff className="w-16 h-16 text-red-500 mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Kein Zugriff</h1>
+        <p className="text-gray-500 dark:text-gray-400">Nur für Admins — Du hast keine Berechtigung für das Admin-Panel.</p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

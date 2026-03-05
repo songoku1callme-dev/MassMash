@@ -23,19 +23,19 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 SUBJECTS = ["math", "english", "german", "history", "science"]
 
-# Admin emails — these users ALWAYS get permanent Max tier and can NEVER be downgraded
-_ADMIN_EMAILS_RAW = ",".join([
-    os.getenv("ADMIN_EMAIL", ""),
-    os.getenv("ADMIN_EMAIL_2", ""),
-    os.getenv("ADMIN_EMAIL_3", ""),
-    os.getenv("ADMIN_EMAIL_4", ""),
-])
-ADMIN_EMAILS = [e.strip() for e in _ADMIN_EMAILS_RAW.split(",") if e.strip()]
+# Hardcoded admin whitelist — these users ALWAYS get permanent Max tier and can NEVER be downgraded
+ADMIN_EMAILS = [
+    "ahmadalkhalaf2019@gmail.com",
+    "ahmadalkhalaf20024@gmail.com",
+    "ahmadalkhalaf1245@gmail.com",
+    "261g2g261@gmail.com",
+    "261al3nzi261@gmail.com",
+]
 
 
 def is_admin(email: str) -> bool:
     """Check if an email belongs to a permanent admin."""
-    return email in ADMIN_EMAILS
+    return email.lower() in [e.lower() for e in ADMIN_EMAILS]
 
 
 async def _ensure_admin_max_tier(db: aiosqlite.Connection, user_id: int) -> None:
