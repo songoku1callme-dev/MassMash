@@ -10,7 +10,7 @@ import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_optional_current_user
 from app.models.schemas import ChatRequest, ChatResponse, ChatSessionResponse
-from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet
+from app.services.ai_engine import detect_subject, build_system_prompt, normalize_fach, get_lehrplan_context, check_antwort_qualitaet, ist_sinnlose_frage, SINNLOSE_ANTWORT
 from app.services.groq_llm import call_groq_llm, classify_needs_search, deep_think_answer
 from app.services import rag_service
 from app.services.ki_personalities import get_personality_by_id, is_personality_accessible
@@ -285,6 +285,16 @@ async def send_message(
 ):
     """Send a message and get AI response."""
     user_id = current_user["id"]
+
+    # FIX 4: Sinnlose/leere Fragen sofort abfangen
+    if ist_sinnlose_frage(request.message):
+        return ChatResponse(
+            response=SINNLOSE_ANTWORT,
+            session_id=request.session_id or 0,
+            subject="Allgemein",
+            detected_subject="Allgemein",
+            proficiency_level="intermediate",
+        )
 
     # Auto-detect subject — neue Fach-Erkennung mit Prioritäts-Scoring
     user_fach = request.subject if request.subject and request.subject not in ("general", "", "Alle", "Allgemein") else None
@@ -786,6 +796,16 @@ async def send_message_stream(
     - event: done    → Stream beendet
     """
     user_id = current_user["id"]
+
+    # FIX 4: Sinnlose/leere Fragen sofort als statische Antwort streamen
+    if ist_sinnlose_frage(request.message):
+        async def _static_sse():
+            import json as _json
+            yield f"event: status\ndata: {_json.dumps({'status': 'writing'})}\n\n"
+            yield f"event: token\ndata: {_json.dumps({'text': SINNLOSE_ANTWORT})}\n\n"
+            yield f"event: meta\ndata: {_json.dumps({'final_text': SINNLOSE_ANTWORT, 'confidence': 100, 'is_verified': True})}\n\n"
+            yield f"event: done\ndata: {_json.dumps({'done': True})}\n\n"
+        return StreamingResponse(_static_sse(), media_type="text/event-stream")
 
     # Fach erkennen + normalisieren
     user_fach = request.subject if request.subject and request.subject not in ("general", "", "Alle", "Allgemein") else None

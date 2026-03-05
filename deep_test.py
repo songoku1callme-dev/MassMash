@@ -3,7 +3,7 @@
 LUMNOS DEEP TEST v2 — KI-Qualitat + API + System
 Fixed API paths/params based on actual backend routes.
 """
-import requests, json, time, re, os, sys
+import requests, json, time, re, os, sys, sqlite3
 from datetime import datetime
 
 BASE = "http://localhost:8000"
@@ -292,6 +292,17 @@ req("Quiz Blind-Spots", "GET", "/api/quiz/blind-spots")
 
 # IQ Test
 print("\n-- IQ-Test --")
+# FIX 2: Reset IQ cooldown before test so it always passes
+# The cooldown checks iq_results table, not iq_tests
+try:
+    _iq_db = sqlite3.connect("eduai-companion/eduai-backend/app.db")
+    _iq_db.execute("DELETE FROM iq_results WHERE user_id = 999")
+    _iq_db.execute("DELETE FROM iq_tests WHERE user_id = 999")
+    _iq_db.commit()
+    _iq_db.close()
+    print("[INFO] IQ cooldown reset for user 999 (iq_results + iq_tests)")
+except Exception as _e:
+    print(f"[WARN] IQ cooldown reset failed: {_e}")
 iq, _ = req("IQ generieren", "POST", "/api/iq/generieren",
              check_keys=["questions"])
 req("IQ Cooldown", "GET", "/api/iq/cooldown")
@@ -337,9 +348,13 @@ req("BP Status", "GET", "/api/battle-pass/status",
 
 # Quests & Challenges
 print("\n-- Quests & Challenges --")
-req("Quests heute", "GET", "/api/quests/today",
+quests_data, _ = req("Quests heute", "GET", "/api/quests/today",
     check_keys=["quests"])
-req("Quest progress", "POST", "/api/quests/progress/quest_chat")
+# FIX 3: Use a real quest_id from today's quests (key is 'quest_id', not 'id')
+_quest_id = "quest_chat"
+if isinstance(quests_data, dict) and quests_data.get("quests"):
+    _quest_id = quests_data["quests"][0].get("quest_id", quests_data["quests"][0].get("id", _quest_id))
+req("Quest progress", "POST", f"/api/quests/progress/{_quest_id}")
 req("Challenge erstellen", "POST", "/api/challenges/create",
     params={"title":"Test","description":"Test Challenge",
             "subject":"Mathematik","target_score":80,
@@ -373,12 +388,31 @@ req("Notes Liste", "GET", "/api/notes/")
 # Shop
 print("\n-- Shop --")
 req("Shop Items", "GET", "/api/shop/items", check_keys=["items"])
-# Get actual shop items first
+# FIX 3: Find an unowned item to buy (key is 'unlocked', boost items can always be re-bought)
 shop_data, _ = req("Shop Items Detail", "GET", "/api/shop/items")
-shop_item_id = "boost_streak_schutz"
+shop_item_id = "boost_double_xp"  # Default to a boost item (always buyable)
 if isinstance(shop_data, dict) and shop_data.get("items"):
-    first_item = shop_data["items"][0]
-    shop_item_id = first_item.get("id", first_item.get("item_id", shop_item_id))
+    # First try: find a non-unlocked non-boost item
+    _unowned = [i for i in shop_data["items"]
+                if not i.get("unlocked") and i.get("category") != "boost"]
+    if _unowned:
+        shop_item_id = _unowned[0]["id"]
+    else:
+        # All non-boost items owned — use a boost item (always re-buyable)
+        _boosts = [i for i in shop_data["items"] if i.get("category") == "boost"]
+        if _boosts:
+            shop_item_id = _boosts[0]["id"]
+        else:
+            # Fallback: reset shop purchases in activity_log
+            try:
+                _shop_db = sqlite3.connect("eduai-companion/eduai-backend/app.db")
+                _shop_db.execute("DELETE FROM activity_log WHERE user_id = 999 AND activity_type = 'shop_purchase'")
+                _shop_db.commit()
+                _shop_db.close()
+                print("[INFO] Shop purchases reset for user 999")
+            except Exception as _se:
+                print(f"[WARN] Shop reset failed: {_se}")
+            shop_item_id = shop_data["items"][0]["id"]
 req("Shop Kaufen", "POST", "/api/shop/buy",
     params={"item_id": shop_item_id})
 

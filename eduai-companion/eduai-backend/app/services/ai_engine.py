@@ -129,6 +129,27 @@ def get_max_tokens(frage: str) -> int:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# FIX 4: Sinnlose/leere Fragen abfangen
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SINNLOSE_ANTWORT = (
+    "Bitte stelle eine konkrete Frage — "
+    "ich helfe dir gerne! 😊 "
+    "Beispiel: *'Erkläre Fotosynthese'* oder "
+    "*'Löse: 3x + 5 = 20'*"
+)
+
+
+def ist_sinnlose_frage(frage: str) -> bool:
+    """Erkennt leere oder sinnlose Eingaben die keine echte Frage sind."""
+    bereinigt = frage.strip()
+    return (
+        len(bereinigt) <= 2
+        or bereinigt in ["?", "!", ".", "...", " ", "??", "!!", "..", "..."]
+        or all(c in "?!. \t\n" for c in bereinigt)
+    )
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # FINAL SYSTEM PROMPT — geprüft, optimiert, wird IMMER verwendet
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FINAL_SYSTEM_PROMPT = """
