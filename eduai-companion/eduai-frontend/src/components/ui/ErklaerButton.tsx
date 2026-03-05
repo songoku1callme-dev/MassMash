@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { erklaerungApi } from "../../services/api";
-import { useNavigate } from "react-router-dom";
 
 interface ErklaerButtonProps {
   thema: string;
@@ -23,7 +22,6 @@ export default function ErklaerButton({
   const [erklaerung, setErklaerung] = useState("");
   const [error, setError] = useState("");
   const popupRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   // Close popup on outside click
   useEffect(() => {
@@ -61,7 +59,7 @@ export default function ErklaerButton({
 
   const goToChat = () => {
     setIsOpen(false);
-    navigate(`/chat?topic=${encodeURIComponent(thema)}`);
+    window.dispatchEvent(new CustomEvent("navigate", { detail: "chat" }));
   };
 
   const buttonStyles = {
