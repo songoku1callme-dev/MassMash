@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from app.core.auth import get_current_user
+from app.core.tier_guard import require_tier
 from app.services.ocr_solver import MathSolver
 from app.services.groq_llm import call_groq_llm
 
@@ -61,6 +62,7 @@ def classify_image_content(ocr_text: str) -> str:
 async def solve_from_image(
     file: UploadFile = File(...),
     _user: dict = Depends(get_current_user),
+    _tier: None = Depends(require_tier("pro")),
 ) -> dict:
     """Upload an image → OCR → Classify → Route to correct solver.
 
@@ -121,6 +123,7 @@ async def solve_from_image(
 async def solve_from_text(
     body: Optional[SolveTextRequest] = None,
     _user: dict = Depends(get_current_user),
+    _tier: None = Depends(require_tier("pro")),
 ) -> dict:
     """Solve a math equation provided as text (no OCR needed).
 

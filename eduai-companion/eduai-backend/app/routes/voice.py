@@ -13,6 +13,7 @@ from pydantic import BaseModel
 import aiosqlite
 from app.core.database import get_db
 from app.core.auth import get_current_user
+from app.core.tier_guard import require_tier
 
 
 class TTSRequest(BaseModel):
@@ -28,6 +29,7 @@ router = APIRouter(prefix="/api/voice", tags=["voice"])
 async def transcribe_audio(
     audio: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
+    _tier: None = Depends(require_tier("pro")),
 ):
     """Transcribe audio to text using Groq Whisper API."""
     groq_key = os.getenv("GROQ_API_KEY", "")
@@ -66,6 +68,7 @@ async def text_to_speech(
     lang: str = Query("de"),
     body: Optional[TTSRequest] = None,
     current_user: dict = Depends(get_current_user),
+    _tier: None = Depends(require_tier("pro")),
 ):
     """Convert text to speech using gTTS. Accepts both query params and JSON body."""
     tts_text = text or (body.text if body else None)
@@ -97,6 +100,7 @@ async def voice_chat(
     session_id: int = 0,
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
+    _tier: None = Depends(require_tier("pro")),
 ):
     """Full voice chat: transcribe -> AI respond -> TTS.
 

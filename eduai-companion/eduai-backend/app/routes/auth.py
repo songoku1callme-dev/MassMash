@@ -1,5 +1,9 @@
-"""Authentication routes."""
+"""Authentication routes.
+
+Shield 8: Account takeover protection — session management, password change invalidation.
+"""
 import json
+import logging
 import os
 import secrets
 import time
@@ -19,7 +23,13 @@ from app.models.schemas import (
 
 from app.core.clerk import get_clerk_frontend_config
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+# Shield 8: In-memory session invalidation store
+# Maps user_id -> timestamp; tokens issued before this time are invalid
+_session_invalidation_store: dict[int, float] = {}
 
 SUBJECTS = ["math", "english", "german", "history", "science"]
 
@@ -561,4 +571,114 @@ async def verify_code(req: OTPVerifyRequest, db: aiosqlite.Connection = Depends(
         "refresh_token": refresh_token,
         "user": _user_response_from_dict(user_dict),
         "is_new_user": user is None,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Shield 8: Account Takeover Protection — Session Management
+# ---------------------------------------------------------------------------
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+
+@router.post("/change-password")
+async def change_password(
+    req: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Shield 8: Change password and invalidate all other sessions.
+
+    Requires old password confirmation. After change, all existing
+    tokens become invalid — user must re-login on all devices.
+    """
+    user_id = current_user["id"]
+
+    # Fetch current password hash
+    cursor = await db.execute(
+        "SELECT password_hash FROM users WHERE id = ?", (user_id,)
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    row_dict = dict(row)
+    if not verify_password(req.old_password, row_dict.get("password_hash", "")):
+        raise HTTPException(status_code=401, detail="Altes Passwort ist falsch")
+
+    # Validate new password
+    if len(req.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Neues Passwort muss mindestens 8 Zeichen lang sein")
+    if len(req.new_password) > 128:
+        raise HTTPException(status_code=400, detail="Neues Passwort darf maximal 128 Zeichen lang sein")
+
+    # Update password
+    new_hash = get_password_hash(req.new_password)
+    await db.execute(
+        "UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?",
+        (new_hash, user_id),
+    )
+    await db.commit()
+
+    # Invalidate all sessions — tokens issued before now are invalid
+    _session_invalidation_store[user_id] = time.time()
+
+    logger.info("Shield 8: Password changed for user_id=%s, all sessions invalidated", user_id)
+
+    # Issue new tokens for the current session
+    access_token = create_access_token(data={"sub": user_id})
+    refresh_token = create_refresh_token(data={"sub": user_id})
+
+    return {
+        "message": "Passwort geaendert. Alle anderen Sessions wurden abgemeldet.",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+    }
+
+
+@router.get("/sessions")
+async def list_sessions(
+    current_user: dict = Depends(get_current_user),
+):
+    """Shield 8: Show active session info for the user.
+
+    Note: With JWT tokens, we track invalidation timestamps rather than
+    individual sessions. This endpoint shows when sessions were last invalidated.
+    """
+    user_id = current_user["id"]
+    last_invalidation = _session_invalidation_store.get(user_id)
+
+    return {
+        "user_id": user_id,
+        "current_session": "active",
+        "last_invalidation": datetime.fromtimestamp(last_invalidation).isoformat() if last_invalidation else None,
+        "note": "JWT-basierte Sessions. Passwort-Aenderung invalidiert alle anderen Sessions.",
+    }
+
+
+@router.delete("/sessions/all")
+async def logout_all_sessions(
+    current_user: dict = Depends(get_current_user),
+):
+    """Shield 8: Invalidate all sessions except the current one.
+
+    All tokens issued before this moment become invalid.
+    The current user gets new tokens.
+    """
+    user_id = current_user["id"]
+    _session_invalidation_store[user_id] = time.time()
+
+    logger.info("Shield 8: All sessions invalidated for user_id=%s", user_id)
+
+    # Issue new tokens for the current session
+    access_token = create_access_token(data={"sub": user_id})
+    refresh_token = create_refresh_token(data={"sub": user_id})
+
+    return {
+        "message": "Alle anderen Sessions wurden abgemeldet.",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
     }

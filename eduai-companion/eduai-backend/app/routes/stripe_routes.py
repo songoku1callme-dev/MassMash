@@ -209,8 +209,12 @@ def _verify_webhook_signature(payload: bytes, sig_header: str) -> dict:
         secrets_to_try.append(STRIPE_WEBHOOK_SECRET)
 
     if not secrets_to_try:
-        # No webhook secret configured - parse without verification (dev mode)
-        logger.warning("Stripe webhook signature NOT verified (no webhook secrets configured)")
+        # Shield 2: In production, REQUIRE signature verification — never skip
+        if os.getenv("FLY_APP_NAME") or os.getenv("RAILWAY_ENVIRONMENT"):
+            logger.error("Stripe webhook rejected: no webhook secrets configured in PRODUCTION")
+            raise HTTPException(status_code=400, detail="Webhook secret not configured")
+        # Dev mode only: parse without verification
+        logger.warning("Stripe webhook signature NOT verified (no webhook secrets configured — dev mode only)")
         return json.loads(payload)
 
     last_error = None
