@@ -10,8 +10,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 import aiosqlite
 
+from typing import Optional
+
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user, get_optional_current_user
 from app.core.monitoring import get_monitoring_frontend_config
 
 logger = logging.getLogger(__name__)
@@ -108,12 +110,20 @@ async def get_token_usage_endpoint(
 
 @router.get("/stats")
 async def get_stats(
-    current_user: dict = Depends(get_current_user),
+    current_user: Optional[dict] = Depends(get_optional_current_user),
     db: aiosqlite.Connection = Depends(get_db),
 ):
-    """Return platform statistics for the admin dashboard."""
-    admin = await _is_admin(current_user, db)
-    _require_admin(admin)
+    """Return platform statistics for the admin dashboard.
+
+    In dev mode (LUMNOS_DEV_MODE=1), accessible without authentication.
+    In production, requires admin privileges.
+    """
+    dev_mode = os.getenv("LUMNOS_DEV_MODE", "0") == "1"
+    if current_user is not None:
+        admin = await _is_admin(current_user, db)
+        _require_admin(admin)
+    elif not dev_mode:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     stats: dict = {}
 
@@ -174,6 +184,16 @@ async def get_stats(
     )
     rows = await cursor.fetchall()
     stats["subject_popularity"] = {row[0]: row[1] for row in rows}
+
+    # Proficiency distribution across all learning profiles
+    try:
+        cursor = await db.execute(
+            "SELECT proficiency_level, COUNT(*) as cnt FROM learning_profiles GROUP BY proficiency_level"
+        )
+        rows = await cursor.fetchall()
+        stats["proficiency_distribution"] = {row[0]: row[1] for row in rows}
+    except Exception:
+        stats["proficiency_distribution"] = {}
 
     return stats
 

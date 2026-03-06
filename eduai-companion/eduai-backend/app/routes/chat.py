@@ -806,8 +806,8 @@ async def send_message(
     return ChatResponse(
         response=ai_response,
         session_id=session_id,
-        subject=subject,
-        detected_subject=detected_subject,
+        subject=detected_subject,  # Raw subject ID for API consistency
+        detected_subject=subject,  # Normalized German name for display
         proficiency_level=level,
         karteikarten=karteikarten,
         zusammenfassung=zusammenfassung,

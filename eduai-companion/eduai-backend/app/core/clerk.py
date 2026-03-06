@@ -115,8 +115,14 @@ def invalidate_jwks_cache():
 
 
 def get_clerk_frontend_config() -> dict:
-    """Return Clerk config for the frontend (safe to expose)."""
+    """Return Clerk config for the frontend (safe to expose).
+
+    Reads env vars at request time so that test fixtures can override them.
+    """
+    secret = os.getenv("CLERK_SECRET_KEY", "")
+    pub = os.getenv("CLERK_PUBLISHABLE_KEY", "")
+    enabled = bool(secret and pub)
     return {
-        "enabled": CLERK_ENABLED,
-        "publishable_key": CLERK_PUBLISHABLE_KEY if CLERK_ENABLED else "",
+        "enabled": enabled,
+        "publishable_key": pub if enabled else "",
     }

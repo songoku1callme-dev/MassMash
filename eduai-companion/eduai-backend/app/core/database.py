@@ -701,6 +701,19 @@ async def init_db():
         );
 
         CREATE INDEX IF NOT EXISTS idx_chat_feedbacks_v2_fach ON chat_feedbacks_v2(fach, bewertung, created_at);
+
+        -- QA Fix ROT 4: battle_pass_progress table
+        CREATE TABLE IF NOT EXISTS battle_pass_progress (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            season_id INTEGER,
+            level INTEGER DEFAULT 0,
+            xp INTEGER DEFAULT 0,
+            claimed_rewards TEXT DEFAULT '[]',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_battle_pass_progress_user ON battle_pass_progress(user_id);
     """)
 
     await db.commit()

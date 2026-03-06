@@ -135,11 +135,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 # CORS allowed origins
 # ---------------------------------------------------------------------------
 
-# Allowed frontend origins — extend as needed
+# Allowed frontend origins — explicit list (no wildcards)
 ALLOWED_ORIGINS = [
+    "https://lumnos.de",
+    "https://www.lumnos.de",
     "https://lumnos-german-tutor-app-mzmkkhlp.devinapps.com",
     "https://mass-mash-git-devin-1772317-607977-songoku1callme-devs-projects.vercel.app",
     "https://massmash.vercel.app",
     "http://localhost:5173",
+    "http://localhost:5175",
     "http://localhost:3000",
 ]

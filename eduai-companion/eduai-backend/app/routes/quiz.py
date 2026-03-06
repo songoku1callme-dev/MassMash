@@ -314,8 +314,23 @@ async def submit_quiz(
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db)
 ):
-    """Submit quiz answers. Validates against server-stored correct answers."""
+    """Submit quiz answers. Validates against server-stored correct answers.
+    Auto-detects subject from quiz_id if not provided."""
     user_id = current_user["id"]
+
+    # Auto-detect subject from quiz_id format: quiz_{user_id}_{subject}_{timestamp}
+    subject = request.subject
+    if not subject or subject.strip() == "":
+        try:
+            parts = request.quiz_id.split("_")
+            if len(parts) >= 3:
+                subject = parts[2]
+        except Exception:
+            pass
+    if not subject:
+        subject = "general"
+    # Overwrite request.subject so downstream code uses the detected value
+    request.subject = subject
 
     # Fetch all correct answers for this quiz from the server
     cursor = await db.execute(

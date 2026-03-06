@@ -1253,6 +1253,199 @@ SUBJECTS = {
                      "timeline", "zeitstrahl", "historisch", "weimar", "nazi",
                      "ddr", "brd", "mauer", "bismarck", "hitler"]
     },
+    "physics": {
+        "id": "physics",
+        "name": "Physics",
+        "name_de": "Physik",
+        "icon": "Atom",
+        "description": "Mechanics, electricity, optics, thermodynamics",
+        "description_de": "Mechanik, Elektrizität, Optik, Thermodynamik",
+        "topics": [
+            "Mechanik", "Elektrizität", "Optik", "Thermodynamik",
+            "Kernphysik", "Quantenphysik", "Schwingungen", "Wellen",
+            "Magnetismus", "Relativitätstheorie"
+        ],
+        "keywords": ["physik", "physics", "mechanik", "kraft", "energie",
+                     "strom", "spannung", "widerstand", "optik", "linse",
+                     "wärme", "newton", "elektron", "proton", "atom",
+                     "schwingung", "welle", "magnetismus", "feld"]
+    },
+    "chemistry": {
+        "id": "chemistry",
+        "name": "Chemistry",
+        "name_de": "Chemie",
+        "icon": "FlaskConical",
+        "description": "Reactions, periodic table, organic chemistry",
+        "description_de": "Reaktionen, Periodensystem, Organische Chemie",
+        "topics": [
+            "Chemische Reaktionen", "Periodensystem", "Organische Chemie",
+            "Säuren und Basen", "Redoxreaktionen", "Elektrochemie",
+            "Stöchiometrie", "Atombau", "Bindungen", "Thermochemie"
+        ],
+        "keywords": ["chemie", "chemistry", "reaktion", "element", "molekül",
+                     "periodensystem", "säure", "base", "redox", "organisch",
+                     "anorganisch", "atom", "ion", "bindung", "formel"]
+    },
+    "biology": {
+        "id": "biology",
+        "name": "Biology",
+        "name_de": "Biologie",
+        "icon": "Leaf",
+        "description": "Cell biology, genetics, evolution, ecology",
+        "description_de": "Zellbiologie, Genetik, Evolution, Ökologie",
+        "topics": [
+            "Zellbiologie", "Genetik", "Evolution", "Ökologie",
+            "Neurobiologie", "Stoffwechsel", "Fortpflanzung",
+            "Immunbiologie", "Photosynthese", "Mikrobiologie"
+        ],
+        "keywords": ["biologie", "biology", "zelle", "cell", "gen", "dna",
+                     "evolution", "ökologie", "stoffwechsel", "photosynthese",
+                     "mitose", "meiose", "neuron", "organ", "gewebe"]
+    },
+    "geography": {
+        "id": "geography",
+        "name": "Geography",
+        "name_de": "Geographie",
+        "icon": "Globe",
+        "description": "Physical and human geography, climate, maps",
+        "description_de": "Physische Geographie, Humangeographie, Klima, Karten",
+        "topics": [
+            "Klimazonen", "Plattentektonik", "Bevölkerungsgeographie",
+            "Stadtgeographie", "Wirtschaftsgeographie", "Geomorphologie",
+            "Nachhaltigkeit", "Globalisierung", "Naturkatastrophen", "Kartographie"
+        ],
+        "keywords": ["geographie", "geography", "klima", "kontinent", "land",
+                     "stadt", "bevölkerung", "karte", "erdkunde", "wetter",
+                     "plattentektonik", "vulkan", "erdbeben", "globalisierung"]
+    },
+    "computer_science": {
+        "id": "computer_science",
+        "name": "Computer Science",
+        "name_de": "Informatik",
+        "icon": "Monitor",
+        "description": "Programming, algorithms, data structures",
+        "description_de": "Programmierung, Algorithmen, Datenstrukturen",
+        "topics": [
+            "Algorithmen", "Datenstrukturen", "Programmierung",
+            "Datenbanken", "Netzwerke", "Kryptographie",
+            "Objektorientierung", "Automatentheorie", "Betriebssysteme", "KI-Grundlagen"
+        ],
+        "keywords": ["informatik", "computer", "programmierung", "algorithmus",
+                     "code", "software", "datenbank", "python", "java",
+                     "netzwerk", "html", "css", "javascript", "datenstruktur"]
+    },
+    "art": {
+        "id": "art",
+        "name": "Art",
+        "name_de": "Kunst",
+        "icon": "Palette",
+        "description": "Art history, techniques, and analysis",
+        "description_de": "Kunstgeschichte, Techniken und Analyse",
+        "topics": [
+            "Kunstgeschichte", "Malerei", "Skulptur", "Grafik-Design",
+            "Farbenlehre", "Perspektive", "Renaissance", "Impressionismus",
+            "Moderne Kunst", "Fotografie"
+        ],
+        "keywords": ["kunst", "art", "malerei", "skulptur", "zeichnen",
+                     "farbe", "perspektive", "renaissance", "impressionismus",
+                     "picasso", "monet", "design", "ästhetik"]
+    },
+    "music": {
+        "id": "music",
+        "name": "Music",
+        "name_de": "Musik",
+        "icon": "Music",
+        "description": "Music theory, history, and analysis",
+        "description_de": "Musiktheorie, Musikgeschichte und Analyse",
+        "topics": [
+            "Musiktheorie", "Harmonielehre", "Rhythmik", "Musikgeschichte",
+            "Klassik", "Jazz", "Instrumentenkunde", "Gehörbildung",
+            "Komposition", "Musikanalyse"
+        ],
+        "keywords": ["musik", "music", "note", "akkord", "tonleiter",
+                     "rhythmus", "melodie", "harmonie", "klassik", "beethoven",
+                     "mozart", "instrument", "singen", "komponist"]
+    },
+    "sports": {
+        "id": "sports",
+        "name": "Sports Science",
+        "name_de": "Sport",
+        "icon": "Dumbbell",
+        "description": "Sports theory, training science, movement",
+        "description_de": "Sporttheorie, Trainingslehre, Bewegungslehre",
+        "topics": [
+            "Trainingslehre", "Bewegungslehre", "Sportbiologie",
+            "Sportpsychologie", "Doping", "Ernährung im Sport",
+            "Ausdauer", "Kraft", "Koordination", "Fairplay"
+        ],
+        "keywords": ["sport", "training", "fitness", "bewegung", "ausdauer",
+                     "kraft", "koordination", "doping", "ernährung", "muskel",
+                     "sporttheorie", "olympia"]
+    },
+    "economics": {
+        "id": "economics",
+        "name": "Economics",
+        "name_de": "Wirtschaft",
+        "icon": "TrendingUp",
+        "description": "Micro/macroeconomics, business, markets",
+        "description_de": "Mikro-/Makroökonomie, BWL, Märkte",
+        "topics": [
+            "Angebot und Nachfrage", "Marktformen", "Konjunktur",
+            "Geldpolitik", "Globalisierung", "Unternehmensformen",
+            "Marketing", "Buchführung", "Steuern", "Sozialversicherung"
+        ],
+        "keywords": ["wirtschaft", "economics", "markt", "angebot", "nachfrage",
+                     "konjunktur", "inflation", "bip", "unternehmen", "aktie",
+                     "börse", "handel", "geld", "bank", "steuern"]
+    },
+    "politics": {
+        "id": "politics",
+        "name": "Political Science",
+        "name_de": "Politik",
+        "icon": "Landmark",
+        "description": "Political systems, democracy, international relations",
+        "description_de": "Politische Systeme, Demokratie, Internationale Beziehungen",
+        "topics": [
+            "Grundgesetz", "Demokratie", "Parteien", "Wahlen",
+            "Europäische Union", "Vereinte Nationen", "Menschenrechte",
+            "Gewaltenteilung", "Föderalismus", "Politische Theorien"
+        ],
+        "keywords": ["politik", "politics", "demokratie", "partei", "wahl",
+                     "bundestag", "regierung", "grundgesetz", "eu", "nato",
+                     "menschenrechte", "staat", "verfassung", "gesetz"]
+    },
+    "latin": {
+        "id": "latin",
+        "name": "Latin",
+        "name_de": "Latein",
+        "icon": "BookMarked",
+        "description": "Latin grammar, translation, Roman culture",
+        "description_de": "Lateinische Grammatik, Übersetzung, Römische Kultur",
+        "topics": [
+            "Deklinationen", "Konjugationen", "AcI", "Ablativus Absolutus",
+            "Cicero", "Caesar", "Ovid", "Metrik",
+            "Römische Geschichte", "Stilmittel"
+        ],
+        "keywords": ["latein", "latin", "deklination", "konjugation", "aci",
+                     "ablativ", "cicero", "caesar", "ovid", "vokabel",
+                     "übersetze", "übersetzung", "rom", "römisch", "grammatik"]
+    },
+    "french": {
+        "id": "french",
+        "name": "French",
+        "name_de": "Französisch",
+        "icon": "Languages",
+        "description": "French grammar, vocabulary, culture",
+        "description_de": "Französische Grammatik, Vokabeln, Kultur",
+        "topics": [
+            "Grammatik", "Vokabeln", "Textverständnis", "Aufsatz",
+            "Passé composé", "Subjonctif", "Pronomen",
+            "Französische Literatur", "Landeskunde", "DELF-Vorbereitung"
+        ],
+        "keywords": ["französisch", "french", "france", "francais", "grammaire",
+                     "vokabel", "passé", "subjonctif", "texte", "delf",
+                     "paris", "übersetze", "frankreich"]
+    },
     "science": {
         "id": "science",
         "name": "Science",
@@ -1281,8 +1474,9 @@ def detect_subject(message: str, user_fach: str | None = None) -> str:
     3. Keyword-Scoring (höchste Priorität gewinnt)
     """
     # User hat ein Fach explizit gewählt → IMMER respektieren
+    # Return raw value; caller normalizes separately for DB storage
     if user_fach and user_fach not in ("", "Alle", "Allgemein", "general"):
-        return normalize_fach(user_fach)
+        return user_fach
 
     text_lower = message.lower()
 

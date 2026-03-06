@@ -121,16 +121,24 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
 
 @router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_db)):
-    """Login and get access token."""
-    cursor = await db.execute(
-        "SELECT * FROM users WHERE username = ?", (credentials.username,)
-    )
+    """Login and get access token. Accepts username OR email."""
+    identifier = credentials.username.strip()
+
+    # If identifier contains "@", search by email; otherwise by username
+    if "@" in identifier:
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE email = ?", (identifier,)
+        )
+    else:
+        cursor = await db.execute(
+            "SELECT * FROM users WHERE username = ?", (identifier,)
+        )
     user = await cursor.fetchone()
 
     if not user or not verify_password(credentials.password, dict(user)["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password"
+            detail="Invalid username/email or password"
         )
 
     user_dict = dict(user)

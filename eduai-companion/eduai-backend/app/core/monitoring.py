@@ -124,10 +124,16 @@ def shutdown_posthog() -> None:
 # ---------------------------------------------------------------------------
 
 def get_monitoring_frontend_config() -> dict:
-    """Return monitoring config for the frontend (safe to expose)."""
+    """Return monitoring config for the frontend (safe to expose).
+
+    Reads env vars at request time so that test fixtures can override them.
+    """
+    sentry_dsn = os.getenv("SENTRY_DSN", "")
+    posthog_key = os.getenv("POSTHOG_API_KEY", "")
+    posthog_host = os.getenv("POSTHOG_HOST", "https://eu.posthog.com")
     return {
-        "sentry_enabled": SENTRY_ENABLED,
-        "posthog_enabled": POSTHOG_ENABLED,
-        "posthog_host": POSTHOG_HOST if POSTHOG_ENABLED else "",
-        "posthog_api_key": POSTHOG_API_KEY if POSTHOG_ENABLED else "",
+        "sentry_enabled": bool(sentry_dsn),
+        "posthog_enabled": bool(posthog_key),
+        "posthog_host": posthog_host if posthog_key else "",
+        "posthog_api_key": posthog_key if posthog_key else "",
     }
