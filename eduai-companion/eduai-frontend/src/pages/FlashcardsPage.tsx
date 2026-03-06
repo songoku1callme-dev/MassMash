@@ -156,13 +156,13 @@ export default function FlashcardsPage() {
  <div className="space-y-2">
  <p className="text-sm theme-text-secondary text-center mb-2">Wie gut wusstest du die Antwort?</p>
  <div className="grid grid-cols-3 gap-2">
- <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => submitReview(1)}>
+ <Button variant="outline" className="border-red-500/30 text-red-500 hover:bg-red-500/10" onClick={() => submitReview(1)}>
  <X className="w-4 h-4 mr-1" /> Nicht gewusst
  </Button>
- <Button variant="outline" className="border-yellow-200 text-yellow-600 hover:bg-yellow-50" onClick={() => submitReview(3)}>
+ <Button variant="outline" className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500/10" onClick={() => submitReview(3)}>
  <RotateCcw className="w-4 h-4 mr-1" /> Schwer
  </Button>
- <Button variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" onClick={() => submitReview(5)}>
+ <Button variant="outline" className="border-green-500/30 text-green-500 hover:bg-green-500/10" onClick={() => submitReview(5)}>
  <Check className="w-4 h-4 mr-1" /> Leicht
  </Button>
  </div>
@@ -194,7 +194,7 @@ export default function FlashcardsPage() {
 
  {/* Create deck dialog */}
  {showCreate && (
- <Card className="border-indigo-200">
+ <Card className="border-indigo-500/30">
  <CardContent className="p-4 flex gap-3">
  <Input
  placeholder="Deck-Name (z.B. Mathe Klausur)"
@@ -210,7 +210,7 @@ export default function FlashcardsPage() {
 
  {/* AI generate dialog */}
  {showAI && (
- <Card className="border-purple-200">
+ <Card className="border-purple-500/30">
  <CardContent className="p-4 space-y-3">
  <Input
  placeholder="Thema (z.B. Photosynthese, Quadratische Gleichungen)"

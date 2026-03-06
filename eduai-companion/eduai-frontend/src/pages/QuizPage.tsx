@@ -366,8 +366,8 @@ export default function QuizPage() {
  const isRight = answerResult ? opt === answerResult.correct_answer : false;
  let optionStyle = "border-[var(--border-color)] hover:border-blue-300";
  if (isAnswered) {
- if (isRight) optionStyle = "border-emerald-500 bg-emerald-50";
- else if (isSelected && !isRight) optionStyle = "border-red-500 bg-red-50";
+ if (isRight) optionStyle = "border-emerald-500 bg-emerald-500/10";
+ else if (isSelected && !isRight) optionStyle = "border-red-500 bg-red-500/10";
  else optionStyle = "border-[var(--border-color)] opacity-60";
  } else if (isSelected) {
  optionStyle = "border-blue-500 bg-blue-500/10";
@@ -407,7 +407,7 @@ export default function QuizPage() {
  </Button>
  </div>
  ) : (
- <div className={`p-4 rounded-xl border-2 ${isCorrect ? "border-emerald-500 bg-emerald-50" : "border-red-500 bg-red-50"}`}>
+ <div className={`p-4 rounded-xl border-2 ${isCorrect ? "border-emerald-500 bg-emerald-500/10" : "border-red-500 bg-red-500/10"}`}>
  <div className="flex items-center gap-2 mb-1">
  {isCorrect ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <XCircle className="w-5 h-5 text-red-500" />}
  <span className="font-medium">{isCorrect ? "Richtig!" : "Falsch"}</span>
@@ -427,7 +427,7 @@ export default function QuizPage() {
 
  {/* Explanation */}
  {isAnswered && answerResult?.explanation && (
- <div className="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-200">
+ <div className="mt-4 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
  <p className="text-sm font-medium text-blue-800 mb-1 flex items-center gap-1"><Lightbulb className="w-4 h-4" /> KI-Erklärung:</p>
  <p className="text-sm text-blue-700">{answerResult.explanation}</p>
  </div>
@@ -479,16 +479,16 @@ export default function QuizPage() {
  </p>
 
  {result.weak_topic_detected && (
- <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-left">
+ <div className="mt-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left">
  <div className="flex items-center gap-2 mb-1">
  <AlertTriangle className="w-5 h-5 text-amber-600" />
- <span className="font-medium text-amber-800">Schwaches Thema erkannt</span>
+ <span className="font-medium text-amber-500">Schwaches Thema erkannt</span>
  </div>
- <p className="text-sm text-amber-700">{result.weak_topic_suggestion}</p>
+ <p className="text-sm text-amber-400">{result.weak_topic_suggestion}</p>
  </div>
  )}
 
- <div className="mt-4 p-3 rounded-lg bg-blue-50 inline-block">
+ <div className="mt-4 p-3 rounded-lg bg-blue-500/10 inline-block">
  <span className="text-sm font-medium text-blue-700">+10 XP verdient!</span>
  </div>
  </CardContent>

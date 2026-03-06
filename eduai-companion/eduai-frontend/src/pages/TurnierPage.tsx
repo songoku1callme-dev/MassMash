@@ -187,7 +187,7 @@ export default function TurnierPage() {
  </div>
 
  {!joined && !submitted && tournament.status === "active" && (
- <Button onClick={handleJoin} className="mt-4 bg-yellow-500 hover:bg-yellow-600 text-black">
+ <Button onClick={handleJoin} className="mt-4 bg-yellow-500 hover:bg-yellow-600 !text-black">
  <Play className="w-4 h-4 mr-2" />
  Jetzt teilnehmen
  </Button>
@@ -208,12 +208,12 @@ export default function TurnierPage() {
  {/* Timer + Questions */}
  {joined && !submitted && tournament && (
  <>
- <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
- <span className="flex items-center gap-2 font-bold text-yellow-700">
+ <div className="flex items-center justify-between p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+ <span className="flex items-center gap-2 font-bold text-yellow-500">
  <Timer className="w-5 h-5" />
  Verbleibende Zeit
  </span>
- <span className={`text-2xl font-mono font-bold ${timeLeft < 60 ? "text-red-600" : "text-yellow-700"}`}>
+ <span className={`text-2xl font-mono font-bold ${timeLeft < 60 ? "text-red-500" : "text-yellow-500"}`}>
  {formatTime(timeLeft)}
  </span>
  </div>
@@ -235,8 +235,8 @@ export default function TurnierPage() {
  onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: letter }))}
  className={`p-3 rounded-lg text-left text-sm border transition-colors ${
  selected
- ? "border-yellow-500 bg-yellow-50 text-yellow-800"
- : "border-[var(--border-color)] hover:border-yellow-300"
+ ? "border-yellow-500 bg-yellow-500/10 text-yellow-500"
+ : "border-[var(--border-color)] hover:border-yellow-400"
  }`}
  >
  <span className="font-bold mr-2">{letter}.</span>
@@ -318,7 +318,7 @@ export default function TurnierPage() {
  <CardContent>
  <div className="space-y-2">
  {winners.map((w) => (
- <div key={w.rank} className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50">
+ <div key={w.rank} className="flex items-center justify-between p-3 rounded-lg bg-yellow-500/10">
  <div className="flex items-center gap-3">
  <span className={`text-lg ${w.rank === 1 ? "text-yellow-500" : w.rank === 2 ? "text-gray-400" : "text-orange-400"}`}>
  {w.rank === 1 ? "\uD83E\uDD47" : w.rank === 2 ? "\uD83E\uDD48" : "\uD83E\uDD49"}
@@ -340,7 +340,7 @@ export default function TurnierPage() {
  </CardHeader>
  <CardContent>
  <div className="space-y-2 text-sm">
- <div className="flex items-center justify-between p-2 rounded bg-yellow-50">
+ <div className="flex items-center justify-between p-2 rounded bg-yellow-500/10">
  <span>1. Platz</span>
  <span className="font-bold text-purple-600">1 Monat Max gratis</span>
  </div>
@@ -348,7 +348,7 @@ export default function TurnierPage() {
  <span>2. Platz</span>
  <span className="font-bold text-blue-600">1 Monat Pro gratis</span>
  </div>
- <div className="flex items-center justify-between p-2 rounded bg-orange-50">
+ <div className="flex items-center justify-between p-2 rounded bg-orange-500/10">
  <span>3. Platz</span>
  <span className="font-bold text-blue-500">1 Woche Pro gratis</span>
  </div>

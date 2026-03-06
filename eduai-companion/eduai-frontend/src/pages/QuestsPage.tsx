@@ -70,7 +70,7 @@ export default function QuestsPage() {
  </div>
 
  {/* Progress Summary */}
- <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200">
+ <div className="mb-6 p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/20">
  <div className="flex items-center justify-between">
  <div>
  <p className="text-sm text-yellow-700">{date}</p>
@@ -84,7 +84,7 @@ export default function QuestsPage() {
  </div>
  </div>
  {/* Progress bar */}
- <div className="mt-3 w-full bg-yellow-200 rounded-full h-2">
+ <div className="mt-3 w-full bg-yellow-500/20 rounded-full h-2">
  <div
  className="bg-yellow-500 h-2 rounded-full transition-all"
  style={{ width: `${quests.length > 0 ? (completedCount / quests.length) * 100 : 0}%` }}
@@ -113,7 +113,7 @@ export default function QuestsPage() {
  }`}
  >
  <div className="flex items-start gap-4">
- <div className={`p-2 rounded-lg ${quest.completed ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"}`}>
+ <div className={`p-2 rounded-lg ${quest.completed ? "bg-green-500/15 text-green-500" : "bg-yellow-500/15 text-yellow-500"}`}>
  {quest.completed ? <CheckCircle className="w-5 h-5" /> : (QUEST_ICONS[quest.icon] || <Circle className="w-5 h-5" />)}
  </div>
  <div className="flex-1">
@@ -122,7 +122,7 @@ export default function QuestsPage() {
  </h3>
  <p className="text-sm theme-text-secondary mt-0.5">{quest.description}</p>
  <div className="flex items-center gap-3 mt-2">
- <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">
+ <span className="text-xs font-medium text-yellow-500 bg-yellow-500/15 px-2 py-0.5 rounded-full">
  +{quest.xp_reward} XP
  </span>
  <span className="text-xs theme-text-secondary">

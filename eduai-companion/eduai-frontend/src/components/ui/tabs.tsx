@@ -23,7 +23,7 @@ function Tabs({ value, onValueChange, className, children, ...props }: TabsProps
 
 const TabsList = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("inline-flex h-10 items-center justify-center rounded-lg bg-gray-100 p-1 text-gray-500 dark:bg-gray-800 dark:text-gray-400", className)} {...props} />
+    <div ref={ref} className={cn("inline-flex h-10 items-center justify-center rounded-lg bg-[var(--bg-surface)] p-1 text-[var(--text-secondary)]", className)} {...props} />
   )
 )
 TabsList.displayName = "TabsList"
@@ -43,8 +43,8 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         className={cn(
           "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-all",
           isActive
-            ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100"
-            : "hover:text-gray-900 dark:hover:text-gray-100",
+            ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
+            : "hover:text-[var(--text-primary)]",
           className
         )}
         {...props}

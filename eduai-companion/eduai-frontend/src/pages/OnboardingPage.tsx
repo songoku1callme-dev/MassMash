@@ -185,7 +185,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  const isLast = step === steps.length - 1;
 
  return (
- <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+ <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center p-4">
  <div className="w-full max-w-lg">
  {/* Progress */}
  <div className="flex gap-2 mb-8">

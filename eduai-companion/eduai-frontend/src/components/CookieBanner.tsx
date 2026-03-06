@@ -23,12 +23,12 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
-      <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="max-w-2xl mx-auto bg-[var(--bg-card)] rounded-2xl shadow-2xl border border-[var(--border-color)] p-6">
         <div className="flex items-start gap-3 mb-4">
           <Cookie className="w-6 h-6 text-orange-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">Cookie-Einstellungen</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <h3 className="font-semibold text-[var(--text-primary)]">Cookie-Einstellungen</h3>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Wir verwenden Cookies für die Funktionalität der App. Optionale Cookies helfen uns, die App zu verbessern.
               Mehr Infos in unserer <a href="/datenschutz" className="text-blue-600 underline">Datenschutzerklaerung</a>.
             </p>
@@ -37,18 +37,18 @@ export default function CookieBanner() {
 
         {showSettings && (
           <div className="mb-4 space-y-3 pl-9">
-            <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700">
+            <label className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-surface)]">
               <input type="checkbox" checked disabled className="w-4 h-4 rounded" />
               <div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Notwendige Cookies</span>
-                <p className="text-xs text-gray-500">Session, Authentifizierung (immer aktiv)</p>
+                <span className="text-sm font-medium text-[var(--text-primary)]">Notwendige Cookies</span>
+                <p className="text-xs text-[var(--text-muted)]">Session, Authentifizierung (immer aktiv)</p>
               </div>
             </label>
-            <label className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700 cursor-pointer">
+            <label className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-surface)] cursor-pointer">
               <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="w-4 h-4 rounded" />
               <div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">Analyse-Cookies</span>
-                <p className="text-xs text-gray-500">Hilft uns die App zu verbessern (Dark Mode, Sprache)</p>
+                <span className="text-sm font-medium text-[var(--text-primary)]">Analyse-Cookies</span>
+                <p className="text-xs text-[var(--text-muted)]">Hilft uns die App zu verbessern (Dark Mode, Sprache)</p>
               </div>
             </label>
           </div>

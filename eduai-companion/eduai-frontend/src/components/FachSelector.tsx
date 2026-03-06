@@ -146,13 +146,13 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
     <div className="w-full space-y-2">
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Fach suchen..."
-          className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
@@ -171,7 +171,7 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
         {/* Favoriten section */}
         {favFächer.length > 0 && (
           <>
-            <div className="w-full text-[10px] font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider mt-1">
+            <div className="w-full text-[10px] font-semibold text-yellow-500 uppercase tracking-wider mt-1">
               Meine Fächer
             </div>
             {favFächer.map((f) => (
@@ -193,7 +193,7 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
           if (!items || items.length === 0) return null;
           return (
             <div key={kat} className="w-full">
-              <div className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-1.5 mb-0.5">
+              <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mt-1.5 mb-0.5">
                 {kat}
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -235,8 +235,8 @@ function FachChip({
       onClick={onSelect}
       className={`group relative flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
         isSelected
-          ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 ring-2 ring-blue-400 scale-105"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+          ? "bg-indigo-500/20 text-indigo-400 ring-2 ring-indigo-400 scale-105"
+          : "bg-[var(--bg-surface)] text-[var(--text-secondary)] hover:bg-[var(--input-bg)]"
       }`}
     >
       <span>{fach.emoji}</span>
@@ -247,7 +247,7 @@ function FachChip({
           className={`ml-0.5 transition-opacity ${
             isFavorit
               ? "text-yellow-500 opacity-100"
-              : "text-gray-300 opacity-0 group-hover:opacity-100"
+              : "text-[var(--text-muted)] opacity-0 group-hover:opacity-100"
           }`}
           title={isFavorit ? "Favorit entfernen" : "Als Favorit merken"}
         >

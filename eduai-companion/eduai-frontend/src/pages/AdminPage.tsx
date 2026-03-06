@@ -239,8 +239,8 @@ export default function AdminPage() {
  <span className="theme-text-secondary ml-2">{u.email}</span>
  </div>
  <span className={`text-xs px-2 py-0.5 rounded ${
- u.subscription_tier === "max" ? "bg-purple-100 text-purple-700" :
- u.subscription_tier === "pro" ? "bg-blue-100 text-blue-700" :
+ u.subscription_tier === "max" ? "bg-purple-500/15 text-purple-400" :
+ u.subscription_tier === "pro" ? "bg-blue-500/15 text-blue-400" :
  "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>{u.subscription_tier}</span>
  </div>

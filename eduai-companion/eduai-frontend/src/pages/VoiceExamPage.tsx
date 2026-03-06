@@ -537,7 +537,7 @@ function ExamResults({
  background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
- <div className="text-6xl font-black mb-2" style={{ color: noteColors[result.note] || "#fff" }}>
+ <div className="text-6xl font-black mb-2" style={{ color: noteColors[result.note] || "var(--text-primary)" }}>
  {result.note}
  </div>
  <p className="text-slate-400 text-sm">

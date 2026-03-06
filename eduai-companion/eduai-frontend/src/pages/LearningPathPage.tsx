@@ -137,9 +137,9 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  {/* Timeline dot */}
  <div className={`relative z-10 w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
  topic.mastered
- ? "bg-emerald-100"
+ ? "bg-emerald-500/15"
  : topic.recommended
- ? "bg-blue-100"
+ ? "bg-blue-500/15"
  : "bg-[var(--bg-surface)]"
  }`}>
  {topic.mastered ? (

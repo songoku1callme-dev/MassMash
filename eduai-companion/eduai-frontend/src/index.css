@@ -183,16 +183,72 @@ body {
 }
 
 /* ===== BLOCK D: Tailwind class overrides via CSS variables ===== */
+/* Dark mode: light backgrounds → dark surfaces */
 :root[data-theme="dark"] .bg-white { background-color: #0f172a !important; }
 :root[data-theme="dark"] .bg-gray-50 { background-color: #0a0f1e !important; }
 :root[data-theme="dark"] .bg-gray-100 { background-color: #0f172a !important; }
 :root[data-theme="dark"] .bg-gray-200 { background-color: #1e293b !important; }
 :root[data-theme="dark"] .bg-slate-50 { background-color: #0a0f1e !important; }
 :root[data-theme="dark"] .bg-slate-100 { background-color: #0f172a !important; }
+/* Dark mode: dark text → light text */
 :root[data-theme="dark"] .text-gray-900 { color: #f1f5f9 !important; }
 :root[data-theme="dark"] .text-gray-800 { color: #e2e8f0 !important; }
+:root[data-theme="dark"] .text-gray-700 { color: #cbd5e1 !important; }
+:root[data-theme="dark"] .text-gray-600 { color: #94a3b8 !important; }
+:root[data-theme="dark"] .text-gray-500 { color: #94a3b8 !important; }
+:root[data-theme="dark"] .text-gray-300 { color: #cbd5e1 !important; }
+:root[data-theme="dark"] .text-slate-600 { color: #94a3b8 !important; }
+/* Dark mode: light borders → dark borders */
+:root[data-theme="dark"] .border-gray-100 { border-color: rgba(99,102,241,0.1) !important; }
 :root[data-theme="dark"] .border-gray-200 { border-color: rgba(99,102,241,0.2) !important; }
 :root[data-theme="dark"] .border-gray-300 { border-color: rgba(99,102,241,0.15) !important; }
+/* Dark mode: light tinted backgrounds → dark tinted */
+:root[data-theme="dark"] .bg-blue-50 { background-color: rgba(59,130,246,0.1) !important; }
+:root[data-theme="dark"] .bg-yellow-50 { background-color: rgba(234,179,8,0.1) !important; }
+:root[data-theme="dark"] .bg-red-50 { background-color: rgba(239,68,68,0.1) !important; }
+:root[data-theme="dark"] .bg-green-50 { background-color: rgba(34,197,94,0.1) !important; }
+:root[data-theme="dark"] .bg-orange-50 { background-color: rgba(249,115,22,0.1) !important; }
+:root[data-theme="dark"] .bg-emerald-50 { background-color: rgba(16,185,129,0.1) !important; }
+:root[data-theme="dark"] .bg-purple-50 { background-color: rgba(168,85,247,0.1) !important; }
+:root[data-theme="dark"] .bg-indigo-50 { background-color: rgba(99,102,241,0.1) !important; }
+:root[data-theme="dark"] .bg-blue-100 { background-color: rgba(59,130,246,0.15) !important; }
+:root[data-theme="dark"] .bg-yellow-100 { background-color: rgba(234,179,8,0.15) !important; }
+:root[data-theme="dark"] .bg-red-100 { background-color: rgba(239,68,68,0.15) !important; }
+:root[data-theme="dark"] .bg-green-100 { background-color: rgba(34,197,94,0.15) !important; }
+:root[data-theme="dark"] .bg-orange-100 { background-color: rgba(249,115,22,0.15) !important; }
+:root[data-theme="dark"] .bg-emerald-100 { background-color: rgba(16,185,129,0.15) !important; }
+/* Dark mode: tinted text that's too dark for dark bg */
+:root[data-theme="dark"] .text-blue-700 { color: #60a5fa !important; }
+:root[data-theme="dark"] .text-blue-800 { color: #93c5fd !important; }
+:root[data-theme="dark"] .text-yellow-700 { color: #fbbf24 !important; }
+:root[data-theme="dark"] .text-yellow-800 { color: #fcd34d !important; }
+:root[data-theme="dark"] .text-red-700 { color: #f87171 !important; }
+:root[data-theme="dark"] .text-red-800 { color: #fca5a5 !important; }
+:root[data-theme="dark"] .text-green-700 { color: #4ade80 !important; }
+:root[data-theme="dark"] .text-green-800 { color: #86efac !important; }
+:root[data-theme="dark"] .text-orange-700 { color: #fb923c !important; }
+:root[data-theme="dark"] .text-emerald-700 { color: #34d399 !important; }
+:root[data-theme="dark"] .text-emerald-800 { color: #6ee7b7 !important; }
+:root[data-theme="dark"] .text-purple-600 { color: #a78bfa !important; }
+/* Dark mode: tinted borders */
+:root[data-theme="dark"] .border-yellow-200 { border-color: rgba(234,179,8,0.2) !important; }
+:root[data-theme="dark"] .border-blue-200 { border-color: rgba(59,130,246,0.2) !important; }
+:root[data-theme="dark"] .border-indigo-200 { border-color: rgba(99,102,241,0.25) !important; }
+:root[data-theme="dark"] .border-purple-200 { border-color: rgba(168,85,247,0.25) !important; }
+:root[data-theme="dark"] .border-red-200 { border-color: rgba(239,68,68,0.25) !important; }
+:root[data-theme="dark"] .border-green-200 { border-color: rgba(34,197,94,0.25) !important; }
+:root[data-theme="dark"] .border-green-300 { border-color: rgba(34,197,94,0.3) !important; }
+:root[data-theme="dark"] .border-orange-200 { border-color: rgba(249,115,22,0.25) !important; }
+:root[data-theme="dark"] .border-emerald-200 { border-color: rgba(16,185,129,0.25) !important; }
+:root[data-theme="dark"] .border-yellow-300 { border-color: rgba(234,179,8,0.3) !important; }
+/* Dark mode: hover border states */
+:root[data-theme="dark"] .hover\:border-blue-300:hover { border-color: rgba(59,130,246,0.4) !important; }
+:root[data-theme="dark"] .hover\:border-gray-300:hover { border-color: rgba(99,102,241,0.3) !important; }
+/* Dark mode: hover states */
+:root[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: #1e293b !important; }
+:root[data-theme="dark"] .hover\:bg-gray-200:hover { background-color: #334155 !important; }
+:root[data-theme="dark"] .hover\:border-gray-300:hover { border-color: rgba(99,102,241,0.3) !important; }
+:root[data-theme="dark"] .hover\:text-gray-600:hover { color: #e2e8f0 !important; }
 
 /* ===== BLOCK E: Light mode overrides for dark-optimized Tailwind classes ===== */
 /* Text colors: dark-mode white/light text → dark text in light mode */
@@ -201,8 +257,11 @@ body {
 :root[data-theme="light"] .text-slate-200 { color: #334155 !important; }
 :root[data-theme="light"] .text-slate-300 { color: #475569 !important; }
 :root[data-theme="light"] .text-slate-400 { color: #64748b !important; }
-:root[data-theme="light"] .text-slate-500 { color: #94a3b8 !important; }
+:root[data-theme="light"] .text-slate-500 { color: #475569 !important; }
+:root[data-theme="light"] .text-slate-600 { color: #334155 !important; }
+:root[data-theme="light"] .text-gray-300 { color: #6b7280 !important; }
 :root[data-theme="light"] .text-gray-400 { color: #64748b !important; }
+:root[data-theme="light"] .text-gray-500 { color: #475569 !important; }
 
 /* Background colors: dark surfaces → light surfaces in light mode */
 :root[data-theme="light"] .bg-slate-700 { background-color: #e2e8f0 !important; }
@@ -220,6 +279,8 @@ body {
 :root[data-theme="light"] .hover\:text-slate-200:hover { color: #1e293b !important; }
 :root[data-theme="light"] .hover\:text-slate-300:hover { color: #334155 !important; }
 :root[data-theme="light"] .hover\:text-slate-400:hover { color: #475569 !important; }
+:root[data-theme="light"] .hover\:text-slate-500:hover { color: #334155 !important; }
+:root[data-theme="light"] .hover\:border-slate-500:hover { border-color: #94a3b8 !important; }
 
 /* Prose/Code in light mode */
 :root[data-theme="light"] .prose pre { background-color: #f1f5f9 !important; }
@@ -233,12 +294,20 @@ body {
 :root[data-theme="light"] .katex .mpunct,
 :root[data-theme="light"] .katex .minner { color: #1e293b !important; }
 
-/* Special: keep white text on gradient/colored buttons */
+/* Special: keep white text on gradient/colored buttons in light mode */
 :root[data-theme="light"] .lumnos-btn-primary,
 :root[data-theme="light"] [style*="linear-gradient(135deg, #6366f1"] { color: #ffffff !important; }
 :root[data-theme="light"] .lumnos-btn-primary .text-white,
 :root[data-theme="light"] .bg-indigo-500 .text-white,
 :root[data-theme="light"] .bg-indigo-600 .text-white { color: #ffffff !important; }
+/* Keep specific text colors on colored-bg elements */
+:root[data-theme="light"] .bg-yellow-500 .text-white,
+:root[data-theme="light"] .bg-emerald-600 .text-white,
+:root[data-theme="light"] .bg-red-500 .text-white,
+:root[data-theme="light"] .bg-blue-600 .text-white { color: #ffffff !important; }
+/* Keep text-black on yellow buttons (both themes) */
+.bg-yellow-500 .\!text-black,
+.bg-yellow-600 .\!text-black { color: #000000 !important; }
 
 /* Prose styles for markdown */
 .prose pre {

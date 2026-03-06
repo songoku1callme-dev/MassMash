@@ -87,11 +87,11 @@ export default function ScannerPage() {
  Der Schulbuch-Scanner ist ein exklusives Feature für Pro- und Max-Abonnenten.
  Scanne Schulbuchseiten und erhalte automatisch Quiz-Fragen und Karteikarten!
  </p>
- <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4">
- <p className="text-lg font-bold text-purple-700">
+ <div className="bg-purple-500/10 rounded-xl p-4">
+ <p className="text-lg font-bold text-purple-500">
  Ab 4,99 EUR/Monat
  </p>
- <p className="text-sm text-purple-600">
+ <p className="text-sm text-purple-400">
  Unbegrenzt scannen + alle Premium-Features
  </p>
  </div>
@@ -146,7 +146,7 @@ export default function ScannerPage() {
  >
  {file ? (
  <div className="space-y-3">
- <div className="w-12 h-12 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+ <div className="w-12 h-12 mx-auto rounded-full bg-green-500/15 flex items-center justify-center">
  <BookOpen className="w-6 h-6 text-green-600" />
  </div>
  <p className="font-medium theme-text">{file.name}</p>
@@ -224,9 +224,9 @@ export default function ScannerPage() {
  <div
  className={`w-8 h-8 rounded-full flex items-center justify-center ${
  i < scanStep
- ? "bg-green-100 text-green-600"
+ ? "bg-green-500/15 text-green-500"
  : i === scanStep
- ? "bg-indigo-100 text-indigo-600 animate-pulse"
+ ? "bg-indigo-500/15 text-indigo-400 animate-pulse"
  : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}
  >
@@ -243,7 +243,7 @@ export default function ScannerPage() {
 
  {/* Result */}
  {result && !scanning && (
- <Card className="border-green-200">
+ <Card className="border-green-500/30">
  <CardContent className="p-6 space-y-4">
  <h3 className="text-lg font-bold theme-text">
  Scan-Ergebnis

@@ -236,7 +236,7 @@ export default function StatsPage() {
 
  {/* KI Analysis */}
  {analysis && (
- <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+ <div className="bg-indigo-500/10 rounded-xl p-6 border border-indigo-500/20">
  <h3 className="font-semibold theme-text flex items-center gap-2 mb-3">
  <Sparkles className="w-5 h-5 text-indigo-600" />
  KI-Analyse
@@ -316,9 +316,9 @@ export default function StatsPage() {
  <td className="py-2 text-center theme-text-secondary">{s.total_quizzes}</td>
  <td className="py-2 text-center">
  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
- s.avg_score >= 80 ? "bg-green-100 text-green-700" :
- s.avg_score >= 60 ? "bg-yellow-100 text-yellow-700" :
- "bg-red-100 text-red-700"
+ s.avg_score >= 80 ? "bg-green-500/15 text-green-400" :
+ s.avg_score >= 60 ? "bg-yellow-500/15 text-yellow-400" :
+ "bg-red-500/15 text-red-400"
  }`}>
  {s.avg_score}%
  </span>
@@ -339,7 +339,7 @@ function StatCard({ icon, label, value, sub, bg }: {
  icon: React.ReactNode; label: string; value: string; sub?: string; bg: string;
 }) {
  return (
- <div className={`${bg} rounded-xl p-4 border border-gray-200/50/50`}>
+ <div className={`${bg} rounded-xl p-4 border border-[var(--border-color)]`}>
  <div className="flex items-center gap-2 mb-2">{icon}<span className="text-xs theme-text-secondary">{label}</span></div>
  <p className="text-xl font-bold theme-text">{value}</p>
  {sub && <p className="text-xs theme-text-secondary mt-1">{sub}</p>}

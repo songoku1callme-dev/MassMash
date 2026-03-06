@@ -58,16 +58,16 @@ export default function PWAInstallBanner() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-in slide-in-from-bottom-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-[var(--bg-card)] rounded-xl shadow-2xl border border-[var(--border-color)] p-4">
         <div className="flex items-start gap-3">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shrink-0">
             <Smartphone className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900 dark:text-white text-sm">
+            <h3 className="font-bold text-[var(--text-primary)] text-sm">
               Lumnos installieren
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
               Installiere die App auf deinem Handy für schnellen Zugriff — auch offline!
             </p>
             <div className="flex gap-2 mt-3">
@@ -75,12 +75,12 @@ export default function PWAInstallBanner() {
                 <Download className="w-3.5 h-3.5" />
                 Installieren
               </Button>
-              <Button onClick={handleDismiss} variant="ghost" size="sm" className="text-xs text-gray-500">
+              <Button onClick={handleDismiss} variant="ghost" size="sm" className="text-xs text-[var(--text-muted)]">
                 Spaeter
               </Button>
             </div>
           </div>
-          <button onClick={handleDismiss} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <button onClick={handleDismiss} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
             <X className="w-4 h-4" />
           </button>
         </div>

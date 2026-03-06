@@ -141,7 +141,7 @@ export default function NotificationBell() {
     reminder: "bg-yellow-100 text-yellow-700",
     achievement: "bg-green-100 text-green-700",
     warning: "bg-red-100 text-red-700",
-    info: "bg-gray-100 text-gray-700",
+    info: "bg-[var(--input-bg)] text-[var(--text-secondary)]",
   };
 
   const timeAgo = (dateStr: string) => {
@@ -158,10 +158,10 @@ export default function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => { setOpen(!open); if (!open && unread > 0) markAllRead(); }}
-        className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="relative p-2 rounded-lg hover:bg-[var(--bg-surface)] transition-colors"
         title="Benachrichtigungen"
       >
-        <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+        <Bell className="w-5 h-5 text-[var(--text-secondary)]" />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
             {unread > 9 ? "9+" : unread}
@@ -170,9 +170,9 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-96 overflow-y-auto">
-          <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-gray-900 dark:text-white">Benachrichtigungen</h3>
+        <div className="absolute right-0 top-full mt-2 w-80 bg-[var(--bg-card)] rounded-xl shadow-xl border border-[var(--border-color)] z-50 max-h-96 overflow-y-auto">
+          <div className="p-3 border-b border-[var(--border-color)] flex items-center justify-between">
+            <h3 className="font-semibold text-sm text-[var(--text-primary)]">Benachrichtigungen</h3>
             {notifications.length > 0 && (
               <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
                 Alle gelesen
@@ -180,25 +180,25 @@ export default function NotificationBell() {
             )}
           </div>
           {notifications.length === 0 ? (
-            <div className="p-6 text-center text-gray-400 text-sm">
+            <div className="p-6 text-center text-[var(--text-muted)] text-sm">
               Keine Benachrichtigungen
             </div>
           ) : (
             notifications.map((n) => (
               <div
                 key={n.id}
-                className={`p-3 border-b border-gray-100 dark:border-gray-700 last:border-0 ${
-                  !n.is_read ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                className={`p-3 border-b border-[var(--border-color)] last:border-0 ${
+                  !n.is_read ? "bg-indigo-500/5" : ""
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <span className={`text-xs px-2 py-0.5 rounded-full ${typeColor[n.type] || typeColor.info}`}>
                     {n.type}
                   </span>
-                  <span className="text-xs text-gray-400 ml-auto">{timeAgo(n.created_at)}</span>
+                  <span className="text-xs text-[var(--text-muted)] ml-auto">{timeAgo(n.created_at)}</span>
                 </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">{n.title}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{n.message}</p>
+                <p className="text-sm font-medium text-[var(--text-primary)] mt-1">{n.title}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5">{n.message}</p>
               </div>
             ))
           )}
