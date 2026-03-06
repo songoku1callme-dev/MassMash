@@ -701,6 +701,37 @@ async def init_db():
         );
 
         CREATE INDEX IF NOT EXISTS idx_chat_feedbacks_v2_fach ON chat_feedbacks_v2(fach, bewertung, created_at);
+
+        -- PR #45: Weekly Challenges table (scheduler job)
+        CREATE TABLE IF NOT EXISTS weekly_challenges (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            challenge_id TEXT UNIQUE NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT DEFAULT '',
+            subject TEXT DEFAULT 'general',
+            target_score INTEGER DEFAULT 80,
+            xp_reward INTEGER DEFAULT 150,
+            deadline TEXT DEFAULT '',
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_weekly_challenges_active ON weekly_challenges(is_active, deadline);
+
+        -- PR #45: Shop Rotations table (scheduler job)
+        CREATE TABLE IF NOT EXISTS shop_rotations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_id TEXT NOT NULL,
+            item_name TEXT NOT NULL,
+            category TEXT DEFAULT 'avatar',
+            price_xp INTEGER DEFAULT 100,
+            rarity TEXT DEFAULT 'common',
+            rotation_date TEXT NOT NULL,
+            is_active INTEGER DEFAULT 1,
+            created_at TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_shop_rotations_active ON shop_rotations(is_active, rotation_date);
     """)
 
     await db.commit()

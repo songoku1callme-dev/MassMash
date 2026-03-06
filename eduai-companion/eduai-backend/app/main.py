@@ -132,8 +132,19 @@ async def lifespan(app: FastAPI):
             except Exception as prompt_err:
                 logger.warning("Prompt-Laden fehlgeschlagen: %s", prompt_err)
 
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            # PR #45: AUFGABE 2 — APScheduler Automation
+            # All Daily/Weekly/Monthly/Hourly jobs
+            # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            try:
+                from app.services.scheduler import setup_scheduler
+                setup_scheduler(scheduler)
+                logger.info("AUFGABE 2: Scheduler Jobs registriert")
+            except Exception as sched_err:
+                logger.warning("Scheduler Setup fehlgeschlagen (non-fatal): %s", sched_err)
+
             scheduler.start()
-            logger.info("✅ Scheduler gestartet: %d Jobs registriert", len(scheduler.get_jobs()))
+            logger.info("Scheduler gestartet: %d Jobs registriert", len(scheduler.get_jobs()))
         except Exception as exc:
             logger.warning("APScheduler start failed (non-fatal): %s", exc)
 

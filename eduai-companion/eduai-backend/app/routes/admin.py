@@ -788,3 +788,88 @@ async def get_evolution_stats(
         stats["fach_updates"] = {}
 
     return stats
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #45: Scheduler Admin Endpoints
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+@router.get("/scheduler/status")
+async def get_scheduler_status(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Show all scheduler jobs + next execution time (admin only)."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "scheduler_status")
+
+    from app.services.scheduler import JOB_REGISTRY
+
+    jobs = []
+    try:
+        from app.main import scheduler as _scheduler
+        if _scheduler is not None:
+            for job in _scheduler.get_jobs():
+                registry_info = JOB_REGISTRY.get(job.id, {})
+                next_run = str(job.next_run_time) if job.next_run_time else "nicht geplant"
+                jobs.append({
+                    "job_id": job.id,
+                    "beschreibung": registry_info.get("beschreibung", job.name),
+                    "zeitplan": registry_info.get("zeitplan", ""),
+                    "naechste_ausfuehrung": next_run,
+                    "aktiv": job.next_run_time is not None,
+                })
+    except Exception as exc:
+        logger.warning("Scheduler status error: %s", exc)
+
+    return {
+        "scheduler_aktiv": len(jobs) > 0,
+        "jobs_count": len(jobs),
+        "jobs": jobs,
+    }
+
+
+@router.post("/scheduler/trigger/{job_id}")
+async def trigger_scheduler_job(
+    job_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Manually trigger any scheduler job by ID (admin only)."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, f"scheduler_trigger:{job_id}")
+
+    from app.services.scheduler import JOB_REGISTRY
+
+    if job_id not in JOB_REGISTRY:
+        available = list(JOB_REGISTRY.keys())
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job '{job_id}' nicht gefunden. Verfuegbar: {available}",
+        )
+
+    job_info = JOB_REGISTRY[job_id]
+    func = job_info.get("func")
+    if func is None:
+        raise HTTPException(
+            status_code=500, detail=f"Job '{job_id}' hat keine Funktion"
+        )
+
+    try:
+        result = await func()
+        return {
+            "message": f"Job '{job_id}' erfolgreich ausgefuehrt",
+            "job_id": job_id,
+            "beschreibung": job_info.get("beschreibung", ""),
+            "ergebnis": result,
+        }
+    except Exception as exc:
+        logger.error("Manual job trigger failed [%s]: %s", job_id, exc)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Job '{job_id}' fehlgeschlagen: {str(exc)}",
+        )
