@@ -9,6 +9,7 @@ Clerk tokens (RS256) are verified via JWKS. Built-in tokens (HS256) are
 verified with the local secret. The middleware tries Clerk first, then
 falls back to built-in JWT.
 """
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
@@ -75,7 +76,10 @@ async def get_current_user(
     )
 
     # --- Dev-Token Bypass --- immer zuerst pruefen
+    # Shield 7: In production, BLOCK dev-tokens completely
     if token == "dev-max-token-lumnos":
+        if os.getenv("FLY_APP_NAME") or os.getenv("RAILWAY_ENVIRONMENT"):
+            raise credentials_exception
         return {
             "id": 999,
             "username": "TestAdmin",
