@@ -213,7 +213,7 @@ export default function GamificationPage() {
  }`}>
  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
  entry.rank === 1 ? "bg-yellow-400 text-yellow-900" :
- entry.rank === 2 ? "bg-gray-400 text-gray-900 dark:bg-gray-500 dark:text-white" :
+ entry.rank === 2 ? "bg-gray-400/60 text-white" :
  entry.rank === 3 ? "bg-orange-300 text-orange-800" :
  "bg-[var(--progress-bg)] theme-text-secondary"
  }`}>

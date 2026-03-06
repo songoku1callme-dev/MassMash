@@ -210,7 +210,7 @@ export default function PomodoroPage() {
  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
  i <= (pomodorosCompleted % 4 || (pomodorosCompleted > 0 && pomodorosCompleted % 4 === 0 ? 4 : 0))
  ? "bg-red-500 text-white"
- : "bg-[var(--progress-bg)] text-gray-400"
+ : "bg-[var(--progress-bg)] theme-text-secondary"
  }`}
  >
  {i}
