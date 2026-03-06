@@ -1,7 +1,18 @@
-"""Pydantic schemas for request/response models."""
-from pydantic import BaseModel, EmailStr
+"""Pydantic schemas for request/response models.
+
+Shield 5: Input validation — all user-facing inputs are validated here.
+"""
+import re
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
+
+# Shield 5: Dangerous patterns to reject in text inputs
+_SCRIPT_PATTERN = re.compile(r"<script|javascript:|on\w+=|eval\(|document\.cookie", re.IGNORECASE)
+_SQL_INJECTION_PATTERN = re.compile(
+    r"(\b(UNION|SELECT|INSERT|UPDATE|DELETE|DROP|ALTER|EXEC)\b.*\b(FROM|INTO|TABLE|SET)\b)",
+    re.IGNORECASE,
+)
 
 
 # Auth schemas
@@ -13,6 +24,42 @@ class UserRegister(BaseModel):
     school_grade: str = "10"
     school_type: str = "Gymnasium"
     preferred_language: str = "de"
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not v or "@" not in v or len(v) > 254:
+            raise ValueError("Ungueltige E-Mail-Adresse")
+        return v
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        v = v.strip()
+        if len(v) < 3 or len(v) > 50:
+            raise ValueError("Benutzername muss 3-50 Zeichen lang sein")
+        if _SCRIPT_PATTERN.search(v):
+            raise ValueError("Unerlaubte Zeichen im Benutzernamen")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Passwort muss mindestens 8 Zeichen lang sein")
+        if len(v) > 128:
+            raise ValueError("Passwort darf maximal 128 Zeichen lang sein")
+        return v
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v: str) -> str:
+        if len(v) > 100:
+            raise ValueError("Name darf maximal 100 Zeichen lang sein")
+        if _SCRIPT_PATTERN.search(v):
+            raise ValueError("Unerlaubte Zeichen im Namen")
+        return v
 
 
 class UserLogin(BaseModel):
@@ -78,6 +125,15 @@ class ChatRequest(BaseModel):
     tutor_modus: bool = False  # Perfect School 4.1: Socratic method toggle
     eli5: bool = False  # Perfect School 4.1: Explain Like I'm 5
     modus: str = "normal"  # "normal" | "deep" | "fast"
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Nachricht darf nicht leer sein")
+        if len(v) > 5000:
+            raise ValueError("Nachricht darf maximal 5000 Zeichen lang sein")
+        return v.strip()
 
 
 class Karteikarte(BaseModel):

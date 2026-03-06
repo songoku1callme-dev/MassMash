@@ -128,6 +128,7 @@ async def update_note(
     if fields:
         fields.append("updated_at = datetime('now')")
         values.append(note_id)
+        # Shield 4: Field names come from hardcoded Pydantic model above — NOT user input
         await db.execute(f"UPDATE notes SET {', '.join(fields)} WHERE id = ?", values)
         await db.commit()
 

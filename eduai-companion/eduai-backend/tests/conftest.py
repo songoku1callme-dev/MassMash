@@ -11,7 +11,7 @@ os.environ["LUMNOS_DEV_MODE"] = "1"
 
 import pytest
 from app.core.database import init_db
-from app.core.security import _rate_limit_store
+from app.core.security import _rate_limit_store, _endpoint_stores, _login_lockout_store
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -28,6 +28,8 @@ def _setup_db():
 
 @pytest.fixture(autouse=True)
 def _clear_rate_limits():
-    """Clear rate limit store before each test so tests don't interfere."""
+    """Clear ALL rate limit stores before each test so tests don't interfere."""
     _rate_limit_store.clear()
+    _endpoint_stores.clear()
+    _login_lockout_store.clear()
     yield

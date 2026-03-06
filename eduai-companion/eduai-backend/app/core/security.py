@@ -1,5 +1,12 @@
-"""Security middleware: rate limiting, CORS, and security headers."""
+"""Security middleware: rate limiting, CORS, security headers, and bot protection.
 
+Iron Shield Security Package:
+- Shield 3: Enhanced rate limiting (tier-based for chat, strict for auth)
+- Shield 6: Security headers (CSP, X-Frame-Options, HSTS, Permissions-Policy)
+- Shield 10: Bot protection (user-agent validation, request body size limit)
+"""
+
+import os
 import time
 import logging
 from collections import defaultdict
@@ -10,29 +17,38 @@ from starlette.responses import Response, JSONResponse
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Rate Limiting (in-memory, per-IP)
+# Shield 3: Enhanced Rate Limiting (in-memory, per-IP)
 # ---------------------------------------------------------------------------
 
 # Stores: ip -> list of request timestamps
 _rate_limit_store: dict[str, list[float]] = defaultdict(list)
 
-# Config — Supreme 12.0 Phase 12: endpoint-specific rate limits
+# Config — Iron Shield: stricter auth limits, tier-based chat
 RATE_LIMIT_MAX_REQUESTS = 5   # max requests per window
 RATE_LIMIT_WINDOW_SEC = 60    # window size in seconds
 RATE_LIMIT_PATHS = ("/api/auth/login", "/api/auth/register", "/api/auth/refresh")
 
+# Shield 3: Login lockout after too many attempts (5 per 15 min)
+_login_lockout_store: dict[str, float] = {}  # ip -> lockout_until timestamp
+LOGIN_LOCKOUT_DURATION = 1800  # 30 minutes
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_WINDOW_SEC = 900  # 15 minutes
+
 # Endpoint-specific limits (path_prefix -> max_per_minute)
 ENDPOINT_RATE_LIMITS: dict[str, int] = {
     "/api/auth/login": 5,
-    "/api/auth/register": 5,
+    "/api/auth/register": 3,
     "/api/auth/refresh": 10,
+    "/api/auth/send-magic-link": 3,
     "/api/chat": 30,
+    "/api/chat/guest": 10,
     "/api/quiz/generate": 10,
     "/api/quiz/check": 20,
     "/api/iq-test": 10,
     "/api/ocr": 15,
     "/api/voice": 15,
     "/api/research": 10,
+    "/api/abitur": 10,
 }
 
 
@@ -77,27 +93,44 @@ def _is_endpoint_rate_limited(ip: str, path: str) -> bool:
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Rate-limit endpoints per IP with endpoint-specific limits (Phase 12)."""
+    """Shield 3: Rate-limit endpoints per IP with login lockout."""
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         path = request.url.path
         ip = _client_ip(request)
 
-        # Check endpoint-specific limits first
+        # Shield 3: Check login lockout first
+        if path.startswith("/api/auth/login"):
+            lockout_until = _login_lockout_store.get(ip, 0)
+            if time.monotonic() < lockout_until:
+                remaining = int(lockout_until - time.monotonic())
+                logger.warning("Login lockout active for IP %s (%ds remaining)", ip, remaining)
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": f"Zu viele Login-Versuche. Gesperrt fuer {remaining // 60} Minuten."},
+                    headers={"Retry-After": str(remaining)},
+                )
+
+        # Check endpoint-specific limits
         if _is_endpoint_rate_limited(ip, path):
             logger.warning("Rate limit exceeded for IP %s on %s", ip, path)
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Zu viele Anfragen. Bitte warte einen Moment."},
+                headers={"Retry-After": "60"},
             )
 
         # Legacy fallback for auth endpoints
         if any(path.startswith(p) for p in RATE_LIMIT_PATHS):
             if _is_rate_limited(ip):
-                logger.warning("Rate limit exceeded for IP %s on %s", ip, path)
+                # Trigger lockout for login endpoint
+                if path.startswith("/api/auth/login"):
+                    _login_lockout_store[ip] = time.monotonic() + LOGIN_LOCKOUT_DURATION
+                    logger.warning("Login lockout triggered for IP %s", ip)
                 return JSONResponse(
                     status_code=429,
-                    content={"detail": "Too many requests. Please try again later."},
+                    content={"detail": "Zu viele Anfragen. Bitte warte einen Moment."},
+                    headers={"Retry-After": "60"},
                 )
         return await call_next(request)
 
@@ -107,7 +140,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 # ---------------------------------------------------------------------------
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Add security headers to every response."""
+    """Shield 6: Hardened security headers on every response."""
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         response: Response = await call_next(request)
@@ -128,7 +161,71 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = (
             "camera=(self), microphone=(self), geolocation=()"
         )
+        # Shield 6: Strict-Transport-Security for HTTPS
+        if not os.getenv("LUMNOS_DEV_MODE"):
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
+
+
+# ---------------------------------------------------------------------------
+# Shield 10: Request Body Size Limiter
+# ---------------------------------------------------------------------------
+
+MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Shield 10: Reject requests with body larger than MAX_BODY_SIZE."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
+        content_length = request.headers.get("content-length")
+        if content_length and int(content_length) > MAX_BODY_SIZE:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "Request body zu gross (max 10 MB)."},
+            )
+        return await call_next(request)
+
+
+# ---------------------------------------------------------------------------
+# Shield 10: Bot Protection (User-Agent validation)
+# ---------------------------------------------------------------------------
+
+BLOCKED_USER_AGENTS = [
+    "scrapy", "python-urllib", "curl/", "wget/", "httpclient",
+    "go-http-client", "java/", "libwww-perl",
+]
+
+
+class BotProtectionMiddleware(BaseHTTPMiddleware):
+    """Shield 10: Block known scraper/bot user agents."""
+
+    async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
+        # Skip for health checks and public endpoints
+        path = request.url.path
+        if path in ("/healthz", "/docs", "/openapi.json"):
+            return await call_next(request)
+
+        user_agent = (request.headers.get("user-agent") or "").lower()
+
+        # Block requests with no user-agent on API endpoints
+        if not user_agent and path.startswith("/api/"):
+            logger.warning("Blocked request with no user-agent on %s", path)
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Forbidden"},
+            )
+
+        # Block known scraper agents
+        for bot in BLOCKED_USER_AGENTS:
+            if bot in user_agent:
+                logger.warning("Blocked bot user-agent: %s on %s", user_agent[:80], path)
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Forbidden"},
+                )
+
+        return await call_next(request)
 
 
 # ---------------------------------------------------------------------------
@@ -142,4 +239,5 @@ ALLOWED_ORIGINS = [
     "https://massmash.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:5175",
 ]

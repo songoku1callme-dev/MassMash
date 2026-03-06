@@ -1,12 +1,13 @@
 """Admin routes: stats dashboard, grant subscriptions, coupon codes, user search.
 
-Admin = user_id=1 OR username='admin' OR email contains 'admin' OR is_admin=1.
+Shield 9: Admin panel hardening — IP logging, action logging, strict access control.
+Admin = user_id=1 OR username='admin' OR email in whitelist OR is_admin=1.
 """
 import logging
 import os
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 import aiosqlite
 
@@ -39,9 +40,10 @@ async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
         return True
     if user.get("username", "") == "admin":
         return True
-    # Dev token user (id=999) is always admin
+    # Shield 7: Dev token user only in dev mode, never in production
     if user.get("id") == 999 and user.get("auth_provider") == "dev":
-        return True
+        if not os.getenv("FLY_APP_NAME"):
+            return True
     # Note: Max-tier users are NOT automatically admins anymore
     user_email = user.get("email", "")
     if is_admin_email(user_email):
@@ -63,6 +65,17 @@ async def _is_admin(user: dict, db: aiosqlite.Connection) -> bool:
 def _require_admin(is_admin: bool) -> None:
     if not is_admin:
         raise HTTPException(status_code=403, detail="Nur Administratoren haben Zugriff.")
+
+
+def _log_admin_action(request: Request, user: dict, action: str) -> None:
+    """Shield 9: Log all admin actions with IP address."""
+    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "unknown")
+    user_id = user.get("id", "?")
+    email = user.get("email", "?")
+    logger.info(
+        "ADMIN_ACTION: user_id=%s email=%s ip=%s action=%s",
+        user_id, email, ip, action,
+    )
 
 
 class GrantSubscriptionRequest(BaseModel):

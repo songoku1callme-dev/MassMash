@@ -219,6 +219,7 @@ async def update_me(
     if update_fields:
         update_fields.append("updated_at = datetime('now')")
         values.append(current_user["id"])
+        # Shield 4: Field names come from hardcoded Pydantic model checks above — NOT user input
         query = f"UPDATE users SET {', '.join(update_fields)} WHERE id = ?"
         await db.execute(query, values)
         await db.commit()
@@ -256,11 +257,15 @@ async def refresh_access_token(
 async def dev_bypass_login(db: aiosqlite.Connection = Depends(get_db)):
     """DEV BYPASS: Instantly login as the test user (Max-Tier) for testing.
 
-    Only works when LUMNOS_DEV_MODE=1 or EDUAI_DEV_MODE=1 is set.
+    Shield 7: Only works when LUMNOS_DEV_MODE=1 is set AND FLY_APP_NAME is NOT set.
+    This double-check prevents dev-mode from being accidentally enabled in production.
     Returns a real JWT token for the 'qualitytest' user (or creates one).
     """
     dev_mode = os.getenv("LUMNOS_DEV_MODE", "") == "1" or os.getenv("EDUAI_DEV_MODE", "") == "1"
-    if not dev_mode:
+    is_production = bool(os.getenv("FLY_APP_NAME")) or bool(os.getenv("RAILWAY_ENVIRONMENT"))
+
+    # Shield 7: Never allow dev bypass in production, even if DEV_MODE is accidentally set
+    if is_production or not dev_mode:
         raise HTTPException(status_code=403, detail="Dev bypass is disabled in production")
 
     # Find or create the test user
@@ -452,8 +457,8 @@ async def send_magic_link(req: OTPSendRequest, db: aiosqlite.Connection = Depend
         "success": True,
         "message": "Code wurde gesendet." if sent else "Code generiert (E-Mail-Versand deaktiviert).",
         "email_sent": sent,
-        # In dev mode, return the code for testing
-        "dev_code": code if os.getenv("LUMNOS_DEV_MODE") == "1" else None,
+        # Shield 7: Only return dev_code if dev mode AND not production
+        "dev_code": code if (os.getenv("LUMNOS_DEV_MODE") == "1" and not os.getenv("FLY_APP_NAME")) else None,
     }
 
 

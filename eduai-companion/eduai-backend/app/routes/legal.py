@@ -99,16 +99,18 @@ async def delete_account(
     """Delete user account and ALL associated data (DSGVO Art. 17)."""
     user_id = current_user["id"]
 
-    # Delete all user data from all tables
-    tables_to_clean = [
+    # Shield 4: Delete all user data from all tables
+    # Table names are hardcoded (not from user input) — safe against SQL injection
+    _ACCOUNT_DELETION_TABLES = (
         "chat_sessions", "quiz_results", "learning_profiles", "activity_log",
         "user_memories", "abitur_simulations", "wochen_coach_plans", "gamification",
         "research_results", "chat_feedback", "push_subscriptions",
         "iq_tests", "iq_results", "tournament_entries",
-    ]
+    )
 
-    for table in tables_to_clean:
+    for table in _ACCOUNT_DELETION_TABLES:
         try:
+            # Table names are from a hardcoded tuple above — NOT user input
             await db.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         except Exception:
             pass  # Table might not exist

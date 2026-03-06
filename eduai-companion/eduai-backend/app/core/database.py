@@ -780,13 +780,12 @@ async def init_db():
         "261al3nzi261@gmail.com",
     ]
     try:
-        admin_conditions = ["id = 1", "username = 'admin'"]
-        for ae in admin_emails:
-            admin_conditions.append(f"email = '{ae}'")
-        admin_where = " OR ".join(admin_conditions)
+        # Shield 4: Use parameterized queries — never interpolate user data into SQL
+        placeholders = ", ".join("?" for _ in admin_emails)
         await db.execute(
             f"UPDATE users SET subscription_tier = 'max', is_pro = 1, is_admin = 1, "
-            f"pro_expires_at = '' WHERE {admin_where}"
+            f"pro_expires_at = '' WHERE id = 1 OR username = 'admin' OR email IN ({placeholders})",
+            tuple(admin_emails),
         )
         await db.commit()
     except Exception:

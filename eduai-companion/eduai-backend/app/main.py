@@ -15,6 +15,8 @@ from app.core.auth import get_current_user
 from app.core.security import (
     RateLimitMiddleware,
     SecurityHeadersMiddleware,
+    RequestSizeLimitMiddleware,
+    BotProtectionMiddleware,
     ALLOWED_ORIGINS,
 )
 from app.routes import auth, chat, quiz, learning, rag, ocr, admin, memory, abitur, research, gamification, groups, tournaments, iq_test, flashcards, notes, referral, password_reset, calendar, multiplayer, legal, adaptive, school, intelligence, pomodoro, shop, challenges, voice, parents, quests, events, matching, notifications, marketplace, pdf_export, battle_pass, stats, schulbuch, voice_exam, confidence, erklaerung, vision, audio
@@ -502,7 +504,12 @@ async def websocket_endpoint(websocket, ticket: str):
         logger.warning("WebSocket error: %s", e)
 
 # --- Security middleware (outermost first) ---
+# Shield 10: Bot protection + request size limit
+app.add_middleware(BotProtectionMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
+# Shield 6: Security headers (CSP, HSTS, X-Frame-Options)
 app.add_middleware(SecurityHeadersMiddleware)
+# Shield 3: Rate limiting with login lockout
 app.add_middleware(RateLimitMiddleware)
 
 # CORS — restrict to known frontend origins in production, allow all in dev
