@@ -93,7 +93,7 @@ export default function ChallengesPage() {
  </div>
 
  {message && (
- <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+ <div className="mb-4 p-3 bg-green-500/10 text-green-500 rounded-lg text-sm">
  {message}
  <button onClick={() => setMessage(null)} className="ml-2 text-green-500 hover:text-green-700">&times;</button>
  </div>
@@ -177,7 +177,7 @@ export default function ChallengesPage() {
  </div>
  ) : challenges.length === 0 ? (
  <div className="text-center py-12">
- <Trophy className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+ <Trophy className="w-12 h-12 mx-auto theme-text-secondary mb-3" />
  <p className="theme-text-secondary">Noch keine Challenges vorhanden.</p>
  <p className="text-sm theme-text-secondary">Erstelle die erste Challenge!</p>
  </div>

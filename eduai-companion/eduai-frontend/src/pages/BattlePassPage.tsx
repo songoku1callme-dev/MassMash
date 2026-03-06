@@ -134,7 +134,7 @@ export default function BattlePassPage() {
 
  {/* Claim Message */}
  {claimMsg && (
- <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium">
+ <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-500 text-sm font-medium">
  {claimMsg}
  </div>
  )}
@@ -170,7 +170,7 @@ export default function BattlePassPage() {
  key={reward.level}
  className={`relative rounded-xl p-3 border transition-all ${
  claimed
- ? "bg-purple-50 border-purple-300"
+ ? "bg-purple-500/10 border-purple-500/30"
  : unlocked
  ? "theme-card border-green-300 shadow-sm"
  : "bg-[var(--bg-surface)] border-[var(--border-color)] opacity-60"
@@ -179,11 +179,11 @@ export default function BattlePassPage() {
  <div className="flex items-center justify-between mb-2">
  <span className="text-xs font-bold theme-text-secondary">Lv. {reward.level}</span>
  {claimed && <Gift className="w-4 h-4 text-purple-500" />}
- {!unlocked && <Lock className="w-4 h-4 text-gray-400" />}
+ {!unlocked && <Lock className="w-4 h-4 theme-text-secondary" />}
  </div>
  <div className="text-center mb-2">
  <div className={`w-8 h-8 rounded-lg flex items-center justify-center mx-auto ${
- unlocked ? "bg-purple-100 text-purple-600" : "bg-[var(--progress-bg)] text-gray-400"
+ unlocked ? "bg-purple-500/20 text-purple-400" : "bg-[var(--progress-bg)] theme-text-secondary"
  }`}>
  {ICON_MAP[reward.icon] || <Star className="w-4 h-4" />}
  </div>

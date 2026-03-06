@@ -115,12 +115,12 @@ export default function RAGPage() {
 
  {/* Alerts */}
  {error && (
- <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
+ <div className="mb-4 p-3 bg-red-500/10 text-red-500 rounded-lg text-sm">
  {error}
  </div>
  )}
  {success && (
- <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+ <div className="mb-4 p-3 bg-green-500/10 text-green-500 rounded-lg text-sm">
  {success}
  </div>
  )}
@@ -150,7 +150,7 @@ export default function RAGPage() {
  <div
  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
  dragOver
- ? "border-blue-500 bg-blue-50"
+ ? "border-blue-500 bg-blue-500/10"
  : "border-[var(--border-color)]"
  }`}
  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -236,14 +236,14 @@ export default function RAGPage() {
  {doc.metadata.topic}
  </span>
  )}
- <span className="text-xs text-gray-400">
+ <span className="text-xs theme-text-secondary">
  {new Date(doc.created_at).toLocaleDateString("de-DE")}
  </span>
  </div>
  </div>
  <button
  onClick={() => handleDelete(doc.doc_id)}
- className="ml-2 p-1.5 text-red-500 hover:bg-red-50/30 rounded"
+ className="ml-2 p-1.5 text-red-500 hover:bg-red-500/10 rounded"
  title="Löschen"
  >
  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

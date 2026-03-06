@@ -131,25 +131,25 @@ export default function ParentsPage() {
 
  {/* Stats Grid */}
  <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
- <div className="text-center p-3 bg-blue-50 rounded-lg">
+ <div className="text-center p-3 bg-blue-500/10 rounded-lg">
  <Trophy className="w-5 h-5 text-blue-600 mx-auto mb-1" />
  <p className="text-lg font-bold theme-text">{child.stats?.xp || 0}</p>
- <p className="text-xs text-gray-500">XP</p>
+ <p className="text-xs theme-text-secondary">XP</p>
  </div>
- <div className="text-center p-3 bg-orange-50 rounded-lg">
+ <div className="text-center p-3 bg-orange-500/10 rounded-lg">
  <Flame className="w-5 h-5 text-orange-600 mx-auto mb-1" />
  <p className="text-lg font-bold theme-text">{child.stats?.streak_days || 0}</p>
- <p className="text-xs text-gray-500">Streak Tage</p>
+ <p className="text-xs theme-text-secondary">Streak Tage</p>
  </div>
- <div className="text-center p-3 bg-green-50 rounded-lg">
+ <div className="text-center p-3 bg-green-500/10 rounded-lg">
  <BookOpen className="w-5 h-5 text-green-600 mx-auto mb-1" />
  <p className="text-lg font-bold theme-text">{child.stats?.quizzes_completed || 0}</p>
- <p className="text-xs text-gray-500">Quizze</p>
+ <p className="text-xs theme-text-secondary">Quizze</p>
  </div>
- <div className="text-center p-3 bg-purple-50 rounded-lg">
+ <div className="text-center p-3 bg-purple-500/10 rounded-lg">
  <TrendingUp className="w-5 h-5 text-purple-600 mx-auto mb-1" />
  <p className="text-lg font-bold theme-text">{child.stats?.avg_quiz_score || 0}%</p>
- <p className="text-xs text-gray-500">Durchschnitt</p>
+ <p className="text-xs theme-text-secondary">Durchschnitt</p>
  </div>
  </div>
 
@@ -159,7 +159,7 @@ export default function ParentsPage() {
  <p className="text-sm font-medium theme-text-secondary mb-2">Schwache Fächer:</p>
  <div className="flex flex-wrap gap-2">
  {child.stats.weak_subjects.map((s: string) => (
- <span key={s} className="px-3 py-1 bg-red-50 text-red-700 text-xs rounded-full">
+ <span key={s} className="px-3 py-1 bg-red-500/10 text-red-500 text-xs rounded-full">
  {s}
  </span>
  ))}

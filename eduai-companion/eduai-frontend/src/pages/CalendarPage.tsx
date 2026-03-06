@@ -142,9 +142,9 @@ export default function CalendarPage() {
  {exams.length === 0 ? (
  <Card>
  <CardContent className="p-12 text-center">
- <CalendarDays className="w-12 h-12 text-gray-300 mx-auto mb-3" />
- <p className="text-gray-500">Keine Klausuren eingetragen.</p>
- <p className="text-sm text-gray-400 mt-1">Trage deine nächste Klausur ein und lass dir einen Lernplan erstellen!</p>
+ <CalendarDays className="w-12 h-12 theme-text-secondary mx-auto mb-3" />
+ <p className="theme-text-secondary">Keine Klausuren eingetragen.</p>
+ <p className="text-sm theme-text-secondary mt-1">Trage deine nächste Klausur ein und lass dir einen Lernplan erstellen!</p>
  </CardContent>
  </Card>
  ) : (
@@ -158,7 +158,7 @@ export default function CalendarPage() {
  <div className="flex items-center justify-between">
  <div>
  <h3 className="font-medium theme-text">{exam.title}</h3>
- <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+ <div className="flex items-center gap-3 mt-1 text-sm theme-text-secondary">
  <span className="flex items-center gap-1">
  <BookOpen className="w-4 h-4" /> {exam.subject}
  </span>
@@ -171,7 +171,7 @@ export default function CalendarPage() {
  </span>
  </div>
  {exam.topics && (
- <p className="text-xs text-gray-400 mt-1">Themen: {exam.topics}</p>
+ <p className="text-xs theme-text-secondary mt-1">Themen: {exam.topics}</p>
  )}
  </div>
  <div className="flex gap-2">
@@ -193,7 +193,7 @@ export default function CalendarPage() {
  variant="ghost"
  size="sm"
  onClick={() => deleteExam(exam.id)}
- className="text-gray-400 hover:text-red-500"
+ className="theme-text-secondary hover:text-red-500"
  >
  <Trash2 className="w-4 h-4" />
  </Button>
@@ -208,14 +208,14 @@ export default function CalendarPage() {
  <div className="space-y-2">
  {activePlan.days.map((day, i) => (
  <div key={i} className="flex items-center gap-3 text-sm">
- <span className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-medium text-xs shrink-0">
+ <span className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-medium text-xs shrink-0">
  {day.tag}
  </span>
  <span className="theme-text-secondary w-20 shrink-0">
  {day.datum ? new Date(day.datum).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" }) : `Tag ${day.tag}`}
  </span>
  <span className="theme-text flex-1">{day.aufgabe}</span>
- <span className="text-gray-400 text-xs shrink-0">{day.dauer_minuten} Min.</span>
+ <span className="theme-text-secondary text-xs shrink-0">{day.dauer_minuten} Min.</span>
  </div>
  ))}
  </div>

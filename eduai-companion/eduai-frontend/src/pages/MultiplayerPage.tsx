@@ -150,11 +150,11 @@ export default function MultiplayerPage() {
  <h2 className="text-2xl font-bold theme-text">Warteraum</h2>
  <div className="mt-4 flex items-center justify-center gap-2">
  <span className="text-4xl font-mono font-bold tracking-[0.3em] text-purple-600">{roomCode}</span>
- <button onClick={copyCode} className="text-gray-400 hover:text-purple-500">
+ <button onClick={copyCode} className="theme-text-secondary hover:text-purple-500">
  {copied ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
  </button>
  </div>
- <p className="text-sm text-gray-500 mt-2">Teile diesen Code mit deinen Freunden</p>
+ <p className="text-sm theme-text-secondary mt-2">Teile diesen Code mit deinen Freunden</p>
  </div>
  <div className="theme-card rounded-xl p-4 shadow-sm border border-[var(--border-color)]">
  <h3 className="font-semibold theme-text mb-3">Spieler ({players.length}/8)</h3>
@@ -183,21 +183,21 @@ export default function MultiplayerPage() {
  <div className="max-w-2xl mx-auto p-6 space-y-6">
  <div className="flex items-center justify-between">
  <Badge variant="outline">Frage {currentQ + 1}/{questions.length}</Badge>
- <div className="flex items-center gap-1 text-gray-500"><Clock className="w-4 h-4" /><span className="text-sm">Schneller = mehr Punkte!</span></div>
+ <div className="flex items-center gap-1 theme-text-secondary"><Clock className="w-4 h-4" /><span className="text-sm">Schneller = mehr Punkte!</span></div>
  </div>
  <div className="theme-card rounded-xl p-6 shadow-sm border border-[var(--border-color)]">
  <h2 className="text-xl font-semibold theme-text mb-6">{q.frage}</h2>
  <div className="grid grid-cols-1 gap-3">
  {q.optionen.map((opt, idx) => (
  <button key={idx} onClick={() => submitAnswer(idx)} disabled={!!result}
- className={`p-4 rounded-xl text-left font-medium transition-all border-2 ${result ? "border-[var(--border-color)]" : "border-[var(--border-color)] hover:border-purple-500 hover:bg-purple-50"}`}>
+ className={`p-4 rounded-xl text-left font-medium transition-all border-2 ${result ? "border-[var(--border-color)]" : "border-[var(--border-color)] hover:border-purple-500 hover:bg-purple-500/10"}`}>
  <span className="theme-text">{opt}</span>
  </button>
  ))}
  </div>
  </div>
  {result && (
- <div className={`p-4 rounded-xl ${result.correct ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+ <div className={`p-4 rounded-xl ${result.correct ? "bg-green-500/10 border border-green-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
  <div className="flex items-center gap-2">
  {result.correct ? <CheckCircle className="w-5 h-5 text-green-600" /> : <XCircle className="w-5 h-5 text-red-600" />}
  <span className="font-semibold">{result.correct ? `Richtig! +${result.points} Punkte` : "Falsch!"}</span>
@@ -207,7 +207,7 @@ export default function MultiplayerPage() {
  )}
  {scores.length > 0 && (
  <div className="theme-card rounded-xl p-4 shadow-sm border border-[var(--border-color)]">
- <h3 className="font-semibold text-sm text-gray-500 mb-2">Live-Rangliste</h3>
+ <h3 className="font-semibold text-sm theme-text-secondary mb-2">Live-Rangliste</h3>
  {[...scores].sort((a, b) => b.score - a.score).map((s, i) => (
  <div key={i} className="flex items-center justify-between py-1">
  <span className="text-sm">{i + 1}. {s.username}</span>

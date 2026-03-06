@@ -198,7 +198,7 @@ export default function QuizPage() {
  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
  {SUBJECTS.map((s) => (
  <button key={s.id} onClick={() => { setSubject(s.id); setSelectedPresetTopic(""); }}
- className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${subject === s.id ? "border-blue-500 bg-blue-50" : "border-[var(--border-color)] hover:border-gray-300"}`}>
+ className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${subject === s.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center text-white`}>{s.icon}</div>
  <span className="text-sm font-medium theme-text-secondary">{s.name}</span>
  </button>
@@ -220,7 +220,7 @@ export default function QuizPage() {
  <option value="">-- Thema wählen --</option>
  {presetTopics.map((t) => (<option key={t.id} value={t.name}>{t.name}</option>))}
  </select>
- <p className="text-xs text-gray-500 mt-1">{presetTopics.length} Themen verfügbar</p>
+ <p className="text-xs theme-text-secondary mt-1">{presetTopics.length} Themen verfügbar</p>
  </div>
  <div>
  <label className="block text-sm font-medium theme-text-secondary mb-2 flex items-center gap-1">
@@ -229,7 +229,7 @@ export default function QuizPage() {
  <Input value={customTopic}
  onChange={(e) => { setCustomTopic(e.target.value); if (e.target.value) setSelectedPresetTopic(""); }}
  placeholder="z.B. Integralrechnung, Sturm und Drang, Napoleonische Kriege..." className="p-3" />
- <p className="text-xs text-gray-500 mt-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Eigenes Thema hat Priorität (Pro/Max)</p>
+ <p className="text-xs theme-text-secondary mt-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Eigenes Thema hat Priorität (Pro/Max)</p>
  </div>
  </div>
  </CardContent>
@@ -243,9 +243,9 @@ export default function QuizPage() {
  <div className="grid grid-cols-1 gap-2">
  {QUIZ_TYPES.map((t) => (
  <button key={t.id} onClick={() => setQuizType(t.id)}
- className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left ${quizType === t.id ? "border-blue-500 bg-blue-50" : "border-[var(--border-color)] hover:border-gray-300"}`}>
+ className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all text-left ${quizType === t.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
  <span className="font-medium text-sm theme-text">{t.name}</span>
- <span className="text-xs text-gray-500">{t.desc}</span>
+ <span className="text-xs theme-text-secondary">{t.desc}</span>
  </button>
  ))}
  </div>
@@ -258,9 +258,9 @@ export default function QuizPage() {
  <div className="grid grid-cols-3 gap-2">
  {DIFFICULTIES.map((d) => (
  <button key={d.id} onClick={() => setDifficulty(d.id)}
- className={`p-3 rounded-lg border-2 text-center transition-all ${difficulty === d.id ? "border-blue-500 bg-blue-50" : "border-[var(--border-color)] hover:border-gray-300"}`}>
+ className={`p-3 rounded-lg border-2 text-center transition-all ${difficulty === d.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
  <p className="font-medium text-sm theme-text">{d.name}</p>
- <p className="text-xs text-gray-500 mt-0.5">{d.desc}</p>
+ <p className="text-xs theme-text-secondary mt-0.5">{d.desc}</p>
  </button>
  ))}
  </div>
@@ -272,7 +272,7 @@ export default function QuizPage() {
  <div className="grid grid-cols-4 gap-2">
  {QUESTION_COUNTS.map((n) => (
  <button key={n} onClick={() => setNumQuestions(n)}
- className={`p-3 rounded-lg border-2 text-center transition-all ${numQuestions === n ? "border-blue-500 bg-blue-50" : "border-[var(--border-color)] hover:border-gray-300"}`}>
+ className={`p-3 rounded-lg border-2 text-center transition-all ${numQuestions === n ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
  <p className="font-bold text-lg theme-text">{n}</p>
  </button>
  ))}
@@ -301,7 +301,7 @@ export default function QuizPage() {
  </div>
  <div>
  <p className="text-sm font-medium theme-text">{SUBJECTS.find(s => s.id === h.subject)?.name || h.subject}</p>
- <p className="text-xs text-gray-500">{new Date(h.completed_at).toLocaleDateString("de-DE")} - {h.difficulty}</p>
+ <p className="text-xs theme-text-secondary">{new Date(h.completed_at).toLocaleDateString("de-DE")} - {h.difficulty}</p>
  </div>
  </div>
  <Badge variant={h.score >= 80 ? "success" : h.score >= 50 ? "warning" : "destructive"}>
@@ -370,7 +370,7 @@ export default function QuizPage() {
  else if (isSelected && !isRight) optionStyle = "border-red-500 bg-red-50";
  else optionStyle = "border-[var(--border-color)] opacity-60";
  } else if (isSelected) {
- optionStyle = "border-blue-500 bg-blue-50";
+ optionStyle = "border-blue-500 bg-blue-500/10";
  }
 
  return (

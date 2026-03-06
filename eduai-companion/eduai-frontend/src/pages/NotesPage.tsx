@@ -194,9 +194,9 @@ export default function NotesPage() {
  {notes.length === 0 ? (
  <Card>
  <CardContent className="p-12 text-center">
- <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
- <p className="text-gray-500">Noch keine Notizen vorhanden.</p>
- <p className="text-sm text-gray-400 mt-1">Erstelle deine erste Notiz!</p>
+ <FileText className="w-12 h-12 theme-text-secondary mx-auto mb-3" />
+ <p className="theme-text-secondary">Noch keine Notizen vorhanden.</p>
+ <p className="text-sm theme-text-secondary mt-1">Erstelle deine erste Notiz!</p>
  </CardContent>
  </Card>
  ) : (
@@ -212,12 +212,12 @@ export default function NotesPage() {
  <h3 className="font-medium theme-text truncate">{note.title}</h3>
  <button
  onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
- className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-all"
+ className="opacity-0 group-hover:opacity-100 theme-text-secondary hover:text-red-500 transition-all"
  >
  <Trash2 className="w-4 h-4" />
  </button>
  </div>
- <p className="text-xs text-gray-400 mt-2">
+ <p className="text-xs theme-text-secondary mt-2">
  {note.word_count} Wörter &middot; {new Date(note.updated_at).toLocaleDateString("de-DE")}
  </p>
  </CardContent>

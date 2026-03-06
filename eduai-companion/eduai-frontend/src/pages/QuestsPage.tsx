@@ -80,7 +80,7 @@ export default function QuestsPage() {
  </div>
  <div className="text-right">
  <p className="text-2xl font-bold text-yellow-600">{totalXP} XP</p>
- <p className="text-xs text-gray-500">verdient</p>
+ <p className="text-xs theme-text-secondary">verdient</p>
  </div>
  </div>
  {/* Progress bar */}
@@ -94,7 +94,7 @@ export default function QuestsPage() {
 
  {/* All Complete Celebration */}
  {completedCount === quests.length && quests.length > 0 && (
- <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-200 text-center">
+ <div className="mb-6 p-4 bg-green-500/10 rounded-xl border border-green-500/20 text-center">
  <Sparkles className="w-8 h-8 text-green-600 mx-auto mb-2" />
  <p className="text-lg font-bold text-green-700">Alle Quests erledigt!</p>
  <p className="text-sm text-green-600">Komm morgen wieder für neue Quests.</p>
@@ -108,7 +108,7 @@ export default function QuestsPage() {
  key={quest.quest_id}
  className={`p-5 rounded-xl border transition-all ${
  quest.completed
- ? "bg-green-50 border-green-200"
+ ? "bg-green-500/10 border-green-500/20"
  : "theme-card border-[var(--border-color)] hover:shadow-md"
  }`}
  >
@@ -125,7 +125,7 @@ export default function QuestsPage() {
  <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">
  +{quest.xp_reward} XP
  </span>
- <span className="text-xs text-gray-400">
+ <span className="text-xs theme-text-secondary">
  {quest.progress}/{quest.target}
  </span>
  </div>

@@ -65,7 +65,7 @@ export default function ResearchPage() {
  </div>
 
  {error && (
- <div className="p-4 rounded-lg bg-red-50 text-red-600 flex items-center gap-2">
+ <div className="p-4 rounded-lg bg-red-500/10 text-red-500 flex items-center gap-2">
  <Lock className="w-5 h-5" />
  {error}
  </div>
@@ -172,7 +172,7 @@ export default function ResearchPage() {
  )}
 
  {!loading && results.length === 0 && !error && (
- <div className="text-center py-12 text-gray-400">
+ <div className="text-center py-12 theme-text-secondary">
  <Globe className="w-16 h-16 mx-auto mb-4 opacity-30" />
  <p>Suche nach Abitur-Themen, Lehrplaninhalten oder Fachbegriffen</p>
  </div>

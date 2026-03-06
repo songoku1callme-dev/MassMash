@@ -79,7 +79,7 @@ export default function EventsPage() {
  onClick={() => handleSelectEvent(event)}
  className={`w-full text-left p-5 rounded-xl border transition-all hover:shadow-md ${
  selectedEvent?.id === event.id
- ? "border-purple-500 bg-purple-50"
+ ? "border-purple-500 bg-purple-500/10"
  : "border-[var(--border-color)] theme-card"
  }`}
  >
@@ -90,7 +90,7 @@ export default function EventsPage() {
  </span>
  </div>
  <p className="text-sm theme-text-secondary mb-3">{event.description}</p>
- <div className="flex items-center gap-3 text-xs text-gray-400">
+ <div className="flex items-center gap-3 text-xs theme-text-secondary">
  <span className="flex items-center gap-1">
  <Clock className="w-3 h-3" />
  {event.start_date} - {event.end_date}
@@ -111,8 +111,8 @@ export default function EventsPage() {
  <p className="text-sm theme-text-secondary mb-6">{selectedEvent.description}</p>
 
  {/* Rewards */}
- <div className="mb-6 p-3 bg-yellow-50 rounded-lg">
- <p className="text-sm font-medium text-yellow-700 flex items-center gap-2">
+ <div className="mb-6 p-3 bg-yellow-500/10 rounded-lg">
+ <p className="text-sm font-medium text-yellow-600 flex items-center gap-2">
  <Trophy className="w-4 h-4" />
  Belohnungen: {selectedEvent.rewards?.xp_bonus} Bonus-XP + Badge "{selectedEvent.rewards?.badge}"
  </p>
@@ -129,7 +129,7 @@ export default function EventsPage() {
  {ch.completed ? (
  <CheckCircle className="w-4 h-4 text-green-500" />
  ) : (
- <Circle className="w-4 h-4 text-gray-300" />
+ <Circle className="w-4 h-4 theme-text-secondary" />
  )}
  {ch.title}
  </span>
@@ -142,13 +142,13 @@ export default function EventsPage() {
  style={{ width: `${(ch.progress / ch.target) * 100}%` }}
  />
  </div>
- <span className="text-xs text-gray-400">{ch.progress}/{ch.target}</span>
+ <span className="text-xs theme-text-secondary">{ch.progress}/{ch.target}</span>
  </div>
  </div>
  ))}
 
  <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
- <p className="text-sm text-gray-600">
+ <p className="text-sm theme-text-secondary">
  {progress.total_completed}/{progress.total_challenges} Challenges abgeschlossen
  </p>
  </div>

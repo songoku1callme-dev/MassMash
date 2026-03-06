@@ -44,7 +44,7 @@ export default function GamificationPage() {
  if (!profile) {
  return (
  <div className="p-4 lg:p-6 max-w-4xl mx-auto text-center">
- <p className="text-gray-500">Gamification-Daten konnten nicht geladen werden.</p>
+ <p className="theme-text-secondary">Gamification-Daten konnten nicht geladen werden.</p>
  </div>
  );
  }
@@ -70,28 +70,28 @@ export default function GamificationPage() {
  <CardContent className="p-4 text-center">
  <div className="text-3xl mb-1">{profile.level_emoji}</div>
  <p className="text-2xl font-bold theme-text">Level {profile.level}</p>
- <p className="text-sm text-gray-500">{profile.level_name}</p>
+ <p className="text-sm theme-text-secondary">{profile.level_name}</p>
  </CardContent>
  </Card>
  <Card>
  <CardContent className="p-4 text-center">
  <Star className="w-8 h-8 text-yellow-500 mx-auto mb-1" />
  <p className="text-2xl font-bold theme-text">{profile.xp}</p>
- <p className="text-sm text-gray-500">XP gesamt</p>
+ <p className="text-sm theme-text-secondary">XP gesamt</p>
  </CardContent>
  </Card>
  <Card>
  <CardContent className="p-4 text-center">
  <Flame className="w-8 h-8 text-orange-500 mx-auto mb-1" />
  <p className="text-2xl font-bold theme-text">{profile.streak_days}</p>
- <p className="text-sm text-gray-500">Tage Streak</p>
+ <p className="text-sm theme-text-secondary">Tage Streak</p>
  </CardContent>
  </Card>
  <Card>
  <CardContent className="p-4 text-center">
  <Target className="w-8 h-8 text-blue-500 mx-auto mb-1" />
  <p className="text-2xl font-bold theme-text">{profile.quizzes_completed}</p>
- <p className="text-sm text-gray-500">Quizzes</p>
+ <p className="text-sm theme-text-secondary">Quizzes</p>
  </CardContent>
  </Card>
  </div>
@@ -103,7 +103,7 @@ export default function GamificationPage() {
  <span className="text-sm font-medium theme-text-secondary">
  {profile.level_emoji} {profile.level_name}
  </span>
- <span className="text-sm text-gray-500">
+ <span className="text-sm theme-text-secondary">
  {profile.xp_to_next_level > 0 ? `${profile.xp_to_next_level} XP bis ${profile.next_level_name}` : "Max Level!"}
  </span>
  </div>
@@ -122,7 +122,7 @@ export default function GamificationPage() {
  ].map((t) => (
  <button key={t.id} onClick={() => setTab(t.id)}
  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
- tab === t.id ? "border-blue-500 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"
+ tab === t.id ? "border-blue-500 text-blue-500" : "border-transparent theme-text-secondary hover:theme-text"
  }`}>
  {t.icon} {t.label}
  </button>
@@ -157,13 +157,13 @@ export default function GamificationPage() {
  <div className="space-y-2">
  {profile.all_levels.map((lvl) => (
  <div key={lvl.level} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
- profile.level >= lvl.level ? "bg-yellow-50" : "bg-[var(--bg-surface)] opacity-60"
+ profile.level >= lvl.level ? "bg-yellow-500/10" : "bg-[var(--bg-surface)] opacity-60"
  }`}>
  <span className="flex items-center gap-2">
  <span>{lvl.emoji}</span>
  <span className="font-medium">{lvl.name}</span>
  </span>
- <span className="text-gray-500">{lvl.min_xp} XP</span>
+ <span className="theme-text-secondary">{lvl.min_xp} XP</span>
  </div>
  ))}
  </div>
@@ -180,7 +180,7 @@ export default function GamificationPage() {
  <Card key={ach.id} className={earned ? "border-yellow-300" : "opacity-60"}>
  <CardContent className="p-4 flex items-center gap-4">
  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
- earned ? "bg-yellow-100" : "bg-[var(--bg-surface)]"
+ earned ? "bg-yellow-500/20" : "bg-[var(--bg-surface)]"
  }`}>
  {ach.emoji}
  </div>
@@ -189,7 +189,7 @@ export default function GamificationPage() {
  {ach.name}
  {earned && <Badge variant="success" className="text-xs">Freigeschaltet</Badge>}
  </p>
- <p className="text-sm text-gray-500">{ach.desc}</p>
+ <p className="text-sm theme-text-secondary">{ach.desc}</p>
  <p className="text-xs text-yellow-600 mt-1">+{ach.xp_reward} XP</p>
  </div>
  </CardContent>
@@ -204,16 +204,16 @@ export default function GamificationPage() {
  <CardHeader><CardTitle className="text-base flex items-center gap-2"><Users className="w-5 h-5" /> Top 10 (Wöchentlich)</CardTitle></CardHeader>
  <CardContent>
  {leaderboard.length === 0 ? (
- <p className="text-sm text-gray-500 text-center py-4">Noch keine Einträge vorhanden.</p>
+ <p className="text-sm theme-text-secondary text-center py-4">Noch keine Einträge vorhanden.</p>
  ) : (
  <div className="space-y-2">
  {leaderboard.map((entry) => (
  <div key={entry.rank} className={`flex items-center gap-3 p-3 rounded-lg ${
- entry.is_you ? "bg-blue-50 border border-blue-200" : "bg-[var(--bg-surface)]"
+ entry.is_you ? "bg-blue-500/10 border border-blue-500/20" : "bg-[var(--bg-surface)]"
  }`}>
  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
  entry.rank === 1 ? "bg-yellow-400 text-yellow-900" :
- entry.rank === 2 ? "bg-gray-300 text-gray-700" :
+ entry.rank === 2 ? "bg-gray-400 text-gray-900 dark:bg-gray-500 dark:text-white" :
  entry.rank === 3 ? "bg-orange-300 text-orange-800" :
  "bg-[var(--progress-bg)] theme-text-secondary"
  }`}>
@@ -223,11 +223,11 @@ export default function GamificationPage() {
  <p className="text-sm font-medium theme-text flex items-center gap-1">
  {entry.name} {entry.is_you && <Badge variant="secondary" className="text-xs">Du</Badge>}
  </p>
- <p className="text-xs text-gray-500">{entry.level_name} - {entry.streak_days} Tage Streak</p>
+ <p className="text-xs theme-text-secondary">{entry.level_name} - {entry.streak_days} Tage Streak</p>
  </div>
  <div className="text-right">
  <p className="font-bold theme-text">{entry.xp} XP</p>
- <p className="text-xs text-gray-500">Level {entry.level}</p>
+ <p className="text-xs theme-text-secondary">Level {entry.level}</p>
  </div>
  </div>
  ))}

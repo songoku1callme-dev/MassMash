@@ -287,7 +287,7 @@ export default function TurnierPage() {
  <div className="flex items-center gap-3">
  <span className={`w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm ${
  r.rank === 1 ? "bg-yellow-100 text-yellow-700" :
- r.rank === 2 ? "bg-gray-200 text-gray-700" :
+ r.rank === 2 ? "bg-gray-400/20 theme-text-secondary" :
  r.rank === 3 ? "bg-orange-100 text-orange-700" :
  "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>

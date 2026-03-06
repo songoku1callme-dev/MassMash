@@ -165,13 +165,13 @@ export default function IntelligencePage() {
  Lernstil erkennen
  </Button>
  {lernstilResult && (
- <div className="mt-4 p-4 bg-blue-50 rounded-lg">
- <p className="text-lg font-bold text-blue-700 mb-2">
+ <div className="mt-4 p-4 bg-blue-500/10 rounded-lg">
+ <p className="text-lg font-bold text-blue-600 mb-2">
  Dein Lernstil: {lernstilResult.lernstil.toUpperCase()}
  </p>
- <p className="text-gray-600 mb-3">{lernstilResult.beschreibung}</p>
- <p className="font-medium text-gray-700 mb-1">Tipps:</p>
- <ul className="list-disc list-inside space-y-1 text-gray-600">
+ <p className="theme-text-secondary mb-3">{lernstilResult.beschreibung}</p>
+ <p className="font-medium theme-text mb-1">Tipps:</p>
+ <ul className="list-disc list-inside space-y-1 theme-text-secondary">
  {lernstilResult.tipps.map((t, i) => <li key={i}>{t}</li>)}
  </ul>
  </div>
@@ -190,22 +190,22 @@ export default function IntelligencePage() {
  value={feynmanThema}
  onChange={(e) => setFeynmanThema(e.target.value)}
  placeholder="Thema (z.B. Photosynthese, Quadratische Gleichungen)"
- className="w-full mb-3 p-3 border rounded-lg"
+ className="w-full mb-3 p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  />
  <textarea
  value={feynmanErklärung}
  onChange={(e) => setFeynmanErklärung(e.target.value)}
  placeholder="Erkläre das Thema in deinen eigenen Worten..."
  rows={6}
- className="w-full mb-3 p-3 border rounded-lg"
+ className="w-full mb-3 p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  />
  <Button onClick={submitFeynman} disabled={loading || !feynmanThema || !feynmanErklärung}>
  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <BookOpen className="w-4 h-4 mr-2" />}
  Bewertung anfordern
  </Button>
  {feynmanResult && (
- <div className="mt-4 p-4 bg-green-50 rounded-lg">
- <p className="whitespace-pre-wrap text-gray-700">{feynmanResult}</p>
+ <div className="mt-4 p-4 bg-green-500/10 rounded-lg">
+ <p className="whitespace-pre-wrap theme-text-secondary">{feynmanResult}</p>
  </div>
  )}
  </div>
@@ -222,15 +222,15 @@ export default function IntelligencePage() {
  value={sokratesFrage}
  onChange={(e) => setSokratesFrage(e.target.value)}
  placeholder="Deine Frage (z.B. Warum ist der Himmel blau?)"
- className="w-full mb-3 p-3 border rounded-lg"
+ className="w-full mb-3 p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  />
  <Button onClick={submitSokrates} disabled={loading || !sokratesFrage}>
  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <HelpCircle className="w-4 h-4 mr-2" />}
  Sokratisch fragen
  </Button>
  {sokratesResult && (
- <div className="mt-4 p-4 bg-purple-50 rounded-lg">
- <p className="whitespace-pre-wrap text-gray-700">{sokratesResult}</p>
+ <div className="mt-4 p-4 bg-purple-500/10 rounded-lg">
+ <p className="whitespace-pre-wrap theme-text-secondary">{sokratesResult}</p>
  </div>
  )}
  </div>
@@ -248,7 +248,7 @@ export default function IntelligencePage() {
  <select
  value={scanSubject}
  onChange={(e) => setScanSubject(e.target.value)}
- className="mb-3 p-3 border rounded-lg"
+ className="mb-3 p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  >
  <option value="math">Mathematik</option>
  <option value="german">Deutsch</option>
@@ -318,12 +318,12 @@ export default function IntelligencePage() {
  <p className="font-medium text-green-600 mb-1">Stärken:</p>
  <div className="flex flex-wrap gap-2">
  {scanResult.strengths.map((s: string, i: number) => (
- <span key={i} className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">{s}</span>
+ <span key={i} className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm">{s}</span>
  ))}
  </div>
  </div>
  )}
- <p className="text-gray-600 mt-3">{scanResult.recommendation}</p>
+ <p className="theme-text-secondary mt-3">{scanResult.recommendation}</p>
  <Button className="mt-3" onClick={() => { setScanQuestions([]); setScanResult(null); }}>
  Neuen Scan starten
  </Button>
@@ -344,8 +344,8 @@ export default function IntelligencePage() {
  Wochenplan erstellen
  </Button>
  {weeklyPlan && (
- <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
- <p className="whitespace-pre-wrap text-gray-700">{weeklyPlan}</p>
+ <div className="mt-4 p-4 bg-yellow-500/10 rounded-lg">
+ <p className="whitespace-pre-wrap theme-text-secondary">{weeklyPlan}</p>
  </div>
  )}
  </div>
@@ -365,13 +365,13 @@ export default function IntelligencePage() {
  value={erklaererThema}
  onChange={(e) => setErklaererThema(e.target.value)}
  placeholder="Thema eingeben (z.B. Fotosynthese, Pythagoras, Gedichtanalyse)"
- className="flex-1 p-3 border rounded-lg"
+ className="flex-1 p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  onKeyDown={(e) => e.key === "Enter" && submitErklaerer()}
  />
  <select
  value={erklaererFach}
  onChange={(e) => setErklaererFach(e.target.value)}
- className="p-3 border rounded-lg"
+ className="p-3 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg"
  >
  <option value="Allgemein">Allgemein</option>
  <option value="Mathematik">Mathematik</option>
@@ -414,20 +414,20 @@ export default function IntelligencePage() {
 
  {/* Explanation Display */}
  <div className={`p-5 rounded-xl border-2 transition-all ${
- erklaererStufe === "einfach" ? "bg-green-50 border-green-300" :
- erklaererStufe === "normal" ? "bg-blue-50 border-blue-300" :
- "bg-purple-50 border-purple-300"
+ erklaererStufe === "einfach" ? "bg-green-500/10 border-green-500/30" :
+ erklaererStufe === "normal" ? "bg-blue-500/10 border-blue-500/30" :
+ "bg-purple-500/10 border-purple-500/30"
  }`}>
  <p className={`text-sm font-bold mb-2 ${
- erklaererStufe === "einfach" ? "text-green-700" :
- erklaererStufe === "normal" ? "text-blue-700" :
- "text-purple-700"
+ erklaererStufe === "einfach" ? "text-green-600" :
+ erklaererStufe === "normal" ? "text-blue-600" :
+ "text-purple-600"
  }`}>
  {erklaererStufe === "einfach" ? "\uD83E\uDDD2 Einfach erklärt" :
  erklaererStufe === "normal" ? "\uD83D\uDCDA Normal" :
  "\uD83D\uDD2C Profi-Level"}
  </p>
- <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+ <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
  {erklaererResult[erklaererStufe]}
  </p>
  </div>

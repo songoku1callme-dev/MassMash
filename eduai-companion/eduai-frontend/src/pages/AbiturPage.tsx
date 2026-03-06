@@ -166,7 +166,7 @@ export default function AbiturPage() {
  </div>
 
  {error && (
- <div className="p-4 rounded-lg bg-red-50 text-red-600 flex items-center gap-2">
+ <div className="p-4 rounded-lg bg-red-500/10 text-red-500 flex items-center gap-2">
  <Lock className="w-5 h-5" />
  {error}
  </div>
@@ -183,7 +183,7 @@ export default function AbiturPage() {
  onClick={() => setSubject(s.id)}
  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
  subject === s.id
- ? "border-purple-500 bg-purple-50"
+ ? "border-purple-500 bg-purple-500/10"
  : "border-[var(--border-color)] hover:border-gray-300"
  }`}
  >
@@ -218,12 +218,12 @@ export default function AbiturPage() {
  onClick={() => setDuration(d)}
  className={`p-4 rounded-xl border-2 text-center transition-all ${
  duration === d
- ? "border-purple-500 bg-purple-50"
+ ? "border-purple-500 bg-purple-500/10"
  : "border-[var(--border-color)] hover:border-gray-300"
  }`}
  >
  <p className="font-bold text-lg">{d} min</p>
- <p className="text-xs text-gray-500">{d / 60} Stunden</p>
+ <p className="text-xs theme-text-secondary">{d / 60} Stunden</p>
  </button>
  ))}
  </div>
@@ -251,7 +251,7 @@ export default function AbiturPage() {
  <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
  <div>
  <p className="text-sm font-medium">{p.subject} - {p.week_count} Wochen</p>
- <p className="text-xs text-gray-500">Woche {p.current_week} / {p.week_count} - {p.status}</p>
+ <p className="text-xs theme-text-secondary">Woche {p.current_week} / {p.week_count} - {p.status}</p>
  </div>
  <Badge variant={p.status === "completed" ? "success" : "secondary"}>
  {p.status === "completed" ? "Fertig" : `Woche ${p.current_week}`}
@@ -273,7 +273,7 @@ export default function AbiturPage() {
  <div key={h.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
  <div>
  <p className="text-sm font-medium">{h.subject} ({h.duration_minutes}min)</p>
- <p className="text-xs text-gray-500">{new Date(h.created_at).toLocaleDateString("de-DE")}</p>
+ <p className="text-xs theme-text-secondary">{new Date(h.created_at).toLocaleDateString("de-DE")}</p>
  </div>
  <div className="text-right">
  <Badge variant={h.note_punkte >= 10 ? "success" : h.note_punkte >= 5 ? "warning" : "destructive"}>
@@ -321,7 +321,7 @@ export default function AbiturPage() {
  </div>
 
  {isPaused && (
- <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-300 text-center">
+ <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-center">
  <Pause className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
  <p className="font-medium text-yellow-800">Pr&uuml;fung pausiert</p>
  <Button onClick={togglePause} className="mt-2" size="sm"><Play className="w-4 h-4 mr-1" /> Fortsetzen</Button>
@@ -349,7 +349,7 @@ export default function AbiturPage() {
  onClick={() => setAnswers({ ...answers, [question.id]: opt })}
  className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
  answers[question.id] === opt
- ? "border-purple-500 bg-purple-50"
+ ? "border-purple-500 bg-purple-500/10"
  : "border-[var(--border-color)] hover:border-gray-300"
  }`}
  >
@@ -405,7 +405,7 @@ export default function AbiturPage() {
  <h2 className="text-2xl font-bold theme-text mb-2">Pr&uuml;fung abgeschlossen!</h2>
  <p className={`text-5xl font-bold ${scoreColor} mb-2`}>{result.note_punkte}/15</p>
  <p className="text-lg font-medium theme-text-secondary mb-2">{result.note}</p>
- <p className="text-gray-500">
+ <p className="theme-text-secondary">
  {result.correct_answers} von {result.total_questions} richtig ({result.score_percent}%)
  </p>
 
@@ -413,7 +413,7 @@ export default function AbiturPage() {
  <div className="mt-6 text-left space-y-2 max-h-60 overflow-y-auto">
  {result.graded_answers.map((ga, idx) => (
  <div key={idx} className={`flex items-center gap-2 p-2 rounded-lg text-sm ${
- ga.is_correct ? "bg-emerald-50" : "bg-red-50"
+ ga.is_correct ? "bg-emerald-500/10" : "bg-red-500/10"
  }`}>
  {ga.is_correct ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> : <XCircle className="w-4 h-4 text-red-500 shrink-0" />}
  <span className="truncate">Frage {idx + 1}: {ga.user_answer || "(leer)"}</span>

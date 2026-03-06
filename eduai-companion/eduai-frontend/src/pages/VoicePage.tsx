@@ -118,7 +118,7 @@ export default function VoicePage() {
  </div>
 
  {error && (
- <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+ <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm">
  {error}
  </div>
  )}
@@ -155,7 +155,7 @@ export default function VoicePage() {
 
  {/* Transcript */}
  {transcript && (
- <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+ <div className="mb-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
  <div className="flex items-center gap-2 mb-2">
  <MessageCircle className="w-4 h-4 text-blue-600" />
  <span className="text-sm font-medium text-blue-700">Deine Nachricht</span>
@@ -166,7 +166,7 @@ export default function VoicePage() {
 
  {/* Response */}
  {response && (
- <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
+ <div className="mb-6 p-4 bg-green-500/10 rounded-lg border border-green-500/20">
  <div className="flex items-center justify-between mb-2">
  <span className="text-sm font-medium text-green-700">KI-Antwort</span>
  <button

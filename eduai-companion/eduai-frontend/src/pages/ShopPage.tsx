@@ -97,7 +97,7 @@ export default function ShopPage() {
  </div>
 
  {message && (
- <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+ <div className="mb-4 p-3 bg-green-500/10 text-green-600 rounded-lg text-sm">
  {message}
  </div>
  )}
@@ -107,7 +107,7 @@ export default function ShopPage() {
  <button
  onClick={() => setFilter("all")}
  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
- filter === "all" ? "bg-blue-600 text-white" : "bg-[var(--bg-surface)] text-gray-600"
+ filter === "all" ? "bg-blue-600 text-white" : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}
  >
  Alle
@@ -117,7 +117,7 @@ export default function ShopPage() {
  key={cat}
  onClick={() => setFilter(cat)}
  className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${
- filter === cat ? "bg-blue-600 text-white" : "bg-[var(--bg-surface)] text-gray-600"
+ filter === cat ? "bg-blue-600 text-white" : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}
  >
  {CATEGORY_LABELS[cat] || cat}
@@ -145,7 +145,7 @@ export default function ShopPage() {
  {ICON_MAP[item.icon] || <ShoppingBag className="w-6 h-6" />}
  </div>
  {item.unlocked && (
- <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+ <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-500/10 px-2 py-1 rounded-full">
  <Check className="w-3 h-3" />
  Freigeschaltet
  </span>

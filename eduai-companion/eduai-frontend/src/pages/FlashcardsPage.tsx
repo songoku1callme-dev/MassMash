@@ -132,21 +132,21 @@ export default function FlashcardsPage() {
  <Button variant="ghost" onClick={() => { setSelectedDeck(null); setReviewCards([]); }}>
  <ChevronLeft className="w-4 h-4 mr-1" /> Zurück
  </Button>
- <span className="text-sm text-gray-500">{currentCard + 1} / {reviewCards.length}</span>
+ <span className="text-sm theme-text-secondary">{currentCard + 1} / {reviewCards.length}</span>
  </div>
 
  <div
  className="cursor-pointer perspective-1000"
  onClick={() => setFlipped(!flipped)}
  >
- <Card className={`min-h-[250px] flex items-center justify-center transition-all duration-300 ${flipped ? "bg-indigo-50" : ""}`}>
+ <Card className={`min-h-[250px] flex items-center justify-center transition-all duration-300 ${flipped ? "bg-indigo-500/10" : ""}`}>
  <CardContent className="p-8 text-center">
- <p className="text-xs text-gray-400 mb-2">{flipped ? "Antwort" : "Frage"}</p>
+ <p className="text-xs theme-text-secondary mb-2">{flipped ? "Antwort" : "Frage"}</p>
  <p className="text-xl font-medium theme-text">
  {flipped ? card.back : card.front}
  </p>
  {!flipped && (
- <p className="text-sm text-gray-400 mt-4">Klicke zum Umdrehen</p>
+ <p className="text-sm theme-text-secondary mt-4">Klicke zum Umdrehen</p>
  )}
  </CardContent>
  </Card>
@@ -154,7 +154,7 @@ export default function FlashcardsPage() {
 
  {flipped && (
  <div className="space-y-2">
- <p className="text-sm text-gray-500 text-center mb-2">Wie gut wusstest du die Antwort?</p>
+ <p className="text-sm theme-text-secondary text-center mb-2">Wie gut wusstest du die Antwort?</p>
  <div className="grid grid-cols-3 gap-2">
  <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => submitReview(1)}>
  <X className="w-4 h-4 mr-1" /> Nicht gewusst
@@ -218,7 +218,7 @@ export default function FlashcardsPage() {
  onChange={(e) => setAiTopic(e.target.value)}
  />
  <div className="flex gap-3 items-center">
- <label className="text-sm text-gray-500">Anzahl:</label>
+ <label className="text-sm theme-text-secondary">Anzahl:</label>
  <Input
  type="number"
  min={1}
@@ -241,9 +241,9 @@ export default function FlashcardsPage() {
  {decks.length === 0 ? (
  <Card>
  <CardContent className="p-12 text-center">
- <Brain className="w-12 h-12 text-gray-300 mx-auto mb-3" />
- <p className="text-gray-500">Noch keine Karteikarten-Decks vorhanden.</p>
- <p className="text-sm text-gray-400 mt-1">Erstelle ein Deck oder lass die KI Karten generieren!</p>
+ <Brain className="w-12 h-12 theme-text-secondary mx-auto mb-3" />
+ <p className="theme-text-secondary">Noch keine Karteikarten-Decks vorhanden.</p>
+ <p className="text-sm theme-text-secondary mt-1">Erstelle ein Deck oder lass die KI Karten generieren!</p>
  </CardContent>
  </Card>
  ) : (
@@ -254,14 +254,14 @@ export default function FlashcardsPage() {
  <CardTitle className="text-base flex items-center justify-between">
  {deck.name}
  {deck.due_count > 0 && (
- <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-medium">
+ <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 text-xs font-medium">
  {deck.due_count} fällig
  </span>
  )}
  </CardTitle>
  </CardHeader>
  <CardContent>
- <p className="text-sm text-gray-500">{deck.card_count} Karten</p>
+ <p className="text-sm theme-text-secondary">{deck.card_count} Karten</p>
  <Button variant="outline" className="w-full mt-3 gap-1" size="sm">
  <RotateCcw className="w-4 h-4" /> Lernen
  </Button>

@@ -147,9 +147,9 @@ export default function GroupsPage() {
  return (
  <div className="p-4 lg:p-6 max-w-4xl mx-auto">
  <div className="text-center py-12">
- <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+ <Lock className="w-12 h-12 theme-text-secondary mx-auto mb-4" />
  <h2 className="text-xl font-bold theme-text mb-2">Max-Abo erforderlich</h2>
- <p className="text-gray-500">{error}</p>
+ <p className="theme-text-secondary">{error}</p>
  </div>
  </div>
  );
@@ -177,7 +177,7 @@ export default function GroupsPage() {
  {SUBJECT_OPTIONS.map((s) => (
  <button key={s.id} onClick={() => setNewGroupSubject(s.id)}
  className={`flex items-center gap-2 p-2 rounded-lg border-2 text-sm transition-all ${
- newGroupSubject === s.id ? "border-blue-500 bg-blue-50" : "border-[var(--border-color)]"
+ newGroupSubject === s.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)]"
  }`}>
  {s.icon} {s.name}
  </button>
@@ -206,7 +206,7 @@ export default function GroupsPage() {
  }}><ArrowLeft className="w-4 h-4" /></Button>
  <div className="flex-1">
  <h2 className="font-bold theme-text">{activeGroup.name}</h2>
- <p className="text-xs text-gray-500">{activeGroup.member_count}/{activeGroup.max_members} Mitglieder - {SUBJECT_OPTIONS.find(s => s.id === activeGroup.subject)?.name || activeGroup.subject}</p>
+ <p className="text-xs theme-text-secondary">{activeGroup.member_count}/{activeGroup.max_members} Mitglieder - {SUBJECT_OPTIONS.find(s => s.id === activeGroup.subject)?.name || activeGroup.subject}</p>
  </div>
  <Button variant="outline" size="sm" className="text-red-500" onClick={() => leaveGroup(activeGroup.id)}>
  Verlassen
@@ -226,7 +226,7 @@ export default function GroupsPage() {
  <div className="flex-1">
  <div className="flex items-center gap-2 mb-1">
  <span className="text-sm font-medium theme-text">{msg.username}</span>
- <span className="text-xs text-gray-500">{new Date(msg.timestamp).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span>
+ <span className="text-xs theme-text-secondary">{new Date(msg.timestamp).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span>
  </div>
  <p className="text-sm theme-text-secondary bg-[var(--bg-surface)] rounded-lg p-3">{msg.content}</p>
  </div>
@@ -268,7 +268,7 @@ export default function GroupsPage() {
  {groups.length === 0 ? (
  <Card>
  <CardContent className="p-8 text-center">
- <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+ <MessageCircle className="w-12 h-12 theme-text-secondary mx-auto mb-4" />
  <h3 className="text-lg font-medium theme-text mb-2">Keine Gruppen vorhanden</h3>
  <p className="text-gray-500 mb-4">Erstelle eine neue Gruppe oder warte, bis andere eine erstellen.</p>
  <Button onClick={() => setView("create")} className="gap-2"><Plus className="w-4 h-4" /> Gruppe erstellen</Button>
@@ -285,7 +285,7 @@ export default function GroupsPage() {
  </div>
  <div className="flex-1">
  <h3 className="font-medium theme-text">{group.name}</h3>
- <p className="text-xs text-gray-500">
+ <p className="text-xs theme-text-secondary">
  {SUBJECT_OPTIONS.find(s => s.id === group.subject)?.name || group.subject} - {group.member_count}/{group.max_members} Mitglieder
  </p>
  </div>
@@ -306,7 +306,7 @@ export default function GroupsPage() {
  </Button>
  )}
  </div>
- <p className="text-xs text-gray-400 mt-2">
+ <p className="text-xs theme-text-secondary mt-2">
  Erstellt: {new Date(group.created_at).toLocaleDateString("de-DE")}
  </p>
  </CardContent>
@@ -315,11 +315,11 @@ export default function GroupsPage() {
  </div>
  )}
 
- <Card className="bg-indigo-50 border-indigo-200">
+ <Card className="bg-indigo-500/10 border-indigo-500/20">
  <CardContent className="p-4">
  <div className="flex items-center gap-3">
- <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">Max</Badge>
- <p className="text-sm text-indigo-700">
+ <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-400">Max</Badge>
+ <p className="text-sm text-indigo-400">
  Gruppen-Chats sind exklusiv für Max-Abonnenten. Max. 10 Mitglieder pro Gruppe.
  </p>
  </div>

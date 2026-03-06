@@ -107,7 +107,7 @@ export default function PomodoroPage() {
  })();
 
  const stateColors = {
- idle: "text-gray-600",
+ idle: "theme-text-secondary",
  work: "text-red-600",
  break: "text-green-600",
  long_break: "text-blue-600",
@@ -135,11 +135,11 @@ export default function PomodoroPage() {
 
  <div className="relative w-48 h-48 mx-auto mb-6">
  <svg className="w-48 h-48 transform -rotate-90" viewBox="0 0 100 100">
- <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" className="text-gray-200" strokeWidth="6" />
+ <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" className="text-[var(--progress-bg)]" strokeWidth="6" />
  <circle
  cx="50" cy="50" r="45" fill="none"
  stroke="currentColor"
- className={timerState === "work" ? "text-red-500" : timerState === "break" || timerState === "long_break" ? "text-green-500" : "text-gray-400"}
+ className={timerState === "work" ? "text-red-500" : timerState === "break" || timerState === "long_break" ? "text-green-500" : "theme-text-secondary"}
  strokeWidth="6"
  strokeLinecap="round"
  strokeDasharray={`${2 * Math.PI * 45}`}
@@ -159,7 +159,7 @@ export default function PomodoroPage() {
  <select
  value={subject}
  onChange={(e) => setSubject(e.target.value)}
- className="p-2 border rounded-lg text-sm"
+ className="p-2 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg text-sm"
  >
  <option value="general">Allgemein</option>
  <option value="math">Mathematik</option>

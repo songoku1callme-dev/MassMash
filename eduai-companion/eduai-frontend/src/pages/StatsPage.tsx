@@ -128,7 +128,7 @@ export default function StatsPage() {
  <div className="flex items-center gap-2">
  <a
  href={`${API_URL}/api/stats/export/csv`}
- className="px-3 py-2 bg-[var(--bg-surface)] theme-text-secondary rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors flex items-center gap-1.5"
+ className="px-3 py-2 bg-[var(--bg-surface)] theme-text-secondary rounded-lg text-sm font-medium hover:bg-[var(--bg-surface)] transition-colors flex items-center gap-1.5"
  onClick={(e) => {
  e.preventDefault();
  const t = localStorage.getItem("lumnos_token") || localStorage.getItem("lumnos_access_token");
@@ -183,7 +183,7 @@ export default function StatsPage() {
  </div>
 
  {prognosen.length === 0 ? (
- <p className="text-gray-400 text-sm">Klicke auf &quot;Prognose erstellen&quot; für deine Noten-Vorhersage</p>
+ <p className="theme-text-secondary text-sm">Klicke auf &quot;Prognose erstellen&quot; für deine Noten-Vorhersage</p>
  ) : (
  <>
  {prognoseTrend && (
@@ -203,16 +203,16 @@ export default function StatsPage() {
  <span className="text-xs text-gray-400 ml-2">({p.total_quizzes} Quizze)</span>
  </div>
  <div className="text-center">
- <span className="text-xs text-gray-400">Aktuell</span>
+ <span className="text-xs theme-text-secondary">Aktuell</span>
  <p className="text-lg font-bold theme-text">{p.aktuelle_note}</p>
  </div>
  <div className="flex items-center">
  {p.trend === "steigend" ? <ArrowUp className="w-4 h-4 text-green-500" /> :
  p.trend === "fallend" ? <ArrowDown className="w-4 h-4 text-red-500" /> :
- <Minus className="w-4 h-4 text-gray-400" />}
+ <Minus className="w-4 h-4 theme-text-secondary" />}
  </div>
  <div className="text-center">
- <span className="text-xs text-gray-400">Prognose</span>
+ <span className="text-xs theme-text-secondary">Prognose</span>
  <p className={`text-lg font-bold ${
  p.prognose_note < p.aktuelle_note ? "text-green-600" :
  p.prognose_note > p.aktuelle_note ? "text-red-600" :
@@ -220,7 +220,7 @@ export default function StatsPage() {
  }`}>{p.prognose_note}</p>
  </div>
  <div className="w-12 text-right">
- <span className="text-xs text-gray-400">{Math.round(p.confidence * 100)}%</span>
+ <span className="text-xs theme-text-secondary">{Math.round(p.confidence * 100)}%</span>
  </div>
  </div>
  ))}
@@ -273,7 +273,7 @@ export default function StatsPage() {
  Stärkste Fächer
  </h3>
  {strongest.length === 0 ? (
- <p className="text-gray-400 text-sm">Noch keine Daten</p>
+ <p className="theme-text-secondary text-sm">Noch keine Daten</p>
  ) : (
  strongest.map((s) => (
  <SubjectBar key={s.subject} subject={s.subject} score={s.avg_score} color="bg-green-500" />
@@ -286,7 +286,7 @@ export default function StatsPage() {
  Zum Ueben
  </h3>
  {weakest.length === 0 ? (
- <p className="text-gray-400 text-sm">Keine Schwächen erkannt</p>
+ <p className="theme-text-secondary text-sm">Keine Schwächen erkannt</p>
  ) : (
  weakest.map((s) => (
  <SubjectBar key={s.subject} subject={s.subject} score={s.avg_score} color="bg-red-500" />

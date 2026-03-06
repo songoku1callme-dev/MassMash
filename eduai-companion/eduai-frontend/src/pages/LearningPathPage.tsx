@@ -147,7 +147,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  ) : topic.recommended ? (
  <Star className="w-6 h-6 text-blue-600" />
  ) : (
- <Circle className="w-6 h-6 text-gray-400" />
+ <Circle className="w-6 h-6 theme-text-secondary" />
  )}
  </div>
 
@@ -216,7 +216,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  {s?.icon}
  </div>
  <p className="text-xs font-medium theme-text">{s?.name}</p>
- <p className="text-xs text-gray-500 capitalize">{p.proficiency_level}</p>
+ <p className="text-xs theme-text-secondary capitalize">{p.proficiency_level}</p>
  <div className="mt-1 w-full bg-[var(--bg-surface)] rounded-full h-1">
  <div
  className={`h-1 rounded-full bg-gradient-to-r ${s?.color || "from-gray-500 to-gray-600"}`}

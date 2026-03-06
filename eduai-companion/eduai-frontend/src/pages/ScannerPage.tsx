@@ -140,7 +140,7 @@ export default function ScannerPage() {
  onDrop={handleDrop}
  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
  file
- ? "border-green-400 bg-green-50"
+ ? "border-green-400 bg-green-500/10"
  : "border-[var(--border-color)] hover:border-indigo-400"
  }`}
  >
@@ -150,7 +150,7 @@ export default function ScannerPage() {
  <BookOpen className="w-6 h-6 text-green-600" />
  </div>
  <p className="font-medium theme-text">{file.name}</p>
- <p className="text-sm text-gray-500">
+ <p className="text-sm theme-text-secondary">
  {(file.size / 1024).toFixed(0)} KB
  </p>
  <Button variant="outline" size="sm" onClick={() => setFile(null)}>
@@ -159,7 +159,7 @@ export default function ScannerPage() {
  </div>
  ) : (
  <div className="space-y-4">
- <div className="w-16 h-16 mx-auto rounded-full bg-indigo-50 flex items-center justify-center">
+ <div className="w-16 h-16 mx-auto rounded-full bg-indigo-500/10 flex items-center justify-center">
  <Upload className="w-8 h-8 text-indigo-600" />
  </div>
  <div>
@@ -227,7 +227,7 @@ export default function ScannerPage() {
  ? "bg-green-100 text-green-600"
  : i === scanStep
  ? "bg-indigo-100 text-indigo-600 animate-pulse"
- : "bg-gray-100 text-gray-400"
+ : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}
  >
  {i < scanStep ? "✓" : i + 1}
@@ -249,14 +249,14 @@ export default function ScannerPage() {
  Scan-Ergebnis
  </h3>
  <div className="grid grid-cols-2 gap-4">
- <div className="bg-indigo-50 rounded-xl p-4">
- <p className="text-sm text-gray-500">Erkanntes Thema</p>
+ <div className="bg-indigo-500/10 rounded-xl p-4">
+ <p className="text-sm theme-text-secondary">Erkanntes Thema</p>
  <p className="font-bold text-indigo-700">
  {result.thema}
  </p>
  </div>
- <div className="bg-purple-50 rounded-xl p-4">
- <p className="text-sm text-gray-500">Lernziele</p>
+ <div className="bg-purple-500/10 rounded-xl p-4">
+ <p className="text-sm theme-text-secondary">Lernziele</p>
  <p className="font-bold text-purple-700">
  {result.lernziele.length} erkannt
  </p>

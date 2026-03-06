@@ -179,12 +179,12 @@ export default function AdminPage() {
  </div>
 
  {message && (
- <div className="p-3 rounded-lg bg-emerald-50 text-emerald-700 text-sm">
+ <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400 text-sm">
  {message}
  </div>
  )}
  {error && (
- <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+ <div className="p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
  {error}
  </div>
  )}
@@ -194,22 +194,22 @@ export default function AdminPage() {
  <Card><CardContent className="p-4 text-center">
  <Users className="w-6 h-6 text-blue-600 mx-auto mb-1" />
  <p className="text-2xl font-bold">{stats.total_users}</p>
- <p className="text-xs text-gray-500">User gesamt</p>
+ <p className="text-xs theme-text-secondary">User gesamt</p>
  </CardContent></Card>
  <Card><CardContent className="p-4 text-center">
  <Star className="w-6 h-6 text-yellow-500 mx-auto mb-1" />
  <p className="text-2xl font-bold">{stats.pro_users}</p>
- <p className="text-xs text-gray-500">Pro-User</p>
+ <p className="text-xs theme-text-secondary">Pro-User</p>
  </CardContent></Card>
  <Card><CardContent className="p-4 text-center">
  <Crown className="w-6 h-6 text-purple-500 mx-auto mb-1" />
  <p className="text-2xl font-bold">{stats.max_users}</p>
- <p className="text-xs text-gray-500">Max-User</p>
+ <p className="text-xs theme-text-secondary">Max-User</p>
  </CardContent></Card>
  <Card><CardContent className="p-4 text-center">
  <BarChart3 className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
  <p className="text-2xl font-bold">{stats.activity_last_24h}</p>
- <p className="text-xs text-gray-500">Aktiv (24h)</p>
+ <p className="text-xs theme-text-secondary">Aktiv (24h)</p>
  </CardContent></Card>
  </div>
  )}
@@ -236,7 +236,7 @@ export default function AdminPage() {
  onClick={() => setGrantUserId(String(u.id))}>
  <div>
  <span className="font-medium">{u.username}</span>
- <span className="text-gray-400 ml-2">{u.email}</span>
+ <span className="theme-text-secondary ml-2">{u.email}</span>
  </div>
  <span className={`text-xs px-2 py-0.5 rounded ${
  u.subscription_tier === "max" ? "bg-purple-100 text-purple-700" :
@@ -320,14 +320,14 @@ export default function AdminPage() {
  </CardHeader>
  <CardContent>
  <div className="max-h-48 overflow-auto space-y-2">
- {coupons.length === 0 && <p className="text-sm text-gray-400">Keine Gutscheine vorhanden</p>}
+ {coupons.length === 0 && <p className="text-sm theme-text-secondary">Keine Gutscheine vorhanden</p>}
  {coupons.map((c) => (
  <div key={c.id} className="flex items-center justify-between p-2 rounded bg-[var(--bg-surface)] text-sm">
  <div>
  <span className="font-mono font-bold">{c.code}</span>
- <span className="text-gray-400 ml-2">{c.tier} / {c.duration_days}d</span>
+ <span className="theme-text-secondary ml-2">{c.tier} / {c.duration_days}d</span>
  </div>
- <span className="text-xs text-gray-500">{c.current_uses}/{c.max_uses || "\u221e"}</span>
+ <span className="text-xs theme-text-secondary">{c.current_uses}/{c.max_uses || "\u221e"}</span>
  </div>
  ))}
  </div>
@@ -346,7 +346,7 @@ export default function AdminPage() {
  </CardHeader>
  <CardContent>
  {analyticsData.daily_signups.length === 0 ? (
- <p className="text-sm text-gray-400">Keine Daten</p>
+ <p className="text-sm theme-text-secondary">Keine Daten</p>
  ) : (
  <div className="flex items-end gap-1 h-32">
  {analyticsData.daily_signups.slice(-14).map((d, i) => {
@@ -396,7 +396,7 @@ export default function AdminPage() {
  </CardHeader>
  <CardContent>
  {analyticsData.popular_subjects.length === 0 ? (
- <p className="text-sm text-gray-400">Keine Daten</p>
+ <p className="text-sm theme-text-secondary">Keine Daten</p>
  ) : (
  <div className="space-y-2">
  {analyticsData.popular_subjects.slice(0, 5).map((s, i) => {
@@ -405,7 +405,7 @@ export default function AdminPage() {
  <div key={i}>
  <div className="flex justify-between text-sm mb-0.5">
  <span className="theme-text-secondary">{s.subject}</span>
- <span className="text-gray-400">{s.count}</span>
+ <span className="theme-text-secondary">{s.count}</span>
  </div>
  <div className="h-2 bg-[var(--bg-surface)] rounded-full">
  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(s.count / max) * 100}%` }} />
@@ -429,16 +429,16 @@ export default function AdminPage() {
  <div className="grid grid-cols-2 gap-4">
  <div className="text-center">
  <p className="text-2xl font-bold text-purple-600">{analyticsData.iq_tests.total}</p>
- <p className="text-xs text-gray-400">Tests absolviert</p>
+ <p className="text-xs theme-text-secondary">Tests absolviert</p>
  </div>
  <div className="text-center">
  <p className="text-2xl font-bold text-purple-600">{analyticsData.iq_tests.avg_iq || "—"}</p>
- <p className="text-xs text-gray-400">Durchschnitt-IQ</p>
+ <p className="text-xs theme-text-secondary">Durchschnitt-IQ</p>
  </div>
  </div>
  <div className="mt-3 pt-3 border-t border-[var(--border-color)]">
  <div className="flex justify-between text-sm">
- <span className="text-gray-500">Turnier-Teilnehmer</span>
+ <span className="theme-text-secondary">Turnier-Teilnehmer</span>
  <span className="font-medium">{analyticsData.tournament_participants}</span>
  </div>
  </div>
