@@ -137,10 +137,10 @@ export default function NotificationBell() {
   }, []);
 
   const typeColor: Record<string, string> = {
-    tip: "bg-blue-100 text-blue-700",
-    reminder: "bg-yellow-100 text-yellow-700",
-    achievement: "bg-green-100 text-green-700",
-    warning: "bg-red-100 text-red-700",
+    tip: "bg-blue-500/15 text-blue-400",
+    reminder: "bg-yellow-500/15 text-yellow-400",
+    achievement: "bg-green-500/15 text-green-400",
+    warning: "bg-red-500/15 text-red-400",
     info: "bg-[var(--input-bg)] text-[var(--text-secondary)]",
   };
 
