@@ -392,3 +392,29 @@ body {
   animation: shimmer 2s ease-in-out infinite 1.5s;
 }
 
+/* ===== MOBILE RESPONSIVE (375px+) ===== */
+@media (max-width: 1023px) {
+  /* Pad top-left for hamburger button on mobile */
+  main > .absolute.top-4.right-4 {
+    right: 1rem;
+  }
+
+  /* Tables: horizontal scroll wrapper */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* Full-width cards on small screens */
+  .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
+  .grid.grid-cols-3 { grid-template-columns: 1fr !important; }
+  .grid.grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+@media (max-width: 640px) {
+  /* Even smaller: single column for 4-col grids */
+  .grid.grid-cols-4 { grid-template-columns: 1fr !important; }
+}
+

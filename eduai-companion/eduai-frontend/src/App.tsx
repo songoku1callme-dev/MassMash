@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 import { useAuthStore } from "./stores/authStore";
@@ -6,50 +6,63 @@ import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { pageVariants } from "./lib/animations";
-import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import ChatPage from "./pages/ChatPage";
-import QuizPage from "./pages/QuizPage";
-import LearningPathPage from "./pages/LearningPathPage";
-import RAGPage from "./pages/RAGPage";
-import AbiturPage from "./pages/AbiturPage";
-import ResearchPage from "./pages/ResearchPage";
-import GamificationPage from "./pages/GamificationPage";
-import GroupsPage from "./pages/GroupsPage";
-import AdminPage from "./pages/AdminPage";
-import TurnierPage from "./pages/TurnierPage";
-import IQTestPage from "./pages/IQTestPage";
-import PricingPage from "./pages/PricingPage";
-import SettingsPage from "./pages/SettingsPage";
-import FlashcardsPage from "./pages/FlashcardsPage";
-import NotesPage from "./pages/NotesPage";
-import CalendarPage from "./pages/CalendarPage";
-import MultiplayerPage from "./pages/MultiplayerPage";
-import DatenschutzPage from "./pages/DatenschutzPage";
-import SchoolPage from "./pages/SchoolPage";
-import IntelligencePage from "./pages/IntelligencePage";
-import PomodoroPage from "./pages/PomodoroPage";
-import ShopPage from "./pages/ShopPage";
-import ChallengesPage from "./pages/ChallengesPage";
-import VoicePage from "./pages/VoicePage";
-import ParentsPage from "./pages/ParentsPage";
-import QuestsPage from "./pages/QuestsPage";
-import EventsPage from "./pages/EventsPage";
-import MatchingPage from "./pages/MatchingPage";
-import MarketplacePage from "./pages/MarketplacePage";
-import BattlePassPage from "./pages/BattlePassPage";
-import StatsPage from "./pages/StatsPage";
-import LandingPage from "./pages/LandingPage";
-import ScannerPage from "./pages/ScannerPage";
-import VoiceExamPage from "./pages/VoiceExamPage";
-import ForschungsSeite from "./pages/ForschungsSeite";
-import OnboardingPage from "./pages/OnboardingPage";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
 import OfflineBanner from "./components/OfflineBanner";
 import NotificationBell from "./components/NotificationBell";
 import ErrorBoundary from "./components/ErrorBoundary";
+
+// Lazy-loaded pages — each page is loaded on-demand for faster initial load
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+const QuizPage = lazy(() => import("./pages/QuizPage"));
+const LearningPathPage = lazy(() => import("./pages/LearningPathPage"));
+const RAGPage = lazy(() => import("./pages/RAGPage"));
+const AbiturPage = lazy(() => import("./pages/AbiturPage"));
+const ResearchPage = lazy(() => import("./pages/ResearchPage"));
+const GamificationPage = lazy(() => import("./pages/GamificationPage"));
+const GroupsPage = lazy(() => import("./pages/GroupsPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const TurnierPage = lazy(() => import("./pages/TurnierPage"));
+const IQTestPage = lazy(() => import("./pages/IQTestPage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const FlashcardsPage = lazy(() => import("./pages/FlashcardsPage"));
+const NotesPage = lazy(() => import("./pages/NotesPage"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const MultiplayerPage = lazy(() => import("./pages/MultiplayerPage"));
+const DatenschutzPage = lazy(() => import("./pages/DatenschutzPage"));
+const SchoolPage = lazy(() => import("./pages/SchoolPage"));
+const IntelligencePage = lazy(() => import("./pages/IntelligencePage"));
+const PomodoroPage = lazy(() => import("./pages/PomodoroPage"));
+const ShopPage = lazy(() => import("./pages/ShopPage"));
+const ChallengesPage = lazy(() => import("./pages/ChallengesPage"));
+const VoicePage = lazy(() => import("./pages/VoicePage"));
+const ParentsPage = lazy(() => import("./pages/ParentsPage"));
+const QuestsPage = lazy(() => import("./pages/QuestsPage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
+const MatchingPage = lazy(() => import("./pages/MatchingPage"));
+const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
+const BattlePassPage = lazy(() => import("./pages/BattlePassPage"));
+const StatsPage = lazy(() => import("./pages/StatsPage"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const ScannerPage = lazy(() => import("./pages/ScannerPage"));
+const VoiceExamPage = lazy(() => import("./pages/VoiceExamPage"));
+const ForschungsSeite = lazy(() => import("./pages/ForschungsSeite"));
+const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
+
+function PageLoader() {
+  return (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-pulse-glow rounded-full h-10 w-10 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-sm font-bold">{"\u2726"}</div>
+        <p className="mt-3 text-lumnos-muted text-xs">Laden...</p>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode, loginWithClerk } = useAuthStore();
@@ -120,22 +133,24 @@ function App() {
   if (!isAuthenticated && !isGuest) {
     if (showLanding) {
       return (
-        <LandingPage
-          onLogin={() => setShowLanding(false)}
-          onRegister={() => setShowLanding(false)}
-          onIQTest={() => setShowLanding(false)}
-          onGuestChat={() => {
-            enterGuestMode();
-            setCurrentPage("chat");
-          }}
-        />
+        <Suspense fallback={<PageLoader />}>
+          <LandingPage
+            onLogin={() => setShowLanding(false)}
+            onRegister={() => setShowLanding(false)}
+            onIQTest={() => setShowLanding(false)}
+            onGuestChat={() => {
+              enterGuestMode();
+              setCurrentPage("chat");
+            }}
+          />
+        </Suspense>
       );
     }
-    return <AuthPage />;
+    return <Suspense fallback={<PageLoader />}><AuthPage /></Suspense>;
   }
 
   if (showOnboarding) {
-    return <OnboardingPage onComplete={() => setShowOnboarding(false)} />;
+    return <Suspense fallback={<PageLoader />}><OnboardingPage onComplete={() => setShowOnboarding(false)} /></Suspense>;
   }
 
   const renderPage = () => {
@@ -253,7 +268,9 @@ function App() {
               style={{ flex: 1, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column" }}
               className="scrollable"
             >
-              {renderPage()}
+              <Suspense fallback={<PageLoader />}>
+                {renderPage()}
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>
