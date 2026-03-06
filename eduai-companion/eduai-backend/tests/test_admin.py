@@ -1,6 +1,7 @@
 """Tests for admin stats and monitoring config endpoints."""
 
 import uuid
+
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -23,10 +24,8 @@ async def admin_client():
     """
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
-        uid = uuid.uuid4().hex[:8]
         admin_email = "ahmadalkhalaf2019@gmail.com"  # in ADMIN_EMAILS whitelist
         admin_password = "TestPass123!"
-
         admin_username = "admin_test_fixed"
 
         # Try to register first; if already exists, login instead
