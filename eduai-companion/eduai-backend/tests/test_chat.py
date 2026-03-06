@@ -43,7 +43,8 @@ async def test_send_chat_message(authed_client: AsyncClient):
     data = resp.json()
     assert "response" in data
     assert "session_id" in data
-    assert data["subject"] in ("math", "general")
+    # normalize_fach maps English names to German: "math" → "Mathematik"
+    assert data["subject"] in ("math", "general", "Mathematik", "Allgemein")
 
 
 @pytest.mark.asyncio

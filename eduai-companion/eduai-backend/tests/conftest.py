@@ -9,6 +9,14 @@ _test_db = os.path.join(tempfile.gettempdir(), "test_lumnos.db")
 os.environ["DATABASE_URL"] = _test_db
 os.environ["LUMNOS_DEV_MODE"] = "1"
 
+# Override monitoring/clerk env vars to empty strings so tests see them as
+# disabled.  We use explicit empty strings rather than pop() because
+# pydantic-settings reads .env and would restore the values otherwise.
+os.environ["SENTRY_DSN"] = ""
+os.environ["POSTHOG_API_KEY"] = ""
+os.environ["CLERK_SECRET_KEY"] = ""
+os.environ["CLERK_PUBLISHABLE_KEY"] = ""
+
 import pytest
 from app.core.database import init_db
 from app.core.security import _rate_limit_store, _endpoint_stores, _login_lockout_store

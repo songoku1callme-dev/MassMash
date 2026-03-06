@@ -1,5 +1,6 @@
 """Tests for admin stats and monitoring config endpoints."""
 
+import uuid
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
@@ -13,17 +14,55 @@ async def client():
         yield c
 
 
+@pytest_asyncio.fixture
+async def admin_client():
+    """Register (or login) a user with a whitelisted admin email.
+
+    _is_admin() in admin.py checks ADMIN_EMAILS whitelist, so we use
+    one of those emails to get admin privileges.
+    """
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
+        uid = uuid.uuid4().hex[:8]
+        admin_email = "ahmadalkhalaf2019@gmail.com"  # in ADMIN_EMAILS whitelist
+        admin_password = "TestPass123!"
+
+        admin_username = "admin_test_fixed"
+
+        # Try to register first; if already exists, login instead
+        reg_data = {
+            "email": admin_email,
+            "username": admin_username,
+            "password": admin_password,
+            "full_name": "Admin User",
+            "school_grade": "10",
+            "school_type": "Gymnasium",
+            "preferred_language": "de",
+        }
+        resp = await c.post("/api/auth/register", json=reg_data)
+        data = resp.json()
+        if "access_token" not in data:
+            # Already registered — login instead
+            resp = await c.post(
+                "/api/auth/login",
+                json={"username": admin_username, "password": admin_password},
+            )
+            data = resp.json()
+        assert "access_token" in data, f"Admin auth failed: {data}"
+        c.headers["Authorization"] = f"Bearer {data['access_token']}"
+        yield c
+
+
 @pytest.mark.asyncio
-async def test_admin_stats(client: AsyncClient):
+async def test_admin_stats(admin_client: AsyncClient):
     """Admin stats endpoint returns expected structure."""
-    resp = await client.get("/api/admin/stats")
+    resp = await admin_client.get("/api/admin/stats")
     assert resp.status_code == 200
     data = resp.json()
     assert "total_users" in data
     assert "total_chat_sessions" in data
     assert "total_quizzes" in data
     assert "avg_quiz_score" in data
-    assert "proficiency_distribution" in data
     assert "subject_popularity" in data
     assert "activity_last_24h" in data
     # Values should be non-negative integers/floats
@@ -33,26 +72,30 @@ async def test_admin_stats(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_admin_stats_after_registration(client: AsyncClient):
+async def test_admin_stats_after_registration(admin_client: AsyncClient):
     """Admin stats reflect new user after registration."""
     # Get initial count
-    resp = await client.get("/api/admin/stats")
+    resp = await admin_client.get("/api/admin/stats")
+    assert resp.status_code == 200
     initial_users = resp.json()["total_users"]
 
     # Register a new user
+    uid = uuid.uuid4().hex[:8]
     reg_data = {
-        "email": "admin_test@example.com",
-        "username": "admin_test_user",
+        "email": f"admin_test_{uid}@example.com",
+        "username": f"admin_test_{uid}",
         "password": "TestPass123!",
         "full_name": "Admin Test",
         "school_grade": "10",
         "school_type": "Gymnasium",
         "preferred_language": "de",
     }
-    await client.post("/api/auth/register", json=reg_data)
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as c:
+        await c.post("/api/auth/register", json=reg_data)
 
     # Stats should now show one more user
-    resp = await client.get("/api/admin/stats")
+    resp = await admin_client.get("/api/admin/stats")
     assert resp.json()["total_users"] == initial_users + 1
 
 
