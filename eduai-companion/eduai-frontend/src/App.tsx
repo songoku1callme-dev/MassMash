@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 import { useAuthStore } from "./stores/authStore";
@@ -6,6 +7,7 @@ import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { pageVariants } from "./lib/animations";
+import { pageIdToPath } from "./lib/routes";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
@@ -71,7 +73,8 @@ function App() {
   const clerkUser = useClerkUser();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
-  const [currentPage, setCurrentPage] = useState("chat");
+  const location = useLocation();
+  const navigate = useNavigate();
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   // Ensure theme store is initialized + subscribed
@@ -104,19 +107,19 @@ function App() {
     }
   }, [isAuthenticated]);
 
-
-  // Allow navigation from pages that don't receive onNavigate props (e.g. Chat header upgrade button)
+  // Legacy "navigate" CustomEvent bridge — pages that still dispatch
+  // window events will be caught here and converted to router navigation.
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent).detail;
       if (typeof detail === "string") {
-        setCurrentPage(detail);
+        navigate(pageIdToPath(detail));
       }
     };
 
     window.addEventListener("navigate", handler);
     return () => window.removeEventListener("navigate", handler);
-  }, []);
+  }, [navigate]);
 
   if (isLoading) {
     return (
@@ -129,7 +132,7 @@ function App() {
     );
   }
 
-  // Auth-Guard komplett entfernt fuer Testing — direkt zum Chat
+  // Auth-Guard: unauthenticated users see Landing/Auth pages
   if (!isAuthenticated && !isGuest) {
     if (showLanding) {
       return (
@@ -140,7 +143,7 @@ function App() {
             onIQTest={() => setShowLanding(false)}
             onGuestChat={() => {
               enterGuestMode();
-              setCurrentPage("chat");
+              navigate("/chat");
             }}
           />
         </Suspense>
@@ -152,83 +155,6 @@ function App() {
   if (showOnboarding) {
     return <Suspense fallback={<PageLoader />}><OnboardingPage onComplete={() => setShowOnboarding(false)} /></Suspense>;
   }
-
-  const renderPage = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return <DashboardPage onNavigate={setCurrentPage} />;
-      case "chat":
-        return <ChatPage />;
-      case "quiz":
-        return <QuizPage />;
-      case "learning":
-        return <LearningPathPage onNavigate={setCurrentPage} />;
-      case "rag":
-        return <RAGPage />;
-      case "abitur":
-        return <AbiturPage />;
-      case "research":
-        return <ResearchPage />;
-      case "gamification":
-        return <GamificationPage />;
-      case "groups":
-        return <GroupsPage />;
-      case "admin":
-        return <AdminPage />;
-      case "turnier":
-        return <TurnierPage />;
-      case "iq-test":
-        return <IQTestPage />;
-      case "flashcards":
-        return <FlashcardsPage />;
-      case "notes":
-        return <NotesPage />;
-      case "calendar":
-        return <CalendarPage />;
-      case "multiplayer":
-        return <MultiplayerPage />;
-      case "datenschutz":
-        return <DatenschutzPage />;
-      case "school":
-        return <SchoolPage />;
-      case "intelligence":
-        return <IntelligencePage />;
-      case "pomodoro":
-        return <PomodoroPage />;
-      case "shop":
-        return <ShopPage />;
-      case "challenges":
-        return <ChallengesPage />;
-      case "voice":
-        return <VoicePage />;
-      case "parents":
-        return <ParentsPage />;
-      case "quests":
-        return <QuestsPage />;
-      case "events":
-        return <EventsPage />;
-      case "matching":
-        return <MatchingPage />;
-      case "marketplace":
-        return <MarketplacePage />;
-      case "battle-pass":
-        return <BattlePassPage />;
-      case "meine-stats":
-        return <StatsPage />;
-      case "scanner":
-        return <ScannerPage />;
-      case "voice-exam":
-        return <VoiceExamPage />;
-      case "forschung":
-        return <ForschungsSeite />;
-      case "pricing":
-        return <PricingPage />;
-      case "settings":
-        return <SettingsPage />;
-      default:
-        return <DashboardPage onNavigate={setCurrentPage} />;
-    }
-  };
 
   return (
     <ErrorBoundary>
@@ -243,7 +169,7 @@ function App() {
         }}
         className="text-lumnos-text"
       >
-        <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
+        <Sidebar />
         <main
           style={{
             flex: 1,
@@ -260,7 +186,7 @@ function App() {
           </div>
           <AnimatePresence mode="wait">
             <motion.div
-              key={currentPage}
+              key={location.pathname}
               variants={pageVariants}
               initial="initial"
               animate="animate"
@@ -269,7 +195,45 @@ function App() {
               className="scrollable"
             >
               <Suspense fallback={<PageLoader />}>
-                {renderPage()}
+                <Routes location={location}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/chat" element={<ChatPage />} />
+                  <Route path="/quiz" element={<QuizPage />} />
+                  <Route path="/iq-test" element={<IQTestPage />} />
+                  <Route path="/learning" element={<LearningPathPage />} />
+                  <Route path="/rag" element={<RAGPage />} />
+                  <Route path="/abitur" element={<AbiturPage />} />
+                  <Route path="/research" element={<ResearchPage />} />
+                  <Route path="/gamification" element={<GamificationPage />} />
+                  <Route path="/groups" element={<GroupsPage />} />
+                  <Route path="/turnier" element={<TurnierPage />} />
+                  <Route path="/flashcards" element={<FlashcardsPage />} />
+                  <Route path="/notes" element={<NotesPage />} />
+                  <Route path="/calendar" element={<CalendarPage />} />
+                  <Route path="/multiplayer" element={<MultiplayerPage />} />
+                  <Route path="/intelligence" element={<IntelligencePage />} />
+                  <Route path="/pomodoro" element={<PomodoroPage />} />
+                  <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/challenges" element={<ChallengesPage />} />
+                  <Route path="/voice" element={<VoicePage />} />
+                  <Route path="/quests" element={<QuestsPage />} />
+                  <Route path="/events" element={<EventsPage />} />
+                  <Route path="/matching" element={<MatchingPage />} />
+                  <Route path="/marketplace" element={<MarketplacePage />} />
+                  <Route path="/battle-pass" element={<BattlePassPage />} />
+                  <Route path="/meine-stats" element={<StatsPage />} />
+                  <Route path="/voice-exam" element={<VoiceExamPage />} />
+                  <Route path="/scanner" element={<ScannerPage />} />
+                  <Route path="/parents" element={<ParentsPage />} />
+                  <Route path="/school" element={<SchoolPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/forschung" element={<ForschungsSeite />} />
+                  <Route path="/datenschutz" element={<DatenschutzPage />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  {/* Catch-all: redirect to /chat */}
+                  <Route path="*" element={<Navigate to="/chat" replace />} />
+                </Routes>
               </Suspense>
             </motion.div>
           </AnimatePresence>

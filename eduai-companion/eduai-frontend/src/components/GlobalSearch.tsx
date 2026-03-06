@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { pageIdToPath } from "../lib/routes";
 
 /**
  * Infra 5: Global Search — Cmd/Ctrl+K zum Suchen
@@ -52,11 +54,9 @@ const ALLE_THEMEN = [
   { label: "Statistiken", fach: "Navigation", page: "meine-stats" },
 ];
 
-interface GlobalSearchProps {
-  onNavigate: (page: string) => void;
-}
-
-export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
+export function GlobalSearch() {
+  const nav = useNavigate();
+  const onNavigate = (id: string) => nav(pageIdToPath(id));
   const [offen, setOffen] = useState(false);
   const [q, setQ] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);

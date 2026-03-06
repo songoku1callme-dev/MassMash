@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import {
  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Target
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
+import { pageIdToPath } from "../lib/routes";
 
 const SUBJECTS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
@@ -17,11 +19,9 @@ const SUBJECTS = [
  { id: "science", name: "Naturwiss.", icon: <FlaskConical className="w-5 h-5" />, color: "from-rose-500 to-rose-600" },
 ];
 
-interface LearningPathPageProps {
- onNavigate: (page: string) => void;
-}
-
-export default function LearningPathPage({ onNavigate }: LearningPathPageProps) {
+export default function LearningPathPage() {
+ const nav = useNavigate();
+ const onNavigate = (id: string) => nav(pageIdToPath(id));
  const [selectedSubject, setSelectedSubject] = useState("math");
  const [learningPath, setLearningPath] = useState<LearningPath | null>(null);
  const [profiles, setProfiles] = useState<LearningProfile[]>([]);

@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { learningApi, type Progress } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 import BentoTile from "../components/BentoTile";
 import LumnosOrb from "../components/LumnosOrb";
 import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
+import { pageIdToPath } from "../lib/routes";
 import { APPLE_EASE, staggerContainer } from "../lib/animations";
 
-interface DashboardProps {
- onNavigate: (page: string) => void;
-}
-
-export default function DashboardPage({ onNavigate }: DashboardProps) {
+export default function DashboardPage() {
+ const nav = useNavigate();
+ const onNavigate = (id: string) => nav(pageIdToPath(id));
  const { user } = useAuthStore();
  const [progress, setProgress] = useState<Progress | null>(null);
  const [loading, setLoading] = useState(true);

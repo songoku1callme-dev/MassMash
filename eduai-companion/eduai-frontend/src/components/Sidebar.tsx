@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { Button } from "@/components/ui/button";
 import GlobalSearch from "./GlobalSearch";
 import ThemeToggle from "./ThemeToggle";
+import { pageIdToPath, pathToPageId } from "../lib/routes";
 import { sidebarItem, mobileOverlay, mobileSidebarSlide, APPLE_EASE } from "../lib/animations";
 import {
   GraduationCap, MessageSquarePlus, LayoutDashboard, MessageCircle,
@@ -25,12 +27,11 @@ const SUBJECT_ICONS: Record<string, React.ReactNode> = {
   general: <MessageCircle className="w-4 h-4" />,
 };
 
-interface SidebarProps {
-  currentPage: string;
-  onPageChange: (page: string) => void;
-}
-
-export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
+export default function Sidebar() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPage = pathToPageId(location.pathname);
+  const onPageChange = (id: string) => navigate(pageIdToPath(id));
   const { user, logout, isGuest, exitGuestMode } = useAuthStore();
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -124,7 +125,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         </Button>
 
         {/* Global Search (Cmd/Ctrl+K) */}
-        <GlobalSearch onNavigate={onPageChange} />
+        <GlobalSearch />
       </div>
 
       {/* ===== MITTE: Navigation (scrollbar fuer sich) ===== */}
