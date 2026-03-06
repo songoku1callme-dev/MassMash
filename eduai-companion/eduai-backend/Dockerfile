@@ -33,5 +33,6 @@ COPY app /app/app
 
 EXPOSE 8080
 
-# Fly.io expects the service to listen on $PORT (mapped to internal_port in fly.toml)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Railway sets PORT as env var; Fly.io uses 8080 via fly.toml
+# Shell form so $PORT is expanded at runtime (defaults to 8080)
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}
