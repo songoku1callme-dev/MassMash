@@ -1,31 +1,36 @@
-"""PR #48: Dual-mode database — SQLite (local) + PostgreSQL (Supabase production).
+"""PR #50: Dual-mode database — SQLite (local) + PostgreSQL (Supabase production).
 
 Checks DATABASE_URL env var:
-  - If starts with "postgresql": uses psycopg2 connection pool
+  - If starts with "postgresql": uses asyncpg connection pool (fully async)
   - Otherwise: uses aiosqlite (current behavior)
 
-Placeholder variable PH adapts SQL syntax:
-  - SQLite: PH = "?"
-  - PostgreSQL: PH = "%s"
+The AsyncPgConnection wrapper auto-converts SQL placeholders:
+  - SQLite: uses "?" natively
+  - PostgreSQL: converts "?" → "$1, $2, ..." at runtime
+  → No need to change any query in any route file!
 """
 import os
+import re
 import logging
 import aiosqlite
 import json
-from datetime import datetime
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from uuid import UUID
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# PR #48: Dual-Mode Database (SQLite / PostgreSQL)
+# PR #50: Dual-Mode Database (SQLite / PostgreSQL)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DATABASE_URL = os.getenv("DATABASE_URL", "")
 IS_POSTGRES = DATABASE_URL.startswith("postgresql")
 
 # Placeholder for parameterized queries
-# SQLite uses "?", PostgreSQL uses "%s"
-PH = "%s" if IS_POSTGRES else "?"
+# SQLite uses "?", PostgreSQL uses "$N" (asyncpg)
+# Routes still use "?" — the wrapper converts automatically
+PH = "?"  # Always use "?" in queries — auto-converted for PostgreSQL
 
 DB_PATH = settings.db_path
 
@@ -33,33 +38,206 @@ DB_PATH = settings.db_path
 _pg_pool = None
 
 
-def _get_pg_pool():
-    """Get or create PostgreSQL connection pool (psycopg2)."""
+def _convert_placeholders(sql: str) -> str:
+    """Convert SQLite '?' placeholders to asyncpg '$1, $2, ...' format.
+
+    Also converts common SQLite-isms to PostgreSQL:
+      - INSERT OR IGNORE → INSERT ... ON CONFLICT DO NOTHING
+      - INSERT OR REPLACE → INSERT ... ON CONFLICT DO NOTHING (simplified)
+      - datetime('now') → NOW()
+      - date('now') → CURRENT_DATE
+      - date('now', '-N days') → CURRENT_DATE - INTERVAL 'N days'
+      - datetime('now', '-N unit') → NOW() - INTERVAL 'N unit'
+      - last_insert_rowid() → lastval()
+    """
+    result = sql
+
+    # 1. Convert INSERT OR IGNORE/REPLACE (before other conversions)
+    _append_on_conflict = False
+    if re.search(r'INSERT\s+OR\s+IGNORE\s+INTO', result, re.IGNORECASE):
+        result = re.sub(r'INSERT\s+OR\s+IGNORE\s+INTO', 'INSERT INTO', result, flags=re.IGNORECASE)
+        _append_on_conflict = True
+    elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO', result, re.IGNORECASE):
+        result = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO', 'INSERT INTO', result, flags=re.IGNORECASE)
+        _append_on_conflict = True
+
+    # 2. Convert SQLite datetime functions (BEFORE ? placeholder conversion)
+    # datetime('now', '-N unit') → NOW() - INTERVAL 'N unit'
+    result = re.sub(
+        r"datetime\('now',\s*'(-?\d+)\s+(days?|hours?|minutes?|seconds?)'\)",
+        lambda m: f"NOW() - INTERVAL '{abs(int(m.group(1)))} {m.group(2)}'",
+        result, flags=re.IGNORECASE,
+    )
+    # date('now', '-N days') → CURRENT_DATE - INTERVAL 'N days'
+    result = re.sub(
+        r"date\('now',\s*'(-?\d+)\s+(days?|hours?|minutes?|seconds?)'\)",
+        lambda m: f"CURRENT_DATE - INTERVAL '{abs(int(m.group(1)))} {m.group(2)}'",
+        result, flags=re.IGNORECASE,
+    )
+    # Simple datetime('now') → NOW()
+    result = re.sub(r"datetime\('now'\)", "NOW()", result, flags=re.IGNORECASE)
+    # Simple date('now') → CURRENT_DATE
+    result = re.sub(r"date\('now'\)", "CURRENT_DATE", result, flags=re.IGNORECASE)
+    # last_insert_rowid() → lastval()
+    result = re.sub(r"last_insert_rowid\(\)", "lastval()", result, flags=re.IGNORECASE)
+
+    # 3. Convert ? placeholders to $1, $2, ...
+    counter = 0
+
+    def replacer(match: re.Match) -> str:
+        nonlocal counter
+        counter += 1
+        return f"${counter}"
+
+    # Replace ? that are NOT inside single-quoted strings
+    # Simple approach: split by single quotes, only replace in odd segments
+    parts = result.split("'")
+    for i in range(0, len(parts), 2):  # Even indices = outside quotes
+        parts[i] = re.sub(r"\?", replacer, parts[i])
+    result = "'".join(parts)
+
+    # 4. Append ON CONFLICT DO NOTHING for INSERT OR IGNORE/REPLACE
+    if _append_on_conflict:
+        result = result.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
+
+    return result
+
+
+class AsyncPgConnection:
+    """Wrapper around asyncpg.Connection that mimics aiosqlite interface.
+
+    Converts:
+      - '?' placeholders → '$1, $2, ...' (asyncpg format)
+      - cursor.fetchone() → returns dict-like Record
+      - cursor.fetchall() → returns list of dict-like Records
+      - db.execute(sql, params) → conn.execute(converted_sql, *params)
+      - db.commit() → conn.execute('COMMIT') (no-op in autocommit)
+      - db.close() → releases connection back to pool
+    """
+
+    def __init__(self, conn):
+        self._conn = conn
+        self._in_transaction = False
+
+    async def execute(self, sql: str, params=None):
+        """Execute SQL with auto-converted placeholders.
+
+        For INSERT statements, automatically appends RETURNING id
+        so that cursor.lastrowid works (PostgreSQL doesn't track
+        lastrowid like SQLite does).
+        """
+        converted = _convert_placeholders(sql)
+
+        # For INSERT without RETURNING, add RETURNING id to capture lastrowid
+        trimmed = converted.strip().upper()
+        if trimmed.startswith("INSERT") and "RETURNING" not in trimmed:
+            converted = converted.rstrip().rstrip(';') + ' RETURNING id'
+
+        if params:
+            result = await self._conn.fetch(converted, *params)
+        else:
+            result = await self._conn.fetch(converted)
+        return AsyncPgCursor(result)
+
+    async def executemany(self, sql: str, params_list):
+        """Execute SQL for multiple parameter sets."""
+        converted = _convert_placeholders(sql)
+        for params in params_list:
+            await self._conn.execute(converted, *params)
+
+    async def executescript(self, sql: str):
+        """Execute multiple SQL statements (for schema creation)."""
+        await self._conn.execute(sql)
+
+    async def commit(self):
+        """Commit transaction (no-op if using asyncpg default autocommit)."""
+        pass  # asyncpg handles transactions differently
+
+    async def close(self):
+        """Release connection back to pool."""
+        pass  # Handled by get_db() finally block
+
+    @property
+    def row_factory(self):
+        return None
+
+    @row_factory.setter
+    def row_factory(self, value):
+        pass  # asyncpg Records already act like dicts
+
+
+def _pg_row_to_dict(record) -> dict:
+    """Convert asyncpg Record to dict with SQLite-compatible types.
+
+    PostgreSQL returns native Python types (datetime, date, Decimal, UUID, etc.)
+    but the Pydantic models and route code expect strings (as SQLite returns).
+    This function converts those types to their string representations.
+    """
+    result = {}
+    for key, value in dict(record).items():
+        if isinstance(value, datetime):
+            result[key] = value.isoformat()
+        elif isinstance(value, date):
+            result[key] = value.isoformat()
+        elif isinstance(value, timedelta):
+            result[key] = str(value)
+        elif isinstance(value, Decimal):
+            result[key] = float(value)
+        elif isinstance(value, UUID):
+            result[key] = str(value)
+        else:
+            result[key] = value
+    return result
+
+
+class AsyncPgCursor:
+    """Wrapper around asyncpg fetch results to mimic aiosqlite cursor."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    async def fetchone(self):
+        if self._rows:
+            return _pg_row_to_dict(self._rows[0])
+        return None
+
+    async def fetchall(self):
+        return [_pg_row_to_dict(r) for r in self._rows]
+
+    @property
+    def lastrowid(self):
+        """Get last inserted row ID (if available)."""
+        if self._rows and "id" in self._rows[0]:
+            return self._rows[0]["id"]
+        return None
+
+
+async def _get_pg_pool():
+    """Get or create asyncpg connection pool."""
     global _pg_pool
     if _pg_pool is None:
-        import psycopg2
-        from psycopg2 import pool as pg_pool
-        logger.info("Connecting to PostgreSQL (Supabase)...")
-        _pg_pool = pg_pool.SimpleConnectionPool(
-            minconn=1,
-            maxconn=5,
+        import asyncpg
+        logger.info("Connecting to PostgreSQL (Supabase) via asyncpg...")
+        _pg_pool = await asyncpg.create_pool(
             dsn=DATABASE_URL,
-            options="-c statement_timeout=30000",  # 30s timeout
+            min_size=1,
+            max_size=5,
+            command_timeout=30,
+            ssl="require",
         )
-        logger.info("PostgreSQL connection pool created (1-5 connections)")
+        logger.info("asyncpg connection pool created (1-5 connections)")
     return _pg_pool
 
 
 async def get_db():
     """Get database connection (SQLite or PostgreSQL based on DATABASE_URL)."""
     if IS_POSTGRES:
-        pool = _get_pg_pool()
-        conn = pool.getconn()
-        conn.autocommit = False
+        pool = await _get_pg_pool()
+        conn = await pool.acquire()
         try:
-            yield conn
+            yield AsyncPgConnection(conn)
         finally:
-            pool.putconn(conn)
+            await pool.release(conn)
     else:
         db = await aiosqlite.connect(DB_PATH)
         db.row_factory = aiosqlite.Row

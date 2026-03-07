@@ -522,7 +522,7 @@ CREATE TABLE IF NOT EXISTS noten_prognose (
     prognose_note DOUBLE PRECISION,
     trend VARCHAR DEFAULT 'stabil',
     confidence DOUBLE PRECISION DEFAULT 0.5,
-    analyse TEXT DEFAULT '',
+    "analyse" TEXT DEFAULT '',
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -564,7 +564,7 @@ CREATE TABLE IF NOT EXISTS schulbuch_scans (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     fach VARCHAR DEFAULT 'Allgemein',
     ocr_text TEXT DEFAULT '',
-    analyse TEXT DEFAULT '{}',
+    "analyse" TEXT DEFAULT '{}',
     quiz TEXT DEFAULT '[]',
     karteikarten TEXT DEFAULT '[]',
     created_at TIMESTAMP DEFAULT NOW()
