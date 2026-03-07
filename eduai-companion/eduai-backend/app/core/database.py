@@ -40,9 +40,46 @@ def _convert_placeholders(sql: str) -> str:
     """Convert SQLite '?' placeholders to asyncpg '$1, $2, ...' format.
 
     Also converts common SQLite-isms to PostgreSQL:
+      - INSERT OR IGNORE → INSERT ... ON CONFLICT DO NOTHING
+      - INSERT OR REPLACE → INSERT ... ON CONFLICT DO NOTHING (simplified)
       - datetime('now') → NOW()
-      - AUTOINCREMENT → (removed, SERIAL handles it)
+      - date('now') → CURRENT_DATE
+      - date('now', '-N days') → CURRENT_DATE - INTERVAL 'N days'
+      - datetime('now', '-N unit') → NOW() - INTERVAL 'N unit'
+      - last_insert_rowid() → lastval()
     """
+    result = sql
+
+    # 1. Convert INSERT OR IGNORE/REPLACE (before other conversions)
+    _append_on_conflict = False
+    if re.search(r'INSERT\s+OR\s+IGNORE\s+INTO', result, re.IGNORECASE):
+        result = re.sub(r'INSERT\s+OR\s+IGNORE\s+INTO', 'INSERT INTO', result, flags=re.IGNORECASE)
+        _append_on_conflict = True
+    elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO', result, re.IGNORECASE):
+        result = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO', 'INSERT INTO', result, flags=re.IGNORECASE)
+        _append_on_conflict = True
+
+    # 2. Convert SQLite datetime functions (BEFORE ? placeholder conversion)
+    # datetime('now', '-N unit') → NOW() - INTERVAL 'N unit'
+    result = re.sub(
+        r"datetime\('now',\s*'(-?\d+)\s+(days?|hours?|minutes?|seconds?)'\)",
+        lambda m: f"NOW() - INTERVAL '{abs(int(m.group(1)))} {m.group(2)}'",
+        result, flags=re.IGNORECASE,
+    )
+    # date('now', '-N days') → CURRENT_DATE - INTERVAL 'N days'
+    result = re.sub(
+        r"date\('now',\s*'(-?\d+)\s+(days?|hours?|minutes?|seconds?)'\)",
+        lambda m: f"CURRENT_DATE - INTERVAL '{abs(int(m.group(1)))} {m.group(2)}'",
+        result, flags=re.IGNORECASE,
+    )
+    # Simple datetime('now') → NOW()
+    result = re.sub(r"datetime\('now'\)", "NOW()", result, flags=re.IGNORECASE)
+    # Simple date('now') → CURRENT_DATE
+    result = re.sub(r"date\('now'\)", "CURRENT_DATE", result, flags=re.IGNORECASE)
+    # last_insert_rowid() → lastval()
+    result = re.sub(r"last_insert_rowid\(\)", "lastval()", result, flags=re.IGNORECASE)
+
+    # 3. Convert ? placeholders to $1, $2, ...
     counter = 0
 
     def replacer(match: re.Match) -> str:
@@ -52,10 +89,16 @@ def _convert_placeholders(sql: str) -> str:
 
     # Replace ? that are NOT inside single-quoted strings
     # Simple approach: split by single quotes, only replace in odd segments
-    parts = sql.split("'")
+    parts = result.split("'")
     for i in range(0, len(parts), 2):  # Even indices = outside quotes
         parts[i] = re.sub(r"\?", replacer, parts[i])
-    return "'".join(parts)
+    result = "'".join(parts)
+
+    # 4. Append ON CONFLICT DO NOTHING for INSERT OR IGNORE/REPLACE
+    if _append_on_conflict:
+        result = result.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
+
+    return result
 
 
 class AsyncPgConnection:
@@ -75,8 +118,19 @@ class AsyncPgConnection:
         self._in_transaction = False
 
     async def execute(self, sql: str, params=None):
-        """Execute SQL with auto-converted placeholders."""
+        """Execute SQL with auto-converted placeholders.
+
+        For INSERT statements, automatically appends RETURNING id
+        so that cursor.lastrowid works (PostgreSQL doesn't track
+        lastrowid like SQLite does).
+        """
         converted = _convert_placeholders(sql)
+
+        # For INSERT without RETURNING, add RETURNING id to capture lastrowid
+        trimmed = converted.strip().upper()
+        if trimmed.startswith("INSERT") and "RETURNING" not in trimmed:
+            converted = converted.rstrip().rstrip(';') + ' RETURNING id'
+
         if params:
             result = await self._conn.fetch(converted, *params)
         else:
