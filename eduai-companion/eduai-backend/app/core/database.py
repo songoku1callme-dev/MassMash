@@ -14,6 +14,9 @@ async def get_db():
     db.row_factory = aiosqlite.Row
     await db.execute("PRAGMA journal_mode=WAL")
     await db.execute("PRAGMA foreign_keys=ON")
+    # PR #46: 512MB RAM optimization — better SQLite performance
+    await db.execute("PRAGMA cache_size=-64000")  # 64MB cache
+    await db.execute("PRAGMA temp_store=MEMORY")
     try:
         yield db
     finally:
@@ -25,6 +28,9 @@ async def init_db():
     db = await aiosqlite.connect(DB_PATH)
     await db.execute("PRAGMA journal_mode=WAL")
     await db.execute("PRAGMA foreign_keys=ON")
+    # PR #46: 512MB RAM optimization
+    await db.execute("PRAGMA cache_size=-64000")
+    await db.execute("PRAGMA temp_store=MEMORY")
 
     await db.executescript("""
         CREATE TABLE IF NOT EXISTS users (
@@ -719,19 +725,15 @@ async def init_db():
         CREATE INDEX IF NOT EXISTS idx_weekly_challenges_active ON weekly_challenges(is_active, deadline);
 
         -- PR #45: Shop Rotations table (scheduler job)
+        -- PR #46 FIX: week_date + items_json columns match rotate_shop_items() function
         CREATE TABLE IF NOT EXISTS shop_rotations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            item_id TEXT NOT NULL,
-            item_name TEXT NOT NULL,
-            category TEXT DEFAULT 'avatar',
-            price_xp INTEGER DEFAULT 100,
-            rarity TEXT DEFAULT 'common',
-            rotation_date TEXT NOT NULL,
-            is_active INTEGER DEFAULT 1,
+            week_date TEXT NOT NULL UNIQUE,
+            items_json TEXT NOT NULL DEFAULT '[]',
             created_at TEXT DEFAULT (datetime('now'))
         );
 
-        CREATE INDEX IF NOT EXISTS idx_shop_rotations_active ON shop_rotations(is_active, rotation_date);
+        CREATE INDEX IF NOT EXISTS idx_shop_rotations_week ON shop_rotations(week_date);
     """)
 
     await db.commit()

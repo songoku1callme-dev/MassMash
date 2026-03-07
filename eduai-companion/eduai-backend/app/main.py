@@ -580,9 +580,18 @@ app.include_router(vision.router)
 app.include_router(audio.router)
 
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #46: Keep-Alive Ping Endpoint
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+@app.get("/api/ping")
+async def ping():
+    """Lightweight keep-alive endpoint (Zero-Budget: prevents sleep on free tiers)."""
+    return {"pong": True}
+
+
 @app.get("/healthz")
 async def healthz():
-    """Production health check used by Fly.io and monitoring."""
+    """Production health check used by Koyeb/Railway and monitoring."""
     import time
 
     checks: dict[str, str] = {}

@@ -786,6 +786,22 @@ async def cleanup_ws_tickets():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #46: Keep-Alive Self-Ping (Zero-Budget)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async def self_ping():
+    """Ping eigenen /api/ping Endpoint alle 10 Min (verhindert Sleep auf Free-Tiers)."""
+    import httpx
+
+    backend_url = os.getenv("BACKEND_URL", "http://localhost:8080")
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(f"{backend_url}/api/ping", timeout=5)
+            logger.debug("Keep-Alive Ping: %s", resp.status_code)
+    except Exception as exc:
+        logger.debug("Keep-Alive Ping fehlgeschlagen (non-fatal): %s", exc)
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Scheduler Setup — Wird von main.py aufgerufen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -865,6 +881,11 @@ JOB_REGISTRY: dict[str, dict] = {
         "func": cleanup_ws_tickets,
         "beschreibung": "Abgelaufene WebSocket-Tickets bereinigen",
         "zeitplan": "Jede Stunde",
+    },
+    "keep_alive": {
+        "func": self_ping,
+        "beschreibung": "Self-Ping Keep-Alive (verhindert Sleep auf Free-Tiers)",
+        "zeitplan": "Alle 10 Minuten",
     },
 }
 
@@ -971,6 +992,13 @@ def setup_scheduler(scheduler_instance):
         cleanup_ws_tickets,
         CronTrigger(minute=10, timezone=tz_berlin),
         id="ws_ticket_cleanup", replace_existing=True,
+    )
+
+    # ━━━ ALLE 10 MINUTEN: Keep-Alive ━━━
+    scheduler_instance.add_job(
+        self_ping,
+        CronTrigger(minute="*/10", timezone=tz_berlin),
+        id="keep_alive", replace_existing=True,
     )
 
     logger.info("Scheduler Setup: %d Jobs registriert", len(JOB_REGISTRY))

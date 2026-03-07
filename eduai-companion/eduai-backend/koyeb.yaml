@@ -1,0 +1,45 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #46: Koyeb Free Tier Deployment Config
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+name: lumnos-backend
+services:
+  - name: api
+    type: web
+    git:
+      repository: github.com/songoku1callme-dev/MassMash
+      branch: main
+      dockerfile:
+        dockerfile: eduai-companion/eduai-backend/Dockerfile
+        target: runtime
+    instance_types:
+      - type: free
+    ports:
+      - port: 8080
+        protocol: http
+    health_checks:
+      - path: /healthz
+        port: 8080
+        interval: 30
+        timeout: 10
+        grace_period: 60
+    scaling:
+      min: 1
+      max: 1
+    env:
+      - key: PORT
+        value: "8080"
+      - key: LUMNOS_DEV_MODE
+        value: "0"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Set these in Koyeb dashboard (secrets):
+      # - SECRET_KEY
+      # - DATABASE_URL (from Supabase)
+      # - GROQ_API_KEY
+      # - TAVILY_API_KEY
+      # - RESEND_API_KEY
+      # - STRIPE_SECRET_KEY
+      # - STRIPE_PUBLISHABLE_KEY
+      # - STRIPE_WEBHOOK_SECRET
+      # - CLERK_SECRET_KEY
+      # - BACKEND_URL (https://[app].koyeb.app)
