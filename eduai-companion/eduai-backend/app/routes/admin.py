@@ -873,3 +873,134 @@ async def trigger_scheduler_job(
             status_code=500,
             detail=f"Job '{job_id}' fehlgeschlagen: {str(exc)}",
         )
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #52: Dedicated Admin Trigger Endpoints (Self-Improvement + KB)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+@router.post("/trigger/self-improvement")
+async def trigger_self_improvement(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger nightly self-improvement analysis (admin only).
+    Analysiert schlechte Feedbacks und generiert Prompt-Verbesserungen."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:self_improvement")
+
+    from app.services.self_improvement import nightly_self_improvement
+    try:
+        result = await nightly_self_improvement()
+        return {"message": "Self-Improvement erfolgreich", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger self-improvement failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/trigger/shop-rotation")
+async def trigger_shop_rotation(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger seasonal shop rotation (admin only).
+    Generiert saisonale Shop-Items basierend auf Jahreszeit."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:shop_rotation")
+
+    from app.services.self_improvement import generate_shop_items_for_season
+    try:
+        result = await generate_shop_items_for_season()
+        return {"message": "Shop-Rotation erfolgreich", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger shop-rotation failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/trigger/knowledge-update")
+async def trigger_knowledge_update(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger daily knowledge update for all 16 subjects (admin only).
+    Tavily-Suche fuer alle Faecher + alte Eintraege loeschen."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:knowledge_update_all")
+
+    from app.services.knowledge_updater import update_knowledge_base_all_subjects
+    try:
+        result = await update_knowledge_base_all_subjects()
+        return {"message": "Knowledge Update erfolgreich", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger knowledge-update failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/trigger/generate-challenges")
+async def trigger_generate_challenges(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger daily challenge generation (admin only).
+    Generiert 5 neue Challenges basierend auf Lerntrends."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:daily_challenges")
+
+    from app.services.self_improvement import generate_daily_challenges
+    try:
+        result = await generate_daily_challenges()
+        return {"message": "Challenges generiert", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger generate-challenges failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/trigger/seasonal-events")
+async def trigger_seasonal_events(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger seasonal events management (admin only).
+    Aktiviert/deaktiviert Events basierend auf Monat."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:seasonal_events")
+
+    from app.services.self_improvement import manage_seasonal_events
+    try:
+        result = await manage_seasonal_events()
+        return {"message": "Seasonal Events aktualisiert", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger seasonal-events failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/trigger/quiz-generation")
+async def trigger_quiz_generation(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Trigger weekly quiz question generation (admin only).
+    Generiert 50 neue Fragen pro Fach via Groq."""
+    admin = await _is_admin(current_user, db)
+    _require_admin(admin)
+    _log_admin_action(request, current_user, "trigger:quiz_generation")
+
+    from app.services.self_improvement import generate_weekly_quiz_questions
+    try:
+        result = await generate_weekly_quiz_questions()
+        return {"message": "Quiz-Generation erfolgreich", "ergebnis": result}
+    except Exception as exc:
+        logger.error("trigger quiz-generation failed: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))

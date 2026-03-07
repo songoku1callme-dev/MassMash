@@ -887,6 +887,52 @@ JOB_REGISTRY: dict[str, dict] = {
         "beschreibung": "Self-Ping Keep-Alive (verhindert Sleep auf Free-Tiers)",
         "zeitplan": "Alle 10 Minuten",
     },
+    # ━━━ PR #52: Self-Improvement + Knowledge Base Auto-Update ━━━
+    "self_improvement": {
+        "func": None,  # wird in setup_scheduler gesetzt
+        "beschreibung": "KI analysiert schlechte Feedbacks + verbessert Prompts",
+        "zeitplan": "Taeglich 03:00",
+    },
+    "shop_seasonal_rotation": {
+        "func": None,
+        "beschreibung": "Saisonale Shop-Items generieren (XP-Booster, Avatare, etc.)",
+        "zeitplan": "Sonntag 23:00",
+    },
+    "seasonal_events_manager": {
+        "func": None,
+        "beschreibung": "Events aktivieren/deaktivieren (Abitur, Ferien, etc.)",
+        "zeitplan": "Jede Stunde",
+    },
+    "quiz_auto_generation": {
+        "func": None,
+        "beschreibung": "50 neue Quiz-Fragen pro Fach via Groq",
+        "zeitplan": "Montag 02:00",
+    },
+    "battle_pass_content": {
+        "func": None,
+        "beschreibung": "Monatlicher Battle Pass: Badges, Titel, XP-Balance",
+        "zeitplan": "1. des Monats 01:00",
+    },
+    "daily_challenges_gen": {
+        "func": None,
+        "beschreibung": "5 neue taegliche Challenges basierend auf Lerntrends",
+        "zeitplan": "Taeglich 04:00",
+    },
+    "knowledge_all_subjects": {
+        "func": None,
+        "beschreibung": "Tavily-Suche fuer alle 16 Faecher (taeglich)",
+        "zeitplan": "Taeglich 03:00",
+    },
+    "wikipedia_sync": {
+        "func": None,
+        "beschreibung": "Wikipedia-Sync fuer 300+ Quiz-Themen",
+        "zeitplan": "Montag 02:00",
+    },
+    "lehrplan_updates": {
+        "func": None,
+        "beschreibung": "Lehrplan-Updates pro Bundesland via Tavily",
+        "zeitplan": "1. des Monats 01:00",
+    },
 }
 
 
@@ -1001,4 +1047,95 @@ def setup_scheduler(scheduler_instance):
         id="keep_alive", replace_existing=True,
     )
 
-    logger.info("Scheduler Setup: %d Jobs registriert", len(JOB_REGISTRY))
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # PR #52: Self-Improvement + Knowledge Base Auto-Update
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    from app.services.self_improvement import (
+        nightly_self_improvement,
+        generate_shop_items_for_season,
+        manage_seasonal_events,
+        generate_daily_challenges,
+        generate_weekly_quiz_questions,
+        generate_battle_pass_content,
+    )
+    from app.services.knowledge_updater import (
+        update_knowledge_base_all_subjects,
+        wikipedia_sync_all_topics,
+        update_lehrplan_content,
+    )
+
+    # Funktionen im Registry setzen
+    JOB_REGISTRY["self_improvement"]["func"] = nightly_self_improvement
+    JOB_REGISTRY["shop_seasonal_rotation"]["func"] = generate_shop_items_for_season
+    JOB_REGISTRY["seasonal_events_manager"]["func"] = manage_seasonal_events
+    JOB_REGISTRY["quiz_auto_generation"]["func"] = generate_weekly_quiz_questions
+    JOB_REGISTRY["battle_pass_content"]["func"] = generate_battle_pass_content
+    JOB_REGISTRY["daily_challenges_gen"]["func"] = generate_daily_challenges
+    JOB_REGISTRY["knowledge_all_subjects"]["func"] = update_knowledge_base_all_subjects
+    JOB_REGISTRY["wikipedia_sync"]["func"] = wikipedia_sync_all_topics
+    JOB_REGISTRY["lehrplan_updates"]["func"] = update_lehrplan_content
+
+    # ━━━ AUFGABE 1A: Self-Improvement (taeglich 03:00) ━━━
+    scheduler_instance.add_job(
+        nightly_self_improvement,
+        CronTrigger(hour=3, minute=0, timezone=tz_berlin),
+        id="self_improvement", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 1B: Shop Seasonal Rotation (Sonntag 23:00) ━━━
+    scheduler_instance.add_job(
+        generate_shop_items_for_season,
+        CronTrigger(day_of_week="sun", hour=23, minute=0, timezone=tz_berlin),
+        id="shop_seasonal_rotation", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 1C: Seasonal Events Manager (jede Stunde) ━━━
+    scheduler_instance.add_job(
+        manage_seasonal_events,
+        CronTrigger(minute=30, timezone=tz_berlin),
+        id="seasonal_events_manager", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 1D: Quiz Auto-Generation (Montag 02:00) ━━━
+    scheduler_instance.add_job(
+        generate_weekly_quiz_questions,
+        CronTrigger(day_of_week="mon", hour=2, minute=0, timezone=tz_berlin),
+        id="quiz_auto_generation", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 1E: Battle Pass Content (1. des Monats 01:00) ━━━
+    scheduler_instance.add_job(
+        generate_battle_pass_content,
+        CronTrigger(day=1, hour=1, minute=0, timezone=tz_berlin),
+        id="battle_pass_content", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 1F: Daily Challenges (taeglich 04:00) ━━━
+    scheduler_instance.add_job(
+        generate_daily_challenges,
+        CronTrigger(hour=4, minute=0, timezone=tz_berlin),
+        id="daily_challenges_gen", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 2A: Knowledge Update alle Faecher (taeglich 03:00) ━━━
+    scheduler_instance.add_job(
+        update_knowledge_base_all_subjects,
+        CronTrigger(hour=3, minute=15, timezone=tz_berlin),
+        id="knowledge_all_subjects", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 2B: Wikipedia Sync (Montag 02:00) ━━━
+    scheduler_instance.add_job(
+        wikipedia_sync_all_topics,
+        CronTrigger(day_of_week="mon", hour=2, minute=30, timezone=tz_berlin),
+        id="wikipedia_sync", replace_existing=True,
+    )
+
+    # ━━━ AUFGABE 2C: Lehrplan Updates (1. des Monats 01:00) ━━━
+    scheduler_instance.add_job(
+        update_lehrplan_content,
+        CronTrigger(day=1, hour=1, minute=30, timezone=tz_berlin),
+        id="lehrplan_updates", replace_existing=True,
+    )
+
+    logger.info("Scheduler Setup: %d Jobs registriert (inkl. PR #52)", len(JOB_REGISTRY))

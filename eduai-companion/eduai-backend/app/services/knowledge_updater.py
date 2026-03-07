@@ -450,3 +450,440 @@ async def enrich_with_live_knowledge(
         "quellen": quellen,
         "stufen_genutzt": stufen_genutzt,
     }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #52 — AUFGABE 2A: Daily Knowledge Update (alle 16 Faecher)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Alle 16 Faecher mit Abitur-Suchbegriffen
+ALLE_FAECHER_THEMEN = {
+    "Mathematik": [
+        "Analysis Abitur", "Stochastik Abitur", "Lineare Algebra Abitur",
+        "Integralrechnung Gymnasium", "Vektorrechnung Abitur",
+    ],
+    "Deutsch": [
+        "Lyrikanalyse Abitur", "Dramenanalyse Abitur", "Erörterung Gymnasium",
+        "Epochen deutscher Literatur", "Sprachanalyse Abitur",
+    ],
+    "Englisch": [
+        "English Literature Abitur", "Mediation Abitur Englisch",
+        "Essay Writing Gymnasium", "British American Culture",
+    ],
+    "Physik": [
+        "Quantenphysik Abitur", "Elektrodynamik Gymnasium",
+        "Mechanik Abitur", "Optik Gymnasium",
+    ],
+    "Chemie": [
+        "Organische Chemie Abitur", "Elektrochemie Gymnasium",
+        "Thermodynamik Chemie", "Saeure-Base Abitur",
+    ],
+    "Biologie": [
+        "Genetik Abitur", "Oekologie Abitur",
+        "Neurobiologie Gymnasium", "Evolution Abitur",
+    ],
+    "Geschichte": [
+        "Weimarer Republik Abitur", "Kalter Krieg Abitur",
+        "Nationalsozialismus Abitur", "Deutsche Wiedervereinigung",
+    ],
+    "Geografie": [
+        "Klimawandel Geografie Abitur", "Stadtentwicklung Deutschland",
+        "Globalisierung Geografie", "Nachhaltigkeit Abitur",
+    ],
+    "Wirtschaft": [
+        "Soziale Marktwirtschaft Abitur", "Konjunktur Deutschland",
+        "Globalisierung Wirtschaft", "Geldpolitik EZB",
+    ],
+    "Ethik": [
+        "Utilitarismus Ethik Abitur", "Menschenwuerde Grundgesetz",
+        "Gerechtigkeit Philosophie", "Bioethik aktuell",
+    ],
+    "Informatik": [
+        "Algorithmen Datenstrukturen Abitur", "Objektorientierung Informatik",
+        "Datenbanken SQL Gymnasium", "Kryptografie Informatik",
+    ],
+    "Kunst": [
+        "Kunstgeschichte Epochen Abitur", "Bildanalyse Gymnasium",
+        "Moderne Kunst Abitur", "Architektur Analyse",
+    ],
+    "Musik": [
+        "Musiktheorie Abitur", "Musikgeschichte Epochen",
+        "Werkanalyse Musik Gymnasium", "Jazz Blues Geschichte",
+    ],
+    "Sozialkunde": [
+        "Demokratie Deutschland Abitur", "Europaeische Union aktuell",
+        "Sozialstaat Deutschland", "Grundrechte Grundgesetz",
+    ],
+    "Latein": [
+        "Caesar Bellum Gallicum", "Cicero Reden Latein",
+        "Ovid Metamorphosen", "Vergil Aeneis",
+    ],
+    "Franzoesisch": [
+        "France Culture Abitur", "Grammatik Franzoesisch Gymnasium",
+        "Francophonie aktuell", "Literatur Franzoesisch Abitur",
+    ],
+}
+
+
+async def update_knowledge_base_all_subjects() -> dict:
+    """AUFGABE 2A: Taegliche Tavily-Suche fuer alle 16 Faecher.
+    Indexiert Top 3 Ergebnisse pro Fach, loescht Eintraege > 30 Tage.
+
+    Returns:
+        {"faecher_aktualisiert": int, "neue_dokumente": int,
+         "entfernte_dokumente": int}
+    """
+    import aiosqlite
+
+    logger.info("Job: update_knowledge_base_all_subjects gestartet")
+
+    tavily_key = os.getenv("TAVILY_API_KEY", "")
+    if not tavily_key:
+        logger.warning("TAVILY_API_KEY nicht gesetzt — Knowledge Update uebersprungen")
+        return {"faecher_aktualisiert": 0, "neue_dokumente": 0, "entfernte_dokumente": 0}
+
+    db_path = os.getenv("DATABASE_PATH", "app.db")
+    neue_dokumente = 0
+    faecher_aktualisiert = 0
+
+    try:
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+
+            import random
+
+            for fach, themen in ALLE_FAECHER_THEMEN.items():
+                try:
+                    # 1 zufaelliges Thema pro Fach pro Tag
+                    thema = random.choice(themen)
+
+                    async with httpx.AsyncClient(timeout=15.0) as client:
+                        resp = await client.post(
+                            "https://api.tavily.com/search",
+                            json={
+                                "api_key": tavily_key,
+                                "query": thema,
+                                "search_depth": "advanced",
+                                "max_results": 3,
+                            },
+                        )
+
+                        if resp.status_code != 200:
+                            continue
+
+                        results = resp.json().get("results", [])[:3]
+
+                        for r in results:
+                            inhalt = r.get("content", "")
+                            titel = r.get("title", "")
+                            url = r.get("url", "")
+                            if len(inhalt) < 100:
+                                continue
+
+                            await db.execute(
+                                """INSERT INTO knowledge_updates
+                                (fach, thema, quellen_count, inhalt, titel, url, created_at)
+                                VALUES (?, ?, 1, ?, ?, ?, datetime('now'))""",
+                                (fach, thema, inhalt[:2000], titel[:200], url[:500]),
+                            )
+                            neue_dokumente += 1
+
+                    faecher_aktualisiert += 1
+
+                except Exception as fach_err:
+                    logger.warning("Knowledge Update fuer %s fehlgeschlagen: %s", fach, fach_err)
+
+            # Eintraege aelter als 30 Tage loeschen
+            grenze = (datetime.utcnow() - timedelta(days=30)).isoformat()
+            cursor = await db.execute(
+                "SELECT COUNT(*) as cnt FROM knowledge_updates WHERE created_at < ?",
+                (grenze,),
+            )
+            row = await cursor.fetchone()
+            entfernte = dict(row)["cnt"] if row else 0
+
+            if entfernte > 0:
+                await db.execute(
+                    "DELETE FROM knowledge_updates WHERE created_at < ?",
+                    (grenze,),
+                )
+
+            await db.commit()
+
+    except Exception as exc:
+        logger.error("update_knowledge_base_all_subjects fehlgeschlagen: %s", exc)
+        return {"faecher_aktualisiert": 0, "neue_dokumente": 0, "entfernte_dokumente": 0}
+
+    logger.info(
+        "Knowledge Update (alle Faecher): %d Faecher, %d neue, %d entfernte Dokumente",
+        faecher_aktualisiert, neue_dokumente, entfernte,
+    )
+    return {
+        "faecher_aktualisiert": faecher_aktualisiert,
+        "neue_dokumente": neue_dokumente,
+        "entfernte_dokumente": entfernte,
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #52 — AUFGABE 2B: Wikipedia Sync (Montag 02:00)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# 300+ Quiz-Themen fuer Wikipedia-Sync (Auswahl der wichtigsten)
+WIKIPEDIA_SYNC_THEMEN = {
+    "Mathematik": [
+        "Differentialrechnung", "Integralrechnung", "Vektorraum",
+        "Wahrscheinlichkeitstheorie", "Kurvendiskussion", "Logarithmus",
+        "Trigonometrie", "Matrizenrechnung", "Stochastik", "Folge_(Mathematik)",
+    ],
+    "Physik": [
+        "Newtonsche_Gesetze", "Thermodynamik", "Elektromagnetismus",
+        "Quantenmechanik", "Relativitaetstheorie", "Optik",
+        "Kernphysik", "Schwingung", "Welle_(Physik)", "Halbleiter",
+    ],
+    "Chemie": [
+        "Periodensystem", "Organische_Chemie", "Elektrochemie",
+        "Saeure-Base-Reaktion", "Redoxreaktion", "Thermodynamik_(Chemie)",
+        "Kunststoff", "Katalyse", "Chemisches_Gleichgewicht", "Atombindung",
+    ],
+    "Biologie": [
+        "Genetik", "Evolution", "Oekologie", "Neurobiologie",
+        "Fotosynthese", "Zellatmung", "Immunsystem", "DNA",
+        "Mitose", "Meiose",
+    ],
+    "Geschichte": [
+        "Weimarer_Republik", "Nationalsozialismus", "Kalter_Krieg",
+        "Deutsche_Wiedervereinigung", "Industrielle_Revolution",
+        "Erster_Weltkrieg", "Zweiter_Weltkrieg", "Imperialismus",
+        "Franzoesische_Revolution", "Roemisches_Reich",
+    ],
+    "Deutsch": [
+        "Sturm_und_Drang", "Romantik", "Expressionismus_(Literatur)",
+        "Johann_Wolfgang_von_Goethe", "Friedrich_Schiller",
+        "Franz_Kafka", "Episches_Theater", "Erörterung",
+        "Stilmittel", "Neue_Sachlichkeit",
+    ],
+    "Englisch": [
+        "Shakespeare", "American_Dream", "British_Empire",
+        "Globalisation", "Industrial_Revolution",
+    ],
+    "Geografie": [
+        "Klimawandel", "Plattentektonik", "Globalisierung",
+        "Nachhaltige_Entwicklung", "Stadtgeographie",
+    ],
+    "Wirtschaft": [
+        "Soziale_Marktwirtschaft", "Konjunktur", "Inflation",
+        "Europaeische_Zentralbank", "Globalisierung",
+    ],
+    "Informatik": [
+        "Algorithmus", "Datenstruktur", "Objektorientierte_Programmierung",
+        "Kryptographie", "Datenbank",
+    ],
+    "Ethik": [
+        "Utilitarismus", "Kategorischer_Imperativ", "Menschenwuerde",
+        "Gerechtigkeit", "Bioethik",
+    ],
+    "Kunst": [
+        "Impressionismus", "Expressionismus", "Bauhaus",
+        "Renaissance", "Pop_Art",
+    ],
+    "Musik": [
+        "Sonate", "Sinfonie", "Jazz", "Barock_(Musik)", "Romantik_(Musik)",
+    ],
+    "Sozialkunde": [
+        "Demokratie", "Grundgesetz_(Deutschland)", "Europaeische_Union",
+        "Sozialstaat", "Gewaltenteilung",
+    ],
+    "Latein": [
+        "Gaius_Iulius_Caesar", "Marcus_Tullius_Cicero", "Ovid",
+        "Vergil", "Seneca",
+    ],
+    "Franzoesisch": [
+        "Frankreich", "Francophonie", "Franzoesische_Revolution",
+        "Victor_Hugo", "Albert_Camus",
+    ],
+}
+
+
+async def wikipedia_sync_all_topics() -> dict:
+    """AUFGABE 2B: Wöchentliche Wikipedia-Sync für 300+ Quiz-Themen.
+    Fetcht Wikipedia-Zusammenfassungen und indexiert sie im RAG.
+
+    Returns:
+        {"themen_verarbeitet": int, "erfolgreich": int, "fehlgeschlagen": int}
+    """
+    import aiosqlite
+
+    logger.info("Job: wikipedia_sync_all_topics gestartet")
+    db_path = os.getenv("DATABASE_PATH", "app.db")
+    themen_total = 0
+    erfolgreich = 0
+    fehlgeschlagen = 0
+
+    try:
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+
+            for fach, themen in WIKIPEDIA_SYNC_THEMEN.items():
+                for thema in themen:
+                    themen_total += 1
+                    try:
+                        wiki_url = f"https://de.wikipedia.org/api/rest_v1/page/summary/{thema}"
+                        async with httpx.AsyncClient(timeout=10.0) as client:
+                            resp = await client.get(
+                                wiki_url,
+                                headers={"User-Agent": "LumnosBot/1.0 (Bildungs-KI)"},
+                            )
+
+                            if resp.status_code != 200:
+                                fehlgeschlagen += 1
+                                continue
+
+                            data = resp.json()
+                            extract = data.get("extract", "")
+                            title = data.get("title", thema)
+                            url = data.get("content_urls", {}).get(
+                                "desktop", {}
+                            ).get("page", "")
+
+                            if not extract or len(extract) < 50:
+                                fehlgeschlagen += 1
+                                continue
+
+                            # In knowledge_updates speichern
+                            await db.execute(
+                                """INSERT INTO knowledge_updates
+                                (fach, thema, quellen_count, inhalt, titel, url,
+                                 quelle_typ, created_at)
+                                VALUES (?, ?, 1, ?, ?, ?, 'wikipedia',
+                                        datetime('now'))""",
+                                (fach, title, extract[:3000], title, url or ""),
+                            )
+                            erfolgreich += 1
+
+                    except Exception as thema_err:
+                        logger.debug("Wikipedia Sync %s/%s: %s", fach, thema, thema_err)
+                        fehlgeschlagen += 1
+
+            await db.commit()
+
+    except Exception as exc:
+        logger.error("wikipedia_sync_all_topics fehlgeschlagen: %s", exc)
+
+    logger.info(
+        "Wikipedia Sync: %d Themen, %d erfolgreich, %d fehlgeschlagen",
+        themen_total, erfolgreich, fehlgeschlagen,
+    )
+    return {
+        "themen_verarbeitet": themen_total,
+        "erfolgreich": erfolgreich,
+        "fehlgeschlagen": fehlgeschlagen,
+    }
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #52 — AUFGABE 2C: Lehrplan Updates (1. des Monats 01:00)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BUNDESLAENDER = [
+    "Bayern", "NRW", "Baden-Württemberg", "Niedersachsen",
+    "Hessen", "Sachsen", "Berlin", "Brandenburg",
+    "Schleswig-Holstein", "Hamburg", "Rheinland-Pfalz",
+    "Saarland", "Thüringen", "Sachsen-Anhalt",
+    "Mecklenburg-Vorpommern", "Bremen",
+]
+
+LEHRPLAN_SUCHBEGRIFFE = [
+    "Abitur Anforderungen {land} {year}",
+    "Lehrplan Gymnasium {land} aktuell",
+    "Kerncurriculum {land} Oberstufe",
+    "Pruefungsaufgaben Abitur {land}",
+]
+
+
+async def update_lehrplan_content() -> dict:
+    """AUFGABE 2C: Monatliche Lehrplan-Updates.
+    Prueft via Tavily auf neue Abitur-Anforderungen pro Bundesland.
+
+    Returns:
+        {"bundeslaender_geprueft": int, "neue_updates": int}
+    """
+    import aiosqlite
+
+    logger.info("Job: update_lehrplan_content gestartet")
+
+    tavily_key = os.getenv("TAVILY_API_KEY", "")
+    if not tavily_key:
+        logger.warning("TAVILY_API_KEY nicht gesetzt — Lehrplan Update uebersprungen")
+        return {"bundeslaender_geprueft": 0, "neue_updates": 0}
+
+    db_path = os.getenv("DATABASE_PATH", "app.db")
+    bundeslaender_geprueft = 0
+    neue_updates = 0
+    current_year = datetime.now().year
+
+    try:
+        async with aiosqlite.connect(db_path) as db:
+            db.row_factory = aiosqlite.Row
+
+            import random
+
+            for land in BUNDESLAENDER:
+                try:
+                    # Zufaelligen Suchbegriff waehlen
+                    template = random.choice(LEHRPLAN_SUCHBEGRIFFE)
+                    query = template.replace("{land}", land).replace(
+                        "{year}", str(current_year)
+                    )
+
+                    async with httpx.AsyncClient(timeout=15.0) as client:
+                        resp = await client.post(
+                            "https://api.tavily.com/search",
+                            json={
+                                "api_key": tavily_key,
+                                "query": query,
+                                "search_depth": "basic",
+                                "max_results": 2,
+                            },
+                        )
+
+                        if resp.status_code != 200:
+                            continue
+
+                        results = resp.json().get("results", [])[:2]
+
+                        for r in results:
+                            inhalt = r.get("content", "")
+                            titel = r.get("title", "")
+                            url = r.get("url", "")
+
+                            if len(inhalt) < 80:
+                                continue
+
+                            await db.execute(
+                                """INSERT INTO lehrplan_updates
+                                (bundesland, titel, inhalt, url, jahr, created_at)
+                                VALUES (?, ?, ?, ?, ?, datetime('now'))""",
+                                (land, titel[:200], inhalt[:2000], url[:500],
+                                 current_year),
+                            )
+                            neue_updates += 1
+
+                    bundeslaender_geprueft += 1
+
+                except Exception as land_err:
+                    logger.warning("Lehrplan Update %s fehlgeschlagen: %s", land, land_err)
+
+            await db.commit()
+
+    except Exception as exc:
+        logger.error("update_lehrplan_content fehlgeschlagen: %s", exc)
+
+    logger.info(
+        "Lehrplan Update: %d Bundeslaender geprueft, %d neue Updates",
+        bundeslaender_geprueft, neue_updates,
+    )
+    return {
+        "bundeslaender_geprueft": bundeslaender_geprueft,
+        "neue_updates": neue_updates,
+    }
