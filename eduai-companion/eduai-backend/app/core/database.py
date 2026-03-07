@@ -14,8 +14,8 @@ async def get_db():
     db.row_factory = aiosqlite.Row
     await db.execute("PRAGMA journal_mode=WAL")
     await db.execute("PRAGMA foreign_keys=ON")
-    # PR #46: 512MB RAM optimization — better SQLite performance
-    await db.execute("PRAGMA cache_size=-64000")  # 64MB cache
+    # PR #46: 512MB RAM optimization — conservative cache for free tier
+    await db.execute("PRAGMA cache_size=-8000")  # 8MB cache (safe for 512MB RAM)
     await db.execute("PRAGMA temp_store=MEMORY")
     try:
         yield db
@@ -28,8 +28,8 @@ async def init_db():
     db = await aiosqlite.connect(DB_PATH)
     await db.execute("PRAGMA journal_mode=WAL")
     await db.execute("PRAGMA foreign_keys=ON")
-    # PR #46: 512MB RAM optimization
-    await db.execute("PRAGMA cache_size=-64000")
+    # PR #46: 512MB RAM optimization — conservative cache for free tier
+    await db.execute("PRAGMA cache_size=-8000")  # 8MB cache (safe for 512MB RAM)
     await db.execute("PRAGMA temp_store=MEMORY")
 
     await db.executescript("""

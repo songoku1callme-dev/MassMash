@@ -82,9 +82,13 @@ Das Backend ist fuer 512MB RAM optimiert (Koyeb Free Tier):
 
 - **Single Worker**: Nur 1 Uvicorn Worker (`--workers 1`)
 - **Request Limit**: Auto-Restart nach 1000 Requests (`--limit-max-requests 1000`)
-- **SQLite Cache**: `PRAGMA cache_size=-64000` fuer bessere Performance
-- **Lazy Imports**: Schwere Libraries (sentence-transformers, faiss, tesseract) werden erst bei Bedarf geladen
+- **SQLite Cache**: `PRAGMA cache_size=-8000` (8MB, sicher fuer 512MB RAM)
+- **Memory Env Vars**: `MALLOC_TRIM_THRESHOLD_=65536`, `PYTHONMALLOC=malloc`
 - **Keep-Alive**: Self-Ping alle 10 Minuten verhindert Sleep
+
+> **Hinweis**: Supabase PostgreSQL-Anbindung ist fuer einen zukuenftigen PR geplant.
+> Aktuell nutzt das Backend SQLite lokal. Fuer Produktion mit Supabase muss
+> `database.py` erweitert werden (dual-mode: SQLite lokal / PostgreSQL remote).
 
 ## APScheduler Jobs (25+ aktive Jobs)
 
