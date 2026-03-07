@@ -14,7 +14,9 @@ import re
 import logging
 import aiosqlite
 import json
-from datetime import datetime
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from uuid import UUID
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -164,6 +166,30 @@ class AsyncPgConnection:
         pass  # asyncpg Records already act like dicts
 
 
+def _pg_row_to_dict(record) -> dict:
+    """Convert asyncpg Record to dict with SQLite-compatible types.
+
+    PostgreSQL returns native Python types (datetime, date, Decimal, UUID, etc.)
+    but the Pydantic models and route code expect strings (as SQLite returns).
+    This function converts those types to their string representations.
+    """
+    result = {}
+    for key, value in dict(record).items():
+        if isinstance(value, datetime):
+            result[key] = value.isoformat()
+        elif isinstance(value, date):
+            result[key] = value.isoformat()
+        elif isinstance(value, timedelta):
+            result[key] = str(value)
+        elif isinstance(value, Decimal):
+            result[key] = float(value)
+        elif isinstance(value, UUID):
+            result[key] = str(value)
+        else:
+            result[key] = value
+    return result
+
+
 class AsyncPgCursor:
     """Wrapper around asyncpg fetch results to mimic aiosqlite cursor."""
 
@@ -172,11 +198,11 @@ class AsyncPgCursor:
 
     async def fetchone(self):
         if self._rows:
-            return dict(self._rows[0])
+            return _pg_row_to_dict(self._rows[0])
         return None
 
     async def fetchall(self):
-        return [dict(r) for r in self._rows]
+        return [_pg_row_to_dict(r) for r in self._rows]
 
     @property
     def lastrowid(self):
