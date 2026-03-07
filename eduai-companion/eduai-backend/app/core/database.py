@@ -1,30 +1,88 @@
-"""SQLite database setup with aiosqlite."""
+"""PR #48: Dual-mode database — SQLite (local) + PostgreSQL (Supabase production).
+
+Checks DATABASE_URL env var:
+  - If starts with "postgresql": uses psycopg2 connection pool
+  - Otherwise: uses aiosqlite (current behavior)
+
+Placeholder variable PH adapts SQL syntax:
+  - SQLite: PH = "?"
+  - PostgreSQL: PH = "%s"
+"""
 import os
+import logging
 import aiosqlite
 import json
 from datetime import datetime
 from app.core.config import settings
 
+logger = logging.getLogger(__name__)
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# PR #48: Dual-Mode Database (SQLite / PostgreSQL)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+IS_POSTGRES = DATABASE_URL.startswith("postgresql")
+
+# Placeholder for parameterized queries
+# SQLite uses "?", PostgreSQL uses "%s"
+PH = "%s" if IS_POSTGRES else "?"
+
 DB_PATH = settings.db_path
+
+# PostgreSQL connection pool (lazy-initialized)
+_pg_pool = None
+
+
+def _get_pg_pool():
+    """Get or create PostgreSQL connection pool (psycopg2)."""
+    global _pg_pool
+    if _pg_pool is None:
+        import psycopg2
+        from psycopg2 import pool as pg_pool
+        logger.info("Connecting to PostgreSQL (Supabase)...")
+        _pg_pool = pg_pool.SimpleConnectionPool(
+            minconn=1,
+            maxconn=5,
+            dsn=DATABASE_URL,
+            options="-c statement_timeout=30000",  # 30s timeout
+        )
+        logger.info("PostgreSQL connection pool created (1-5 connections)")
+    return _pg_pool
 
 
 async def get_db():
-    """Get database connection."""
-    db = await aiosqlite.connect(DB_PATH)
-    db.row_factory = aiosqlite.Row
-    await db.execute("PRAGMA journal_mode=WAL")
-    await db.execute("PRAGMA foreign_keys=ON")
-    # PR #46: 512MB RAM optimization — conservative cache for free tier
-    await db.execute("PRAGMA cache_size=-8000")  # 8MB cache (safe for 512MB RAM)
-    await db.execute("PRAGMA temp_store=MEMORY")
-    try:
-        yield db
-    finally:
-        await db.close()
+    """Get database connection (SQLite or PostgreSQL based on DATABASE_URL)."""
+    if IS_POSTGRES:
+        pool = _get_pg_pool()
+        conn = pool.getconn()
+        conn.autocommit = False
+        try:
+            yield conn
+        finally:
+            pool.putconn(conn)
+    else:
+        db = await aiosqlite.connect(DB_PATH)
+        db.row_factory = aiosqlite.Row
+        await db.execute("PRAGMA journal_mode=WAL")
+        await db.execute("PRAGMA foreign_keys=ON")
+        # PR #46: 512MB RAM optimization — conservative cache for free tier
+        await db.execute("PRAGMA cache_size=-8000")  # 8MB cache (safe for 512MB RAM)
+        await db.execute("PRAGMA temp_store=MEMORY")
+        try:
+            yield db
+        finally:
+            await db.close()
 
 
 async def init_db():
-    """Initialize database tables."""
+    """Initialize database tables (SQLite mode only).
+
+    For PostgreSQL, use scripts/supabase_setup.py instead.
+    """
+    if IS_POSTGRES:
+        logger.info("PostgreSQL mode: Skipping SQLite init_db (use supabase_setup.py)")
+        return
+
     db = await aiosqlite.connect(DB_PATH)
     await db.execute("PRAGMA journal_mode=WAL")
     await db.execute("PRAGMA foreign_keys=ON")

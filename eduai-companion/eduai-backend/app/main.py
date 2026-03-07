@@ -40,6 +40,30 @@ except ImportError:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database, monitoring and scheduler on startup."""
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # PR #48: Startup Memory Check
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    try:
+        import psutil
+        process = psutil.Process(os.getpid())
+        startup_ram = process.memory_info().rss / 1024 ** 2
+        logger.info("Startup RAM: %.1f MB", startup_ram)
+        if startup_ram > 400:
+            logger.warning(
+                "WARNUNG: Startup RAM %.1f MB > 400 MB! "
+                "Ziel ist < 200 MB fuer 512 MB Free-Tier.",
+                startup_ram,
+            )
+        elif startup_ram > 200:
+            logger.info(
+                "Startup RAM %.1f MB (ueber 200 MB Ziel, aber unter 400 MB Limit)",
+                startup_ram,
+            )
+        else:
+            logger.info("Startup RAM %.1f MB — optimal fuer Free-Tier!", startup_ram)
+    except Exception as mem_err:
+        logger.warning("Memory check fehlgeschlagen: %s", mem_err)
+
     init_sentry()
     init_posthog()
     await init_db()

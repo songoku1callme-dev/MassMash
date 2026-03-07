@@ -8,23 +8,58 @@ import io
 import logging
 from typing import Optional
 
-import pytesseract
-from PIL import Image
-import sympy
-from sympy.parsing.sympy_parser import (
-    parse_expr,
-    standard_transformations,
-    implicit_multiplication_application,
-    convert_xor,
-)
-
 logger = logging.getLogger(__name__)
 
-# SymPy parser transformations for natural math input
-TRANSFORMATIONS = standard_transformations + (
-    implicit_multiplication_application,
-    convert_xor,
-)
+# ── PR #48: Lazy Imports (RAM sparen) ──────────────────────────────
+# pytesseract, PIL, sympy werden erst bei Bedarf geladen
+# Spart ~50-80MB RAM beim Startup
+
+_pytesseract = None
+_Image = None
+_sympy = None
+_parse_expr = None
+_TRANSFORMATIONS = None
+
+
+def _get_pytesseract():
+    """Lazy-load pytesseract (only when OCR is actually needed)."""
+    global _pytesseract
+    if _pytesseract is None:
+        import pytesseract
+        _pytesseract = pytesseract
+        logger.info("Lazy-loaded: pytesseract")
+    return _pytesseract
+
+
+def _get_pil_image():
+    """Lazy-load PIL Image (only when image processing is needed)."""
+    global _Image
+    if _Image is None:
+        from PIL import Image
+        _Image = Image
+        logger.info("Lazy-loaded: PIL.Image")
+    return _Image
+
+
+def _get_sympy():
+    """Lazy-load sympy and parser (only when math solving is needed)."""
+    global _sympy, _parse_expr, _TRANSFORMATIONS
+    if _sympy is None:
+        import sympy
+        from sympy.parsing.sympy_parser import (
+            parse_expr,
+            standard_transformations,
+            implicit_multiplication_application,
+            convert_xor,
+        )
+        _sympy = sympy
+        _parse_expr = parse_expr
+        _TRANSFORMATIONS = standard_transformations + (
+            implicit_multiplication_application,
+            convert_xor,
+        )
+        logger.info("Lazy-loaded: sympy + parser")
+    return _sympy, _parse_expr, _TRANSFORMATIONS
 
 
 class MathSolver:
@@ -34,6 +69,8 @@ class MathSolver:
     def ocr_image(image_bytes: bytes) -> str:
         """Run Tesseract OCR on image bytes. Returns extracted text."""
         try:
+            Image = _get_pil_image()
+            pytesseract = _get_pytesseract()
             image = Image.open(io.BytesIO(image_bytes))
             # Convert to RGB if needed (e.g. RGBA PNGs)
             if image.mode not in ("L", "RGB"):
@@ -96,6 +133,7 @@ class MathSolver:
 
         Returns dict with keys: equation, variable, solution, steps, latex
         """
+        sympy, parse_expr, TRANSFORMATIONS = _get_sympy()
         x = sympy.Symbol("x")
         y = sympy.Symbol("y")
         local_dict = {"x": x, "y": y, "pi": sympy.pi, "e": sympy.E}
@@ -162,11 +200,12 @@ class MathSolver:
 
     @staticmethod
     def _generate_steps(
-        equation: sympy.Eq,
-        var: sympy.Symbol,
+        equation,  # type: ignore[override]
+        var,
         solutions: list,
     ) -> list[str]:
         """Generate German step-by-step explanation."""
+        sympy, _, _ = _get_sympy()
         steps: list[str] = []
         lhs = equation.lhs
         rhs = equation.rhs
