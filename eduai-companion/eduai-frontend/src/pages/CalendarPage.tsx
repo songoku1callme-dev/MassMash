@@ -6,6 +6,7 @@ import {
  CalendarDays, Plus, Trash2, Sparkles, Loader2, BookOpen, Clock
 } from "lucide-react";
 import { getAccessToken } from "../services/api";
+import { LoadingSkeleton, ErrorState } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -37,6 +38,7 @@ async function apiFetch(path: string, opts: RequestInit = {}) {
 export default function CalendarPage() {
  const [exams, setExams] = useState<Exam[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [showAdd, setShowAdd] = useState(false);
  const [title, setTitle] = useState("");
  const [subject, setSubject] = useState("");
@@ -50,11 +52,12 @@ export default function CalendarPage() {
  }, []);
 
  const loadExams = async () => {
+ setError(false);
  try {
  const data = await apiFetch("/api/calendar/exams");
  setExams(data.exams || []);
  } catch {
- /* ignore */
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -97,13 +100,8 @@ export default function CalendarPage() {
  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
  };
 
- if (loading) {
- return (
- <div className="flex items-center justify-center h-full">
- <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
- </div>
- );
- }
+ if (loading) return <LoadingSkeleton lines={6} />;
+ if (error) return <ErrorState message="Fehler beim Laden des Kalenders." onRetry={loadExams} />;
 
  return (
  <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen, ArrowUp, ArrowDown, Minus, Download } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -40,6 +41,7 @@ export default function StatsPage() {
  const [analysis, setAnalysis] = useState("");
  const [analysisLoading, setAnalysisLoading] = useState(false);
  const [loading, setLoading] = useState(true);
+ const [loadError, setLoadError] = useState(false);
  const [prognosen, setPrognosen] = useState<NotenPrognose[]>([]);
  const [prognoseLoading, setPrognoseLoading] = useState(false);
  const [prognoseEmpfehlung, setPrognoseEmpfehlung] = useState("");
@@ -48,8 +50,9 @@ export default function StatsPage() {
  const token = localStorage.getItem("lumnos_access_token");
  const headers = { Authorization: `Bearer ${token}` };
 
- useEffect(() => {
- const load = async () => {
+ const loadStats = async () => {
+ setLoadError(false);
+ setLoading(true);
  try {
  const [ovRes, subjRes] = await Promise.all([
  fetch(`${API_URL}/api/stats/overview`, { headers }),
@@ -62,10 +65,14 @@ export default function StatsPage() {
  setStrongest(data.strongest || []);
  setWeakest(data.weakest || []);
  }
- } catch { /* ignore */ }
+ } catch {
+ setLoadError(true);
+ }
  setLoading(false);
  };
- load();
+
+ useEffect(() => {
+ loadStats();
  }, []);
 
  const runNotenPrognose = async () => {
@@ -100,13 +107,8 @@ export default function StatsPage() {
  setAnalysisLoading(false);
  };
 
- if (loading) {
- return (
- <div className="p-8 flex items-center justify-center min-h-screen">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
- </div>
- );
- }
+ if (loading) return <PageLoader text="Statistiken laden..." />;
+ if (loadError) return <ErrorState message="Fehler beim Laden der Statistiken." onRetry={loadStats} />;
 
  const ov = overview || {
  total_learning_minutes: 0, total_quizzes: 0, quiz_success_rate: 0,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { eventsApi } from "../services/api";
 import { Calendar, Trophy, Star, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 export default function EventsPage() {
  /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -8,17 +9,19 @@ export default function EventsPage() {
  const [selectedEvent, setSelectedEvent] = useState<any>(null);
  const [progress, setProgress] = useState<any>(null);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
 
  useEffect(() => {
  loadEvents();
  }, []);
 
  const loadEvents = async () => {
+ setError(false);
  try {
  const data = await eventsApi.all();
  setEvents(data.events);
  } catch {
- // No events
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -50,13 +53,8 @@ export default function EventsPage() {
  ended: "Beendet",
  };
 
- if (loading) {
- return (
- <div className="flex justify-center items-center h-64">
- <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
- </div>
- );
- }
+ if (loading) return <PageLoader text="Events laden..." />;
+ if (error) return <ErrorState message="Fehler beim Laden der Events." onRetry={loadEvents} />;
 
  return (
  <div className="p-6 max-w-4xl mx-auto">

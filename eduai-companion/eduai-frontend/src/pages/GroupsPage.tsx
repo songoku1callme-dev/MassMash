@@ -9,6 +9,7 @@ import {
  Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf,
  Clock, Globe, Landmark, Brain, Code, Palette, Music, BookOpen
 } from "lucide-react";
+import { PageLoader } from "../components/PageStates";
 
 const SUBJECT_OPTIONS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-4 h-4" /> },
@@ -135,13 +136,7 @@ export default function GroupsPage() {
  }
  };
 
- if (loading && view === "list") {
- return (
- <div className="p-4 lg:p-6 max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
- <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
- </div>
- );
- }
+ if (loading && view === "list") return <PageLoader text="Gruppen laden..." />;
 
  if (error) {
  return (

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import {
  Trophy, Clock, Users, Medal, Loader2, Play, Send, Timer, Award
 } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 interface TournamentQuestion {
  id: number;
@@ -45,6 +46,7 @@ export default function TurnierPage() {
  const [rankings, setRankings] = useState<Ranking[]>([]);
  const [winners, setWinners] = useState<Winner[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [joined, setJoined] = useState(false);
  const [submitting, setSubmitting] = useState(false);
  const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -73,6 +75,7 @@ export default function TurnierPage() {
 
  const loadTournament = async () => {
  setLoading(true);
+ setError(false);
  try {
  const data = await tournamentApi.current();
  if (data.tournament) {
@@ -83,7 +86,7 @@ export default function TurnierPage() {
  }
  }
  } catch {
- // Tournament not available
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -135,13 +138,8 @@ export default function TurnierPage() {
  return `${m}:${s.toString().padStart(2, "0")}`;
  };
 
- if (loading) {
- return (
- <div className="p-6 flex items-center justify-center">
- <Loader2 className="w-8 h-8 animate-spin text-yellow-600" />
- </div>
- );
- }
+ if (loading) return <PageLoader text="Turnier laden..." />;
+ if (error) return <ErrorState message="Fehler beim Laden des Turniers." onRetry={loadTournament} />;
 
  return (
  <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">

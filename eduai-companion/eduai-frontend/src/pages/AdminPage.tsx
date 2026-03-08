@@ -8,6 +8,7 @@ import {
  Shield, Users, BarChart3, Ticket, Search, Gift, Loader2, Crown, Star,
  TrendingUp, DollarSign, Brain, ShieldOff
 } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 // Hardcoded admin whitelist — must match backend
 const ADMIN_EMAILS = [
@@ -160,13 +161,8 @@ export default function AdminPage() {
  );
  }
 
- if (loading) {
- return (
- <div className="p-6 flex items-center justify-center">
- <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
- </div>
- );
- }
+ if (loading) return <PageLoader text="Admin-Panel laden..." />;
+ if (error && !stats) return <ErrorState message={error} onRetry={loadData} />;
 
  return (
  <div className="p-4 lg:p-6 max-w-6xl mx-auto space-y-6">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { questsApi } from "../services/api";
 import { Target, CheckCircle, Circle, Flame, Swords, BookOpen, Loader2, Sparkles } from "lucide-react";
+import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
 
 const QUEST_ICONS: Record<string, React.ReactNode> = {
  target: <Target className="w-5 h-5" />,
@@ -13,6 +14,7 @@ export default function QuestsPage() {
  /* eslint-disable @typescript-eslint/no-explicit-any */
  const [quests, setQuests] = useState<any[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [date, setDate] = useState("");
 
  useEffect(() => {
@@ -20,12 +22,13 @@ export default function QuestsPage() {
  }, []);
 
  const loadQuests = async () => {
+ setError(false);
  try {
  const data = await questsApi.today();
- setQuests(data.quests);
+ setQuests(data.quests || []);
  setDate(data.date);
  } catch {
- // No quests yet
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -49,13 +52,8 @@ export default function QuestsPage() {
  const completedCount = quests.filter((q) => q.completed).length;
  const totalXP = quests.reduce((sum, q) => sum + (q.completed ? q.xp_reward : 0), 0);
 
- if (loading) {
- return (
- <div className="flex justify-center items-center h-64">
- <Loader2 className="w-8 h-8 animate-spin text-yellow-600" />
- </div>
- );
- }
+ if (loading) return <PageLoader text="Quests laden..." />;
+ if (error) return <ErrorState message="Fehler beim Laden der Quests." onRetry={loadQuests} />;
 
  return (
  <div className="p-6 max-w-2xl mx-auto">

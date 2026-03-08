@@ -7,6 +7,7 @@ import {
  Loader2, Check, X, Brain
 } from "lucide-react";
 import { getAccessToken } from "../services/api";
+import { CardSkeleton, ErrorState, EmptyState } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -36,6 +37,7 @@ async function apiFetch(path: string, opts: RequestInit = {}) {
 export default function FlashcardsPage() {
  const [decks, setDecks] = useState<Deck[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [selectedDeck, setSelectedDeck] = useState<number | null>(null);
  const [reviewCards, setReviewCards] = useState<FlashCard[]>([]);
  const [currentCard, setCurrentCard] = useState(0);
@@ -52,11 +54,12 @@ export default function FlashcardsPage() {
  }, []);
 
  const loadDecks = async () => {
+ setError(false);
  try {
  const data = await apiFetch("/api/flashcards/decks");
  setDecks(data.decks || []);
  } catch {
- /* ignore */
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -115,13 +118,8 @@ export default function FlashcardsPage() {
  }
  };
 
- if (loading) {
- return (
- <div className="flex items-center justify-center h-full">
- <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
- </div>
- );
- }
+ if (loading) return <CardSkeleton count={6} />;
+ if (error) return <ErrorState message="Fehler beim Laden der Karteikarten." onRetry={loadDecks} />;
 
  // Review mode
  if (selectedDeck !== null && reviewCards.length > 0) {

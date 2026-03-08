@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import {
  BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2,
  Atom, Leaf, Globe, Landmark, Brain, Palette, Music, Users, Code, BookOpen,
- AlertTriangle, Lightbulb, Lock
+ AlertTriangle, Lightbulb, Lock, Timer, Zap
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
 
@@ -69,6 +70,41 @@ export default function QuizPage() {
  const [fillAnswer, setFillAnswer] = useState("");
  const [presetTopics, setPresetTopics] = useState<{ id: number; name: string; tier: string }[]>([]);
  const [confidenceGiven, setConfidenceGiven] = useState(false);
+ const [timer, setTimer] = useState(30);
+ const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+ // Timer: 30s countdown per question
+ const startTimer = useCallback(() => {
+ setTimer(30);
+ if (timerRef.current) clearInterval(timerRef.current);
+ timerRef.current = setInterval(() => {
+ setTimer((prev) => {
+ if (prev <= 1) {
+ if (timerRef.current) clearInterval(timerRef.current);
+ return 0;
+ }
+ return prev - 1;
+ });
+ }, 1000);
+ }, []);
+
+ const stopTimer = useCallback(() => {
+ if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+ }, []);
+
+ // Auto-submit when timer hits 0
+ useEffect(() => {
+ if (timer === 0 && state === "playing" && !showAnswer && quiz) {
+ const q = quiz.questions[currentQ];
+ selectAnswer(q.id, "__timeout__");
+ }
+ }, [timer, state, showAnswer]);
+
+ // Start timer when question changes
+ useEffect(() => {
+ if (state === "playing" && !showAnswer) startTimer();
+ return () => stopTimer();
+ }, [currentQ, state, showAnswer, startTimer, stopTimer]);
 
  useEffect(() => { loadHistory(); }, []);
  useEffect(() => { loadTopics(); }, [subject]);
@@ -100,6 +136,7 @@ export default function QuizPage() {
 
  const selectAnswer = async (questionId: number, answer: string) => {
  if (showAnswer || !quiz) return;
+ stopTimer();
  setAnswers({ ...answers, [questionId]: answer });
  setShowAnswer(true);
  // Check answer against server
@@ -324,22 +361,49 @@ export default function QuizPage() {
  const userAnswer = answers[question.id];
  const isCorrect = answerResult?.correct ?? false;
  const hasOptions = question.options && question.options.length > 0;
+ const timerColor = timer > 15 ? "#22c55e" : timer > 5 ? "#f59e0b" : "#ef4444";
+ const timerPercent = (timer / 30) * 100;
 
  return (
  <div className="p-4 lg:p-6 max-w-2xl mx-auto space-y-6">
- {/* Progress */}
+ {/* Progress + Timer */}
  <div className="flex items-center justify-between">
  <Badge variant="secondary" className="text-sm">
  Frage {currentQ + 1} von {quiz.questions.length}
  </Badge>
+ {!isAnswered && (
+ <motion.div
+ initial={{ scale: 0.8, opacity: 0 }}
+ animate={{ scale: 1, opacity: 1 }}
+ className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-bold"
+ style={{
+ background: `rgba(${timer > 15 ? "34,197,94" : timer > 5 ? "245,158,11" : "239,68,68"},0.15)`,
+ border: `1px solid ${timerColor}40`,
+ color: timerColor,
+ }}
+ >
+ <Timer className="w-4 h-4" />
+ <motion.span
+ key={timer}
+ initial={{ scale: 1.3, opacity: 0 }}
+ animate={{ scale: 1, opacity: 1 }}
+ transition={{ duration: 0.2 }}
+ >
+ {timer}s
+ </motion.span>
+ </motion.div>
+ )}
  <Badge variant="default">
  {SUBJECTS.find(s => s.id === quiz.subject)?.name} - {difficulty}
  </Badge>
  </div>
- <div className="w-full bg-[var(--progress-bg)] rounded-full h-2">
- <div
- className="bg-blue-600 h-2 rounded-full transition-all"
- style={{ width: `${((currentQ + (isAnswered ? 1 : 0)) / quiz.questions.length) * 100}%` }}
+ {/* Timer bar */}
+ <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: "rgba(var(--surface-rgb),0.5)" }}>
+ <motion.div
+ className="h-2 rounded-full"
+ style={{ background: timerColor }}
+ animate={{ width: `${isAnswered ? ((currentQ + 1) / quiz.questions.length) * 100 : timerPercent}%` }}
+ transition={{ duration: 0.3 }}
  />
  </div>
 
@@ -358,37 +422,54 @@ export default function QuizPage() {
  />
  </div>
 
- {/* MCQ Options */}
+ {/* MCQ Options — Animated */}
  {hasOptions ? (
  <div className="space-y-3">
+ <AnimatePresence mode="wait">
  {question.options!.map((opt, idx) => {
  const isSelected = userAnswer === opt;
  const isRight = answerResult ? opt === answerResult.correct_answer : false;
- let optionStyle = "border-[var(--border-color)] hover:border-blue-300";
+ let optionBg = "transparent";
+ let optionBorder = "var(--border-color)";
  if (isAnswered) {
- if (isRight) optionStyle = "border-emerald-500 bg-emerald-50";
- else if (isSelected && !isRight) optionStyle = "border-red-500 bg-red-50";
- else optionStyle = "border-[var(--border-color)] opacity-60";
+ if (isRight) { optionBg = "rgba(34,197,94,0.1)"; optionBorder = "#22c55e"; }
+ else if (isSelected && !isRight) { optionBg = "rgba(239,68,68,0.1)"; optionBorder = "#ef4444"; }
+ else { optionBorder = "var(--border-color)"; }
  } else if (isSelected) {
- optionStyle = "border-blue-500 bg-blue-500/10";
+ optionBg = "rgba(99,102,241,0.1)"; optionBorder = "#6366f1";
  }
 
  return (
- <button
- key={idx}
+ <motion.button
+ key={`${currentQ}-${idx}`}
+ initial={{ opacity: 0, x: -20 }}
+ animate={{ opacity: isAnswered && !isRight && !isSelected ? 0.5 : 1, x: 0 }}
+ transition={{ delay: idx * 0.05, duration: 0.3 }}
+ whileHover={!isAnswered ? { scale: 1.01, x: 4 } : {}}
+ whileTap={!isAnswered ? { scale: 0.98 } : {}}
  onClick={() => selectAnswer(question.id, opt)}
  disabled={isAnswered}
- className={`w-full text-left p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${optionStyle}`}
+ className="w-full text-left p-4 rounded-xl border-2 transition-colors flex items-center gap-3"
+ style={{ background: optionBg, borderColor: optionBorder }}
  >
  <span className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium shrink-0">
  {String.fromCharCode(65 + idx)}
  </span>
- <span className="theme-text">{opt}</span>
- {isAnswered && isRight && <CheckCircle2 className="w-5 h-5 text-emerald-500 ml-auto shrink-0" />}
- {isAnswered && isSelected && !isRight && <XCircle className="w-5 h-5 text-red-500 ml-auto shrink-0" />}
- </button>
+ <span className="theme-text flex-1">{opt}</span>
+ {isAnswered && isRight && (
+ <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
+ <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+ </motion.div>
+ )}
+ {isAnswered && isSelected && !isRight && (
+ <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
+ <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+ </motion.div>
+ )}
+ </motion.button>
  );
  })}
+ </AnimatePresence>
  </div>
  ) : (
  /* Fill-in-blank */
@@ -454,20 +535,43 @@ export default function QuizPage() {
  );
  }
 
- // Results screen
+ // Results screen — with Framer Motion animations + XP display
  if (state === "results" && result) {
- const scoreColor = result.score >= 80 ? "text-emerald-600" : result.score >= 50 ? "text-amber-600" : "text-red-600";
+ const scoreColor = result.score >= 80 ? "text-emerald-500" : result.score >= 50 ? "text-amber-500" : "text-red-500";
  const scoreBg = result.score >= 80 ? "from-emerald-500 to-emerald-600" : result.score >= 50 ? "from-amber-500 to-amber-600" : "from-red-500 to-red-600";
+ const xpEarned = result.score >= 80 ? 25 : result.score >= 50 ? 15 : 10;
 
  return (
- <div className="p-4 lg:p-6 max-w-2xl mx-auto space-y-6">
- <Card className="shadow-xl text-center">
- <CardContent className="p-8">
- <div className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br ${scoreBg} flex items-center justify-center text-white shadow-lg mb-6`}>
+ <motion.div
+ initial={{ opacity: 0, scale: 0.95 }}
+ animate={{ opacity: 1, scale: 1 }}
+ transition={{ duration: 0.5, ease: "easeOut" }}
+ className="p-4 lg:p-6 max-w-2xl mx-auto space-y-6"
+ >
+ <Card className="shadow-xl text-center overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.3)" }}>
+ <CardContent className="p-8 relative">
+ {/* Animated trophy */}
+ <motion.div
+ initial={{ scale: 0, rotate: -20 }}
+ animate={{ scale: 1, rotate: 0 }}
+ transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }}
+ className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br ${scoreBg} flex items-center justify-center text-white shadow-lg mb-6`}
+ style={{ boxShadow: `0 0 40px ${result.score >= 80 ? "rgba(34,197,94,0.4)" : result.score >= 50 ? "rgba(245,158,11,0.4)" : "rgba(239,68,68,0.4)"}` }}
+ >
  <Trophy className="w-12 h-12" />
- </div>
- <h2 className="text-2xl font-bold theme-text mb-2">Quiz abgeschlossen!</h2>
- <p className={`text-5xl font-bold ${scoreColor} mb-2`}>{result.score}%</p>
+ </motion.div>
+ <motion.h2
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.3 }}
+ className="text-2xl font-bold theme-text mb-2"
+ >Quiz abgeschlossen!</motion.h2>
+ <motion.p
+ initial={{ opacity: 0, scale: 0.5 }}
+ animate={{ opacity: 1, scale: 1 }}
+ transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+ className={`text-5xl font-bold ${scoreColor} mb-2`}
+ >{result.score}%</motion.p>
  <p className="theme-text-secondary mb-4">
  {result.correct_answers} von {result.total_questions} richtig
  </p>
@@ -479,18 +583,37 @@ export default function QuizPage() {
  </p>
 
  {result.weak_topic_detected && (
- <div className="mt-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-left">
+ <motion.div
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.7 }}
+ className="mt-4 p-4 rounded-xl text-left"
+ style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)" }}
+ >
  <div className="flex items-center gap-2 mb-1">
- <AlertTriangle className="w-5 h-5 text-amber-600" />
- <span className="font-medium text-amber-800">Schwaches Thema erkannt</span>
+ <AlertTriangle className="w-5 h-5 text-amber-500" />
+ <span className="font-medium text-amber-400">Schwaches Thema erkannt</span>
  </div>
- <p className="text-sm text-amber-700">{result.weak_topic_suggestion}</p>
- </div>
+ <p className="text-sm text-amber-300/80">{result.weak_topic_suggestion}</p>
+ </motion.div>
  )}
 
- <div className="mt-4 p-3 rounded-lg bg-blue-50 inline-block">
- <span className="text-sm font-medium text-blue-700">+10 XP verdient!</span>
- </div>
+ {/* XP Animation */}
+ <motion.div
+ initial={{ opacity: 0, y: 20, scale: 0.8 }}
+ animate={{ opacity: 1, y: 0, scale: 1 }}
+ transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+ className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold"
+ style={{
+ background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))",
+ border: "1px solid rgba(99,102,241,0.4)",
+ color: "#a78bfa",
+ boxShadow: "0 0 20px rgba(99,102,241,0.3)",
+ }}
+ >
+ <Zap className="w-4 h-4" />
+ +{xpEarned} XP verdient!
+ </motion.div>
  </CardContent>
  </Card>
 
@@ -503,7 +626,7 @@ export default function QuizPage() {
  Anderes Fach
  </Button>
  </div>
- </div>
+ </motion.div>
  );
  }
 

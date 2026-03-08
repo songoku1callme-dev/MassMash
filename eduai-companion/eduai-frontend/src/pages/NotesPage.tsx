@@ -6,6 +6,7 @@ import {
  FileText, Plus, Trash2, Save, Sparkles, Loader2, ArrowLeft
 } from "lucide-react";
 import { getAccessToken } from "../services/api";
+import { CardSkeleton, ErrorState } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -30,6 +31,7 @@ async function apiFetch(path: string, opts: RequestInit = {}) {
 export default function NotesPage() {
  const [notes, setNotes] = useState<Note[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
  const [editTitle, setEditTitle] = useState("");
  const [editContent, setEditContent] = useState("");
@@ -42,11 +44,12 @@ export default function NotesPage() {
  }, []);
 
  const loadNotes = async () => {
+ setError(false);
  try {
  const data = await apiFetch("/api/notes/");
  setNotes(data.notes || []);
  } catch {
- /* ignore */
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -106,13 +109,8 @@ export default function NotesPage() {
  }
  };
 
- if (loading) {
- return (
- <div className="flex items-center justify-center h-full">
- <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
- </div>
- );
- }
+ if (loading) return <CardSkeleton count={6} />;
+ if (error) return <ErrorState message="Fehler beim Laden der Notizen." onRetry={loadNotes} />;
 
  // Note editor
  if (selectedNote) {

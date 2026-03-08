@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import { challengesApi, Challenge } from "../services/api";
 import { Button } from "@/components/ui/button";
 import { Trophy, Plus, Users, Target, Loader2, Check } from "lucide-react";
+import { CardSkeleton, ErrorState } from "../components/PageStates";
 
 export default function ChallengesPage() {
  const [challenges, setChallenges] = useState<Challenge[]>([]);
  const [loading, setLoading] = useState(true);
+ const [loadError, setLoadError] = useState(false);
  const [showCreate, setShowCreate] = useState(false);
  const [joining, setJoining] = useState<string | null>(null);
  const [message, setMessage] = useState<string | null>(null);
@@ -25,11 +27,13 @@ export default function ChallengesPage() {
 
  const loadChallenges = async () => {
  setLoading(true);
+ setLoadError(false);
  try {
  const data = await challengesApi.list();
  setChallenges(data.challenges);
  } catch (e) {
  console.error(e);
+ setLoadError(true);
  }
  setLoading(false);
  };
@@ -172,9 +176,9 @@ export default function ChallengesPage() {
 
  {/* Challenges List */}
  {loading ? (
- <div className="flex items-center justify-center py-12">
- <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
- </div>
+ <CardSkeleton count={3} />
+ ) : loadError ? (
+ <ErrorState message="Fehler beim Laden der Challenges." onRetry={loadChallenges} />
  ) : challenges.length === 0 ? (
  <div className="text-center py-12">
  <Trophy className="w-12 h-12 mx-auto theme-text-secondary mb-3" />

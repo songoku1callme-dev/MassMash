@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getAccessToken } from "../services/api";
 import { Trophy, Star, Lock, Gift, Zap, Bot, Palette, Crown, Gem, Flame } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -78,21 +79,8 @@ export default function BattlePassPage() {
  }
  };
 
- if (loading) {
- return (
- <div className="p-6 flex items-center justify-center min-h-[60vh]">
- <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600" />
- </div>
- );
- }
-
- if (!status) {
- return (
- <div className="p-6">
- <p className="theme-text-secondary">Battle Pass konnte nicht geladen werden.</p>
- </div>
- );
- }
+ if (loading) return <PageLoader text="Battle Pass laden..." />;
+ if (!status) return <ErrorState message="Battle Pass konnte nicht geladen werden." onRetry={fetchStatus} />;
 
  return (
  <div className="p-6 max-w-5xl mx-auto">
