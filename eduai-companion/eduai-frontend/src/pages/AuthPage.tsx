@@ -485,18 +485,33 @@ export default function AuthPage() {
  </p>
  </div>
 
- {/* Global CSS to hide Clerk development mode badge */}
+ {/* Global CSS to hide Clerk development mode badge and fix footer */}
  <style>{`
  .cl-internal-b3fm6y,
+ .cl-internal-1fpq5at,
+ .cl-internal-1dauvpw,
+ .cl-internal-pe6vm4,
  [data-testid="development-mode-badge"],
- .cl-developmentModeNotice,
- div[class*="cl-internal"][style*="development"] {
+ .cl-developmentModeNotice {
  display: none !important;
+ }
+ .cl-footer p[class*="cl-internal"] {
+ display: none !important;
+ }
+ .cl-footer,
+ .cl-footer > div {
+ background: transparent !important;
+ background-image: none !important;
  }
  .cl-rootBox iframe[src*="turnstile"],
  .cl-rootBox iframe[src*="challenges"] {
  max-width: 100% !important;
  border-radius: 12px !important;
+ }
+ .cl-cardBox {
+ background: transparent !important;
+ border: none !important;
+ box-shadow: none !important;
  }
  `}</style>
  </div>
