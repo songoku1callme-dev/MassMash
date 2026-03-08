@@ -862,7 +862,7 @@ async def trigger_scheduler_job(
     try:
         result = await func()
         return {
-            "message": f"Job '{job_id}' erfolgreich ausgefuehrt",
+            "message": f"Job '{job_id}' erfolgreich ausgeführt",
             "job_id": job_id,
             "beschreibung": job_info.get("beschreibung", ""),
             "ergebnis": result,

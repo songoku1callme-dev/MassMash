@@ -655,7 +655,7 @@ async def list_sessions(
         "user_id": user_id,
         "current_session": "active",
         "last_invalidation": datetime.fromtimestamp(last_invalidation).isoformat() if last_invalidation else None,
-        "note": "JWT-basierte Sessions. Passwort-Aenderung invalidiert alle anderen Sessions.",
+        "note": "JWT-basierte Sessions. Passwort-Änderung invalidiert alle anderen Sessions.",
     }
 
 

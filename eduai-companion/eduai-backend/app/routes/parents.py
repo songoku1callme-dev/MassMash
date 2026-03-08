@@ -36,7 +36,7 @@ async def link_child(
     child_id = child_dict["id"]
 
     if child_id == parent_id:
-        raise HTTPException(status_code=400, detail="Du kannst dich nicht mit dir selbst verknuepfen")
+        raise HTTPException(status_code=400, detail="Du kannst dich nicht mit dir selbst verknüpfen")
 
     # Check if already linked
     cursor = await db.execute(
@@ -69,12 +69,12 @@ async def link_child(
                     json={
                         "from": "Lumnos <noreply@lumnos.de>",
                         "to": [child_email],
-                        "subject": "Eltern-Verknuepfung bestätigen - Lumnos",
+                        "subject": "Eltern-Verknüpfung bestätigen - Lumnos",
                         "html": (
                             f"<p>Hallo {child_dict['username']}!</p>"
-                            f"<p>Ein Elternteil moechte sich mit deinem Lumnos-Account verknuepfen, "
+                            f"<p>Ein Elternteil möchte sich mit deinem Lumnos-Account verknüpfen, "
                             f"um deinen Lernfortschritt zu sehen.</p>"
-                            f'<p><a href="{frontend_url}/parent-verify/{token}">Verknuepfung bestätigen</a></p>'
+                            f'<p><a href="{frontend_url}/parent-verify/{token}">Verknüpfung bestätigen</a></p>'
                             f'<p>Oder: <a href="{frontend_url}/parent-reject/{token}">Ablehnen</a></p>'
                             f"<p>Dein Lumnos Team</p>"
                         ),
@@ -126,7 +126,7 @@ async def verify_parent_link(
     )
     await db.commit()
 
-    return {"message": "Eltern-Verknuepfung bestaetigt! Dein Elternteil kann jetzt deinen Fortschritt sehen."}
+    return {"message": "Eltern-Verknüpfung bestätigt! Dein Elternteil kann jetzt deinen Fortschritt sehen."}
 
 
 @router.get("/reject/{token}")
@@ -148,7 +148,7 @@ async def reject_parent_link(
     )
     await db.commit()
 
-    return {"message": "Verknuepfung abgelehnt."}
+    return {"message": "Verknüpfung abgelehnt."}
 
 
 @router.get("/children")
@@ -271,4 +271,4 @@ async def unlink_child(
         (parent_id, child_id),
     )
     await db.commit()
-    return {"message": "Verknuepfung entfernt"}
+    return {"message": "Verknüpfung entfernt"}

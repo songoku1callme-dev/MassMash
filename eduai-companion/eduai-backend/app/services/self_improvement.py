@@ -368,7 +368,7 @@ async def manage_seasonal_events() -> dict:
                 start_m = event["start_month"]
                 end_m = event["end_month"]
 
-                # Pruefen ob aktueller Monat im Event-Zeitraum
+                # Prüfen ob aktueller Monat im Event-Zeitraum
                 if start_m <= end_m:
                     is_active = start_m <= current_month <= end_m
                 else:
@@ -692,7 +692,7 @@ async def generate_battle_pass_content() -> dict:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# F) Challenges Auto-Generation (taeglich 04:00)
+# F) Challenges Auto-Generation (täglich 04:00)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CHALLENGE_TEMPLATES = [
@@ -749,7 +749,7 @@ CHALLENGE_TEMPLATES = [
 
 
 async def generate_daily_challenges() -> dict:
-    """Generiert 5 neue taeglich Challenges basierend auf Lerntrends.
+    """Generiert 5 neue täglich Challenges basierend auf Lerntrends.
 
     Returns:
         {"neue_challenges": int, "faecher": [str]}

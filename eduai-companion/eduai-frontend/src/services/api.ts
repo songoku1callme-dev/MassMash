@@ -67,7 +67,7 @@ export function clearTokens(): void {
 export function isTokenExpiringSoon(bufferSec: number = 120): boolean {
   const token = getAccessToken();
   if (!token) return true;
-  // Dev-Token laeuft nie ab
+  // Dev-Token läuft nie ab
   if (token === "dev-max-token-lumnos") return false;
   try {
     const { exp } = jwtDecode<JwtPayload>(token);

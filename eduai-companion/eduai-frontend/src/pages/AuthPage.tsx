@@ -443,7 +443,7 @@ export default function AuthPage() {
  }}
  onClick={() => {
  // Will be handled by Clerk in production
- setError("Google-Login wird bald verfuegbar sein!");
+ setError("Google-Login wird bald verfügbar sein!");
  }}
  >
  <svg width="18" height="18" viewBox="0 0 24 24">

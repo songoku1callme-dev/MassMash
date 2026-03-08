@@ -34,7 +34,7 @@ async def transcribe_audio(
     """Transcribe audio to text using Groq Whisper API."""
     groq_key = os.getenv("GROQ_API_KEY", "")
     if not groq_key:
-        raise HTTPException(status_code=503, detail="Voice-Modus nicht verfuegbar (kein API Key)")
+        raise HTTPException(status_code=503, detail="Voice-Modus nicht verfügbar (kein API Key)")
 
     try:
         from groq import Groq
@@ -109,7 +109,7 @@ async def voice_chat(
     # Step 1: Transcribe
     groq_key = os.getenv("GROQ_API_KEY", "")
     if not groq_key:
-        raise HTTPException(status_code=503, detail="Voice-Modus nicht verfuegbar")
+        raise HTTPException(status_code=503, detail="Voice-Modus nicht verfügbar")
 
     try:
         from groq import Groq

@@ -32,7 +32,7 @@ test.describe("Lumnos Companion E2E — Final Polish 5.1", () => {
     expect(hasOnboarding || hasAuth).toBeTruthy();
   });
 
-  // Test 3: Quiz — Fach waehlen + Fragen + XP
+  // Test 3: Quiz — Fach wählen + Fragen + XP
   test("quiz page loads with subject selector", async ({ page }) => {
     await page.goto(`${BASE}/quiz`);
     // Should show quiz page or redirect to auth
@@ -65,7 +65,7 @@ test.describe("Lumnos Companion E2E — Final Polish 5.1", () => {
     expect(hasScanner || hasAuth).toBeTruthy();
   });
 
-  // Test 7: Offline — Karteikarten verfuegbar (PWA + SW)
+  // Test 7: Offline — Karteikarten verfügbar (PWA + SW)
   test("PWA service worker and manifest are accessible", async ({ page }) => {
     const swResponse = await page.goto(`${BASE}/sw.js`);
     if (swResponse) {

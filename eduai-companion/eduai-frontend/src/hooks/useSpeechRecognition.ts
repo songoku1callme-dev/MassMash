@@ -123,7 +123,7 @@ export function useSpeechRecognition(language: string = "de") {
               setError("Kein Mikrofon gefunden. Bitte stelle sicher, dass ein Mikrofon angeschlossen ist.");
               break;
             case "network":
-              setError("Netzwerkfehler bei der Spracherkennung. Pruefe deine Internetverbindung.");
+              setError("Netzwerkfehler bei der Spracherkennung. Prüfe deine Internetverbindung.");
               break;
             case "aborted":
               // User cancelled — no error message needed

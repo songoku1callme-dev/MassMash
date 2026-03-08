@@ -1127,7 +1127,7 @@ export default function ChatPage() {
  }
  title={
  !speechSupported
- ? "Spracheingabe nur in Chrome/Edge verfuegbar"
+ ? "Spracheingabe nur in Chrome/Edge verfügbar"
  : isListening
  ? (language === "de" ? "Aufnahme stoppen" : "Stop recording")
  : (language === "de" ? "Spracheingabe starten" : "Start voice input")

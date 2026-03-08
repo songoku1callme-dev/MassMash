@@ -94,12 +94,12 @@ ABITUR_THEMEN = {
 
 
 def fach_braucht_internet(fach: str) -> bool:
-    """Pruefen ob ein Fach automatisch Internet-Suche benoetigt."""
+    """Prüfen ob ein Fach automatisch Internet-Suche benötigt."""
     return fach in FAECHER_MIT_INTERNET
 
 
 def fach_braucht_wikipedia(fach: str) -> bool:
-    """Pruefen ob ein Fach Wikipedia Fact-Check benoetigt."""
+    """Prüfen ob ein Fach Wikipedia Fact-Check benötigt."""
     return fach in FAECHER_MIT_WIKIPEDIA
 
 
@@ -214,7 +214,7 @@ async def update_knowledge_base() -> dict:
             # Für jedes Fach: Top Abitur-Themen abrufen
             for fach, themen in ABITUR_THEMEN.items():
                 try:
-                    # Waehle 2 zufaellige Themen pro Fach pro Nacht
+                    # Wähle 2 zufällige Themen pro Fach pro Nacht
                     import random
                     ausgewaehlte = random.sample(themen, min(2, len(themen)))
 
@@ -495,7 +495,7 @@ ALLE_FAECHER_THEMEN = {
         "Globalisierung Wirtschaft", "Geldpolitik EZB",
     ],
     "Ethik": [
-        "Utilitarismus Ethik Abitur", "Menschenwuerde Grundgesetz",
+        "Utilitarismus Ethik Abitur", "Menschenwürde Grundgesetz",
         "Gerechtigkeit Philosophie", "Bioethik aktuell",
     ],
     "Informatik": [
@@ -554,7 +554,7 @@ async def update_knowledge_base_all_subjects() -> dict:
 
             for fach, themen in ALLE_FAECHER_THEMEN.items():
                 try:
-                    # 1 zufaelliges Thema pro Fach pro Tag
+                    # 1 zufälliges Thema pro Fach pro Tag
                     thema = random.choice(themen)
 
                     async with httpx.AsyncClient(timeout=15.0) as client:
@@ -680,7 +680,7 @@ WIKIPEDIA_SYNC_THEMEN = {
         "Kryptographie", "Datenbank",
     ],
     "Ethik": [
-        "Utilitarismus", "Kategorischer_Imperativ", "Menschenwuerde",
+        "Utilitarismus", "Kategorischer_Imperativ", "Menschenwürde",
         "Gerechtigkeit", "Bioethik",
     ],
     "Kunst": [
@@ -830,7 +830,7 @@ async def update_lehrplan_content() -> dict:
 
             for land in BUNDESLAENDER:
                 try:
-                    # Zufaelligen Suchbegriff waehlen
+                    # Zufaelligen Suchbegriff wählen
                     template = random.choice(LEHRPLAN_SUCHBEGRIFFE)
                     query = template.replace("{land}", land).replace(
                         "{year}", str(current_year)

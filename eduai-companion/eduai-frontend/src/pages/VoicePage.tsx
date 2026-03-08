@@ -146,7 +146,7 @@ export default function VoicePage() {
  </button>
  <p className="text-sm theme-text-secondary">
  {isRecording
- ? "Aufnahme laeuft... Klicke zum Stoppen"
+ ? "Aufnahme läuft... Klicke zum Stoppen"
  : isProcessing
  ? "Verarbeite Audio..."
  : "Klicke zum Sprechen"}

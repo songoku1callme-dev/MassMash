@@ -48,7 +48,7 @@ export default function ParentsPage() {
  await parentsApi.unlinkChild(childId);
  loadChildren();
  } catch {
- setError("Fehler beim Entfernen der Verknuepfung");
+ setError("Fehler beim Entfernen der Verknüpfung");
  }
  };
 
@@ -68,7 +68,7 @@ export default function ParentsPage() {
  <div className="mb-8 p-6 theme-card rounded-xl border border-[var(--border-color)] shadow-sm">
  <h2 className="text-lg font-semibold theme-text mb-4 flex items-center gap-2">
  <Link className="w-5 h-5 text-purple-600" />
- Kind verknuepfen
+ Kind verknüpfen
  </h2>
  <div className="flex gap-3">
  <input
@@ -100,7 +100,7 @@ export default function ParentsPage() {
  ) : children.length === 0 ? (
  <div className="text-center py-12 theme-text-secondary">
  <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
- <p className="text-lg">Noch keine Kinder verknuepft</p>
+ <p className="text-lg">Noch keine Kinder verknüpft</p>
  <p className="text-sm mt-1">Gib die Email-Adresse deines Kindes ein, um seine Fortschritte zu sehen.</p>
  </div>
  ) : (

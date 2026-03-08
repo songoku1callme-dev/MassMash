@@ -60,7 +60,7 @@ async def generate_daily_quests():
                 user_id = dict(u)["user_id"]
                 today_str = date.today().isoformat()
 
-                # Pruefen ob heute schon Quests existieren
+                # Prüfen ob heute schon Quests existieren
                 cursor = await db.execute(
                     "SELECT COUNT(*) as cnt FROM daily_quests WHERE user_id = ? AND quest_date = ?",
                     (user_id, today_str),
@@ -69,7 +69,7 @@ async def generate_daily_quests():
                 if row and dict(row)["cnt"] > 0:
                     continue
 
-                # Schwaeche ermitteln
+                # Schwäche ermitteln
                 cursor = await db.execute(
                     """SELECT subject FROM quiz_results
                     WHERE user_id = ? AND completed_at >= date('now', '-30 days')
@@ -83,7 +83,7 @@ async def generate_daily_quests():
                 quests = [
                     {
                         "quest_id": f"weak_{today_str}",
-                        "title": f"Schwaeche ueben: {weak_subject}",
+                        "title": f"Schwäche üben: {weak_subject}",
                         "description": f"Mache ein Quiz in {weak_subject}",
                         "xp_reward": 50,
                         "target": 1,
@@ -237,9 +237,9 @@ MOTIVATIONS_NACHRICHTEN = [
     "Jeder Tag ist eine neue Chance zu lernen! Starte jetzt dein erstes Quiz.",
     "Wusstest du? Regelmaessiges Lernen verbessert dein Gedaechtnis um 40%!",
     "Dein Gehirn ist bereit! Nur 15 Minuten reichen für einen Lernfortschritt.",
-    "Top-Schueler lernen jeden Tag ein bisschen. Du schaffst das auch!",
+    "Top-Schüler lernen jeden Tag ein bisschen. Du schaffst das auch!",
     "Tipp: Wiederhole heute dein schwaechstes Fach — das bringt am meisten!",
-    "Neuer Tag, neue Moeglichkeiten! Welches Fach moechtest du heute meistern?",
+    "Neuer Tag, neue Möglichkeiten! Welches Fach möchtest du heute meistern?",
     "Streak-Alarm! Vergiss nicht, heute zu lernen um deinen Streak zu halten.",
     "Fun Fact: Wer täglich 20 Min lernt, schneidet 30% besser in Prüfungen ab.",
     "Challenge des Tages: Schaffe alle 3 Daily Quests!",
@@ -248,7 +248,7 @@ MOTIVATIONS_NACHRICHTEN = [
 
 
 async def send_motivation_notifications():
-    """Personalisierte Motivations-Nachricht pro User basierend auf Schwaeche."""
+    """Personalisierte Motivations-Nachricht pro User basierend auf Schwäche."""
     import aiosqlite
 
     logger.info("Job: send_motivation_notifications gestartet")
@@ -458,7 +458,7 @@ async def rotate_shop_items():
         async with aiosqlite.connect(db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # 3-5 zufaellige Rotation Items auswaehlen
+            # 3-5 zufällige Rotation Items auswählen
             num_items = random.randint(3, 5)
             neue_items = random.sample(ROTATION_ITEMS, min(num_items, len(ROTATION_ITEMS)))
 

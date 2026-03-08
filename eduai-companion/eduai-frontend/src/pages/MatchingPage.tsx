@@ -120,7 +120,7 @@ export default function MatchingPage() {
  {/* Gemeinsam lernen Button */}
  <button
  className="mt-3 flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 rounded-lg transition-colors"
- onClick={() => alert(`Lerngruppe mit ${partner.username} wird erstellt! Ihr koennt jetzt gemeinsam lernen.`)}
+ onClick={() => alert(`Lerngruppe mit ${partner.username} wird erstellt! Ihr könnt jetzt gemeinsam lernen.`)}
  >
  <MessageCircle className="w-4 h-4" />
  Gemeinsam lernen

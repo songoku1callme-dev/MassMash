@@ -59,7 +59,7 @@ export default function SchoolPage() {
  setMessage({ text: errData?.detail || "Klasse konnte nicht erstellt werden. Bitte versuche es erneut.", type: "error" });
  }
  } catch {
- setMessage({ text: "Verbindung zum Server fehlgeschlagen. Bitte pruefe deine Internetverbindung.", type: "error" });
+ setMessage({ text: "Verbindung zum Server fehlgeschlagen. Bitte prüfe deine Internetverbindung.", type: "error" });
  }
  setLoading(false);
  };
@@ -78,10 +78,10 @@ export default function SchoolPage() {
  fetchData();
  } else {
  const errData = await res.json().catch(() => null);
- setMessage({ text: errData?.detail || "Klassen-Code nicht gefunden. Bitte pruefe den Code.", type: "error" });
+ setMessage({ text: errData?.detail || "Klassen-Code nicht gefunden. Bitte prüfe den Code.", type: "error" });
  }
  } catch {
- setMessage({ text: "Verbindung zum Server fehlgeschlagen. Bitte pruefe deine Internetverbindung.", type: "error" });
+ setMessage({ text: "Verbindung zum Server fehlgeschlagen. Bitte prüfe deine Internetverbindung.", type: "error" });
  }
  setLoading(false);
  };
@@ -105,8 +105,8 @@ export default function SchoolPage() {
  };
 
  const packages = [
- { id: "klassen" as PackageType, name: "Klassen-Lizenz", price: "49,99", period: "EUR/Monat", students: "Bis zu 30 Schueler", icon: <School className="w-6 h-6" />, popular: false },
- { id: "schul" as PackageType, name: "Schul-Lizenz", price: "299,99", period: "EUR/Monat", students: "Bis zu 300 Schueler", icon: <Building2 className="w-6 h-6" />, popular: true },
+ { id: "klassen" as PackageType, name: "Klassen-Lizenz", price: "49,99", period: "EUR/Monat", students: "Bis zu 30 Schüler", icon: <School className="w-6 h-6" />, popular: false },
+ { id: "schul" as PackageType, name: "Schul-Lizenz", price: "299,99", period: "EUR/Monat", students: "Bis zu 300 Schüler", icon: <Building2 className="w-6 h-6" />, popular: true },
  { id: "enterprise" as PackageType, name: "Enterprise", price: "Auf Anfrage", period: "", students: "Unbegrenzt", icon: <Sparkles className="w-6 h-6" />, popular: false },
  ];
 
@@ -217,7 +217,7 @@ export default function SchoolPage() {
  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
  Klasse erstellen
  </button>
- <p className="text-xs text-slate-500 mt-3 text-center">Alle Schueler in deiner Klasse erhalten automatisch Max-Zugang.</p>
+ <p className="text-xs text-slate-500 mt-3 text-center">Alle Schüler in deiner Klasse erhalten automatisch Max-Zugang.</p>
  </div>
  )}
 
@@ -283,14 +283,14 @@ export default function SchoolPage() {
  </div>
  </div>
  <span className={`text-xs px-3 py-1 rounded-full font-medium ${c.is_active ? "bg-emerald-500/10 text-emerald-400" : "bg-slate-500/10 text-slate-400"}`}>
- {c.student_count}/{c.max_students} Schueler
+ {c.student_count}/{c.max_students} Schüler
  </span>
  </div>
 
  {c.students.length > 0 && (
  <div className="space-y-2">
  <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-slate-500 px-2">
- <span>Schueler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span>
+ <span>Schüler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span>
  </div>
  {c.students.map((s) => (
  <div
@@ -308,7 +308,7 @@ export default function SchoolPage() {
  </div>
  )}
  {c.students.length === 0 && (
- <p className="text-sm text-slate-500 text-center py-4">Noch keine Schueler beigetreten. Teile den Code!</p>
+ <p className="text-sm text-slate-500 text-center py-4">Noch keine Schüler beigetreten. Teile den Code!</p>
  )}
  </div>
  ))}

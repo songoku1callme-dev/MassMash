@@ -105,9 +105,9 @@ async def send_parent_link_email(
 ) -> bool:
     """Template 3: Parent linking verification email."""
     content = f"""
-    <h2 style="color: #1f2937;">Eltern-Verknuepfung bestätigen</h2>
+    <h2 style="color: #1f2937;">Eltern-Verknüpfung bestätigen</h2>
     <p style="color: #4b5563; line-height: 1.6;">
-      Hallo! <strong>{parent_name}</strong> moechte das Konto von <strong>{child_name}</strong> verknuepfen,
+      Hallo! <strong>{parent_name}</strong> möchte das Konto von <strong>{child_name}</strong> verknüpfen,
       um den Lernfortschritt zu verfolgen.
     </p>
     <div style="text-align: center; margin: 24px 0;">
@@ -128,7 +128,7 @@ async def send_parent_link_email(
     """
     return await _send_email(
         to,
-        f"Eltern-Verknuepfung: {parent_name} moechte {child_name} verfolgen",
+        f"Eltern-Verknüpfung: {parent_name} möchte {child_name} verfolgen",
         _base_template(content),
     )
 

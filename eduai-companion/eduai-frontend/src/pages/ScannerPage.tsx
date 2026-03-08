@@ -126,7 +126,7 @@ export default function ScannerPage() {
  <Card>
  <CardContent className="p-6">
  <label className="text-sm font-medium theme-text-secondary mb-3 block">
- Fach waehlen
+ Fach wählen
  </label>
  <FachSelector value={fach} onChange={setFach} />
  </CardContent>
@@ -154,7 +154,7 @@ export default function ScannerPage() {
  {(file.size / 1024).toFixed(0)} KB
  </p>
  <Button variant="outline" size="sm" onClick={() => setFile(null)}>
- Anderes Bild waehlen
+ Anderes Bild wählen
  </Button>
  </div>
  ) : (
@@ -167,7 +167,7 @@ export default function ScannerPage() {
  Schulbuchseite hochladen
  </p>
  <p className="text-sm theme-text-secondary mt-1">
- Drag & Drop oder klicke zum Auswaehlen
+ Drag & Drop oder klicke zum Auswählen
  </p>
  </div>
  <div className="flex gap-3 justify-center">
@@ -179,7 +179,7 @@ export default function ScannerPage() {
  onChange={handleFileSelect}
  />
  <Button variant="outline" size="sm" asChild>
- <span><Upload className="w-4 h-4 mr-2" />Datei waehlen</span>
+ <span><Upload className="w-4 h-4 mr-2" />Datei wählen</span>
  </Button>
  </label>
  <label className="cursor-pointer">
