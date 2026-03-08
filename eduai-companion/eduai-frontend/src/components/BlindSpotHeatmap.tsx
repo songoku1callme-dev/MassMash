@@ -7,8 +7,8 @@ interface BlindSpotFach {
   blind_spots: number;
 }
 
-export function BlindSpotHeatmap({ fächer }: { fächer: BlindSpotFach[] }) {
-  if (!fächer || fächer.length === 0) return null;
+export function BlindSpotHeatmap({ subjects }: { subjects: BlindSpotFach[] }) {
+  if (!subjects || subjects.length === 0) return null;
 
   return (
     <div
@@ -22,7 +22,7 @@ export function BlindSpotHeatmap({ fächer }: { fächer: BlindSpotFach[] }) {
         Blind Spots — du glaubst es zu wissen, liegst aber falsch
       </div>
       <div className="flex flex-wrap gap-2">
-        {fächer.map((f) => (
+        {subjects.map((f) => (
           <div
             key={f.fach}
             className="px-2 py-1 rounded-lg text-xs font-medium"

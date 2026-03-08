@@ -659,7 +659,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {/* Blind-Spot Heatmap */}
  {blindSpots.length > 0 && (
  <div className="mb-5">
- <BlindSpotHeatmap f\u00e4cher={blindSpots} />
+ <BlindSpotHeatmap subjects={blindSpots} />
  </div>
  )}
 
