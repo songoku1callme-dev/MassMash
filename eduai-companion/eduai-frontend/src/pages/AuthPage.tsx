@@ -4,6 +4,32 @@ import { dark } from "@clerk/themes";
 import { useAuthStore } from "../stores/authStore";
 import { BookOpen, Zap, Eye, EyeOff } from "lucide-react";
 
+/* ── German localization for Clerk (no extra package needed) ── */
+const deLocalization = {
+ signIn: {
+ start: {
+ title: "Anmelden",
+ subtitle: "Willkommen zurueck!",
+ actionText: "Noch kein Konto?",
+ actionLink: "Registrieren",
+ },
+ },
+ signUp: {
+ start: {
+ title: "Registrieren",
+ subtitle: "Erstelle dein Konto",
+ actionText: "Bereits registriert?",
+ actionLink: "Anmelden",
+ },
+ },
+ socialButtonsBlockButton: "Mit {{provider|titleize}} fortfahren",
+ dividerText: "oder",
+ formFieldLabel__emailAddress: "E-Mail-Adresse",
+ formFieldLabel__password: "Passwort",
+ formButtonPrimary: "Weiter",
+ footerActionLink__useAnotherMethod: "Andere Methode verwenden",
+};
+
 const CLERK_ENABLED = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 /* ── Clerk Cyber-Zen Appearance ── */
@@ -145,8 +171,8 @@ export default function AuthPage() {
  >
  <span className="text-2xl font-bold">{"\u2726"}</span>
  </div>
- <h1 className="text-3xl font-bold text-white tracking-tight">Lumnos</h1>
- <p className="text-slate-400 mt-1 flex items-center justify-center gap-1.5 text-sm">
+ <h1 className="text-3xl font-bold text-foreground tracking-tight">Lumnos</h1>
+ <p className="text-muted-foreground mt-1 flex items-center justify-center gap-1.5 text-sm">
  <BookOpen className="w-4 h-4" />
  KI-Lerncoach
  </p>
@@ -173,20 +199,10 @@ export default function AuthPage() {
  style={{ maxWidth: "100%", overflow: "hidden" }}
  >
  {isLogin ? (
- <SignIn routing="hash" appearance={clerkAppearance} />
+ <SignIn routing="hash" appearance={clerkAppearance} localization={deLocalization} />
  ) : (
- <SignUp routing="hash" appearance={clerkAppearance} />
+ <SignUp routing="hash" appearance={clerkAppearance} localization={deLocalization} />
  )}
- </div>
- <div className="mt-4 text-center">
- <button
- onClick={() => setIsLogin(!isLogin)}
- className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
- >
- {isLogin
- ? "Noch kein Konto? Jetzt registrieren"
- : "Bereits registriert? Jetzt anmelden"}
- </button>
  </div>
  </div>
  ) : (
@@ -485,8 +501,9 @@ export default function AuthPage() {
  </p>
  </div>
 
- {/* Global CSS to hide Clerk development mode badge and fix footer */}
+ {/* Global CSS to hide Clerk development mode badge, fix footer, theme-aware */}
  <style>{`
+ /* Hide development mode badge */
  .cl-internal-b3fm6y,
  .cl-internal-1fpq5at,
  .cl-internal-1dauvpw,
@@ -498,20 +515,57 @@ export default function AuthPage() {
  .cl-footer p[class*="cl-internal"] {
  display: none !important;
  }
+ /* Transparent footer background */
  .cl-footer,
  .cl-footer > div {
  background: transparent !important;
  background-image: none !important;
  }
+ /* Turnstile containment */
  .cl-rootBox iframe[src*="turnstile"],
  .cl-rootBox iframe[src*="challenges"] {
  max-width: 100% !important;
  border-radius: 12px !important;
  }
+ /* Transparent card box */
  .cl-cardBox {
  background: transparent !important;
  border: none !important;
  box-shadow: none !important;
+ }
+ /* Fix: Hide first social button if it has no visible text (Apple button broken) */
+ .cl-socialButtonsBlockButton:first-child:empty,
+ .cl-socialButtonsBlockButton img[src*="apple"] {
+ /* Keep Apple visible — Clerk renders icon-only sometimes */
+ }
+ /* Theme-aware Clerk text colors (Light Mode support) */
+ .cl-formFieldLabel {
+ color: var(--text-primary, hsl(var(--foreground))) !important;
+ }
+ .cl-formFieldInput {
+ color: var(--text-primary, hsl(var(--foreground))) !important;
+ background: var(--input-bg, hsl(var(--input))) !important;
+ border-color: var(--border-color, hsl(var(--border))) !important;
+ }
+ .cl-dividerText {
+ color: var(--text-secondary, hsl(var(--muted-foreground))) !important;
+ }
+ .cl-dividerLine {
+ background: var(--border-color, hsl(var(--border))) !important;
+ }
+ .cl-footerActionText {
+ color: var(--text-secondary, hsl(var(--muted-foreground))) !important;
+ }
+ .cl-socialButtonsBlockButton {
+ background: var(--input-bg, hsl(var(--muted))) !important;
+ border-color: var(--border-color, hsl(var(--border))) !important;
+ color: var(--text-primary, hsl(var(--foreground))) !important;
+ }
+ .cl-socialButtonsBlockButton:hover {
+ background: var(--hover-bg, hsl(var(--accent))) !important;
+ }
+ .cl-socialButtonsBlockButtonText {
+ color: var(--text-primary, hsl(var(--foreground))) !important;
  }
  `}</style>
  </div>
