@@ -9,9 +9,9 @@ interface Section { title: string; content: string; }
 const STATIC_SECTIONS: Section[] = [
  { title: "1. Verantwortlicher", content: "Lumnos Companion ist ein Bildungstechnologie-Projekt. Kontakt: support@lumnos-companion.de" },
  { title: "2. Welche Daten wir erheben", content: "Wir erheben: E-Mail-Adresse, Benutzername, Schulklasse, Schultyp, Lernfortschritt, Quiz-Ergebnisse, Chat-Verlaeufe. Alle Daten dienen ausschliesslich der Lernunterstuetzung." },
- { title: "3. Zweck der Verarbeitung", content: "Personalisiertes Lernen, KI-gestuetztes Tutoring, Fortschrittsverfolgung, Gamification. Keine Daten werden an Dritte verkauft." },
- { title: "4. KI-Verarbeitung (Groq)", content: "Chat-Nachrichten werden an die Groq API gesendet fuer KI-Antworten. Es werden keine personenbezogenen Daten (Name, E-Mail) an Groq uebermittelt. Nur der Fragetext und minimaler Kontext." },
- { title: "5. Zahlungsdaten (Stripe)", content: "Zahlungen werden ueber Stripe abgewickelt. Wir speichern keine Kreditkartendaten. Stripe ist PCI-DSS zertifiziert." },
+ { title: "3. Zweck der Verarbeitung", content: "Personalisiertes Lernen, KI-gestütztes Tutoring, Fortschrittsverfolgung, Gamification. Keine Daten werden an Dritte verkauft." },
+ { title: "4. KI-Verarbeitung (Groq)", content: "Chat-Nachrichten werden an die Groq API gesendet für KI-Antworten. Es werden keine personenbezogenen Daten (Name, E-Mail) an Groq übermittelt. Nur der Fragetext und minimaler Kontext." },
+ { title: "5. Zahlungsdaten (Stripe)", content: "Zahlungen werden über Stripe abgewickelt. Wir speichern keine Kreditkartendaten. Stripe ist PCI-DSS zertifiziert." },
  { title: "6. Cookies", content: "Wir verwenden: Notwendige Cookies (Session, Auth-Token), Optionale Cookies (Dark Mode Praeferenz, Sprache). Keine Tracking-Cookies ohne Einwilligung." },
  { title: "7. Deine Rechte (DSGVO Art. 15-22)", content: "Du hast das Recht auf: Auskunft, Berichtigung, Loeschung, Einschraenkung, Datenportabilitaet, Widerspruch. Kontaktiere uns jederzeit." },
  { title: "8. Account loeschen", content: "Du kannst deinen Account jederzeit in den Einstellungen loeschen. Alle deine Daten werden unwiderruflich entfernt." },
@@ -20,9 +20,9 @@ const STATIC_SECTIONS: Section[] = [
 
 const STATIC_IMPRESSUM: Record<string, string> = {
  name: "Lumnos Companion",
- description: "KI-gestuetztes Lernen fuer deutsche Schueler",
+ description: "KI-gestütztes Lernen für deutsche Schüler",
  email: "support@lumnos-companion.de",
- haftungsausschluss: "Die Inhalte dieser App wurden mit groesster Sorgfalt erstellt. Fuer die Richtigkeit, Vollstaendigkeit und Aktualitaet der Inhalte koennen wir jedoch keine Gewaehr uebernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
+ haftungsausschluss: "Die Inhalte dieser App wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte können wir jedoch keine Gewähr übernehmen. Die KI-generierten Antworten ersetzen keinen professionellen Unterricht.",
  urheberrecht: "Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht.",
 };
 

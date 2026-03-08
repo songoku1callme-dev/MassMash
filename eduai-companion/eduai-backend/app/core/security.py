@@ -107,7 +107,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 logger.warning("Login lockout active for IP %s (%ds remaining)", ip, remaining)
                 return JSONResponse(
                     status_code=429,
-                    content={"detail": f"Zu viele Login-Versuche. Gesperrt fuer {remaining // 60} Minuten."},
+                    content={"detail": f"Zu viele Login-Versuche. Gesperrt für {remaining // 60} Minuten."},
                     headers={"Retry-After": str(remaining)},
                 )
 

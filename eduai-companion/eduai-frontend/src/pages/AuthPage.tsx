@@ -9,7 +9,7 @@ const deLocalization = {
  signIn: {
  start: {
  title: "Anmelden",
- subtitle: "Willkommen zurueck!",
+ subtitle: "Willkommen zurück!",
  actionText: "Noch kein Konto?",
  actionLink: "Registrieren",
  },
@@ -476,7 +476,7 @@ export default function AuthPage() {
  <Zap className="w-4 h-4" />
  DEV BYPASS LOGIN (Max-Tier)
  </button>
- <p className="text-xs text-red-400/60 text-center mt-1.5">Nur fuer Entwickler-Testing</p>
+ <p className="text-xs text-red-400/60 text-center mt-1.5">Nur für Entwickler-Testing</p>
  </div>
  )}
 

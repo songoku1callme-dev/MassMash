@@ -1,8 +1,8 @@
 """KI Live-Wissen — 3-Stufen Wissenssystem.
 
-STUFE 1: Tavily Web-Suche (Auto-Trigger bei bestimmten Faechern)
+STUFE 1: Tavily Web-Suche (Auto-Trigger bei bestimmten Fächern)
 STUFE 2: Nightly Knowledge Update (APScheduler Job um 03:00)
-STUFE 3: Wikipedia Fact-Check (fuer Geschichte, Biologie, Chemie, Physik, Geographie)
+STUFE 3: Wikipedia Fact-Check (für Geschichte, Biologie, Chemie, Physik, Geographie)
 """
 import logging
 import os
@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 # STUFE 1: Fach-Erkennung + Tavily Auto-Trigger
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Faecher die IMMER Internet-Suche benoetigen (aktuelle Infos wichtig)
+# Fächer die IMMER Internet-Suche benötigen (aktuelle Infos wichtig)
 FAECHER_MIT_INTERNET = [
     "Geschichte", "Politik", "Wirtschaft", "Biologie",
     "Geographie", "Sozialkunde",
 ]
 
-# Faecher fuer Wikipedia Fact-Check (STUFE 3)
+# Fächer für Wikipedia Fact-Check (STUFE 3)
 FAECHER_MIT_WIKIPEDIA = [
     "Geschichte", "Biologie", "Chemie", "Physik", "Geographie",
 ]
@@ -103,16 +103,16 @@ def fach_braucht_wikipedia(fach: str) -> bool:
     return fach in FAECHER_MIT_WIKIPEDIA
 
 
-async def tavily_suche_fuer_fach(
+async def tavily_suche_für_fach(
     frage: str,
     fach: str,
     max_results: int = 3,
 ) -> dict:
-    """STUFE 1: Automatische Tavily-Suche fuer Faecher die aktuelle Infos brauchen.
+    """STUFE 1: Automatische Tavily-Suche für Fächer die aktuelle Infos brauchen.
 
     Returns:
         {
-            "kontext": str,  # Fuer System-Prompt Injection
+            "kontext": str,  # Für System-Prompt Injection
             "quellen": [str],  # Formatierte Quellen-Links
             "ergebnisse": [dict],
         }
@@ -211,7 +211,7 @@ async def update_knowledge_base() -> dict:
         async with aiosqlite.connect(db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Fuer jedes Fach: Top Abitur-Themen abrufen
+            # Für jedes Fach: Top Abitur-Themen abrufen
             for fach, themen in ABITUR_THEMEN.items():
                 try:
                     # Waehle 2 zufaellige Themen pro Fach pro Nacht
@@ -252,7 +252,7 @@ async def update_knowledge_base() -> dict:
                     aktualisierte_faecher.append(fach)
 
                 except Exception as fach_err:
-                    logger.warning("Knowledge Update fuer %s fehlgeschlagen: %s", fach, fach_err)
+                    logger.warning("Knowledge Update für %s fehlgeschlagen: %s", fach, fach_err)
 
             # Alte Eintraege entfernen (>90 Tage)
             grenze = (datetime.utcnow() - timedelta(days=90)).isoformat()
@@ -275,7 +275,7 @@ async def update_knowledge_base() -> dict:
         logger.error("Knowledge Update fehlgeschlagen: %s", exc)
 
     logger.info(
-        "Knowledge Update abgeschlossen: %d neue, %d entfernte Dokumente, Faecher: %s",
+        "Knowledge Update abgeschlossen: %d neue, %d entfernte Dokumente, Fächer: %s",
         neue_dokumente, entfernte_dokumente, aktualisierte_faecher,
     )
 
@@ -295,7 +295,7 @@ async def wikipedia_fact_check(
     fach: str,
     sprache: str = "de",
 ) -> dict:
-    """Wikipedia Fact-Check fuer Geschichte, Biologie, Chemie, Physik, Geographie.
+    """Wikipedia Fact-Check für Geschichte, Biologie, Chemie, Physik, Geographie.
 
     Uses the Wikipedia REST API (no external dependency needed).
 
@@ -304,7 +304,7 @@ async def wikipedia_fact_check(
             "gefunden": bool,
             "zusammenfassung": str,
             "url": str,
-            "kontext": str,  # Fuer Prompt-Injection
+            "kontext": str,  # Für Prompt-Injection
         }
     """
     if not fach_braucht_wikipedia(fach):
@@ -409,11 +409,11 @@ async def enrich_with_live_knowledge(
     fach: str,
     user_tier: str = "free",
 ) -> dict:
-    """Kombiniert alle 3 Stufen fuer maximale Wissensanreicherung.
+    """Kombiniert alle 3 Stufen für maximale Wissensanreicherung.
 
     Returns:
         {
-            "kontext": str,  # Gesamtkontext fuer System-Prompt
+            "kontext": str,  # Gesamtkontext für System-Prompt
             "quellen": [str],
             "stufen_genutzt": [str],  # z.B. ["tavily", "wikipedia"]
         }
@@ -422,16 +422,16 @@ async def enrich_with_live_knowledge(
     quellen = []
     stufen_genutzt = []
 
-    # STUFE 1: Tavily fuer Faecher die aktuelle Infos brauchen
+    # STUFE 1: Tavily für Fächer die aktuelle Infos brauchen
     # (nur Pro/Max User)
     if user_tier in ("pro", "max") and fach_braucht_internet(fach):
-        tavily_result = await tavily_suche_fuer_fach(frage, fach)
+        tavily_result = await tavily_suche_für_fach(frage, fach)
         if tavily_result["kontext"]:
             kontext_parts.append(tavily_result["kontext"])
             quellen.extend(tavily_result["quellen"])
             stufen_genutzt.append("tavily")
 
-    # STUFE 3: Wikipedia Fact-Check (fuer alle User bei bestimmten Faechern)
+    # STUFE 3: Wikipedia Fact-Check (für alle User bei bestimmten Fächern)
     if fach_braucht_wikipedia(fach):
         # Extrahiere Hauptthema aus der Frage (erste 3-4 Woerter)
         woerter = frage.split()
@@ -453,10 +453,10 @@ async def enrich_with_live_knowledge(
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# PR #52 — AUFGABE 2A: Daily Knowledge Update (alle 16 Faecher)
+# PR #52 — AUFGABE 2A: Daily Knowledge Update (alle 16 Fächer)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Alle 16 Faecher mit Abitur-Suchbegriffen
+# Alle 16 Fächer mit Abitur-Suchbegriffen
 ALLE_FAECHER_THEMEN = {
     "Mathematik": [
         "Analysis Abitur", "Stochastik Abitur", "Lineare Algebra Abitur",
@@ -526,7 +526,7 @@ ALLE_FAECHER_THEMEN = {
 
 
 async def update_knowledge_base_all_subjects() -> dict:
-    """AUFGABE 2A: Taegliche Tavily-Suche fuer alle 16 Faecher.
+    """AUFGABE 2A: Tägliche Tavily-Suche für alle 16 Fächer.
     Indexiert Top 3 Ergebnisse pro Fach, loescht Eintraege > 30 Tage.
 
     Returns:
@@ -591,7 +591,7 @@ async def update_knowledge_base_all_subjects() -> dict:
                     faecher_aktualisiert += 1
 
                 except Exception as fach_err:
-                    logger.warning("Knowledge Update fuer %s fehlgeschlagen: %s", fach, fach_err)
+                    logger.warning("Knowledge Update für %s fehlgeschlagen: %s", fach, fach_err)
 
             # Eintraege aelter als 30 Tage loeschen
             grenze = (datetime.utcnow() - timedelta(days=30)).isoformat()
@@ -615,7 +615,7 @@ async def update_knowledge_base_all_subjects() -> dict:
         return {"faecher_aktualisiert": 0, "neue_dokumente": 0, "entfernte_dokumente": 0}
 
     logger.info(
-        "Knowledge Update (alle Faecher): %d Faecher, %d neue, %d entfernte Dokumente",
+        "Knowledge Update (alle Fächer): %d Fächer, %d neue, %d entfernte Dokumente",
         faecher_aktualisiert, neue_dokumente, entfernte,
     )
     return {
@@ -629,7 +629,7 @@ async def update_knowledge_base_all_subjects() -> dict:
 # PR #52 — AUFGABE 2B: Wikipedia Sync (Montag 02:00)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# 300+ Quiz-Themen fuer Wikipedia-Sync (Auswahl der wichtigsten)
+# 300+ Quiz-Themen für Wikipedia-Sync (Auswahl der wichtigsten)
 WIKIPEDIA_SYNC_THEMEN = {
     "Mathematik": [
         "Differentialrechnung", "Integralrechnung", "Vektorraum",
@@ -797,7 +797,7 @@ LEHRPLAN_SUCHBEGRIFFE = [
     "Abitur Anforderungen {land} {year}",
     "Lehrplan Gymnasium {land} aktuell",
     "Kerncurriculum {land} Oberstufe",
-    "Pruefungsaufgaben Abitur {land}",
+    "Prüfungsaufgaben Abitur {land}",
 ]
 
 

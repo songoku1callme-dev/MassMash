@@ -144,11 +144,11 @@ async def nightly_self_improvement() -> dict:
             # Verbesserungsvorschlaege generieren
             if muster:
                 verbesserung_prompt = (
-                    "Du bist ein KI-System-Prompt-Optimierer fuer einen "
+                    "Du bist ein KI-System-Prompt-Optimierer für einen "
                     "Bildungs-Tutor (Gymnasium, Abitur).\n\n"
                     f"Diese Fehlermuster wurden identifiziert:\n"
                     + "\n".join(muster)
-                    + "\n\nErstelle 3 konkrete Verbesserungen fuer den "
+                    + "\n\nErstelle 3 konkrete Verbesserungen für den "
                     "System-Prompt. Jede Verbesserung als eine Zeile. Deutsch."
                 )
                 verbesserung_text = await _groq_generate(
@@ -302,7 +302,7 @@ async def generate_shop_items_for_season() -> dict:
         logger.error("generate_shop_items_for_season fehlgeschlagen: %s", exc)
         return {"season": season, "neue_items": 0, "items": []}
 
-    logger.info("Shop saisonal rotiert: %d Items fuer %s", len(neue_items), season)
+    logger.info("Shop saisonal rotiert: %d Items für %s", len(neue_items), season)
     return {
         "season": season,
         "neue_items": len(neue_items),
@@ -317,7 +317,7 @@ async def generate_shop_items_for_season() -> dict:
 SEASONAL_EVENTS = [
     {
         "name": "Abitur-Season",
-        "description": "Intensives Lernen fuer die Abiturpruefungen! 2x XP auf alle Quizze.",
+        "description": "Intensives Lernen für die Abiturprüfungen! 2x XP auf alle Quizze.",
         "start_month": 3, "end_month": 6,
         "xp_multiplier": 2.0,
         "event_type": "abitur",
@@ -331,7 +331,7 @@ SEASONAL_EVENTS = [
     },
     {
         "name": "Back-to-School",
-        "description": "Neues Schuljahr, neuer Start! 1.5x XP fuer alle Faecher.",
+        "description": "Neues Schuljahr, neuer Start! 1.5x XP für alle Fächer.",
         "start_month": 8, "end_month": 9,
         "xp_multiplier": 1.5,
         "event_type": "back_to_school",
@@ -500,7 +500,7 @@ async def generate_weekly_quiz_questions() -> dict:
 
                     # 5 Fragen pro Fach generieren (Batch von 5 statt 50 um API-Limits zu schonen)
                     quiz_prompt = (
-                        f"Erstelle 5 Multiple-Choice-Quiz-Fragen fuer das Fach {fach} "
+                        f"Erstelle 5 Multiple-Choice-Quiz-Fragen für das Fach {fach} "
                         f"(Gymnasium, Schwierigkeit: {schwierigkeit}).\n\n"
                         f"Format pro Frage (JSON Array):\n"
                         f'[{{"frage": "...", "optionen": ["A", "B", "C", "D"], '
@@ -563,7 +563,7 @@ async def generate_weekly_quiz_questions() -> dict:
                     faecher_verarbeitet += 1
 
                 except Exception as fach_err:
-                    logger.warning("Quiz-Gen fuer %s fehlgeschlagen: %s", fach, fach_err)
+                    logger.warning("Quiz-Gen für %s fehlgeschlagen: %s", fach, fach_err)
 
             await db.commit()
 
@@ -571,7 +571,7 @@ async def generate_weekly_quiz_questions() -> dict:
         logger.error("generate_weekly_quiz_questions fehlgeschlagen: %s", exc)
 
     logger.info(
-        "Quiz-Gen: %d Faecher, %d neue Fragen, %d Duplikate entfernt",
+        "Quiz-Gen: %d Fächer, %d neue Fragen, %d Duplikate entfernt",
         faecher_verarbeitet, neue_fragen_total, duplikate_entfernt,
     )
     return {
@@ -654,7 +654,7 @@ async def generate_battle_pass_content() -> dict:
                 (season_name, json.dumps(levels_data)),
             )
 
-            # Alle User Battle Pass zuruecksetzen
+            # Alle User Battle Pass zurücksetzen
             await db.execute(
                 """UPDATE battle_pass SET
                 current_level = 1, current_xp = 0,
@@ -705,14 +705,14 @@ CHALLENGE_TEMPLATES = [
     },
     {
         "title_template": "Streak-Challenge",
-        "description_template": "Halte deinen Streak fuer {target} Tage",
+        "description_template": "Halte deinen Streak für {target} Tage",
         "target_range": (3, 7),
         "xp_range": (200, 500),
         "zeitlimit": "1w",
     },
     {
         "title_template": "Karteikarten-Meister",
-        "description_template": "Erstelle {target} Karteikarten in beliebigen Faechern",
+        "description_template": "Erstelle {target} Karteikarten in beliebigen Fächern",
         "target_range": (10, 30),
         "xp_range": (150, 350),
         "zeitlimit": "3d",
@@ -733,7 +733,7 @@ CHALLENGE_TEMPLATES = [
     },
     {
         "title_template": "Allrounder",
-        "description_template": "Lerne in {target} verschiedenen Faechern",
+        "description_template": "Lerne in {target} verschiedenen Fächern",
         "target_range": (3, 6),
         "xp_range": (250, 500),
         "zeitlimit": "3d",
@@ -763,7 +763,7 @@ async def generate_daily_challenges() -> dict:
         async with aiosqlite.connect(db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Trend-Faecher der letzten 7 Tage
+            # Trend-Fächer der letzten 7 Tage
             cursor = await db.execute(
                 """SELECT subject, COUNT(*) as cnt FROM chat_sessions
                 WHERE created_at >= date('now', '-7 days')

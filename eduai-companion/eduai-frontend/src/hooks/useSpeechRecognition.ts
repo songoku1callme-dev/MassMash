@@ -76,7 +76,7 @@ export function useSpeechRecognition(language: string = "de") {
       try {
         const recognition = new SpeechRecognitionClass();
 
-        // Sprache korrekt setzen — MUSS de-DE sein fuer deutsche Erkennung!
+        // Sprache korrekt setzen — MUSS de-DE sein für deutsche Erkennung!
         recognition.lang = language === "de" ? "de-DE" : "en-US";
         recognition.continuous = false;
         recognition.interimResults = true;

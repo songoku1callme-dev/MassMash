@@ -51,16 +51,16 @@ async def lifespan(app: FastAPI):
         if startup_ram > 400:
             logger.warning(
                 "WARNUNG: Startup RAM %.1f MB > 400 MB! "
-                "Ziel ist < 200 MB fuer 512 MB Free-Tier.",
+                "Ziel ist < 200 MB für 512 MB Free-Tier.",
                 startup_ram,
             )
         elif startup_ram > 200:
             logger.info(
-                "Startup RAM %.1f MB (ueber 200 MB Ziel, aber unter 400 MB Limit)",
+                "Startup RAM %.1f MB (über 200 MB Ziel, aber unter 400 MB Limit)",
                 startup_ram,
             )
         else:
-            logger.info("Startup RAM %.1f MB — optimal fuer Free-Tier!", startup_ram)
+            logger.info("Startup RAM %.1f MB — optimal für Free-Tier!", startup_ram)
     except Exception as mem_err:
         logger.warning("Memory check fehlgeschlagen: %s", mem_err)
 

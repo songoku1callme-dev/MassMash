@@ -14,8 +14,8 @@ export const BRAND = {
     fach_farben: {
         "Mathe":       "#3b82f6",  // Blau
         "Physik":      "#06b6d4",  // Cyan
-        "Chemie":      "#10b981",  // Gruen
-        "Biologie":    "#22c55e",  // Hellgruen
+        "Chemie":      "#10b981",  // Grün
+        "Biologie":    "#22c55e",  // Hellgrün
         "Geschichte":  "#f59e0b",  // Gold
         "Deutsch":     "#ec4899",  // Pink
         "Englisch":    "#f97316",  // Orange

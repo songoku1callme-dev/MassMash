@@ -369,7 +369,7 @@ export default function SchoolPage() {
  <div className="mt-6 text-center">
  {selectedPackage === "enterprise" ? (
  <div className="space-y-3">
- <p className="text-sm text-slate-400">Fuer Enterprise-Loesungen kontaktiere uns direkt:</p>
+ <p className="text-sm text-slate-400">Für Enterprise-Lösungen kontaktiere uns direkt:</p>
  <button
  onClick={handleContactEnterprise}
  disabled={contactSent}
@@ -386,7 +386,7 @@ export default function SchoolPage() {
  ) : (
  <div className="space-y-3">
  <p className="text-sm text-slate-400">
- {selectedPackage === "klassen" ? "Perfekt fuer einzelne Klassen mit bis zu 30 Schuelern." : "Ideal fuer ganze Schulen mit bis zu 300 Schuelern."}
+ {selectedPackage === "klassen" ? "Perfekt für einzelne Klassen mit bis zu 30 Schülern." : "Ideal für ganze Schulen mit bis zu 300 Schülern."}
  </p>
  <button
  onClick={() => {

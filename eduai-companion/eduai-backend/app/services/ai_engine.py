@@ -156,7 +156,7 @@ def ist_sinnlose_frage(frage: str) -> bool:
 def erkenne_antwort_typ(frage: str) -> str:
     """
     Erkennt was der Schüler wirklich will.
-    Returns: 'kurz' | 'schritt_fuer_schritt' | 'aufgabe_loesen' | 'standard'
+    Returns: 'kurz' | 'schritt_für_schritt' | 'aufgabe_loesen' | 'standard'
     """
     frage_lower = frage.lower()
 
@@ -185,7 +185,7 @@ def erkenne_antwort_typ(frage: str) -> str:
     ]
 
     if any(k in frage_lower for k in schritt_keywords):
-        return "schritt_fuer_schritt"
+        return "schritt_für_schritt"
     elif any(k in frage_lower for k in aufgabe_keywords):
         return "aufgabe_loesen"
     elif any(k in frage_lower for k in kurz_keywords):
@@ -205,7 +205,7 @@ ANTWORT-STIL: KURZ & PRÄZISE
 - Kein Beispiel nötig
 - Format: **Antwort:** [Antwort]
 """,
-    "schritt_fuer_schritt": """
+    "schritt_für_schritt": """
 ANTWORT-STIL: SCHRITT FÜR SCHRITT
 - Nummerierte Schritte (1. 2. 3. ...)
 - Jeden Schritt einzeln erklären

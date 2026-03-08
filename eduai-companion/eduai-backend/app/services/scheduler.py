@@ -1,7 +1,7 @@
-"""APScheduler Automation — Alle automatisierten Jobs fuer LUMNOS.
+"""APScheduler Automation — Alle automatisierten Jobs für LUMNOS.
 
-TAEGLICH (00:00): Daily Quests, Streak-Check, XP-Bonus, Knowledge Update
-TAEGLICH (08:00): Motivations-Nachricht
+TÄGLICH (00:00): Daily Quests, Streak-Check, XP-Bonus, Knowledge Update
+TÄGLICH (08:00): Motivations-Nachricht
 WOECHENTLICH (Montag 07:00): Weekly Report, neue Challenges
 WOECHENTLICH (Sonntag 23:59): Shop-Rotation, Events aktualisieren
 MONATLICH (1. des Monats): Battle Pass Season, Turniere, Leaderboard Reset
@@ -24,11 +24,11 @@ def _get_db_path() -> str:
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAEGLICH 00:00 — Daily Quests generieren
+# TÄGLICH 00:00 — Daily Quests generieren
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def generate_daily_quests():
-    """3 neue Quests pro User basierend auf Schwaechen + Faechern.
+    """3 neue Quests pro User basierend auf Schwächen + Fächern.
     Alte Quests werden auf 'abgelaufen' gesetzt.
     """
     import aiosqlite
@@ -115,14 +115,14 @@ async def generate_daily_quests():
                 count += 1
 
             await db.commit()
-            logger.info("Daily Quests generiert fuer %d User", count)
+            logger.info("Daily Quests generiert für %d User", count)
 
     except Exception as exc:
         logger.error("generate_daily_quests fehlgeschlagen: %s", exc)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAEGLICH 00:05 — Streak pruefen
+# TÄGLICH 00:05 — Streak prüfen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def check_streaks():
@@ -152,7 +152,7 @@ async def check_streaks():
                 user_id = ud["id"]
                 lost_streak = ud["streak_days"]
 
-                # Streak zuruecksetzen
+                # Streak zurücksetzen
                 await db.execute(
                     "UPDATE users SET streak_days = 0 WHERE id = ?",
                     (user_id,),
@@ -170,14 +170,14 @@ async def check_streaks():
                 reset_count += 1
 
             await db.commit()
-            logger.info("Streaks zurueckgesetzt: %d User", reset_count)
+            logger.info("Streaks zurückgesetzt: %d User", reset_count)
 
     except Exception as exc:
         logger.error("check_streaks fehlgeschlagen: %s", exc)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAEGLICH 00:10 — XP-Bonus fuer Top 10
+# TÄGLICH 00:10 — XP-Bonus für Top 10
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def distribute_daily_xp_bonus():
@@ -230,18 +230,18 @@ async def distribute_daily_xp_bonus():
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TAEGLICH 08:00 — Motivations-Nachricht
+# TÄGLICH 08:00 — Motivations-Nachricht
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 MOTIVATIONS_NACHRICHTEN = [
     "Jeder Tag ist eine neue Chance zu lernen! Starte jetzt dein erstes Quiz.",
     "Wusstest du? Regelmaessiges Lernen verbessert dein Gedaechtnis um 40%!",
-    "Dein Gehirn ist bereit! Nur 15 Minuten reichen fuer einen Lernfortschritt.",
+    "Dein Gehirn ist bereit! Nur 15 Minuten reichen für einen Lernfortschritt.",
     "Top-Schueler lernen jeden Tag ein bisschen. Du schaffst das auch!",
     "Tipp: Wiederhole heute dein schwaechstes Fach — das bringt am meisten!",
     "Neuer Tag, neue Moeglichkeiten! Welches Fach moechtest du heute meistern?",
     "Streak-Alarm! Vergiss nicht, heute zu lernen um deinen Streak zu halten.",
-    "Fun Fact: Wer taeglich 20 Min lernt, schneidet 30% besser in Pruefungen ab.",
+    "Fun Fact: Wer täglich 20 Min lernt, schneidet 30% besser in Prüfungen ab.",
     "Challenge des Tages: Schaffe alle 3 Daily Quests!",
     "Dein Wissen waechst jeden Tag. Halte die Lernroutine aufrecht!",
 ]
@@ -351,7 +351,7 @@ async def generate_weekly_report():
                         logger.warning("Weekly Report Email fehlgeschlagen: %s", mail_err)
 
             await db.commit()
-            logger.info("Weekly Reports generiert fuer %d User", len(users))
+            logger.info("Weekly Reports generiert für %d User", len(users))
 
     except Exception as exc:
         logger.error("generate_weekly_report fehlgeschlagen: %s", exc)
@@ -368,7 +368,7 @@ async def create_weekly_challenges():
         async with aiosqlite.connect(db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Populaerste Faecher ermitteln
+            # Populärste Fächer ermitteln
             cursor = await db.execute(
                 """SELECT subject, COUNT(*) as cnt FROM chat_sessions
                 GROUP BY subject ORDER BY cnt DESC LIMIT 5"""
@@ -430,7 +430,7 @@ async def create_weekly_challenges():
 # WOECHENTLICH Sonntag 23:59 — Shop rotieren + Events
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Rotations-Items fuer den Shop
+# Rotations-Items für den Shop
 ROTATION_ITEMS = [
     {"id": "theme_neon", "name": "Neon Theme", "category": "theme", "price": 600, "icon": "palette"},
     {"id": "theme_galaxy", "name": "Galaxy Theme", "category": "theme", "price": 700, "icon": "palette"},
@@ -495,7 +495,7 @@ async def rotate_shop_items():
 
 
 async def update_seasonal_events():
-    """Saisonale Events pruefen, neue aktivieren, abgelaufene deaktivieren."""
+    """Saisonale Events prüfen, neue aktivieren, abgelaufene deaktivieren."""
     import aiosqlite
 
     logger.info("Job: update_seasonal_events gestartet")
@@ -540,7 +540,7 @@ SEASON_NAMES = [
 
 
 async def start_new_battle_pass_season():
-    """Neue Season starten, Rewards generieren, alle User auf Level 0 zuruecksetzen.
+    """Neue Season starten, Rewards generieren, alle User auf Level 0 zurücksetzen.
     'Neue Season!' Push-Notification.
     """
     import aiosqlite
@@ -556,7 +556,7 @@ async def start_new_battle_pass_season():
             now = datetime.now()
             season_name = f"{random.choice(SEASON_NAMES)} {now.year}"
 
-            # Alle Battle Pass auf Level 1 / XP 0 zuruecksetzen
+            # Alle Battle Pass auf Level 1 / XP 0 zurücksetzen
             await db.execute(
                 """UPDATE battle_pass SET
                 current_level = 1, current_xp = 0,
@@ -576,7 +576,7 @@ async def start_new_battle_pass_season():
                     VALUES (?, ?, ?, 'event')""",
                     (user_id,
                      "Neue Season!",
-                     f"Battle Pass Season '{season_name}' hat begonnen! Sammle XP fuer neue Belohnungen."),
+                     f"Battle Pass Season '{season_name}' hat begonnen! Sammle XP für neue Belohnungen."),
                 )
 
             await db.commit()
@@ -604,7 +604,7 @@ async def create_monthly_tournaments():
         async with aiosqlite.connect(db_path) as db:
             db.row_factory = aiosqlite.Row
 
-            # Waehle 5 Faecher fuer diesen Monat
+            # Wähle 5 Fächer für diesen Monat
             monatliche_faecher = random.sample(TURNIER_FAECHER, min(5, len(TURNIER_FAECHER)))
 
             created = 0
@@ -667,7 +667,7 @@ async def reset_monthly_leaderboard():
                 )
 
             await db.commit()
-            logger.info("Monatliches Leaderboard zurueckgesetzt, %d Badges vergeben", len(top3))
+            logger.info("Monatliches Leaderboard zurückgesetzt, %d Badges vergeben", len(top3))
 
     except Exception as exc:
         logger.error("reset_monthly_leaderboard fehlgeschlagen: %s", exc)
@@ -805,7 +805,7 @@ async def self_ping():
 # Scheduler Setup — Wird von main.py aufgerufen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Registry aller Jobs (fuer Admin-Endpoints)
+# Registry aller Jobs (für Admin-Endpoints)
 JOB_REGISTRY: dict[str, dict] = {
     "daily_quests": {
         "func": generate_daily_quests,
@@ -814,7 +814,7 @@ JOB_REGISTRY: dict[str, dict] = {
     },
     "streak_check": {
         "func": check_streaks,
-        "beschreibung": "Streaks pruefen und zuruecksetzen",
+        "beschreibung": "Streaks prüfen und zurücksetzen",
         "zeitplan": "Taeglich 00:05",
     },
     "xp_bonus": {
@@ -849,7 +849,7 @@ JOB_REGISTRY: dict[str, dict] = {
     },
     "events_update": {
         "func": update_seasonal_events,
-        "beschreibung": "Saisonale Events pruefen und aktualisieren",
+        "beschreibung": "Saisonale Events prüfen und aktualisieren",
         "zeitplan": "Sonntag 23:59",
     },
     "battle_pass_season": {
@@ -915,17 +915,17 @@ JOB_REGISTRY: dict[str, dict] = {
     },
     "daily_challenges_gen": {
         "func": None,
-        "beschreibung": "5 neue taegliche Challenges basierend auf Lerntrends",
+        "beschreibung": "5 neue tägliche Challenges basierend auf Lerntrends",
         "zeitplan": "Taeglich 04:00",
     },
     "knowledge_all_subjects": {
         "func": None,
-        "beschreibung": "Tavily-Suche fuer alle 16 Faecher (taeglich)",
+        "beschreibung": "Tavily-Suche für alle 16 Fächer (täglich)",
         "zeitplan": "Taeglich 03:00",
     },
     "wikipedia_sync": {
         "func": None,
-        "beschreibung": "Wikipedia-Sync fuer 300+ Quiz-Themen",
+        "beschreibung": "Wikipedia-Sync für 300+ Quiz-Themen",
         "zeitplan": "Montag 02:00",
     },
     "lehrplan_updates": {
@@ -951,7 +951,7 @@ def setup_scheduler(scheduler_instance):
     from app.services.knowledge_updater import update_knowledge_base
     JOB_REGISTRY["knowledge_update"]["func"] = update_knowledge_base
 
-    # ━━━ TAEGLICH 00:00 ━━━
+    # ━━━ TÄGLICH 00:00 ━━━
     scheduler_instance.add_job(
         generate_daily_quests,
         CronTrigger(hour=0, minute=0, timezone=tz_berlin),
@@ -968,14 +968,14 @@ def setup_scheduler(scheduler_instance):
         id="xp_bonus", replace_existing=True,
     )
 
-    # ━━━ TAEGLICH 03:00 ━━━
+    # ━━━ TÄGLICH 03:00 ━━━
     scheduler_instance.add_job(
         update_knowledge_base,
         CronTrigger(hour=3, minute=0, timezone=tz_berlin),
         id="knowledge_update", replace_existing=True,
     )
 
-    # ━━━ TAEGLICH 08:00 ━━━
+    # ━━━ TÄGLICH 08:00 ━━━
     scheduler_instance.add_job(
         send_motivation_notifications,
         CronTrigger(hour=8, minute=0, timezone=tz_berlin),
@@ -1075,7 +1075,7 @@ def setup_scheduler(scheduler_instance):
     JOB_REGISTRY["wikipedia_sync"]["func"] = wikipedia_sync_all_topics
     JOB_REGISTRY["lehrplan_updates"]["func"] = update_lehrplan_content
 
-    # ━━━ AUFGABE 1A: Self-Improvement (taeglich 03:00) ━━━
+    # ━━━ AUFGABE 1A: Self-Improvement (täglich 03:00) ━━━
     scheduler_instance.add_job(
         nightly_self_improvement,
         CronTrigger(hour=3, minute=0, timezone=tz_berlin),
@@ -1110,14 +1110,14 @@ def setup_scheduler(scheduler_instance):
         id="battle_pass_content", replace_existing=True,
     )
 
-    # ━━━ AUFGABE 1F: Daily Challenges (taeglich 04:00) ━━━
+    # ━━━ AUFGABE 1F: Daily Challenges (täglich 04:00) ━━━
     scheduler_instance.add_job(
         generate_daily_challenges,
         CronTrigger(hour=4, minute=0, timezone=tz_berlin),
         id="daily_challenges_gen", replace_existing=True,
     )
 
-    # ━━━ AUFGABE 2A: Knowledge Update alle Faecher (taeglich 03:00) ━━━
+    # ━━━ AUFGABE 2A: Knowledge Update alle Fächer (täglich 03:00) ━━━
     scheduler_instance.add_job(
         update_knowledge_base_all_subjects,
         CronTrigger(hour=3, minute=15, timezone=tz_berlin),

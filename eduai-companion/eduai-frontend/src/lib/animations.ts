@@ -32,7 +32,7 @@ export const pageVariants = {
   },
 };
 
-// STAGGER CHILDREN (fuer Listen)
+// STAGGER CHILDREN (für Listen)
 export const staggerContainer = {
   initial: {},
   animate: {
@@ -94,7 +94,7 @@ export const sidebarItem = {
   }),
 };
 
-// FADE IN (fuer Content-Bereiche)
+// FADE IN (für Content-Bereiche)
 export const fadeIn = {
   initial: { opacity: 0 },
   animate: { opacity: 1, transition: { duration: 0.4 } },

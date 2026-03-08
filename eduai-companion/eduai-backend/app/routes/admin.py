@@ -929,7 +929,7 @@ async def trigger_knowledge_update(
     db: aiosqlite.Connection = Depends(get_db),
 ):
     """Trigger daily knowledge update for all 16 subjects (admin only).
-    Tavily-Suche fuer alle Faecher + alte Eintraege loeschen."""
+    Tavily-Suche für alle Fächer + alte Eintraege löschen."""
     admin = await _is_admin(current_user, db)
     _require_admin(admin)
     _log_admin_action(request, current_user, "trigger:knowledge_update_all")

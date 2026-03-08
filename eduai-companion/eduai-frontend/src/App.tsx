@@ -157,7 +157,7 @@ function App() {
     );
   }
 
-  // Auth-Guard komplett entfernt fuer Testing — direkt zum Chat
+  // Auth-Guard komplett entfernt für Testing — direkt zum Chat
   if (!isAuthenticated && !isGuest) {
     if (showLanding) {
       return (

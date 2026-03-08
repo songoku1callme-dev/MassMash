@@ -127,7 +127,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         <GlobalSearch onNavigate={onPageChange} />
       </div>
 
-      {/* ===== MITTE: Navigation (scrollbar fuer sich) ===== */}
+      {/* ===== MITTE: Navigation (scrollbar für sich) ===== */}
       <div className="scrollable" style={{
         flex: 1,
         overflowY: "auto",
@@ -157,7 +157,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           ))}
         </div>
 
-        {/* Chat History (nur fuer eingeloggte User) */}
+        {/* Chat History (nur für eingeloggte User) */}
         {!isGuest && (
           <div className="mt-4 px-2">
             <p className="text-xs font-semibold text-lumnos-muted uppercase tracking-wider mb-2 px-3">
@@ -198,7 +198,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         padding: "12px 16px",
         borderTop: "1px solid var(--border-color)",
       }}>
-        {/* UPGRADE BANNER fuer Free-User */}
+        {/* UPGRADE BANNER für Free-User */}
         {(!user?.subscription_tier || user.subscription_tier === "free") && (
           <div className="mb-3 rounded-xl p-3 cursor-pointer"
                style={{

@@ -7,7 +7,7 @@ interface PageLayoutProps {
 }
 
 /**
- * PageLayout — Wrapper fuer ALLE Nicht-Chat-Seiten.
+ * PageLayout — Wrapper für ALLE Nicht-Chat-Seiten.
  * Stellt sicher, dass jede Seite in sich selbst scrollt
  * und der App-Shell (Sidebar + Main) nicht beeinflusst wird.
  */
