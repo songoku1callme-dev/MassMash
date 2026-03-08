@@ -10,7 +10,7 @@ const CLERK_ENABLED = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const clerkAppearance = {
  baseTheme: dark,
  variables: {
- colorBackground: "#0d0d2b",
+ colorBackground: "transparent",
  colorInputBackground: "rgba(255,255,255,0.05)",
  colorInputText: "#ffffff",
  colorText: "#ffffff",
@@ -21,20 +21,20 @@ const clerkAppearance = {
  fontFamily: "inherit",
  },
  elements: {
- rootBox: "w-full",
- card: "bg-transparent shadow-none border-0",
- headerTitle: "text-white text-2xl font-bold",
- headerSubtitle: "text-slate-400 text-sm",
+ rootBox: "w-full max-w-[400px] mx-auto",
+ card: "bg-transparent shadow-none border-0 p-0 w-full",
+ headerTitle: "hidden",
+ headerSubtitle: "hidden",
  socialButtonsBlockButton:
- "bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all",
- socialButtonsBlockButtonText: "text-white",
+ "bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all rounded-xl h-11",
+ socialButtonsBlockButtonText: "text-white font-medium",
  dividerLine: "bg-white/10",
  dividerText: "text-slate-500",
  formFieldLabel: "text-slate-300 text-sm",
  formFieldInput:
- "bg-white/5 border-white/10 text-white focus:border-indigo-500 rounded-xl",
+ "bg-white/5 border-white/10 text-white focus:border-indigo-500 rounded-xl h-11",
  formButtonPrimary:
- "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg",
+ "bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all shadow-lg h-11",
  footerActionLink: "text-indigo-400 hover:text-indigo-300",
  footerActionText: "text-slate-400",
  identityPreviewText: "text-white",
@@ -43,6 +43,9 @@ const clerkAppearance = {
  alertText: "text-red-400",
  formFieldErrorText: "text-red-400",
  otpCodeFieldInput: "bg-white/5 border-white/10 text-white",
+ badge: "hidden",
+ footer: "justify-center",
+ footerAction: "mx-auto",
  },
 };
 
@@ -151,19 +154,24 @@ export default function AuthPage() {
 
  {/* Main Card — Glassmorphismus */}
  <div
+ className="overflow-hidden"
  style={{
  background: "var(--bg-card)",
  border: "1px solid var(--border-color)",
  backdropFilter: "blur(20px)",
  WebkitBackdropFilter: "blur(20px)",
  borderRadius: "24px",
- padding: "40px",
+ padding: "32px 28px",
+ boxShadow: "0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05) inset",
  }}
  >
  {/* Clerk OAuth Login/Register */}
  {CLERK_ENABLED ? (
  <div className="flex flex-col items-center justify-center w-full">
- <div className="w-full flex justify-center [&_.cl-rootBox]:w-full [&_.cl-card]:w-full [&_.cl-card]:mx-auto">
+ <div
+ className="w-full flex justify-center [&_.cl-rootBox]:w-full [&_.cl-card]:w-full [&_.cl-card]:mx-auto [&_.cl-internal-b3fm6y]:hidden"
+ style={{ maxWidth: "100%", overflow: "hidden" }}
+ >
  {isLogin ? (
  <SignIn routing="hash" appearance={clerkAppearance} />
  ) : (
@@ -476,6 +484,21 @@ export default function AuthPage() {
  DSGVO-konform. Deine Daten sind sicher.
  </p>
  </div>
+
+ {/* Global CSS to hide Clerk development mode badge */}
+ <style>{`
+ .cl-internal-b3fm6y,
+ [data-testid="development-mode-badge"],
+ .cl-developmentModeNotice,
+ div[class*="cl-internal"][style*="development"] {
+ display: none !important;
+ }
+ .cl-rootBox iframe[src*="turnstile"],
+ .cl-rootBox iframe[src*="challenges"] {
+ max-width: 100% !important;
+ border-radius: 12px !important;
+ }
+ `}</style>
  </div>
  );
 }
