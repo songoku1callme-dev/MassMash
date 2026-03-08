@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { gamificationApi, type GamificationProfile, type LeaderboardEntry } from "../services/api";
@@ -11,6 +12,7 @@ export default function GamificationPage() {
  const [profile, setProfile] = useState<GamificationProfile | null>(null);
  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
  const [loading, setLoading] = useState(true);
+ const [error, setError] = useState(false);
  const [tab, setTab] = useState<"overview" | "achievements" | "leaderboard">("overview");
 
  useEffect(() => {
@@ -19,6 +21,7 @@ export default function GamificationPage() {
 
  const loadData = async () => {
  setLoading(true);
+ setError(false);
  try {
  const [profileData, lbData] = await Promise.all([
  gamificationApi.profile(),
@@ -28,6 +31,7 @@ export default function GamificationPage() {
  setLeaderboard(lbData.leaderboard);
  } catch (err) {
  console.error("Failed to load gamification data:", err);
+ setError(true);
  } finally {
  setLoading(false);
  }
@@ -35,16 +39,30 @@ export default function GamificationPage() {
 
  if (loading) {
  return (
- <div className="p-4 lg:p-6 max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
- <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+ <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-4">
+ <div className="animate-pulse space-y-4">
+ <div className="h-10 rounded-xl w-64" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
+ <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+ {[1,2,3,4].map(i => (
+ <div key={i} className="h-24 rounded-xl" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
+ ))}
+ </div>
+ <div className="h-16 rounded-xl" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
+ <div className="h-64 rounded-xl" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
+ </div>
  </div>
  );
  }
 
- if (!profile) {
+ if (error || !profile) {
  return (
- <div className="p-4 lg:p-6 max-w-4xl mx-auto text-center">
- <p className="theme-text-secondary">Gamification-Daten konnten nicht geladen werden.</p>
+ <div className="p-4 lg:p-6 max-w-4xl mx-auto text-center py-20">
+ <div className="text-4xl mb-4">😔</div>
+ <p className="text-foreground font-bold text-lg mb-2">Fehler beim Laden</p>
+ <p className="text-muted-foreground mb-4">Gamification-Daten konnten nicht geladen werden.</p>
+ <button onClick={loadData} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+ Erneut versuchen
+ </button>
  </div>
  );
  }
@@ -56,65 +74,69 @@ export default function GamificationPage() {
  const earnedAchievementIds = new Set(profile.achievements.map(a => a.id));
 
  return (
- <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
+ <motion.div
+ initial={{ opacity: 0, y: 12 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ duration: 0.35 }}
+ className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6 pb-20">
  <div>
- <h1 className="text-2xl font-bold theme-text flex items-center gap-2">
+ <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
  <Trophy className="w-7 h-7 text-yellow-500" /> Gamification
  </h1>
- <p className="theme-text-secondary mt-1">Dein Fortschritt, Achievements und Rangliste</p>
+ <p className="text-muted-foreground mt-1">Dein Fortschritt, Achievements und Rangliste</p>
  </div>
 
  {/* Stats Cards */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
- <Card>
- <CardContent className="p-4 text-center">
- <div className="text-3xl mb-1">{profile.level_emoji}</div>
- <p className="text-2xl font-bold theme-text">Level {profile.level}</p>
- <p className="text-sm theme-text-secondary">{profile.level_name}</p>
- </CardContent>
- </Card>
- <Card>
- <CardContent className="p-4 text-center">
- <Star className="w-8 h-8 text-yellow-500 mx-auto mb-1" />
- <p className="text-2xl font-bold theme-text">{profile.xp}</p>
- <p className="text-sm theme-text-secondary">XP gesamt</p>
- </CardContent>
- </Card>
- <Card>
- <CardContent className="p-4 text-center">
- <Flame className="w-8 h-8 text-orange-500 mx-auto mb-1" />
- <p className="text-2xl font-bold theme-text">{profile.streak_days}</p>
- <p className="text-sm theme-text-secondary">Tage Streak</p>
- </CardContent>
- </Card>
- <Card>
- <CardContent className="p-4 text-center">
- <Target className="w-8 h-8 text-blue-500 mx-auto mb-1" />
- <p className="text-2xl font-bold theme-text">{profile.quizzes_completed}</p>
- <p className="text-sm theme-text-secondary">Quizzes</p>
- </CardContent>
- </Card>
+ {[
+ { icon: <span className="text-3xl">{profile.level_emoji}</span>, value: `Level ${profile.level}`, label: profile.level_name, color: "rgba(234,179,8,0.15)", border: "rgba(234,179,8,0.3)" },
+ { icon: <Star className="w-8 h-8 text-yellow-500" />, value: String(profile.xp), label: "XP gesamt", color: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.3)" },
+ { icon: <Flame className="w-8 h-8 text-orange-500" />, value: String(profile.streak_days), label: "Tage Streak", color: "rgba(249,115,22,0.15)", border: "rgba(249,115,22,0.3)" },
+ { icon: <Target className="w-8 h-8 text-cyan-500" />, value: String(profile.quizzes_completed), label: "Quizzes", color: "rgba(6,182,212,0.15)", border: "rgba(6,182,212,0.3)" },
+ ].map((card, i) => (
+ <motion.div
+ key={card.label}
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.1 + i * 0.05 }}
+ className="rounded-2xl p-4 text-center"
+ style={{ background: card.color, border: `1px solid ${card.border}` }}>
+ <div className="mb-1 flex justify-center">{card.icon}</div>
+ <p className="text-2xl font-bold text-foreground">{card.value}</p>
+ <p className="text-sm text-muted-foreground">{card.label}</p>
+ </motion.div>
+ ))}
  </div>
 
  {/* XP Progress Bar */}
- <Card>
- <CardContent className="p-4">
+ <motion.div
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.3 }}
+ className="rounded-2xl p-4"
+ style={{ background: "rgba(var(--surface-rgb),0.4)", border: "1px solid rgba(99,102,241,0.2)" }}>
  <div className="flex items-center justify-between mb-2">
- <span className="text-sm font-medium theme-text-secondary">
+ <span className="text-sm font-medium text-muted-foreground">
  {profile.level_emoji} {profile.level_name}
  </span>
- <span className="text-sm theme-text-secondary">
+ <span className="text-sm text-muted-foreground">
  {profile.xp_to_next_level > 0 ? `${profile.xp_to_next_level} XP bis ${profile.next_level_name}` : "Max Level!"}
  </span>
  </div>
- <div className="w-full bg-[var(--progress-bg)] rounded-full h-3">
- <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 h-3 rounded-full transition-all" style={{ width: `${xpProgress}%` }} />
+ <div className="w-full rounded-full h-3 overflow-hidden" style={{ background: "rgba(var(--surface-rgb),0.6)" }}>
+ <motion.div
+ initial={{ width: 0 }}
+ animate={{ width: `${xpProgress}%` }}
+ transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.5 }}
+ className="h-3 rounded-full relative overflow-hidden"
+ style={{ background: "linear-gradient(90deg, #eab308, #f59e0b)" }}>
+ <div className="absolute inset-0 animate-shimmer" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)", width: "50%" }} />
+ </motion.div>
  </div>
- </CardContent>
- </Card>
+ </motion.div>
 
  {/* Tabs */}
- <div className="flex gap-2 border-b border-[var(--border-color)]">
+ <div className="flex gap-2 border-b" style={{ borderColor: "rgba(var(--surface-rgb),0.8)" }}>
  {[
  { id: "overview" as const, label: "Übersicht", icon: <TrendingUp className="w-4 h-4" /> },
  { id: "achievements" as const, label: "Achievements", icon: <Award className="w-4 h-4" /> },
@@ -122,7 +144,7 @@ export default function GamificationPage() {
  ].map((t) => (
  <button key={t.id} onClick={() => setTab(t.id)}
  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
- tab === t.id ? "border-blue-500 text-blue-500" : "border-transparent theme-text-secondary hover:theme-text"
+ tab === t.id ? "border-indigo-500 text-indigo-400" : "border-transparent text-muted-foreground hover:text-foreground"
  }`}>
  {t.icon} {t.label}
  </button>
@@ -130,112 +152,142 @@ export default function GamificationPage() {
  </div>
 
  {/* Tab Content */}
+ <AnimatePresence mode="wait">
  {tab === "overview" && (
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <Card>
- <CardHeader><CardTitle className="text-base flex items-center gap-2"><Zap className="w-5 h-5 text-yellow-500" /> Aktivitäten</CardTitle></CardHeader>
- <CardContent>
+ <motion.div
+ key="overview"
+ initial={{ opacity: 0, x: -10 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: 10 }}
+ className="grid grid-cols-1 md:grid-cols-2 gap-4">
+ <div className="rounded-2xl p-4" style={{ background: "rgba(var(--surface-rgb),0.4)", border: "1px solid rgba(99,102,241,0.15)" }}>
+ <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-3"><Zap className="w-5 h-5 text-yellow-500" /> Aktivitäten</h3>
  <div className="space-y-3">
- <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
- <span className="text-sm theme-text-secondary">Quizzes abgeschlossen</span>
- <Badge variant="secondary">{profile.quizzes_completed}</Badge>
- </div>
- <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
- <span className="text-sm theme-text-secondary">Chat-Nachrichten</span>
- <Badge variant="secondary">{profile.chats_sent}</Badge>
- </div>
- <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
- <span className="text-sm theme-text-secondary">Abitur-Simulationen</span>
- <Badge variant="secondary">{profile.abitur_completed}</Badge>
- </div>
- </div>
- </CardContent>
- </Card>
- <Card>
- <CardHeader><CardTitle className="text-base flex items-center gap-2"><Medal className="w-5 h-5 text-purple-500" /> Level-System</CardTitle></CardHeader>
- <CardContent>
- <div className="space-y-2">
- {profile.all_levels.map((lvl) => (
- <div key={lvl.level} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
- profile.level >= lvl.level ? "bg-yellow-500/10" : "bg-[var(--bg-surface)] opacity-60"
- }`}>
- <span className="flex items-center gap-2">
- <span>{lvl.emoji}</span>
- <span className="font-medium">{lvl.name}</span>
- </span>
- <span className="theme-text-secondary">{lvl.min_xp} XP</span>
+ {[
+ { label: "Quizzes abgeschlossen", value: profile.quizzes_completed },
+ { label: "Chat-Nachrichten", value: profile.chats_sent },
+ { label: "Abitur-Simulationen", value: profile.abitur_completed },
+ ].map((item) => (
+ <div key={item.label} className="flex items-center justify-between p-3 rounded-lg" style={{ background: "rgba(var(--surface-rgb),0.5)" }}>
+ <span className="text-sm text-muted-foreground">{item.label}</span>
+ <span className="text-sm font-bold text-foreground">{item.value}</span>
  </div>
  ))}
  </div>
- </CardContent>
- </Card>
  </div>
+ <div className="rounded-2xl p-4" style={{ background: "rgba(var(--surface-rgb),0.4)", border: "1px solid rgba(99,102,241,0.15)" }}>
+ <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-3"><Medal className="w-5 h-5 text-purple-500" /> Level-System</h3>
+ <div className="space-y-2">
+ {profile.all_levels.map((lvl) => (
+ <div key={lvl.level} className={`flex items-center justify-between p-2 rounded-lg text-sm ${
+ profile.level >= lvl.level ? "" : "opacity-50"
+ }`} style={{
+ background: profile.level >= lvl.level ? "rgba(234,179,8,0.1)" : "rgba(var(--surface-rgb),0.4)",
+ border: profile.level === lvl.level ? "1px solid rgba(234,179,8,0.4)" : "1px solid transparent",
+ }}>
+ <span className="flex items-center gap-2">
+ <span>{lvl.emoji}</span>
+ <span className="font-medium text-foreground">{lvl.name}</span>
+ </span>
+ <span className="text-muted-foreground">{lvl.min_xp} XP</span>
+ </div>
+ ))}
+ </div>
+ </div>
+ </motion.div>
  )}
 
  {tab === "achievements" && (
- <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
- {profile.all_achievements.map((ach) => {
+ <motion.div
+ key="achievements"
+ initial={{ opacity: 0, x: -10 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: 10 }}
+ className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+ {profile.all_achievements.map((ach, i) => {
  const earned = earnedAchievementIds.has(ach.id);
  return (
- <Card key={ach.id} className={earned ? "border-yellow-300" : "opacity-60"}>
- <CardContent className="p-4 flex items-center gap-4">
+ <motion.div
+ key={ach.id}
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: i * 0.03 }}
+ className={`rounded-2xl p-4 flex items-center gap-4 ${earned ? "" : "opacity-50"}`}
+ style={{
+ background: earned ? "rgba(234,179,8,0.08)" : "rgba(var(--surface-rgb),0.4)",
+ border: earned ? "1px solid rgba(234,179,8,0.3)" : "1px solid rgba(var(--surface-rgb),0.8)",
+ }}>
  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${
- earned ? "bg-yellow-500/20" : "bg-[var(--bg-surface)]"
- }`}>
+ earned ? "" : ""
+ }`} style={{ background: earned ? "rgba(234,179,8,0.2)" : "rgba(var(--surface-rgb),0.6)" }}>
  {ach.emoji}
  </div>
  <div className="flex-1">
- <p className="font-medium theme-text flex items-center gap-2">
+ <p className="font-medium text-foreground flex items-center gap-2">
  {ach.name}
- {earned && <Badge variant="success" className="text-xs">Freigeschaltet</Badge>}
+ {earned && <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: "rgba(16,185,129,0.15)", color: "#10b981" }}>Freigeschaltet</span>}
  </p>
- <p className="text-sm theme-text-secondary">{ach.desc}</p>
- <p className="text-xs text-yellow-600 mt-1">+{ach.xp_reward} XP</p>
+ <p className="text-sm text-muted-foreground">{ach.desc}</p>
+ <p className="text-xs text-yellow-500 mt-1 font-bold">+{ach.xp_reward} XP</p>
  </div>
- </CardContent>
- </Card>
+ </motion.div>
  );
  })}
- </div>
+ </motion.div>
  )}
 
  {tab === "leaderboard" && (
- <Card>
- <CardHeader><CardTitle className="text-base flex items-center gap-2"><Users className="w-5 h-5" /> Top 10 (Wöchentlich)</CardTitle></CardHeader>
- <CardContent>
+ <motion.div
+ key="leaderboard"
+ initial={{ opacity: 0, x: -10 }}
+ animate={{ opacity: 1, x: 0 }}
+ exit={{ opacity: 0, x: 10 }}
+ className="rounded-2xl p-4"
+ style={{ background: "rgba(var(--surface-rgb),0.4)", border: "1px solid rgba(99,102,241,0.15)" }}>
+ <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-4"><Users className="w-5 h-5" /> Top 10 (Wöchentlich)</h3>
  {leaderboard.length === 0 ? (
- <p className="text-sm theme-text-secondary text-center py-4">Noch keine Einträge vorhanden.</p>
+ <div className="text-center py-8">
+ <div className="text-3xl mb-2">🏆</div>
+ <p className="text-sm text-muted-foreground">Noch keine Einträge vorhanden.</p>
+ </div>
  ) : (
  <div className="space-y-2">
- {leaderboard.map((entry) => (
- <div key={entry.rank} className={`flex items-center gap-3 p-3 rounded-lg ${
- entry.is_you ? "bg-blue-500/10 border border-blue-500/20" : "bg-[var(--bg-surface)]"
- }`}>
+ {leaderboard.map((entry, i) => (
+ <motion.div
+ key={entry.rank}
+ initial={{ opacity: 0, x: -10 }}
+ animate={{ opacity: 1, x: 0 }}
+ transition={{ delay: i * 0.05 }}
+ className={`flex items-center gap-3 p-3 rounded-xl`}
+ style={{
+ background: entry.is_you ? "rgba(99,102,241,0.15)" : "rgba(var(--surface-rgb),0.5)",
+ border: entry.is_you ? "1px solid rgba(99,102,241,0.3)" : "1px solid transparent",
+ }}>
  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
  entry.rank === 1 ? "bg-yellow-400 text-yellow-900" :
  entry.rank === 2 ? "bg-gray-400/60 text-white" :
  entry.rank === 3 ? "bg-orange-300 text-orange-800" :
- "bg-[var(--progress-bg)] theme-text-secondary"
- }`}>
- {entry.rank}
+ "text-muted-foreground"
+ }`} style={entry.rank > 3 ? { background: "rgba(var(--surface-rgb),0.6)" } : {}}>
+ {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank-1] : entry.rank}
  </div>
  <div className="flex-1">
- <p className="text-sm font-medium theme-text flex items-center gap-1">
- {entry.name} {entry.is_you && <Badge variant="secondary" className="text-xs">Du</Badge>}
+ <p className="text-sm font-medium text-foreground flex items-center gap-1">
+ {entry.name} {entry.is_you && <span className="text-xs px-1.5 py-0.5 rounded font-bold" style={{ background: "rgba(99,102,241,0.2)", color: "#818cf8" }}>Du</span>}
  </p>
- <p className="text-xs theme-text-secondary">{entry.level_name} - {entry.streak_days} Tage Streak</p>
+ <p className="text-xs text-muted-foreground">{entry.level_name} - {entry.streak_days} Tage Streak</p>
  </div>
  <div className="text-right">
- <p className="font-bold theme-text">{entry.xp} XP</p>
- <p className="text-xs theme-text-secondary">Level {entry.level}</p>
+ <p className="font-bold text-foreground">{entry.xp} XP</p>
+ <p className="text-xs text-muted-foreground">Level {entry.level}</p>
  </div>
- </div>
+ </motion.div>
  ))}
  </div>
  )}
- </CardContent>
- </Card>
+ </motion.div>
  )}
- </div>
+ </AnimatePresence>
+ </motion.div>
  );
 }
