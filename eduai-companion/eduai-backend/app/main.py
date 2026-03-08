@@ -549,9 +549,12 @@ app.add_middleware(RateLimitMiddleware)
 
 # CORS — restrict to known frontend origins in production, allow all in dev
 _cors_origins: list[str] = ["*"] if os.getenv("LUMNOS_DEV_MODE") else ALLOWED_ORIGINS
+# Regex to match all Vercel preview URLs for this project
+_vercel_preview_regex = r"https://mass-mash-[a-z0-9]+-songoku1callme-devs-projects\.vercel\.app"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors_origins,
+    allow_origin_regex=_vercel_preview_regex if not os.getenv("LUMNOS_DEV_MODE") else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

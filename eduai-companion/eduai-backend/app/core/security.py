@@ -201,9 +201,9 @@ class BotProtectionMiddleware(BaseHTTPMiddleware):
     """Shield 10: Block known scraper/bot user agents."""
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
-        # Skip for health checks and public endpoints
+        # Skip for health checks, ping, and public endpoints
         path = request.url.path
-        if path in ("/healthz", "/docs", "/openapi.json"):
+        if path in ("/healthz", "/api/ping", "/docs", "/openapi.json"):
             return await call_next(request)
 
         user_agent = (request.headers.get("user-agent") or "").lower()
@@ -234,6 +234,8 @@ class BotProtectionMiddleware(BaseHTTPMiddleware):
 
 # Allowed frontend origins — extend as needed
 ALLOWED_ORIGINS = [
+    "https://mass-mash.vercel.app",
+    "https://mass-mash-*.vercel.app",
     "https://lumnos-german-tutor-app-mzmkkhlp.devinapps.com",
     "https://mass-mash-git-devin-1772317-607977-songoku1callme-devs-projects.vercel.app",
     "https://massmash.vercel.app",

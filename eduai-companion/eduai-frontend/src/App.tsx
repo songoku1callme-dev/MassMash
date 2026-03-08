@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth as useClerkAuth, useUser as useClerkUser } from "@clerk/clerk-react";
 import { useAuthStore } from "./stores/authStore";
@@ -74,8 +74,29 @@ function App() {
   const [currentPage, setCurrentPage] = useState("chat");
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [backendWaking, setBackendWaking] = useState(false);
   // Ensure theme store is initialized + subscribed
   useThemeStore((s) => s.resolvedTheme);
+
+  // Backend pre-warm: ping backend on app load to wake it from Render free-tier sleep
+  const preWarmBackend = useCallback(() => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) return;
+    setBackendWaking(true);
+    fetch(`${apiUrl}/api/ping`, { method: "GET", mode: "cors" })
+      .then(() => setBackendWaking(false))
+      .catch(() => {
+        // Retry once after 3s
+        setTimeout(() => {
+          fetch(`${apiUrl}/api/ping`, { method: "GET", mode: "cors" })
+            .finally(() => setBackendWaking(false));
+        }, 3000);
+      });
+  }, []);
+
+  useEffect(() => {
+    preWarmBackend();
+  }, [preWarmBackend]);
 
   // Clerk → AuthStore sync: when Clerk signs in, get token and sync
   useEffect(() => {
@@ -123,7 +144,14 @@ function App() {
       <div className="min-h-screen cyber-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"\u2726"}</div>
-          <p className="mt-4 text-lumnos-muted text-sm">Laden...</p>
+          {backendWaking ? (
+            <>
+              <p className="mt-4 text-lumnos-accent text-sm font-medium">KI-Gehirn wird geweckt...</p>
+              <p className="mt-1 text-lumnos-muted text-xs">Erster Start kann bis zu 30 Sekunden dauern</p>
+            </>
+          ) : (
+            <p className="mt-4 text-lumnos-muted text-sm">Laden...</p>
+          )}
         </div>
       </div>
     );
