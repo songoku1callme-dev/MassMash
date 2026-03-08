@@ -153,7 +153,7 @@ export default function StatsPage() {
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
  <StatCard icon={<BookOpen className="w-5 h-5 text-blue-600" />} label="Lernzeit" value={`${ov.total_learning_minutes} min`} bg="bg-blue-50" />
  <StatCard icon={<Target className="w-5 h-5 text-green-600" />} label="Quiz-Erfolg" value={`${ov.quiz_success_rate}%`} bg="bg-green-50" />
- <StatCard icon={<Flame className="w-5 h-5 text-orange-600" />} label="Streak" value={`${ov.current_streak} Tage`} sub={`Laengster: ${ov.longest_streak}`} bg="bg-orange-50" />
+ <StatCard icon={<Flame className="w-5 h-5 text-orange-600" />} label="Streak" value={`${ov.current_streak} Tage`} sub={`Längster: ${ov.longest_streak}`} bg="bg-orange-50" />
  <StatCard icon={<Trophy className="w-5 h-5 text-purple-600" />} label="XP / Level" value={`${ov.total_xp} XP`} sub={`Level ${ov.level}`} bg="bg-purple-50" />
  </div>
 
@@ -192,7 +192,7 @@ export default function StatsPage() {
  prognoseTrend === "fallend" ? "bg-red-50 text-red-700" :
  "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>
- Gesamt-Trend: {prognoseTrend === "steigend" ? "Aufwaerts" : prognoseTrend === "fallend" ? "Abwaerts" : "Stabil"}
+ Gesamt-Trend: {prognoseTrend === "steigend" ? "Aufwärts" : prognoseTrend === "fallend" ? "Abwärts" : "Stabil"}
  </div>
  )}
  <div className="space-y-2">
@@ -282,8 +282,8 @@ export default function StatsPage() {
  </div>
  <div className="theme-card rounded-xl p-5 border border-[var(--border-color)]">
  <h3 className="font-semibold theme-text flex items-center gap-2 mb-3">
- <Target className="w-5 h-5 text-red-600" />
- Zum Ueben
+  <Target className="w-5 h-5 text-red-600" />
+  Zum Üben
  </h3>
  {weakest.length === 0 ? (
  <p className="theme-text-secondary text-sm">Keine Schwächen erkannt</p>
