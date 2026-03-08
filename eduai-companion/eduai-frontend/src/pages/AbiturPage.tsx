@@ -10,6 +10,7 @@ import {
  Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const SUBJECTS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" /> },
@@ -29,6 +30,7 @@ export default function AbiturPage() {
  const [duration, setDuration] = useState(180);
  const [loading, setLoading] = useState(false);
  const [error, setError] = useState("");
+ const [initLoading, setInitLoading] = useState(true);
  const [simulation, setSimulation] = useState<AbiturSimulation | null>(null);
  const [answers, setAnswers] = useState<Record<number, string>>({});
  const [currentQ, setCurrentQ] = useState(0);
@@ -70,6 +72,8 @@ export default function AbiturPage() {
  setPlans(data.plans);
  } catch {
  // Ignore
+ } finally {
+ setInitLoading(false);
  }
  };
 
@@ -150,6 +154,8 @@ export default function AbiturPage() {
 
  const remainingSeconds = duration * 60 - elapsedSeconds;
  const progressPercent = Math.min(100, (elapsedSeconds / (duration * 60)) * 100);
+
+ if (initLoading) return <PageLoader text="Abitur-Simulation lädt..." />;
 
  // Setup screen
  if (state === "setup") {

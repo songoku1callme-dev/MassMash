@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { voiceApi } from "../services/api";
 import { Mic, MicOff, Volume2, Loader2, MessageCircle } from "lucide-react";
+import { ErrorState } from "../components/PageStates";
 
 export default function VoicePage() {
  const [isRecording, setIsRecording] = useState(false);

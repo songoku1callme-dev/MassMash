@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LumnosOrb from "../components/LumnosOrb";
 import { getAccessToken } from "../services/api";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -71,8 +72,10 @@ export default function ForschungsSeite() {
  const [stats, setStats] = useState<EvolutionStats | null>(null);
  const [crawling, setCrawling] = useState<string | null>(null);
  const [loading, setLoading] = useState(true);
+ const [loadError, setLoadError] = useState(false);
 
  const loadData = async () => {
+ setLoadError(false);
  try {
  const [updatesData, vorschlägData, statsData] = await Promise.all([
  adminFetch<{ updates: KnowledgeUpdate[] }>("/api/admin/knowledge-updates"),
@@ -84,6 +87,7 @@ export default function ForschungsSeite() {
  setStats(statsData);
  } catch (e) {
  console.error("Forschungs-Daten laden fehlgeschlagen:", e);
+ setLoadError(true);
  } finally {
  setLoading(false);
  }
@@ -119,15 +123,10 @@ export default function ForschungsSeite() {
  }
  };
 
- if (loading) {
- return (
- <div className="min-h-screen cyber-bg flex items-center justify-center">
- <div className="text-center">
- <LumnosOrb isTyping size="lg" />
- <p className="mt-4 text-lumnos-muted">Forschungs-Zentrum lädt...</p>
- </div>
- </div>
- );
+ if (loading) return <PageLoader text="Forschungs-Zentrum lädt..." />;
+ if (loadError) return <ErrorState message="Fehler beim Laden des Forschungs-Zentrums." onRetry={loadData} />;
+
+ if (false) {
  }
 
  return (

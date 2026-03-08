@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { matchingApi } from "../services/api";
 import { Users, Star, Flame, Trophy, Loader2, RefreshCw, MessageCircle } from "lucide-react";
+import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
 
 export default function MatchingPage() {
  /* eslint-disable @typescript-eslint/no-explicit-any */

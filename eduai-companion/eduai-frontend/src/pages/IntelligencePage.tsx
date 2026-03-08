@@ -2,6 +2,7 @@ import { useState } from "react";
 import { intelligenceApi, erklaerungApi } from "../services/api";
 import { Button } from "@/components/ui/button";
 import { Brain, BookOpen, HelpCircle, Search, Calendar, Loader2, GraduationCap } from "lucide-react";
+import { ErrorState } from "../components/PageStates";
 
 type Tab = "lernstil" | "feynman" | "sokrates" | "wissensscan" | "wochenplan" | "erklaerer";
 

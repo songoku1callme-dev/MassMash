@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { pomodoroApi } from "../services/api";
 import { Button } from "@/components/ui/button";
 import { Timer, Play, Pause, RotateCcw, Coffee, Loader2 } from "lucide-react";
+import { ErrorState } from "../components/PageStates";
 
 type TimerState = "idle" | "work" | "break" | "long_break";
 
@@ -12,6 +13,7 @@ export default function PomodoroPage() {
  const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
  const [subject, setSubject] = useState("general");
  const [loading, setLoading] = useState(false);
+ const [statsError, setStatsError] = useState(false);
  const [stats, setStats] = useState<{ today: number; today_minutes: number; week: number; total: number } | null>(null);
  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -37,11 +39,13 @@ export default function PomodoroPage() {
  }, [isRunning, secondsLeft]);
 
  const loadStats = async () => {
+ setStatsError(false);
  try {
  const data = await pomodoroApi.stats();
  setStats(data);
  } catch (e) {
  console.error(e);
+ setStatsError(true);
  }
  };
 
@@ -219,6 +223,7 @@ export default function PomodoroPage() {
  </div>
 
  {/* Stats */}
+ {statsError && <ErrorState message="Fehler beim Laden der Pomodoro-Stats." onRetry={loadStats} />}
  {stats && (
  <div className="grid grid-cols-3 gap-4">
  <div className="theme-card rounded-xl p-4 text-center border border-[var(--border-color)]">

@@ -7,6 +7,7 @@ import {
  Loader2, AlertCircle, CheckCircle2, Lightbulb, Puzzle,
  Calculator, BookOpen, Box, MemoryStick
 } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 type Step = "intro" | "test" | "results";
 

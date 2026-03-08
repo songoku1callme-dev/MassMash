@@ -3,39 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { gamificationApi, type GamificationProfile, type LeaderboardEntry } from "../services/api";
+import { useGamificationProfile, useLeaderboard } from "../hooks/useApiQueries";
+import { PageLoader, ErrorState } from "../components/PageStates";
 import {
  Trophy, Flame, Star, Medal, Target, Zap, Crown, Users,
  Loader2, TrendingUp, Award
 } from "lucide-react";
 
 export default function GamificationPage() {
- const [profile, setProfile] = useState<GamificationProfile | null>(null);
- const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState(false);
+ // React Query hooks for automatic caching & refetch
+ const { data: profileData, isLoading: profileLoading, isError: profileError, refetch: refetchProfile } = useGamificationProfile();
+ const { data: lbData, isLoading: lbLoading, isError: lbError } = useLeaderboard();
+
+ const profile = profileData as GamificationProfile | undefined;
+ const leaderboard = (lbData as { leaderboard?: LeaderboardEntry[] })?.leaderboard || [];
+ const loading = profileLoading || lbLoading;
+ const error = profileError || lbError;
  const [tab, setTab] = useState<"overview" | "achievements" | "leaderboard">("overview");
-
- useEffect(() => {
- loadData();
- }, []);
-
- const loadData = async () => {
- setLoading(true);
- setError(false);
- try {
- const [profileData, lbData] = await Promise.all([
- gamificationApi.profile(),
- gamificationApi.leaderboard(),
- ]);
- setProfile(profileData);
- setLeaderboard(lbData.leaderboard);
- } catch (err) {
- console.error("Failed to load gamification data:", err);
- setError(true);
- } finally {
- setLoading(false);
- }
- };
 
  if (loading) {
  return (
@@ -60,7 +44,7 @@ export default function GamificationPage() {
  <div className="text-4xl mb-4">😔</div>
  <p className="text-foreground font-bold text-lg mb-2">Fehler beim Laden</p>
  <p className="text-muted-foreground mb-4">Gamification-Daten konnten nicht geladen werden.</p>
- <button onClick={loadData} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+ <button onClick={() => refetchProfile()} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
  Erneut versuchen
  </button>
  </div>

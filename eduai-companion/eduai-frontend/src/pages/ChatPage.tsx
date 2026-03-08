@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
 import ReactMarkdown from "react-markdown";
+import { ErrorState } from "../components/PageStates";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";

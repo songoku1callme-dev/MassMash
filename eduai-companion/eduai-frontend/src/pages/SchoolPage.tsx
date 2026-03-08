@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle } from "lucide-react";
+import { ErrorState } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 

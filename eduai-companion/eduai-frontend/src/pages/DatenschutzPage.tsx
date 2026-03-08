@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Shield, FileText, Lock, Trash2, Cookie, Mail, Scale, Eye } from "lucide-react";
+import { PageLoader } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 

@@ -8,6 +8,7 @@ import {
  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Target
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const SUBJECTS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },

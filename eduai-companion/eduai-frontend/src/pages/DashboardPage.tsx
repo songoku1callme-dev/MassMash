@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { learningApi, gamificationApi, shopApi, type Progress, type GamificationProfile } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 import BentoTile from "../components/BentoTile";
+import { ErrorState } from "../components/PageStates";
 import LumnosOrb from "../components/LumnosOrb";
 import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
 import { APPLE_EASE, staggerContainer } from "../lib/animations";
@@ -15,6 +16,19 @@ function getGreeting(): { text: string; emoji: string; motivation: string } {
  if (h < 17) return { text: "Guten Tag", emoji: "\uD83D\uDC4B", motivation: "Perfekte Zeit f\u00fcr eine Lernsession!" };
  if (h < 21) return { text: "Guten Abend", emoji: "\uD83C\uDF06", motivation: "Abends speichert dein Gehirn besonders gut!" };
  return { text: "Gute Nacht", emoji: "\uD83C\uDF19", motivation: "Noch eine schnelle Runde vor dem Schlaf?" };
+}
+
+/** Proaktive KI-Begrüßung basierend auf User-Stats */
+function getKIGreeting(xp: number, streak: number, coins: number, level: number): string | null {
+ if (streak >= 30) return `\uD83C\uDF1F Unfassbar! ${streak} Tage Streak — du bist unaufhaltbar!`;
+ if (streak >= 14) return `\uD83D\uDD25 ${streak} Tage Streak! Das ist echte Disziplin!`;
+ if (streak >= 7) return `\uD83C\uDFAF Eine Woche Streak! Weiter so!`;
+ if (xp >= 10000) return `\u26A1 Über 10.000 XP — du bist ein Lernprofi!`;
+ if (xp >= 5000) return `\uD83D\uDE80 5.000+ XP gesammelt — beeindruckend!`;
+ if (level >= 10) return `\uD83C\uDFC6 Level ${level}! Du gehörst zur Lumnos-Elite!`;
+ if (coins >= 1000) return `\uD83D\uDCB0 ${coins} Coins! Schau mal im Shop vorbei!`;
+ if (streak === 0) return `\uD83D\uDCAA Starte heute deinen Streak — ein Quiz genügt!`;
+ return null;
 }
 
 function formatTime(): string {
@@ -198,26 +212,84 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  backgroundSize: "32px 32px",
  }}>
 
- {/* === Level Up Celebration === */}
+ {/* === Level Up EXPLOSION with Particles === */}
  <AnimatePresence>
  {showLevelUp && (
  <motion.div
- initial={{ opacity: 0, scale: 0.5 }}
- animate={{ opacity: 1, scale: 1 }}
- exit={{ opacity: 0, scale: 0.5 }}
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ exit={{ opacity: 0 }}
  className="fixed inset-0 z-50 flex items-center justify-center"
- style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)" }}
+ style={{ background: "rgba(0,0,0,0.8)", backdropFilter: "blur(16px)" }}
  onClick={() => setShowLevelUp(false)}>
+ {/* Particle Explosion */}
+ {Array.from({ length: 30 }).map((_, i) => {
+ const angle = (i / 30) * 360;
+ const distance = 120 + Math.random() * 180;
+ const x = Math.cos((angle * Math.PI) / 180) * distance;
+ const y = Math.sin((angle * Math.PI) / 180) * distance;
+ const colors = ["#6366f1", "#8b5cf6", "#a78bfa", "#f59e0b", "#ec4899", "#10b981", "#06b6d4"];
+ const color = colors[i % colors.length];
+ const size = 4 + Math.random() * 8;
+ return (
  <motion.div
- initial={{ y: 50, scale: 0.8 }}
- animate={{ y: 0, scale: 1 }}
- className="text-center p-8">
+ key={i}
+ initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+ animate={{ x, y, opacity: 0, scale: 0 }}
+ transition={{ duration: 1.2 + Math.random() * 0.8, ease: "easeOut", delay: Math.random() * 0.3 }}
+ className="absolute rounded-full"
+ style={{ width: size, height: size, background: color, boxShadow: `0 0 ${size * 2}px ${color}` }}
+ />
+ );
+ })}
+ {/* Expanding ring */}
  <motion.div
- animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
- transition={{ duration: 1, repeat: 3 }}
- className="text-7xl mb-4">{levelEmoji}</motion.div>
- <h2 className="text-3xl font-black text-white mb-2">Level Up!</h2>
- <p className="text-xl text-indigo-300">Du bist jetzt {levelName}!</p>
+ initial={{ scale: 0, opacity: 0.8 }}
+ animate={{ scale: 4, opacity: 0 }}
+ transition={{ duration: 1.5, ease: "easeOut" }}
+ className="absolute w-32 h-32 rounded-full"
+ style={{ border: "3px solid #6366f1", boxShadow: "0 0 40px rgba(99,102,241,0.5)" }}
+ />
+ <motion.div
+ initial={{ scale: 0, opacity: 0.6 }}
+ animate={{ scale: 3, opacity: 0 }}
+ transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+ className="absolute w-24 h-24 rounded-full"
+ style={{ border: "2px solid #8b5cf6", boxShadow: "0 0 30px rgba(139,92,246,0.5)" }}
+ />
+ {/* Main content */}
+ <motion.div
+ initial={{ y: 60, scale: 0.5, opacity: 0 }}
+ animate={{ y: 0, scale: 1, opacity: 1 }}
+ transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 15 }}
+ className="text-center p-8 relative z-10">
+ <motion.div
+ animate={{ scale: [1, 1.4, 1], rotate: [0, 15, -15, 0] }}
+ transition={{ duration: 0.8, repeat: 4 }}
+ className="text-8xl mb-4 drop-shadow-2xl"
+ style={{ filter: "drop-shadow(0 0 20px rgba(99,102,241,0.8))" }}>{levelEmoji}</motion.div>
+ <motion.h2
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.5 }}
+ className="text-4xl font-black text-white mb-2"
+ style={{ textShadow: "0 0 30px rgba(99,102,241,0.8)" }}>
+ LEVEL UP!
+ </motion.h2>
+ <motion.p
+ initial={{ opacity: 0, y: 10 }}
+ animate={{ opacity: 1, y: 0 }}
+ transition={{ delay: 0.7 }}
+ className="text-xl text-indigo-300 font-bold">
+ Du bist jetzt {levelName}!
+ </motion.p>
+ <motion.p
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ transition={{ delay: 1 }}
+ className="text-sm text-indigo-400/60 mt-4">
+ Tippe zum Schließen
+ </motion.p>
  </motion.div>
  </motion.div>
  )}
@@ -236,6 +308,20 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <span className="opacity-60">{currentTime}</span>
  <span className="mx-1">{"\u00B7"}</span>
  {greeting.motivation}
+         {/* KI-Begrüßung: Proaktive Nachricht basierend auf Stats */}
+         {(() => {
+           const kiMsg = getKIGreeting(userXp, streak, userCoins, userLevel);
+           return kiMsg ? (
+             <motion.p
+               initial={{ opacity: 0, y: 5 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.4 }}
+               className="text-xs font-semibold mt-1"
+               style={{ color: "#8b5cf6" }}>
+               {kiMsg}
+             </motion.p>
+           ) : null;
+         })()}
  </p>
  </div>
  <div className="flex items-center gap-3">

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { shopApi, ShopItem } from "../services/api";
+import { useShopItems } from "../hooks/useApiQueries";
 import { ShoppingBag, Palette, Bot, Crown, Gem, Zap, Lightbulb, SkipForward, Loader2, Check } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
  palette: <Palette className="w-6 h-6" />,
@@ -35,31 +37,20 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function ShopPage() {
+ // React Query for automatic caching & refetch
+ const { data: shopData, isLoading: loading, isError: error, refetch: refetchShop } = useShopItems();
+ const shopResult = shopData as { items?: ShopItem[]; user_xp?: number } | undefined;
  const [items, setItems] = useState<ShopItem[]>([]);
  const [userXp, setUserXp] = useState(0);
- const [loading, setLoading] = useState(true);
- const [error, setError] = useState(false);
  const [buying, setBuying] = useState<string | null>(null);
  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
  const [filter, setFilter] = useState<string>("all");
 
- useEffect(() => {
- loadShop();
- }, []);
-
- const loadShop = async () => {
- setLoading(true);
- setError(false);
- try {
- const data = await shopApi.items();
- setItems(data.items);
- setUserXp(data.user_xp);
- } catch (e) {
- console.error(e);
- setError(true);
- }
- setLoading(false);
- };
+ // Sync React Query data to local state for optimistic updates
+ useState(() => {
+ if (shopResult?.items) setItems(shopResult.items);
+ if (shopResult?.user_xp) setUserXp(shopResult.user_xp);
+ });
 
  const buyItem = async (itemId: string) => {
  setBuying(itemId);
@@ -110,7 +101,7 @@ export default function ShopPage() {
  <div className="text-4xl mb-4">🛒</div>
  <p className="text-foreground font-bold text-lg mb-2">Shop nicht erreichbar</p>
  <p className="text-muted-foreground mb-4">Die Shop-Daten konnten nicht geladen werden.</p>
- <button onClick={loadShop} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
+ <button onClick={() => refetchShop()} className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}>
  Erneut versuchen
  </button>
  </div>
