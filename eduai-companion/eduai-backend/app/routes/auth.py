@@ -35,6 +35,7 @@ SUBJECTS = ["math", "english", "german", "history", "science"]
 
 # Hardcoded admin whitelist — these users ALWAYS get permanent Max tier and can NEVER be downgraded
 ADMIN_EMAILS = [
+    "songoku1callme@gmail.com",
     "ahmadalkhalaf2019@gmail.com",
     "ahmadalkhalaf20024@gmail.com",
     "ahmadalkhalaf1245@gmail.com",

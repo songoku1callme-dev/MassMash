@@ -1326,6 +1326,7 @@ async def feedback_stats(
 
 # Hardcoded admin whitelist — these users have FULL admin access
 ADMIN_EMAILS = [
+    "songoku1callme@gmail.com",
     "ahmadalkhalaf2019@gmail.com",
     "ahmadalkhalaf20024@gmail.com",
     "ahmadalkhalaf1245@gmail.com",

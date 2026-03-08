@@ -10,7 +10,7 @@ import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import CookieBanner from "./components/CookieBanner";
 import OfflineBanner from "./components/OfflineBanner";
-import NotificationBell from "./components/NotificationBell";
+import GlobalHeader from "./components/GlobalHeader";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy-loaded pages — each page is loaded on-demand for faster initial load
@@ -283,9 +283,7 @@ function App() {
             minWidth: 0,
           }}
         >
-          <div className="absolute top-4 right-4 z-30">
-            <NotificationBell />
-          </div>
+          <GlobalHeader />
           <AnimatePresence mode="wait">
             <motion.div
               key={currentPage}
