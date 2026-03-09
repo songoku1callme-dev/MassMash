@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LumnosOrb from "../components/LumnosOrb";
-import { getAccessToken } from "../services/api";
-import { PageLoader, ErrorState } from "../components/PageStates";
+import { getAccessToken, researchApi, type ResearchResult } from "../services/api";
+import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
+import { Search, Loader2, Globe, ExternalLink, GitBranch } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -66,6 +67,54 @@ async function adminFetch<T>(endpoint: string, options: RequestInit = {}): Promi
  return res.json();
 }
 
+/** SVG Mindmap — generiert aus Recherche-Ergebnissen */
+function MindmapSVG({ query, results }: { query: string; results: ResearchResult[] }) {
+ const cx = 400, cy = 250;
+ const nodes = results.slice(0, 8);
+ const angleStep = (2 * Math.PI) / Math.max(nodes.length, 1);
+ const radius = 160;
+
+ return (
+  <div className="w-full overflow-x-auto">
+   <svg viewBox="0 0 800 500" className="w-full max-w-3xl mx-auto" style={{ minHeight: 320 }}>
+    {/* Connection lines */}
+    {nodes.map((_, i) => {
+     const angle = angleStep * i - Math.PI / 2;
+     const nx = cx + radius * Math.cos(angle);
+     const ny = cy + radius * Math.sin(angle);
+     return (
+      <line key={`line-${i}`} x1={cx} y1={cy} x2={nx} y2={ny}
+       stroke="rgba(99,102,241,0.3)" strokeWidth="2" strokeDasharray="6 3" />
+     );
+    })}
+    {/* Center node */}
+    <circle cx={cx} cy={cy} r="48" fill="rgba(99,102,241,0.15)" stroke="#6366f1" strokeWidth="2" />
+    <text x={cx} y={cy - 6} textAnchor="middle" fill="#a5b4fc" fontSize="11" fontWeight="bold">
+     {query.length > 20 ? query.slice(0, 18) + "..." : query}
+    </text>
+    <text x={cx} y={cy + 12} textAnchor="middle" fill="#64748b" fontSize="9">
+     Recherche
+    </text>
+    {/* Outer nodes */}
+    {nodes.map((r, i) => {
+     const angle = angleStep * i - Math.PI / 2;
+     const nx = cx + radius * Math.cos(angle);
+     const ny = cy + radius * Math.sin(angle);
+     const title = r.title.length > 22 ? r.title.slice(0, 20) + "..." : r.title;
+     return (
+      <g key={`node-${i}`}>
+       <circle cx={nx} cy={ny} r="36" fill="rgba(34,197,94,0.1)" stroke="#22c55e" strokeWidth="1.5" />
+       <text x={nx} y={ny + 4} textAnchor="middle" fill="#86efac" fontSize="9" fontWeight="500">
+        {title}
+       </text>
+      </g>
+     );
+    })}
+   </svg>
+  </div>
+ );
+}
+
 export default function ForschungsSeite() {
  const [updates, setUpdates] = useState<KnowledgeUpdate[]>([]);
  const [vorschläge, setVorschläge] = useState<PromptVorschlag[]>([]);
@@ -73,6 +122,13 @@ export default function ForschungsSeite() {
  const [crawling, setCrawling] = useState<string | null>(null);
  const [loading, setLoading] = useState(true);
  const [loadError, setLoadError] = useState(false);
+ // User-facing search
+ const [searchQuery, setSearchQuery] = useState("");
+ const [searchResults, setSearchResults] = useState<ResearchResult[]>([]);
+ const [searching, setSearching] = useState(false);
+ const [searchError, setSearchError] = useState("");
+ const [showMindmap, setShowMindmap] = useState(false);
+ const [lastQuery, setLastQuery] = useState("");
 
  const loadData = async () => {
  setLoadError(false);
@@ -123,11 +179,24 @@ export default function ForschungsSeite() {
  }
  };
 
- if (loading) return <PageLoader text="Forschungs-Zentrum lädt..." />;
- if (loadError) return <ErrorState message="Fehler beim Laden des Forschungs-Zentrums." onRetry={loadData} />;
-
- if (false) {
+ const handleSearch = useCallback(async () => {
+ if (!searchQuery.trim()) return;
+ setSearching(true);
+ setSearchError("");
+ setShowMindmap(false);
+ try {
+ const result = await researchApi.search({ query: searchQuery.trim(), max_results: 8 });
+ setSearchResults(result.results);
+ setLastQuery(searchQuery.trim());
+ if (result.results.length > 0) setShowMindmap(true);
+ } catch (err) {
+ setSearchError(err instanceof Error ? err.message : "Recherche fehlgeschlagen");
  }
+ setSearching(false);
+ }, [searchQuery]);
+
+ if (loading) return <PageLoader text="Forschungs-Zentrum l\u00e4dt..." />;
+ if (loadError) return <ErrorState message="Fehler beim Laden des Forschungs-Zentrums." onRetry={loadData} />;
 
  return (
  <div className="min-h-screen cyber-bg p-6 space-y-6">
@@ -143,9 +212,95 @@ export default function ForschungsSeite() {
  {"\u{1F9E0}"} Forschungs-Zentrum
  </h1>
  <p className="text-lumnos-muted text-sm">
- LUMNOS Self-Evolution — Autonomes Lernen aus dem Internet
+ LUMNOS Self-Evolution \u2014 Autonomes Lernen aus dem Internet
  </p>
  </div>
+ </div>
+
+ {/* User-facing Search with Mindmap */}
+ <div className="glass rounded-2xl p-6 border border-lumnos-border">
+ <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+ <Globe className="w-5 h-5 text-blue-400" />
+ Internet-Recherche
+ </h2>
+ <div className="flex gap-2 mb-4">
+ <input
+  type="text"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+  placeholder="Recherchiere ein Thema im Internet..."
+  className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500"
+  style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(99,102,241,0.3)" }}
+ />
+ <button
+  onClick={handleSearch}
+  disabled={searching || !searchQuery.trim()}
+  className="px-5 py-2.5 rounded-xl text-sm font-medium text-white flex items-center gap-2 transition-all hover:brightness-110 disabled:opacity-50"
+  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }}
+ >
+  {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+  Suchen
+ </button>
+ </div>
+
+ {searchError && (
+  <div className="mb-4 p-3 rounded-lg text-sm" style={{ background: "rgba(239,68,68,0.1)", color: "#f87171" }}>
+   {searchError}
+  </div>
+ )}
+
+ {/* Mindmap Visualization */}
+ {showMindmap && searchResults.length > 0 && (
+  <div className="mb-4">
+   <div className="flex items-center gap-2 mb-2">
+    <GitBranch className="w-4 h-4 text-indigo-400" />
+    <span className="text-sm font-semibold text-indigo-300">Mindmap \u2014 {lastQuery}</span>
+    <button
+     onClick={() => setShowMindmap(!showMindmap)}
+     className="ml-auto text-xs text-slate-500 hover:text-slate-300"
+    >
+     {showMindmap ? "Ausblenden" : "Anzeigen"}
+    </button>
+   </div>
+   <div className="rounded-xl p-2" style={{ background: "rgba(15,23,42,0.4)", border: "1px solid rgba(99,102,241,0.15)" }}>
+    <MindmapSVG query={lastQuery} results={searchResults} />
+   </div>
+  </div>
+ )}
+
+ {/* Search Results */}
+ {searchResults.length > 0 && (
+  <div className="space-y-3">
+   <p className="text-xs text-slate-400 font-semibold">{searchResults.length} Ergebnisse gefunden:</p>
+   {searchResults.map((r, i) => (
+    <motion.div
+     key={i}
+     initial={{ opacity: 0, y: 8 }}
+     animate={{ opacity: 1, y: 0 }}
+     transition={{ delay: i * 0.05 }}
+     className="p-3 rounded-xl"
+     style={{ background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.15)" }}
+    >
+     <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0 flex-1">
+       <p className="text-sm font-medium text-white truncate">{r.title}</p>
+       <p className="text-xs text-slate-400 mt-1 line-clamp-2">{r.content.slice(0, 200)}</p>
+      </div>
+      {r.url && (
+       <a href={r.url} target="_blank" rel="noopener noreferrer" className="shrink-0 p-1.5 rounded-lg hover:bg-indigo-500/10">
+        <ExternalLink className="w-3.5 h-3.5 text-indigo-400" />
+       </a>
+      )}
+     </div>
+    </motion.div>
+   ))}
+  </div>
+ )}
+
+ {!searching && searchResults.length === 0 && searchQuery && !searchError && (
+  <p className="text-sm text-slate-500 text-center py-4">Keine Ergebnisse. Versuche einen anderen Suchbegriff.</p>
+ )}
  </div>
 
  {/* Stats Row */}

@@ -1,24 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
 import ThemeToggle from "../components/ThemeToggle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
- Settings, User, Shield, Moon, Globe, Save, Loader2, Star, Crown, CreditCard
+ Settings, User, Shield, Moon, Globe, Save, Loader2, Star, Crown, CreditCard, CheckCircle2
 } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 export default function SettingsPage() {
- const { user, updateUser, logout } = useAuthStore();
- const [fullName, setFullName] = useState(user?.full_name || "");
- const [schoolGrade, setSchoolGrade] = useState(user?.school_grade || "10");
- const [schoolType, setSchoolType] = useState(user?.school_type || "Gymnasium");
- const [preferredLanguage, setPreferredLanguage] = useState(user?.preferred_language || "de");
+ const { user, updateUser, logout, loadUser, isLoading } = useAuthStore();
+ const [fullName, setFullName] = useState("");
+ const [schoolGrade, setSchoolGrade] = useState("10");
+ const [schoolType, setSchoolType] = useState("Gymnasium");
+ const [preferredLanguage, setPreferredLanguage] = useState("de");
  const [saving, setSaving] = useState(false);
  const [saved, setSaved] = useState(false);
+ const [saveError, setSaveError] = useState("");
+ const [loadError, setLoadError] = useState(false);
+
+ useEffect(() => {
+ const init = async () => {
+ try {
+ await loadUser();
+ } catch {
+ setLoadError(true);
+ }
+ };
+ init();
+ }, []);
+
+ useEffect(() => {
+ if (user) {
+ setFullName(user.full_name || "");
+ setSchoolGrade(user.school_grade || "10");
+ setSchoolType(user.school_type || "Gymnasium");
+ setPreferredLanguage(user.preferred_language || "de");
+ }
+ }, [user]);
 
  const handleSave = async () => {
  setSaving(true);
+ setSaveError("");
  try {
  await updateUser({
  full_name: fullName,
@@ -29,11 +53,15 @@ export default function SettingsPage() {
  setSaved(true);
  setTimeout(() => setSaved(false), 3000);
  } catch (err) {
- console.error("Failed to update profile:", err);
+ console.error("Profil-Update fehlgeschlagen:", err);
+ setSaveError("Speichern fehlgeschlagen. Bitte versuche es erneut.");
  } finally {
  setSaving(false);
  }
  };
+
+ if (isLoading) return <PageLoader text="Einstellungen laden..." />;
+ if (loadError) return <ErrorState message="Fehler beim Laden der Einstellungen." onRetry={() => { setLoadError(false); loadUser(); }} />;
 
  return (
  <div className="p-4 lg:p-6 max-w-3xl mx-auto space-y-6">
@@ -43,7 +71,7 @@ export default function SettingsPage() {
  <Settings className="w-7 h-7" style={{ color: "var(--icon-color)" }} />
  Einstellungen
  </h1>
- <p className="theme-text-secondary mt-1">Verwalte dein Profil und Einstellungen</p>
+ <p className="theme-text-secondary mt-1">Verwalte dein Profil und deine Einstellungen</p>
  </div>
 
  {/* Pro Status */}
@@ -59,7 +87,7 @@ export default function SettingsPage() {
  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
  </p>
  <p className="text-sm theme-text-secondary">
- Unbegrenzt OCR, Spracheingabe & priorisierte KI-Antworten
+ Unbegrenzte OCR, Spracheingabe & priorisierte KI-Antworten
  </p>
  </div>
  </CardContent>
@@ -91,7 +119,7 @@ export default function SettingsPage() {
  <User className="w-5 h-5" style={{ color: "var(--icon-color)" }} />
  <CardTitle className="text-base">Profil</CardTitle>
  </div>
- <CardDescription>Deine persönlichen Informationen</CardDescription>
+ <CardDescription>Deine persönlichen Daten</CardDescription>
  </CardHeader>
  <CardContent className="space-y-4">
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -155,6 +183,17 @@ export default function SettingsPage() {
  </div>
  </div>
 
+ {saveError && (
+ <div className="p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
+ {saveError}
+ </div>
+ )}
+ {saved && (
+ <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 text-green-600 text-sm font-medium">
+ <CheckCircle2 className="w-4 h-4" />
+ Gespeichert!
+ </div>
+ )}
  <Button onClick={handleSave} className="gap-2" disabled={saving}>
  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
  {saved ? "Gespeichert!" : "Speichern"}
@@ -169,13 +208,13 @@ export default function SettingsPage() {
  <Moon className="w-5 h-5" style={{ color: "var(--icon-color)" }} />
  <CardTitle className="text-base">Erscheinungsbild</CardTitle>
  </div>
- <CardDescription>Wähle dein bevorzugtes Design</CardDescription>
+ <CardDescription>Wähle dein bevorzugtes Erscheinungsbild</CardDescription>
  </CardHeader>
  <CardContent>
  <div className="flex items-center justify-between gap-4 flex-wrap">
  <div>
  <p className="font-medium theme-text">Theme</p>
- <p className="text-sm theme-text-secondary">System — passt sich automatisch deinem Gerät an (Standard)</p>
+ <p className="text-sm theme-text-secondary">System — paßt sich automatisch deinem Gerät an (Standard)</p>
  </div>
  <ThemeToggle />
  </div>
@@ -189,7 +228,7 @@ export default function SettingsPage() {
  <Shield className="w-5 h-5" style={{ color: "var(--icon-color)" }} />
  <CardTitle className="text-base">Datenschutz (DSGVO)</CardTitle>
  </div>
- <CardDescription>Deine Daten, deine Kontrolle</CardDescription>
+ <CardDescription>Deine Daten, deine Kontrolle — DSGVO-konform</CardDescription>
  </CardHeader>
  <CardContent className="space-y-3">
  <div

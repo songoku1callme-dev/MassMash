@@ -51,6 +51,7 @@ const LandingPage = lazy(() => import("./pages/LandingPage"));
 const ScannerPage = lazy(() => import("./pages/ScannerPage"));
 const VoiceExamPage = lazy(() => import("./pages/VoiceExamPage"));
 const ForschungsSeite = lazy(() => import("./pages/ForschungsSeite"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const OnboardingPage = lazy(() => import("./pages/OnboardingPage"));
 
 function PageLoader() {
@@ -249,6 +250,8 @@ function App() {
         return <VoiceExamPage />;
       case "forschung":
         return <ForschungsSeite />;
+      case "notifications":
+        return <NotificationsPage />;
       case "pricing":
         return <PricingPage />;
       case "settings":

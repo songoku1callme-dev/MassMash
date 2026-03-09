@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
  GraduationCap, Play, Pause, Send, Clock, Trophy, Calendar,
  Loader2, Lock, CheckCircle2, XCircle, BarChart3,
- Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb
+ Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb, MessageCircle
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
 import { PageLoader, ErrorState } from "../components/PageStates";
@@ -39,6 +39,10 @@ export default function AbiturPage() {
  const [plans, setPlans] = useState<StudyPlanListItem[]>([]);
  const [isPaused, setIsPaused] = useState(false);
  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+ const [proTipp, setProTipp] = useState<string | null>(null);
+ const [tippLoading, setTippLoading] = useState(false);
+ const lastAnswerTimeRef = useRef<number>(Date.now());
+ const tippTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
  useEffect(() => {
@@ -51,11 +55,58 @@ export default function AbiturPage() {
  timerRef.current = setInterval(() => {
  setElapsedSeconds((prev) => prev + 1);
  }, 1000);
+ // Echtzeit-Prüfer: Proaktive Tipps wenn der Nutzer zu lange zögert
+ tippTimerRef.current = setInterval(() => {
+ const secondsSinceLastAnswer = (Date.now() - lastAnswerTimeRef.current) / 1000;
+ if (secondsSinceLastAnswer >= 30 && !tippLoading && !proTipp && simulation) {
+ generateProTipp();
+ }
+ }, 5000);
  }
  return () => {
  if (timerRef.current) clearInterval(timerRef.current);
+ if (tippTimerRef.current) clearInterval(tippTimerRef.current);
  };
- }, [state, isPaused]);
+ }, [state, isPaused, simulation, tippLoading, proTipp]);
+
+ // Reset Tipp-Timer wenn Antwort geändert wird
+ useEffect(() => {
+ lastAnswerTimeRef.current = Date.now();
+ setProTipp(null);
+ }, [currentQ, answers]);
+
+ const generateProTipp = async () => {
+ if (!simulation || tippLoading) return;
+ const question = simulation.questions[currentQ];
+ if (!question) return;
+ setTippLoading(true);
+ try {
+ // Verwende den Erklärungs-Endpunkt für einen kontextbezogenen Tipp
+ const subjectName = SUBJECTS.find(s => s.id === subject)?.name || "Allgemein";
+ const response = await fetch(
+ `${import.meta.env.VITE_API_URL || ""}/api/erklaerung/schnell`,
+ {
+ method: "POST",
+ headers: { "Content-Type": "application/json" },
+ body: JSON.stringify({
+ thema: question.question,
+ fach: subjectName,
+ kontext: "Gib einen kurzen, hilfreichen Tipp f\u00fcr diese Abitur-Aufgabe. Kein L\u00f6sungsweg, nur ein Denkansatz in 1-2 S\u00e4tzen."
+ }),
+ }
+ );
+ if (response.ok) {
+ const data = await response.json();
+ setProTipp(data.erklaerung || "Lies die Frage nochmal genau durch und überlege, welche Konzepte hier relevant sind.");
+ } else {
+ setProTipp("Lies die Frage nochmal genau durch und überlege, welche Konzepte hier relevant sind.");
+ }
+ } catch {
+ setProTipp("Lies die Frage nochmal genau durch und überlege, welche Konzepte hier relevant sind.");
+ } finally {
+ setTippLoading(false);
+ }
+ };
 
  const loadHistory = async () => {
  try {
@@ -167,7 +218,7 @@ export default function AbiturPage() {
  Abitur-Simulation
  </h1>
  <p className="theme-text-secondary mt-1">
- Echte Pr&uuml;fungsbedingungen mit Timer und Notenpunkten (Max)
+ Echte Prüfungsbedingungen mit Timer und Notenpunkten (Max)
  </p>
  </div>
 
@@ -180,7 +231,7 @@ export default function AbiturPage() {
 
  {/* Subject Selection */}
  <Card>
- <CardHeader><CardTitle className="text-base">Fach w&auml;hlen</CardTitle></CardHeader>
+ <CardHeader><CardTitle className="text-base">Fach wählen</CardTitle></CardHeader>
  <CardContent>
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
  {SUBJECTS.map((s) => (
@@ -239,7 +290,7 @@ export default function AbiturPage() {
  <div className="flex gap-3">
  <Button onClick={startExam} size="lg" className="flex-1 gap-2 bg-purple-600 hover:bg-purple-700" disabled={loading}>
  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}
- Pr&uuml;fung starten
+ Prüfung starten
  </Button>
  <Button onClick={createPlan} variant="outline" size="lg" className="flex-1 gap-2" disabled={loading}>
  <Calendar className="w-5 h-5" />
@@ -250,7 +301,7 @@ export default function AbiturPage() {
  {/* Plans */}
  {plans.length > 0 && (
  <Card>
- <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Lernpl&auml;ne</CardTitle></CardHeader>
+ <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="w-5 h-5" /> Lernpläne</CardTitle></CardHeader>
  <CardContent>
  <div className="space-y-2">
  {plans.map((p) => (
@@ -272,7 +323,7 @@ export default function AbiturPage() {
  {/* History */}
  {history.length > 0 && (
  <Card>
- <CardHeader><CardTitle className="text-base flex items-center gap-2"><Trophy className="w-5 h-5" /> Pr&uuml;fungshistorie</CardTitle></CardHeader>
+ <CardHeader><CardTitle className="text-base flex items-center gap-2"><Trophy className="w-5 h-5" /> Prüfungshistorie</CardTitle></CardHeader>
  <CardContent>
  <div className="space-y-2">
  {history.slice(0, 5).map((h) => (
@@ -329,8 +380,26 @@ export default function AbiturPage() {
  {isPaused && (
  <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-center">
  <Pause className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
- <p className="font-medium text-yellow-800">Pr&uuml;fung pausiert</p>
+ <p className="font-medium text-yellow-800">Prüfung pausiert</p>
  <Button onClick={togglePause} className="mt-2" size="sm"><Play className="w-4 h-4 mr-1" /> Fortsetzen</Button>
+ </div>
+ )}
+
+ {/* Echtzeit-Prüfer Tipp */}
+ {(proTipp || tippLoading) && !isPaused && (
+ <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+ <MessageCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+ <div>
+ <p className="text-sm font-semibold text-amber-600 mb-1">Echtzeit-Prüfer — Tipp</p>
+ {tippLoading ? (
+ <div className="flex items-center gap-2 text-sm text-amber-500">
+ <Loader2 className="w-4 h-4 animate-spin" />
+ Generiere Tipp...
+ </div>
+ ) : (
+ <p className="text-sm theme-text-secondary">{proTipp}</p>
+ )}
+ </div>
  </div>
  )}
 
@@ -381,16 +450,16 @@ export default function AbiturPage() {
 
  <div className="flex gap-3">
  {currentQ > 0 && (
- <Button variant="outline" onClick={() => setCurrentQ(currentQ - 1)}>Zur&uuml;ck</Button>
+ <Button variant="outline" onClick={() => setCurrentQ(currentQ - 1)}>Zurück</Button>
  )}
  {currentQ < simulation.questions.length - 1 ? (
  <Button className="flex-1" onClick={() => setCurrentQ(currentQ + 1)}>
- N&auml;chste Frage
+ Nächste Frage
  </Button>
  ) : (
  <Button className="flex-1 bg-purple-600 hover:bg-purple-700 gap-2" onClick={submitExam} disabled={loading}>
  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
- Pr&uuml;fung abgeben
+ Prüfung abgeben
  </Button>
  )}
  </div>
@@ -408,7 +477,7 @@ export default function AbiturPage() {
  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white shadow-lg mb-6">
  <Trophy className="w-12 h-12" />
  </div>
- <h2 className="text-2xl font-bold theme-text mb-2">Pr&uuml;fung abgeschlossen!</h2>
+ <h2 className="text-2xl font-bold theme-text mb-2">Prüfung abgeschlossen!</h2>
  <p className={`text-5xl font-bold ${scoreColor} mb-2`}>{result.note_punkte}/15</p>
  <p className="text-lg font-medium theme-text-secondary mb-2">{result.note}</p>
  <p className="theme-text-secondary">
@@ -435,7 +504,7 @@ export default function AbiturPage() {
  Nochmal
  </Button>
  <Button onClick={() => { setState("setup"); setSimulation(null); setResult(null); }} variant="outline" className="flex-1">
- Zur&uuml;ck
+ Zurück
  </Button>
  </div>
  </div>

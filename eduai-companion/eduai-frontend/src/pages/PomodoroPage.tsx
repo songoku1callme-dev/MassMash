@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { pomodoroApi } from "../services/api";
 import { Button } from "@/components/ui/button";
-import { Timer, Play, Pause, RotateCcw, Coffee, Loader2 } from "lucide-react";
-import { ErrorState } from "../components/PageStates";
+import { Timer, Play, Pause, RotateCcw, Coffee, Loader2, BarChart3 } from "lucide-react";
+import { ErrorState, EmptyState } from "../components/PageStates";
 
 type TimerState = "idle" | "work" | "break" | "long_break";
 
@@ -126,8 +126,11 @@ export default function PomodoroPage() {
 
  return (
  <div className="p-6 max-w-2xl mx-auto">
- <h1 className="text-2xl font-bold theme-text mb-2">Pomodoro Lern-Timer</h1>
- <p className="theme-text-secondary mb-6">25 Min lernen, 5 Min Pause. Nach 4 Runden: 30 Min Pause.</p>
+ <h1 className="text-2xl font-bold theme-text mb-2 flex items-center gap-2">
+ <Timer className="w-7 h-7 text-red-500" />
+ Pomodoro Lern-Timer
+ </h1>
+ <p className="theme-text-secondary mb-6">25 Minuten lernen, 5 Minuten Pause. Nach 4 Runden: 30 Minuten große Pause.</p>
 
  {/* Timer Display */}
  <div className="theme-card rounded-2xl p-8 shadow-sm border border-[var(--border-color)] text-center mb-6">
@@ -223,7 +226,18 @@ export default function PomodoroPage() {
  </div>
 
  {/* Stats */}
- {statsError && <ErrorState message="Fehler beim Laden der Pomodoro-Stats." onRetry={loadStats} />}
+ {/* Statistiken */}
+ <h2 className="text-lg font-semibold theme-text flex items-center gap-2 mb-3">
+ <BarChart3 className="w-5 h-5" style={{ color: "var(--icon-color)" }} />
+ Deine Statistiken
+ </h2>
+ {statsError && <ErrorState message="Fehler beim Laden der Pomodoro-Statistiken." onRetry={loadStats} />}
+ {!statsError && !stats && (
+ <EmptyState
+ title="Noch keine Statistiken"
+ description="Starte deinen ersten Pomodoro, um deine Lernstatistiken zu sehen."
+ />
+ )}
  {stats && (
  <div className="grid grid-cols-3 gap-4">
  <div className="theme-card rounded-xl p-4 text-center border border-[var(--border-color)]">
