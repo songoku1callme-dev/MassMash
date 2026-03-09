@@ -102,6 +102,57 @@ async def check_is_admin(
     return {"is_admin": admin}
 
 
+@router.get("/check")
+async def check_admin_status(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Detaillierter Admin-Status-Check für Frontend.
+
+    Gibt zurück ob der User Admin ist, welche E-Mail geprüft wurde,
+    und über welche Methode der Admin-Status ermittelt wurde.
+    """
+    user_email = current_user.get("email", "")
+    user_id = current_user.get("id", 0)
+    username = current_user.get("username", "")
+
+    # Methode bestimmen
+    method = "none"
+    admin = False
+
+    # 1. user_id == 1 oder username == 'admin'
+    if user_id == 1 or username == "admin":
+        admin = True
+        method = "superuser"
+    # 2. Dev-Token (nur lokal)
+    elif user_id == 999 and current_user.get("auth_provider") == "dev":
+        if not os.getenv("FLY_APP_NAME"):
+            admin = True
+            method = "dev_token"
+    # 3. Whitelist
+    elif is_admin_email(user_email):
+        admin = True
+        method = "whitelist"
+    # 4. Datenbank is_admin Feld
+    else:
+        try:
+            cursor = await db.execute(
+                "SELECT is_admin FROM users WHERE id = ?", (user_id,)
+            )
+            row = await cursor.fetchone()
+            if row and dict(row).get("is_admin", 0):
+                admin = True
+                method = "db"
+        except Exception:
+            pass
+
+    return {
+        "is_admin": admin,
+        "email": user_email,
+        "method": method,
+    }
+
+
 @router.get("/token-usage")
 async def get_token_usage_endpoint(
     current_user: dict = Depends(get_current_user),

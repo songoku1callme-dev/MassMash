@@ -10,8 +10,9 @@ import {
 } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
 
-// Hardcoded admin whitelist — must match backend
+// Hardcoded admin whitelist — Fallback falls API nicht erreichbar
 const ADMIN_EMAILS = [
+ "songoku1callme@gmail.com",
  "ahmadalkhalaf2019@gmail.com",
  "ahmadalkhalaf20024@gmail.com",
  "ahmadalkhalaf1245@gmail.com",
@@ -63,7 +64,20 @@ interface AnalyticsData {
 export default function AdminPage() {
  const { user } = useAuthStore();
  const userEmail = (user?.email || "").toLowerCase();
- const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+ const localAdminCheck = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+
+ // API-basierter Admin-Check (Single Source of Truth)
+ const [apiAdmin, setApiAdmin] = useState<boolean | null>(null);
+ const [adminCheckDone, setAdminCheckDone] = useState(false);
+
+ useEffect(() => {
+   adminApi.check()
+     .then((res) => { setApiAdmin(res.is_admin); setAdminCheckDone(true); })
+     .catch(() => { setApiAdmin(null); setAdminCheckDone(true); });
+ }, []);
+
+ // API hat Vorrang, Fallback auf lokale Whitelist
+ const isAdmin = apiAdmin !== null ? apiAdmin : localAdminCheck;
 
  const [stats, setStats] = useState<AdminStats | null>(null);
  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -83,7 +97,7 @@ export default function AdminPage() {
  const [creatingCoupon, setCreatingCoupon] = useState(false);
  const [message, setMessage] = useState("");
 
- useEffect(() => { if (isAdmin) loadData(); }, [isAdmin]);
+ useEffect(() => { if (adminCheckDone && isAdmin) loadData(); }, [adminCheckDone, isAdmin]);
 
  const loadData = async () => {
  setLoading(true);
@@ -149,6 +163,9 @@ export default function AdminPage() {
  setCreatingCoupon(false);
  }
  };
+
+ // Warte auf Admin-Check bevor Zugriff verweigert wird
+ if (!adminCheckDone) return <PageLoader text="Admin-Berechtigung wird geprüft..." />;
 
  // Access control: only whitelisted admin emails can see the admin panel
  if (!isAdmin) {

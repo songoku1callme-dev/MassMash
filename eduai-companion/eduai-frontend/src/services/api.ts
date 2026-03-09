@@ -883,6 +883,7 @@ export interface LearningProfileFull {
 // Admin API
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const adminApi = {
+  check: () => request<{ is_admin: boolean; email: string; method: string }>("/api/admin/check"),
   stats: () => request<any>("/api/admin/stats"),
   analytics: (days: number = 7) => request<any>(`/api/admin/analytics?days=${days}`),
   searchUsers: (query: string) =>

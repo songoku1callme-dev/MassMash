@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
+import { adminApi } from "../services/api";
 import { Button } from "@/components/ui/button";
 import GlobalSearch from "./GlobalSearch";
 import ThemeToggle from "./ThemeToggle";
@@ -35,7 +36,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Hardcoded admin whitelist — must match backend
+  // Admin-Status: API-Check mit Fallback auf Hardcoded-Liste
   const ADMIN_EMAILS = [
     "songoku1callme@gmail.com",
     "ahmadalkhalaf2019@gmail.com",
@@ -44,7 +45,18 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     "261g2g261@gmail.com",
     "261al3nzi261@gmail.com",
   ];
-  const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === (user?.email || "").toLowerCase());
+  const localAdminCheck = ADMIN_EMAILS.some(e => e.toLowerCase() === (user?.email || "").toLowerCase());
+  const [apiAdmin, setApiAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    adminApi.check()
+      .then((res) => setApiAdmin(res.is_admin))
+      .catch(() => setApiAdmin(null)); // Fallback auf lokale Prüfung
+  }, [user?.email]);
+
+  // API hat Vorrang, Fallback auf lokale Whitelist
+  const isAdmin = apiAdmin !== null ? apiAdmin : localAdminCheck;
 
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
