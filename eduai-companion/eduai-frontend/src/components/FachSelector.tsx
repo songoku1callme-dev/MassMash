@@ -8,7 +8,9 @@
  * - Compact chip design with emoji + name
  */
 import { useState, useMemo, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Search, Star } from "lucide-react";
+import { learningApi, type Subject } from "../services/api";
 
 // ── 32 Fächer in 6 Kategorien ──────────────────────────────────────
 export interface FachItem {
@@ -103,6 +105,43 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
   const [search, setSearch] = useState("");
   const [favoriten, setFavoritenState] = useState<string[]>(getFavoriten);
 
+  // API-backed subjects list (falls back to hardcoded list on error/offline)
+  const subjectsQuery = useQuery({
+    queryKey: ["subjects"],
+    queryFn: learningApi.subjects,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  const apiFaecher = useMemo<FachItem[]>(() => {
+    const data = subjectsQuery.data;
+    if (!data || data.length === 0) return ALLE_FAECHER;
+
+    const ids = new Set(data.map((s: Subject) => s.id));
+    const known = ALLE_FAECHER.filter((f) => ids.has(f.id));
+
+    const byId = new Map(ALLE_FAECHER.map((f) => [f.id, f] as const));
+    const unknown: FachItem[] = data
+      .filter((s: Subject) => !byId.has(s.id))
+      .map((s: Subject) => ({
+        id: s.id,
+        name: s.name_de || s.name || s.id,
+        emoji: s.icon && s.icon.length <= 3 ? s.icon : "📚",
+        kategorie: "Weitere",
+      }));
+
+    return [...known, ...unknown];
+  }, [subjectsQuery.data]);
+
+  const kategorien = useMemo(() => {
+    const base = [...KATEGORIEN];
+    if (apiFaecher.some((f) => f.kategorie === "Weitere") && !base.includes("Weitere")) {
+      base.push("Weitere");
+    }
+    // Only keep categories that actually exist in the current dataset
+    return base.filter((k) => apiFaecher.some((f) => f.kategorie === k));
+  }, [apiFaecher]);
+
   const toggleFavorit = useCallback(
     (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
@@ -117,14 +156,14 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
-    if (!q) return ALLE_FAECHER;
-    return ALLE_FAECHER.filter(
+    if (!q) return apiFaecher;
+    return apiFaecher.filter(
       (f) =>
         f.name.toLowerCase().includes(q) ||
         f.kategorie.toLowerCase().includes(q) ||
         f.id.toLowerCase().includes(q),
     );
-  }, [search]);
+  }, [search, apiFaecher]);
 
   // Split into favoriten + rest, grouped by category
   const favFächer = useMemo(
@@ -133,14 +172,14 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
   );
   const restByKategorie = useMemo(() => {
     const map: Record<string, FachItem[]> = {};
-    for (const k of KATEGORIEN) map[k] = [];
+    for (const k of kategorien) map[k] = [];
     for (const f of filtered) {
       if (!favoriten.includes(f.id)) {
         (map[f.kategorie] ??= []).push(f);
       }
     }
     return map;
-  }, [filtered, favoriten]);
+  }, [filtered, favoriten, kategorien]);
 
   return (
     <div className="w-full space-y-2">
@@ -188,7 +227,7 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
         )}
 
         {/* Rest grouped by category */}
-        {KATEGORIEN.map((kat) => {
+        {kategorien.map((kat) => {
           const items = restByKategorie[kat];
           if (!items || items.length === 0) return null;
           return (

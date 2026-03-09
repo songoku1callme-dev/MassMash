@@ -8,6 +8,10 @@ MONATLICH (1. des Monats): Battle Pass Season, Turniere, Leaderboard Reset
 JEDE STUNDE: Turnier-Cleanup, Multiplayer Rooms, WebSocket Tickets
 
 Alle Jobs laufen in Europe/Berlin Zeitzone.
+
+PR #58: Migrated from raw aiosqlite to unified get_db() dual-mode layer.
+All jobs now use the database layer from app.core.database which
+auto-converts SQLite syntax to PostgreSQL when DATABASE_URL is set.
 """
 import json
 import logging
@@ -19,8 +23,15 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 
-def _get_db_path() -> str:
-    return os.getenv("DATABASE_PATH", "app.db")
+async def _get_connection():
+    """Get a database connection from the dual-mode database layer.
+
+    Returns an async generator yielding a connection
+    (either aiosqlite or AsyncPgConnection).
+    Uses the same get_db() as all route handlers for consistency.
+    """
+    from app.core.database import get_db
+    return get_db()
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -31,24 +42,18 @@ async def generate_daily_quests():
     """3 neue Quests pro User basierend auf Schwächen + Fächern.
     Alte Quests werden auf 'abgelaufen' gesetzt.
     """
-    import aiosqlite
-
     logger.info("Job: generate_daily_quests gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Alte Quests von gestern auf abgelaufen setzen
-            gestern = (date.today() - timedelta(days=1)).isoformat()
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             await db.execute(
                 """UPDATE daily_quests SET completed = -1
                 WHERE quest_date < ? AND completed = 0""",
                 (date.today().isoformat(),),
             )
 
-            # Aktive User der letzten 7 Tage
             cursor = await db.execute(
                 """SELECT DISTINCT user_id FROM activity_log
                 WHERE created_at >= date('now', '-7 days')"""
@@ -57,19 +62,19 @@ async def generate_daily_quests():
 
             count = 0
             for u in active_users:
-                user_id = dict(u)["user_id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["user_id"]
                 today_str = date.today().isoformat()
 
-                # Prüfen ob heute schon Quests existieren
                 cursor = await db.execute(
                     "SELECT COUNT(*) as cnt FROM daily_quests WHERE user_id = ? AND quest_date = ?",
                     (user_id, today_str),
                 )
                 row = await cursor.fetchone()
-                if row and dict(row)["cnt"] > 0:
+                rd = dict(row) if row and not isinstance(row, dict) else row
+                if rd and rd["cnt"] > 0:
                     continue
 
-                # Schwäche ermitteln
                 cursor = await db.execute(
                     """SELECT subject FROM quiz_results
                     WHERE user_id = ? AND completed_at >= date('now', '-30 days')
@@ -77,9 +82,9 @@ async def generate_daily_quests():
                     (user_id,),
                 )
                 weak_row = await cursor.fetchone()
-                weak_subject = dict(weak_row)["subject"] if weak_row else "Mathematik"
+                wd = dict(weak_row) if weak_row and not isinstance(weak_row, dict) else weak_row
+                weak_subject = wd["subject"] if wd else "Mathematik"
 
-                # 3 Quests generieren
                 quests = [
                     {
                         "quest_id": f"weak_{today_str}",
@@ -116,6 +121,11 @@ async def generate_daily_quests():
 
             await db.commit()
             logger.info("Daily Quests generiert für %d User", count)
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("generate_daily_quests fehlgeschlagen: %s", exc)
@@ -126,19 +136,13 @@ async def generate_daily_quests():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def check_streaks():
-    """User die gestern nicht gelernt haben: Streak auf 0 setzen.
-    Push-Notification senden.
-    """
-    import aiosqlite
-
+    """User die gestern nicht gelernt haben: Streak auf 0 setzen."""
     logger.info("Job: check_streaks gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # User mit Streak > 0 die gestern NICHT aktiv waren
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT id, username, email, streak_days FROM users
                 WHERE streak_days > 0
@@ -148,17 +152,15 @@ async def check_streaks():
 
             reset_count = 0
             for u in users:
-                ud = dict(u)
+                ud = dict(u) if not isinstance(u, dict) else u
                 user_id = ud["id"]
                 lost_streak = ud["streak_days"]
 
-                # Streak zurücksetzen
                 await db.execute(
                     "UPDATE users SET streak_days = 0 WHERE id = ?",
                     (user_id,),
                 )
 
-                # Notification erstellen
                 await db.execute(
                     """INSERT INTO notifications
                     (user_id, title, message, notification_type)
@@ -171,6 +173,11 @@ async def check_streaks():
 
             await db.commit()
             logger.info("Streaks zurückgesetzt: %d User", reset_count)
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("check_streaks fehlgeschlagen: %s", exc)
@@ -182,16 +189,12 @@ async def check_streaks():
 
 async def distribute_daily_xp_bonus():
     """Top 10 User des Tages bekommen +50 XP Bonus."""
-    import aiosqlite
-
     logger.info("Job: distribute_daily_xp_bonus gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Top 10 User nach Aktivitaet gestern
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT user_id, COUNT(*) as aktivitaeten
                 FROM activity_log
@@ -203,16 +206,14 @@ async def distribute_daily_xp_bonus():
             top_users = await cursor.fetchall()
 
             for u in top_users:
-                user_id = dict(u)["user_id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["user_id"]
 
-                # +50 XP
                 await db.execute(
-                    """UPDATE gamification SET xp = xp + 50
-                    WHERE user_id = ?""",
+                    "UPDATE gamification SET xp = xp + 50 WHERE user_id = ?",
                     (user_id,),
                 )
 
-                # Notification
                 await db.execute(
                     """INSERT INTO notifications
                     (user_id, title, message, notification_type)
@@ -224,6 +225,11 @@ async def distribute_daily_xp_bonus():
 
             await db.commit()
             logger.info("XP-Bonus verteilt an %d Top-User", len(top_users))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("distribute_daily_xp_bonus fehlgeschlagen: %s", exc)
@@ -235,30 +241,26 @@ async def distribute_daily_xp_bonus():
 
 MOTIVATIONS_NACHRICHTEN = [
     "Jeder Tag ist eine neue Chance zu lernen! Starte jetzt dein erstes Quiz.",
-    "Wusstest du? Regelmaessiges Lernen verbessert dein Gedaechtnis um 40%!",
+    "Wusstest du? Regelmäßiges Lernen verbessert dein Gedächtnis um 40%!",
     "Dein Gehirn ist bereit! Nur 15 Minuten reichen für einen Lernfortschritt.",
     "Top-Schüler lernen jeden Tag ein bisschen. Du schaffst das auch!",
-    "Tipp: Wiederhole heute dein schwaechstes Fach — das bringt am meisten!",
+    "Tipp: Wiederhole heute dein schwächstes Fach — das bringt am meisten!",
     "Neuer Tag, neue Möglichkeiten! Welches Fach möchtest du heute meistern?",
     "Streak-Alarm! Vergiss nicht, heute zu lernen um deinen Streak zu halten.",
     "Fun Fact: Wer täglich 20 Min lernt, schneidet 30% besser in Prüfungen ab.",
     "Challenge des Tages: Schaffe alle 3 Daily Quests!",
-    "Dein Wissen waechst jeden Tag. Halte die Lernroutine aufrecht!",
+    "Dein Wissen wächst jeden Tag. Halte die Lernroutine aufrecht!",
 ]
 
 
 async def send_motivation_notifications():
-    """Personalisierte Motivations-Nachricht pro User basierend auf Schwäche."""
-    import aiosqlite
-
+    """Personalisierte Motivations-Nachricht pro User."""
     logger.info("Job: send_motivation_notifications gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Aktive User der letzten 14 Tage
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT DISTINCT user_id FROM activity_log
                 WHERE created_at >= date('now', '-14 days')"""
@@ -266,7 +268,8 @@ async def send_motivation_notifications():
             users = await cursor.fetchall()
 
             for u in users:
-                user_id = dict(u)["user_id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["user_id"]
                 nachricht = random.choice(MOTIVATIONS_NACHRICHTEN)
 
                 await db.execute(
@@ -278,6 +281,11 @@ async def send_motivation_notifications():
 
             await db.commit()
             logger.info("Motivations-Nachrichten gesendet an %d User", len(users))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("send_motivation_notifications fehlgeschlagen: %s", exc)
@@ -288,18 +296,13 @@ async def send_motivation_notifications():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def generate_weekly_report():
-    """Weekly Report: Lernzeit, Quiz-Score, XP, Streak, Verbesserungen.
-    Per Email (Resend) + In-App Notification.
-    """
-    import aiosqlite
-
+    """Weekly Report: Lernzeit, Quiz-Score, XP, Streak."""
     logger.info("Job: generate_weekly_report gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT id, username, email FROM users
                 WHERE email IS NOT NULL AND email != ''"""
@@ -307,10 +310,9 @@ async def generate_weekly_report():
             users = await cursor.fetchall()
 
             for u in users:
-                ud = dict(u)
+                ud = dict(u) if not isinstance(u, dict) else u
                 user_id = ud["id"]
 
-                # Wochen-Stats berechnen
                 qc = await db.execute(
                     """SELECT COUNT(*) as cnt, AVG(score) as avg_score
                     FROM quiz_results
@@ -318,12 +320,11 @@ async def generate_weekly_report():
                     (user_id,),
                 )
                 qr = await qc.fetchone()
-                qd = dict(qr) if qr else {}
+                qd = (dict(qr) if not isinstance(qr, dict) else qr) if qr else {}
 
                 quiz_count = qd.get("cnt", 0) or 0
                 avg_score = round(qd.get("avg_score", 0) or 0, 1)
 
-                # In-App Notification
                 await db.execute(
                     """INSERT INTO notifications
                     (user_id, title, message, notification_type)
@@ -333,7 +334,6 @@ async def generate_weekly_report():
                      f"Diese Woche: {quiz_count} Quizze, {avg_score}% Durchschnitt. Weiter so!"),
                 )
 
-                # Email senden (best-effort)
                 if ud.get("email"):
                     try:
                         from app.services.email_service import send_weekly_report_email
@@ -352,33 +352,37 @@ async def generate_weekly_report():
 
             await db.commit()
             logger.info("Weekly Reports generiert für %d User", len(users))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("generate_weekly_report fehlgeschlagen: %s", exc)
 
 
 async def create_weekly_challenges():
-    """5 neue Wochenchallenges basierend auf Fach-Popularitaet."""
-    import aiosqlite
-
+    """5 neue Wochenchallenges basierend auf Fach-Popularität."""
     logger.info("Job: create_weekly_challenges gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Populärste Fächer ermitteln
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT subject, COUNT(*) as cnt FROM chat_sessions
                 GROUP BY subject ORDER BY cnt DESC LIMIT 5"""
             )
             top_faecher = await cursor.fetchall()
-            faecher = [dict(r)["subject"] for r in top_faecher] if top_faecher else [
+            faecher_list = []
+            for r in top_faecher:
+                rd = dict(r) if not isinstance(r, dict) else r
+                faecher_list.append(rd["subject"])
+            faecher = faecher_list if faecher_list else [
                 "Mathematik", "Deutsch", "Englisch", "Physik", "Geschichte"
             ]
 
-            # 5 Challenges erstellen
             woche_start = date.today().isoformat()
             woche_ende = (date.today() + timedelta(days=7)).isoformat()
 
@@ -421,6 +425,11 @@ async def create_weekly_challenges():
 
             await db.commit()
             logger.info("5 Weekly Challenges erstellt")
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("create_weekly_challenges fehlgeschlagen: %s", exc)
@@ -430,7 +439,6 @@ async def create_weekly_challenges():
 # WOECHENTLICH Sonntag 23:59 — Shop rotieren + Events
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Rotations-Items für den Shop
 ROTATION_ITEMS = [
     {"id": "theme_neon", "name": "Neon Theme", "category": "theme", "price": 600, "icon": "palette"},
     {"id": "theme_galaxy", "name": "Galaxy Theme", "category": "theme", "price": 700, "icon": "palette"},
@@ -443,26 +451,21 @@ ROTATION_ITEMS = [
     {"id": "frame_feuer", "name": "Feuer-Rahmen", "category": "frame", "price": 900, "icon": "flame"},
     {"id": "frame_kristall", "name": "Kristall-Rahmen", "category": "frame", "price": 1300, "icon": "gem"},
     {"id": "boost_triple_xp", "name": "Dreifach-XP (1h)", "category": "boost", "price": 400, "icon": "zap"},
-    {"id": "boost_reveal", "name": "Antwort-Enthuellung", "category": "boost", "price": 350, "icon": "eye"},
+    {"id": "boost_reveal", "name": "Antwort-Enthüllung", "category": "boost", "price": 350, "icon": "eye"},
 ]
 
 
 async def rotate_shop_items():
     """3-5 neue Items im Shop, alte Items entfernen, Notification senden."""
-    import aiosqlite
-
     logger.info("Job: rotate_shop_items gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # 3-5 zufällige Rotation Items auswählen
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             num_items = random.randint(3, 5)
             neue_items = random.sample(ROTATION_ITEMS, min(num_items, len(ROTATION_ITEMS)))
 
-            # Speichere aktuelle Rotation in DB
             rotation_data = json.dumps([item["id"] for item in neue_items])
             await db.execute(
                 """INSERT OR REPLACE INTO shop_rotations
@@ -471,13 +474,13 @@ async def rotate_shop_items():
                 (rotation_data,),
             )
 
-            # Notification an alle User
             cursor = await db.execute("SELECT id FROM users")
             users = await cursor.fetchall()
 
             item_namen = ", ".join([i["name"] for i in neue_items[:3]])
             for u in users:
-                user_id = dict(u)["id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["id"]
                 await db.execute(
                     """INSERT INTO notifications
                     (user_id, title, message, notification_type)
@@ -489,6 +492,11 @@ async def rotate_shop_items():
 
             await db.commit()
             logger.info("Shop rotiert: %d neue Items", len(neue_items))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("rotate_shop_items fehlgeschlagen: %s", exc)
@@ -496,25 +504,20 @@ async def rotate_shop_items():
 
 async def update_seasonal_events():
     """Saisonale Events prüfen, neue aktivieren, abgelaufene deaktivieren."""
-    import aiosqlite
-
     logger.info("Job: update_seasonal_events gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             now = datetime.now().strftime("%Y-%m-%d")
 
-            # Events die heute starten aktivieren
             await db.execute(
                 """UPDATE seasonal_events SET status = 'active'
                 WHERE start_date <= ? AND end_date >= ? AND status = 'upcoming'""",
                 (now, now),
             )
 
-            # Abgelaufene Events deaktivieren
             await db.execute(
                 """UPDATE seasonal_events SET status = 'ended'
                 WHERE end_date < ? AND status = 'active'""",
@@ -523,6 +526,11 @@ async def update_seasonal_events():
 
             await db.commit()
             logger.info("Seasonal Events aktualisiert")
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("update_seasonal_events fehlgeschlagen: %s", exc)
@@ -533,30 +541,23 @@ async def update_seasonal_events():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 SEASON_NAMES = [
-    "Fruehling", "Sommer", "Herbst", "Winter",
+    "Frühling", "Sommer", "Herbst", "Winter",
     "Nebel", "Sturm", "Eis", "Feuer",
     "Kristall", "Schatten", "Licht", "Donner",
 ]
 
 
 async def start_new_battle_pass_season():
-    """Neue Season starten, Rewards generieren, alle User auf Level 0 zurücksetzen.
-    'Neue Season!' Push-Notification.
-    """
-    import aiosqlite
-
+    """Neue Season starten, alle User auf Level 0 zurücksetzen."""
     logger.info("Job: start_new_battle_pass_season gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Season-Name generieren
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             now = datetime.now()
             season_name = f"{random.choice(SEASON_NAMES)} {now.year}"
 
-            # Alle Battle Pass auf Level 1 / XP 0 zurücksetzen
             await db.execute(
                 """UPDATE battle_pass SET
                 current_level = 1, current_xp = 0,
@@ -564,12 +565,12 @@ async def start_new_battle_pass_season():
                 updated_at = datetime('now')"""
             )
 
-            # Notification an alle User
             cursor = await db.execute("SELECT id FROM users")
             users = await cursor.fetchall()
 
             for u in users:
-                user_id = dict(u)["id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["id"]
                 await db.execute(
                     """INSERT INTO notifications
                     (user_id, title, message, notification_type)
@@ -581,6 +582,11 @@ async def start_new_battle_pass_season():
 
             await db.commit()
             logger.info("Neue Battle Pass Season: %s", season_name)
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("start_new_battle_pass_season fehlgeschlagen: %s", exc)
@@ -589,29 +595,24 @@ async def start_new_battle_pass_season():
 TURNIER_FAECHER = [
     "Mathematik", "Deutsch", "Physik", "Englisch", "Geschichte",
     "Biologie", "Chemie", "Informatik", "Geographie", "Wirtschaft",
-    "Politik", "Philosophie", "Kunst", "Musik", "Franzoesisch", "Sport",
+    "Politik", "Philosophie", "Kunst", "Musik", "Französisch", "Sport",
 ]
 
 
 async def create_monthly_tournaments():
     """2 neue Turniere pro Fach mit verschiedenen Schwierigkeitsgraden."""
-    import aiosqlite
-
     logger.info("Job: create_monthly_tournaments gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Wähle 5 Fächer für diesen Monat
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             monatliche_faecher = random.sample(TURNIER_FAECHER, min(5, len(TURNIER_FAECHER)))
 
             created = 0
             for fach in monatliche_faecher:
                 for schwierigkeit in ["mittel", "schwer"]:
                     turnier_date = date.today().isoformat()
-                    turnier_name = f"{fach} {schwierigkeit.capitalize()}-Turnier"
 
                     await db.execute(
                         """INSERT INTO tournaments
@@ -624,6 +625,11 @@ async def create_monthly_tournaments():
 
             await db.commit()
             logger.info("Monatliche Turniere erstellt: %d", created)
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("create_monthly_tournaments fehlgeschlagen: %s", exc)
@@ -631,16 +637,12 @@ async def create_monthly_tournaments():
 
 async def reset_monthly_leaderboard():
     """Monatliches Ranking resetten. Top 3 mit Badges belohnen."""
-    import aiosqlite
-
     logger.info("Job: reset_monthly_leaderboard gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Top 3 User des letzten Monats (nach XP-Zuwachs)
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT user_id, SUM(xp_amount) as total_xp
                 FROM activity_log
@@ -654,7 +656,8 @@ async def reset_monthly_leaderboard():
 
             badges = ["Gold-Champion", "Silber-Champion", "Bronze-Champion"]
             for rank, u in enumerate(top3):
-                user_id = dict(u)["user_id"]
+                ud = dict(u) if not isinstance(u, dict) else u
+                user_id = ud["user_id"]
                 badge = badges[rank] if rank < len(badges) else "Top-Lerner"
 
                 await db.execute(
@@ -668,6 +671,11 @@ async def reset_monthly_leaderboard():
 
             await db.commit()
             logger.info("Monatliches Leaderboard zurückgesetzt, %d Badges vergeben", len(top3))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("reset_monthly_leaderboard fehlgeschlagen: %s", exc)
@@ -678,19 +686,13 @@ async def reset_monthly_leaderboard():
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 async def cleanup_tournaments():
-    """Abgelaufene Turniere beenden, Gewinner ermitteln + XP vergeben.
-    'Turnier beendet!' Notification.
-    """
-    import aiosqlite
-
+    """Abgelaufene Turniere beenden, Gewinner ermitteln + XP vergeben."""
     logger.info("Job: cleanup_tournaments gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            db.row_factory = aiosqlite.Row
-
-            # Turniere die aelter als 24h sind und noch aktiv
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
             cursor = await db.execute(
                 """SELECT id, subject FROM tournaments
                 WHERE status = 'active'
@@ -699,10 +701,9 @@ async def cleanup_tournaments():
             expired = await cursor.fetchall()
 
             for t in expired:
-                td = dict(t)
+                td = dict(t) if not isinstance(t, dict) else t
                 tournament_id = td["id"]
 
-                # Gewinner ermitteln
                 cursor = await db.execute(
                     """SELECT user_id, score FROM tournament_entries
                     WHERE tournament_id = ?
@@ -714,17 +715,15 @@ async def cleanup_tournaments():
 
                 xp_rewards = [200, 100, 50]
                 for rank, w in enumerate(winners):
-                    wd = dict(w)
+                    wd = dict(w) if not isinstance(w, dict) else w
                     user_id = wd["user_id"]
                     xp = xp_rewards[rank] if rank < len(xp_rewards) else 25
 
-                    # XP vergeben
                     await db.execute(
                         "UPDATE gamification SET xp = xp + ? WHERE user_id = ?",
                         (xp, user_id),
                     )
 
-                    # Notification
                     await db.execute(
                         """INSERT INTO notifications
                         (user_id, title, message, notification_type)
@@ -734,43 +733,50 @@ async def cleanup_tournaments():
                          f"Platz {rank + 1} im {td['subject']}-Turnier! +{xp} XP"),
                     )
 
-                # Turnier als beendet markieren
                 await db.execute(
                     "UPDATE tournaments SET status = 'completed' WHERE id = ?",
                     (tournament_id,),
                 )
 
             await db.commit()
-            logger.info("Turniere aufgeraeumt: %d beendet", len(expired))
+            logger.info("Turniere aufgeräumt: %d beendet", len(expired))
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("cleanup_tournaments fehlgeschlagen: %s", exc)
 
 
 async def cleanup_multiplayer_rooms():
-    """Inaktive Rooms (>30 Min) loeschen."""
-    import aiosqlite
-
+    """Inaktive Rooms (>30 Min) löschen."""
     logger.info("Job: cleanup_multiplayer_rooms gestartet")
-    db_path = _get_db_path()
 
     try:
-        async with aiosqlite.connect(db_path) as db:
-            # Rooms die aelter als 30 Minuten und noch 'waiting' oder 'active' sind
-            result = await db.execute(
+        db_gen = await _get_connection()
+        db = await db_gen.__anext__()
+        try:
+            await db.execute(
                 """DELETE FROM multiplayer_rooms
                 WHERE status IN ('waiting', 'active')
                 AND created_at < datetime('now', '-30 minutes')"""
             )
             await db.commit()
-            logger.info("Multiplayer Rooms aufgeraeumt: %d geloescht", result.rowcount)
+            logger.info("Multiplayer Rooms aufgeräumt")
+        finally:
+            try:
+                await db_gen.__anext__()
+            except StopAsyncIteration:
+                pass
 
     except Exception as exc:
         logger.error("cleanup_multiplayer_rooms fehlgeschlagen: %s", exc)
 
 
 async def cleanup_ws_tickets():
-    """Abgelaufene WebSocket-Tickets loeschen (aus main.py ws_tickets dict)."""
+    """Abgelaufene WebSocket-Tickets löschen (aus main.py ws_tickets dict)."""
     logger.info("Job: cleanup_ws_tickets gestartet")
 
     try:
@@ -780,7 +786,7 @@ async def cleanup_ws_tickets():
         for k in expired:
             del ws_tickets[k]
         if expired:
-            logger.info("WebSocket Tickets bereinigt: %d geloescht", len(expired))
+            logger.info("WebSocket Tickets bereinigt: %d gelöscht", len(expired))
     except Exception as exc:
         logger.error("cleanup_ws_tickets fehlgeschlagen: %s", exc)
 
@@ -789,7 +795,7 @@ async def cleanup_ws_tickets():
 # PR #46: Keep-Alive Self-Ping (Zero-Budget)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 async def self_ping():
-    """Ping eigenen /api/ping Endpoint alle 10 Min (verhindert Sleep auf Free-Tiers)."""
+    """Ping eigenen /api/ping Endpoint alle 10 Min."""
     import httpx
 
     backend_url = os.getenv("BACKEND_URL", "http://localhost:8080")
@@ -805,36 +811,35 @@ async def self_ping():
 # Scheduler Setup — Wird von main.py aufgerufen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Registry aller Jobs (für Admin-Endpoints)
 JOB_REGISTRY: dict[str, dict] = {
     "daily_quests": {
         "func": generate_daily_quests,
-        "beschreibung": "Taeglich 3 neue Quests pro User generieren",
-        "zeitplan": "Taeglich 00:00",
+        "beschreibung": "Täglich 3 neue Quests pro User generieren",
+        "zeitplan": "Täglich 00:00",
     },
     "streak_check": {
         "func": check_streaks,
         "beschreibung": "Streaks prüfen und zurücksetzen",
-        "zeitplan": "Taeglich 00:05",
+        "zeitplan": "Täglich 00:05",
     },
     "xp_bonus": {
         "func": distribute_daily_xp_bonus,
         "beschreibung": "Top 10 User +50 XP Bonus",
-        "zeitplan": "Taeglich 00:10",
+        "zeitplan": "Täglich 00:10",
     },
     "knowledge_update": {
-        "func": None,  # wird spaeter gesetzt (aus knowledge_updater)
+        "func": None,
         "beschreibung": "Nightly Knowledge Update (Tavily)",
-        "zeitplan": "Taeglich 03:00",
+        "zeitplan": "Täglich 03:00",
     },
     "daily_motivation": {
         "func": send_motivation_notifications,
         "beschreibung": "Personalisierte Motivations-Nachricht",
-        "zeitplan": "Taeglich 08:00",
+        "zeitplan": "Täglich 08:00",
     },
     "weekly_report": {
         "func": generate_weekly_report,
-        "beschreibung": "Woechentlicher Lernbericht per Email + In-App",
+        "beschreibung": "Wöchentlicher Lernbericht per Email + In-App",
         "zeitplan": "Montag 07:00",
     },
     "weekly_challenges": {
@@ -874,7 +879,7 @@ JOB_REGISTRY: dict[str, dict] = {
     },
     "multiplayer_cleanup": {
         "func": cleanup_multiplayer_rooms,
-        "beschreibung": "Inaktive Multiplayer Rooms loeschen",
+        "beschreibung": "Inaktive Multiplayer Rooms löschen",
         "zeitplan": "Jede Stunde",
     },
     "ws_ticket_cleanup": {
@@ -887,11 +892,10 @@ JOB_REGISTRY: dict[str, dict] = {
         "beschreibung": "Self-Ping Keep-Alive (verhindert Sleep auf Free-Tiers)",
         "zeitplan": "Alle 10 Minuten",
     },
-    # ━━━ PR #52: Self-Improvement + Knowledge Base Auto-Update ━━━
     "self_improvement": {
-        "func": None,  # wird in setup_scheduler gesetzt
+        "func": None,
         "beschreibung": "KI analysiert schlechte Feedbacks + verbessert Prompts",
-        "zeitplan": "Taeglich 03:00",
+        "zeitplan": "Täglich 03:00",
     },
     "shop_seasonal_rotation": {
         "func": None,
@@ -916,12 +920,12 @@ JOB_REGISTRY: dict[str, dict] = {
     "daily_challenges_gen": {
         "func": None,
         "beschreibung": "5 neue tägliche Challenges basierend auf Lerntrends",
-        "zeitplan": "Taeglich 04:00",
+        "zeitplan": "Täglich 04:00",
     },
     "knowledge_all_subjects": {
         "func": None,
         "beschreibung": "Tavily-Suche für alle 16 Fächer (täglich)",
-        "zeitplan": "Taeglich 03:00",
+        "zeitplan": "Täglich 03:00",
     },
     "wikipedia_sync": {
         "func": None,
@@ -937,21 +941,15 @@ JOB_REGISTRY: dict[str, dict] = {
 
 
 def setup_scheduler(scheduler_instance):
-    """Registriere alle Jobs beim APScheduler.
-
-    Args:
-        scheduler_instance: AsyncIOScheduler Instanz aus main.py
-    """
+    """Registriere alle Jobs beim APScheduler."""
     from apscheduler.triggers.cron import CronTrigger
     import pytz
 
     tz_berlin = pytz.timezone("Europe/Berlin")
 
-    # Knowledge Update Funktion setzen
     from app.services.knowledge_updater import update_knowledge_base
     JOB_REGISTRY["knowledge_update"]["func"] = update_knowledge_base
 
-    # ━━━ TÄGLICH 00:00 ━━━
     scheduler_instance.add_job(
         generate_daily_quests,
         CronTrigger(hour=0, minute=0, timezone=tz_berlin),
@@ -967,22 +965,16 @@ def setup_scheduler(scheduler_instance):
         CronTrigger(hour=0, minute=10, timezone=tz_berlin),
         id="xp_bonus", replace_existing=True,
     )
-
-    # ━━━ TÄGLICH 03:00 ━━━
     scheduler_instance.add_job(
         update_knowledge_base,
         CronTrigger(hour=3, minute=0, timezone=tz_berlin),
         id="knowledge_update", replace_existing=True,
     )
-
-    # ━━━ TÄGLICH 08:00 ━━━
     scheduler_instance.add_job(
         send_motivation_notifications,
         CronTrigger(hour=8, minute=0, timezone=tz_berlin),
         id="daily_motivation", replace_existing=True,
     )
-
-    # ━━━ WOECHENTLICH Montag 07:00 ━━━
     scheduler_instance.add_job(
         generate_weekly_report,
         CronTrigger(day_of_week="mon", hour=7, minute=0, timezone=tz_berlin),
@@ -993,8 +985,6 @@ def setup_scheduler(scheduler_instance):
         CronTrigger(day_of_week="mon", hour=7, minute=5, timezone=tz_berlin),
         id="weekly_challenges", replace_existing=True,
     )
-
-    # ━━━ WOECHENTLICH Sonntag 23:59 ━━━
     scheduler_instance.add_job(
         rotate_shop_items,
         CronTrigger(day_of_week="sun", hour=23, minute=59, timezone=tz_berlin),
@@ -1005,8 +995,6 @@ def setup_scheduler(scheduler_instance):
         CronTrigger(day_of_week="sun", hour=23, minute=55, timezone=tz_berlin),
         id="events_update", replace_existing=True,
     )
-
-    # ━━━ MONATLICH (1. des Monats) ━━━
     scheduler_instance.add_job(
         start_new_battle_pass_season,
         CronTrigger(day=1, hour=0, minute=0, timezone=tz_berlin),
@@ -1022,8 +1010,6 @@ def setup_scheduler(scheduler_instance):
         CronTrigger(day=1, hour=0, minute=10, timezone=tz_berlin),
         id="leaderboard_reset", replace_existing=True,
     )
-
-    # ━━━ JEDE STUNDE ━━━
     scheduler_instance.add_job(
         cleanup_tournaments,
         CronTrigger(minute=0, timezone=tz_berlin),
@@ -1039,17 +1025,13 @@ def setup_scheduler(scheduler_instance):
         CronTrigger(minute=10, timezone=tz_berlin),
         id="ws_ticket_cleanup", replace_existing=True,
     )
-
-    # ━━━ ALLE 10 MINUTEN: Keep-Alive ━━━
     scheduler_instance.add_job(
         self_ping,
         CronTrigger(minute="*/10", timezone=tz_berlin),
         id="keep_alive", replace_existing=True,
     )
 
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # PR #52: Self-Improvement + Knowledge Base Auto-Update
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     from app.services.self_improvement import (
         nightly_self_improvement,
         generate_shop_items_for_season,
@@ -1064,7 +1046,6 @@ def setup_scheduler(scheduler_instance):
         update_lehrplan_content,
     )
 
-    # Funktionen im Registry setzen
     JOB_REGISTRY["self_improvement"]["func"] = nightly_self_improvement
     JOB_REGISTRY["shop_seasonal_rotation"]["func"] = generate_shop_items_for_season
     JOB_REGISTRY["seasonal_events_manager"]["func"] = manage_seasonal_events
@@ -1075,67 +1056,50 @@ def setup_scheduler(scheduler_instance):
     JOB_REGISTRY["wikipedia_sync"]["func"] = wikipedia_sync_all_topics
     JOB_REGISTRY["lehrplan_updates"]["func"] = update_lehrplan_content
 
-    # ━━━ AUFGABE 1A: Self-Improvement (täglich 03:00) ━━━
     scheduler_instance.add_job(
         nightly_self_improvement,
         CronTrigger(hour=3, minute=0, timezone=tz_berlin),
         id="self_improvement", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 1B: Shop Seasonal Rotation (Sonntag 23:00) ━━━
     scheduler_instance.add_job(
         generate_shop_items_for_season,
         CronTrigger(day_of_week="sun", hour=23, minute=0, timezone=tz_berlin),
         id="shop_seasonal_rotation", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 1C: Seasonal Events Manager (jede Stunde) ━━━
     scheduler_instance.add_job(
         manage_seasonal_events,
         CronTrigger(minute=30, timezone=tz_berlin),
         id="seasonal_events_manager", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 1D: Quiz Auto-Generation (Montag 02:00) ━━━
     scheduler_instance.add_job(
         generate_weekly_quiz_questions,
         CronTrigger(day_of_week="mon", hour=2, minute=0, timezone=tz_berlin),
         id="quiz_auto_generation", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 1E: Battle Pass Content (1. des Monats 01:00) ━━━
     scheduler_instance.add_job(
         generate_battle_pass_content,
         CronTrigger(day=1, hour=1, minute=0, timezone=tz_berlin),
         id="battle_pass_content", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 1F: Daily Challenges (täglich 04:00) ━━━
     scheduler_instance.add_job(
         generate_daily_challenges,
         CronTrigger(hour=4, minute=0, timezone=tz_berlin),
         id="daily_challenges_gen", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 2A: Knowledge Update alle Fächer (täglich 03:00) ━━━
     scheduler_instance.add_job(
         update_knowledge_base_all_subjects,
         CronTrigger(hour=3, minute=15, timezone=tz_berlin),
         id="knowledge_all_subjects", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 2B: Wikipedia Sync (Montag 02:00) ━━━
     scheduler_instance.add_job(
         wikipedia_sync_all_topics,
         CronTrigger(day_of_week="mon", hour=2, minute=30, timezone=tz_berlin),
         id="wikipedia_sync", replace_existing=True,
     )
-
-    # ━━━ AUFGABE 2C: Lehrplan Updates (1. des Monats 01:00) ━━━
     scheduler_instance.add_job(
         update_lehrplan_content,
         CronTrigger(day=1, hour=1, minute=30, timezone=tz_berlin),
         id="lehrplan_updates", replace_existing=True,
     )
 
-    logger.info("Scheduler Setup: %d Jobs registriert (inkl. PR #52)", len(JOB_REGISTRY))
+    logger.info("Scheduler Setup: %d Jobs registriert (PostgreSQL via get_db())", len(JOB_REGISTRY))

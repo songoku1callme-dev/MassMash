@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
 import ReactMarkdown from "react-markdown";
@@ -7,7 +7,7 @@ import { ErrorState } from "../components/PageStates";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ocrApi, quizApi, guestApi, visionApi, audioApi } from "../services/api";
+import { ocrApi, quizApi, guestApi, visionApi, audioApi, getAccessToken } from "../services/api";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -87,9 +87,24 @@ interface Msg {
 
 export default function ChatPage() {
  const {
- messages, isSending, isStreaming, streamStatus, currentSubject, language,
- sendMessageStream, setSubject, setLanguage, addMessage,
- isThinking, thinkingText,
+ sessions,
+ currentSessionId,
+ messages,
+ isSending,
+ isStreaming,
+ streamStatus,
+ currentSubject,
+ language,
+ sendMessageStream,
+ setSubject,
+ setLanguage,
+ addMessage,
+ isThinking,
+ thinkingText,
+ loadSessions,
+ loadSession,
+ newChat,
+ deleteSession,
  } = useChatStore();
  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
  const [input, setInput] = useState("");
@@ -110,6 +125,9 @@ export default function ChatPage() {
  const [tutorModus, setTutorModus] = useState(() => localStorage.getItem("lumnos_tutor_modus") === "true");
  const [eli5, setEli5] = useState(false);
  const [modus, setModus] = useState<"normal" | "deep" | "fast">("normal");
+ const [showSidebar, setShowSidebar] = useState(false);
+ const [starRating, setStarRating] = useState<Record<number, number>>({});
+ const [starHover, setStarHover] = useState<Record<number, number>>({});
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const messagesContainerRef = useRef<HTMLDivElement>(null);
  const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -136,6 +154,30 @@ export default function ChatPage() {
  setSelectedPersonality(res.current_id);
  }).catch(() => {});
  }, []);
+
+ // Load chat sessions (sidebar)
+ useEffect(() => {
+  loadSessions();
+ }, [loadSessions]);
+
+ const handleStarRating = useCallback((msgIdx: number, stars: number) => {
+  setStarRating((prev) => ({ ...prev, [msgIdx]: stars }));
+
+  const sessionId = currentSessionId || 0;
+  if (!sessionId) return;
+
+  const rating = stars >= 4 ? "positive" : stars <= 2 ? "negative" : "positive";
+  const reason = `stars_${stars}`;
+  const token = getAccessToken() || localStorage.getItem("lumnos_token") || "";
+
+  fetch(
+   `/api/chat/feedback?message_index=${msgIdx}&session_id=${sessionId}&rating=${rating}&reason=${encodeURIComponent(reason)}&fach=${encodeURIComponent(currentSubject || "")}`,
+   {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+   },
+  ).catch(() => {});
+ }, [currentSessionId, currentSubject]);
 
  const handlePersonalityChange = useCallback(async (id: number) => {
  setSelectedPersonality(id);
@@ -347,6 +389,86 @@ export default function ChatPage() {
  position: "relative",
  background: "var(--lumnos-bg)",
  }}>
+
+ {/* ===== CHAT-VERLAUF SIDEBAR (Overlay) ===== */}
+ <AnimatePresence>
+ {showSidebar && (
+  <>
+   <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="absolute inset-0"
+    style={{ background: "rgba(0,0,0,0.55)", zIndex: 40 }}
+    onClick={() => setShowSidebar(false)}
+   />
+   <motion.div
+    initial={{ x: -320, opacity: 0 }}
+    animate={{ x: 0, opacity: 1 }}
+    exit={{ x: -320, opacity: 0 }}
+    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    className="absolute left-0 top-0 h-full flex flex-col"
+    style={{
+     width: 320,
+     background: "rgba(var(--overlay-rgb),0.98)",
+     backdropFilter: "blur(20px)",
+     borderRight: "1px solid rgba(99,102,241,0.2)",
+     zIndex: 50,
+    }}
+   >
+    <div className="p-3 border-b flex items-center justify-between" style={{ borderColor: "rgba(99,102,241,0.2)" }}>
+     <h3 className="text-sm font-bold text-white">Chat-Verlauf</h3>
+     <div className="flex items-center gap-2">
+      <button
+       onClick={() => {
+        newChat();
+        setShowSidebar(false);
+       }}
+       className="px-2 py-1 rounded-lg text-[11px] font-bold text-indigo-400 hover:bg-indigo-900/30 transition-all"
+      >
+       + Neuer Chat
+      </button>
+      <button onClick={() => setShowSidebar(false)} className="text-slate-400 hover:text-white text-lg px-1">&#10005;</button>
+     </div>
+    </div>
+
+    <div className="flex-1 overflow-y-auto p-2 space-y-1">
+     {sessions.length === 0 ? (
+      <p className="text-xs text-slate-500 text-center py-8">Keine gespeicherten Chats</p>
+     ) : (
+      sessions.map((s) => (
+       <div
+        key={s.id}
+        className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all text-sm ${
+         currentSessionId === s.id
+          ? "bg-indigo-900/30 text-indigo-300"
+          : "text-slate-300 hover:bg-slate-800/50"
+        }`}
+        onClick={() => {
+         loadSession(s.id);
+         setShowSidebar(false);
+        }}
+       >
+        <span className="flex-1 truncate text-xs">{s.title || `Chat #${s.id}`}</span>
+        <button
+         onClick={(e) => {
+          e.stopPropagation();
+          deleteSession(s.id);
+         }}
+         className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 text-xs transition-opacity"
+         title="Chat löschen"
+        >
+         &#128465;
+        </button>
+       </div>
+      ))
+     )}
+    </div>
+   </motion.div>
+  </>
+ )}
+ </AnimatePresence>
+
  {/* ===== GAST-BANNER ===== */}
  {isGuest && (
  <div
@@ -415,6 +537,14 @@ export default function ChatPage() {
  }}
  >
  <div className="flex flex-wrap items-center gap-2">
+ {/* Sidebar Toggle */}
+ <button
+  onClick={() => setShowSidebar(!showSidebar)}
+  className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+  title="Chat-Verlauf"
+ >
+  <span style={{ fontSize: "16px" }}>&#9776;</span>
+ </button>
  <div className="flex-1 min-w-0">
  <FachSelector selected={currentSubject} onSelect={setSubject} showAll />
  </div>
@@ -880,6 +1010,28 @@ export default function ChatPage() {
  }`}>
  {feedbackGiven[idx] === "positive" ? "Danke! \u2713" : "Feedback gesendet"}
  </span>
+ )}
+
+ {/* Star Rating */}
+ {!starRating[idx] ? (
+  <div className="flex items-center gap-0.5 ml-1">
+   {[1, 2, 3, 4, 5].map((star) => (
+    <button
+     key={star}
+     onClick={() => handleStarRating(idx, star)}
+     onMouseEnter={() => setStarHover((prev) => ({ ...prev, [idx]: star }))}
+     onMouseLeave={() => setStarHover((prev) => ({ ...prev, [idx]: 0 }))}
+     className="text-sm transition-transform hover:scale-125"
+     title={`${star} Stern${star > 1 ? "e" : ""}`}
+    >
+     <span style={{ color: star <= (starHover[idx] || 0) ? "#f59e0b" : "#475569" }}>&#9733;</span>
+    </button>
+   ))}
+  </div>
+ ) : (
+  <span className="text-[10px] px-2 py-0.5 rounded-full text-amber-400 bg-amber-900/20 ml-1">
+   {"\u2B50".repeat(starRating[idx])} Bewertet
+  </span>
  )}
 
  <span className="w-px h-4 bg-slate-700" />

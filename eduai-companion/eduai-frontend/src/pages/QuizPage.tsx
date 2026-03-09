@@ -540,6 +540,22 @@ export default function QuizPage() {
  const scoreColor = result.score >= 80 ? "text-emerald-500" : result.score >= 50 ? "text-amber-500" : "text-red-500";
  const scoreBg = result.score >= 80 ? "from-emerald-500 to-emerald-600" : result.score >= 50 ? "from-amber-500 to-amber-600" : "from-red-500 to-red-600";
  const xpEarned = result.score >= 80 ? 25 : result.score >= 50 ? 15 : 10;
+ const showConfetti = result.score >= 80;
+
+ const confettiColors = ["#22c55e", "#6366f1", "#a78bfa", "#f59e0b", "#06b6d4", "#f472b6"];
+ const confettiPieces = Array.from({ length: 26 }, (_, i) => {
+  const left = (i * 17) % 100;
+  const size = 6 + (i % 3) * 3;
+  const delay = i * 0.03;
+  return {
+   key: i,
+   left,
+   size,
+   delay,
+   color: confettiColors[i % confettiColors.length],
+   rotate: (i * 57) % 360,
+  };
+ });
 
  return (
  <motion.div
@@ -550,6 +566,29 @@ export default function QuizPage() {
  >
  <Card className="shadow-xl text-center overflow-hidden" style={{ border: "1px solid rgba(99,102,241,0.3)" }}>
  <CardContent className="p-8 relative">
+ {/* Confetti (score >= 80%) */}
+ {showConfetti && (
+  <div className="pointer-events-none absolute inset-0 overflow-hidden">
+   {confettiPieces.map((p) => (
+    <motion.div
+     key={p.key}
+     initial={{ y: -20, opacity: 0, rotate: p.rotate }}
+     animate={{ y: 420, opacity: [0, 1, 1, 0], rotate: p.rotate + 360 }}
+     transition={{ duration: 2.4, delay: p.delay, ease: "easeOut" }}
+     className="absolute rounded-sm"
+     style={{
+      left: `${p.left}%`,
+      top: -20,
+      width: p.size,
+      height: p.size * 0.55,
+      background: p.color,
+      boxShadow: `0 0 12px ${p.color}55`,
+     }}
+    />
+   ))}
+  </div>
+ )}
+
  {/* Animated trophy */}
  <motion.div
  initial={{ scale: 0, rotate: -20 }}
@@ -617,13 +656,20 @@ export default function QuizPage() {
  </CardContent>
  </Card>
 
- <div className="flex gap-3">
+ <div className="flex flex-col sm:flex-row gap-3">
  <Button onClick={startQuiz} className="flex-1 gap-2" disabled={loading}>
  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
  Nochmal spielen
  </Button>
  <Button onClick={resetQuiz} variant="outline" className="flex-1">
  Anderes Fach
+ </Button>
+ <Button
+  onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "dashboard" }))}
+  variant="outline"
+  className="flex-1"
+ >
+  Zum Dashboard
  </Button>
  </div>
  </motion.div>
