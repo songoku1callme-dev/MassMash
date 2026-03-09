@@ -195,7 +195,7 @@ export default function ForschungsSeite() {
  setSearching(false);
  }, [searchQuery]);
 
- if (loading) return <PageLoader text="Forschungs-Zentrum l\u00e4dt..." />;
+ if (loading) return <PageLoader text="Forschungs-Zentrum lädt..." />;
  if (loadError) return <ErrorState message="Fehler beim Laden des Forschungs-Zentrums." onRetry={loadData} />;
 
  return (
@@ -212,7 +212,7 @@ export default function ForschungsSeite() {
  {"\u{1F9E0}"} Forschungs-Zentrum
  </h1>
  <p className="text-lumnos-muted text-sm">
- LUMNOS Self-Evolution \u2014 Autonomes Lernen aus dem Internet
+ LUMNOS Self-Evolution — Autonomes Lernen aus dem Internet
  </p>
  </div>
  </div>
@@ -255,7 +255,7 @@ export default function ForschungsSeite() {
   <div className="mb-4">
    <div className="flex items-center gap-2 mb-2">
     <GitBranch className="w-4 h-4 text-indigo-400" />
-    <span className="text-sm font-semibold text-indigo-300">Mindmap \u2014 {lastQuery}</span>
+    <span className="text-sm font-semibold text-indigo-300">Mindmap — {lastQuery}</span>
     <button
      onClick={() => setShowMindmap(!showMindmap)}
      className="ml-auto text-xs text-slate-500 hover:text-slate-300"

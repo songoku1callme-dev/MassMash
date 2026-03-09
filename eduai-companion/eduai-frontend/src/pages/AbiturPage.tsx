@@ -91,7 +91,7 @@ export default function AbiturPage() {
  body: JSON.stringify({
  thema: question.question,
  fach: subjectName,
- kontext: "Gib einen kurzen, hilfreichen Tipp f\u00fcr diese Abitur-Aufgabe. Kein L\u00f6sungsweg, nur ein Denkansatz in 1-2 S\u00e4tzen."
+ kontext: "Gib einen kurzen, hilfreichen Tipp für diese Abitur-Aufgabe. Kein Lösungsweg, nur ein Denkansatz in 1-2 Sätzen."
  }),
  }
  );

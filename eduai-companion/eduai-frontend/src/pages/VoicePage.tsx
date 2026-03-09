@@ -73,7 +73,7 @@ export default function VoicePage() {
     setConversation((prev) => [...prev, { role: "user", text: result.text, timestamp: new Date() }]);
     scrollToBottom();
 
-    // Step 2: Voice chat \u2014 get mentor response
+    // Step 2: Voice chat — get mentor response
     try {
      const chatResult = await voiceApi.voiceChat(audioBlob);
      if (chatResult.response) {
@@ -82,7 +82,7 @@ export default function VoicePage() {
       setConversation((prev) => [...prev, { role: "mentor", text: mentorText, timestamp: new Date() }]);
       scrollToBottom();
 
-      // Step 3: Auto-play TTS \u2014 realistic mentor voice
+      // Step 3: Auto-play TTS — realistic mentor voice
       try {
        const audioResult = await voiceApi.tts(mentorText);
        const url = URL.createObjectURL(audioResult);
@@ -108,7 +108,7 @@ export default function VoicePage() {
     } catch {
      setConversation((prev) => [...prev, {
       role: "mentor",
-      text: "Transkription erfolgreich! Sende die Nachricht im Chat f\u00fcr eine KI-Antwort.",
+      text: "Transkription erfolgreich! Sende die Nachricht im Chat für eine KI-Antwort.",
       timestamp: new Date(),
      }]);
      scrollToBottom();
@@ -154,7 +154,7 @@ export default function VoicePage() {
      KI-Mentor Voice
     </h1>
     <p className="theme-text-secondary mt-1">
-     Sprich mit deinem pers\u00f6nlichen KI-Mentor \u2014 realistische Stimme mit Pausen und Betonung.
+     Sprich mit deinem persönlichen KI-Mentor — realistische Stimme mit Pausen und Betonung.
     </p>
    </div>
 
@@ -168,8 +168,8 @@ export default function VoicePage() {
    <div className="flex-1 mb-6 space-y-4 overflow-y-auto max-h-[400px] pr-1">
     {conversation.length === 0 && !isRecording && !isProcessing && (
      <EmptyState
-      title="Kein Gespr\u00e4ch"
-      description="Klicke den Mikrofon-Button und stelle deinem KI-Mentor eine Frage. Er antwortet mit nat\u00fcrlicher Stimme!"
+      title="Kein Gespräch"
+      description="Klicke den Mikrofon-Button und stelle deinem KI-Mentor eine Frage. Er antwortet mit natürlicher Stimme!"
       icon={<Mic className="w-8 h-8 text-indigo-400" />}
      />
     )}
@@ -210,7 +210,7 @@ export default function VoicePage() {
          className="mt-2 flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300"
         >
          <Volume2 className="w-3 h-3" />
-         {isPlaying ? "Spielt..." : "Nochmal anh\u00f6ren"}
+         {isPlaying ? "Spielt..." : "Nochmal anhören"}
         </button>
        )}
       </div>
@@ -268,7 +268,7 @@ export default function VoicePage() {
 
     <p className="text-sm theme-text-secondary">
      {isRecording
-      ? `Aufnahme l\u00e4uft... ${formatDuration(recordingDuration)}`
+      ? `Aufnahme läuft... ${formatDuration(recordingDuration)}`
       : isProcessing
       ? "Verarbeite Audio..."
       : "Klicke zum Sprechen"}
@@ -277,7 +277,7 @@ export default function VoicePage() {
     {conversation.length > 0 && (
      <div className="flex items-center gap-1 text-xs theme-text-secondary">
       <History className="w-3 h-3" />
-      {conversation.length} Nachrichten in diesem Gespr\u00e4ch
+      {conversation.length} Nachrichten in diesem Gespräch
      </div>
     )}
    </div>
@@ -299,11 +299,11 @@ export default function VoicePage() {
      </li>
      <li className="flex items-start gap-2">
       <span className="text-purple-400 font-bold">3.</span>
-      Dein KI-Mentor antwortet wie ein echter Tutor \u2014 mit Pausen und Betonung
+      Dein KI-Mentor antwortet wie ein echter Tutor — mit Pausen und Betonung
      </li>
      <li className="flex items-start gap-2">
       <span className="text-purple-400 font-bold">4.</span>
-      Die Antwort wird automatisch vorgelesen \u2014 oder klicke Nochmal anh\u00f6ren
+      Die Antwort wird automatisch vorgelesen — oder klicke Nochmal anhören
      </li>
     </ul>
    </div>

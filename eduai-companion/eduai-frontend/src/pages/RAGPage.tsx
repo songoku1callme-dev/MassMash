@@ -92,10 +92,10 @@ export default function RAGPage() {
  const handleDelete = async (docId: string) => {
   try {
    await ragApi.deleteDocument(docId);
-   setSuccess(`Dokument ${docId} gel\u00f6scht`);
+   setSuccess(`Dokument ${docId} gelöscht`);
    loadData();
   } catch (err) {
-   setError(err instanceof Error ? err.message : "L\u00f6schen fehlgeschlagen");
+   setError(err instanceof Error ? err.message : "Löschen fehlgeschlagen");
   }
  };
 
@@ -122,7 +122,7 @@ export default function RAGPage() {
     Wissensdatenbank (RAG)
    </h1>
    <p className="theme-text-secondary mb-6">
-    Lade Lehrpl\u00e4ne, Arbeitsbl\u00e4tter oder Texte hoch, damit der KI-Tutor darauf zugreifen kann.
+    Lade Lehrpläne, Arbeitsblätter oder Texte hoch, damit der KI-Tutor darauf zugreifen kann.
    </p>
 
    {/* Stats */}
@@ -199,7 +199,7 @@ export default function RAGPage() {
         className="px-3 py-1.5 theme-card theme-text rounded-lg text-sm hover:opacity-80"
         onClick={() => setAutoSuggestion(null)}
        >
-        Sp\u00e4ter
+        Später
        </button>
       </div>
      </div>
@@ -308,7 +308,7 @@ export default function RAGPage() {
       <p className="theme-text-secondary">
        {uploading
         ? "Wird hochgeladen und indexiert..."
-        : "Datei hierher ziehen oder klicken zum Ausw\u00e4hlen"}
+        : "Datei hierher ziehen oder klicken zum Auswählen"}
       </p>
       <p className="text-xs theme-text-secondary mt-1">
        PDF, TXT, MD, CSV
@@ -340,7 +340,7 @@ export default function RAGPage() {
      Beispiel-Lehrplan laden
     </h2>
     <p className="text-sm theme-text-secondary mb-4">
-     Lade vorgefertigte deutsche Lehrplaninhalte f\u00fcr Mathe, Physik, Chemie, Deutsch, Englisch und Geschichte.
+     Lade vorgefertigte deutsche Lehrplaninhalte für Mathe, Physik, Chemie, Deutsch, Englisch und Geschichte.
     </p>
     <button
      onClick={handleSeed}
@@ -397,7 +397,7 @@ export default function RAGPage() {
         <button
          onClick={() => handleDelete(doc.doc_id)}
          className="ml-2 p-1.5 text-red-500 hover:bg-red-500/10 rounded"
-         title="L\u00f6schen"
+         title="Löschen"
         >
          <Trash2 className="w-4 h-4" />
         </button>
