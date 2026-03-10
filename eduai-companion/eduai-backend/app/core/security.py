@@ -28,6 +28,9 @@ RATE_LIMIT_MAX_REQUESTS = 5   # max requests per window
 RATE_LIMIT_WINDOW_SEC = 60    # window size in seconds
 RATE_LIMIT_PATHS = ("/api/auth/login", "/api/auth/register", "/api/auth/refresh")
 
+# Paths that skip ALL auth and security checks (health, docs)
+SKIP_AUTH_PATHS = ["/health", "/healthz", "/docs", "/openapi.json", "/api/ping"]
+
 # Shield 3: Login lockout after too many attempts (5 per 15 min)
 _login_lockout_store: dict[str, float] = {}  # ip -> lockout_until timestamp
 LOGIN_LOCKOUT_DURATION = 1800  # 30 minutes
@@ -97,6 +100,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         path = request.url.path
+
+        # Skip rate limiting for health/docs/ping endpoints
+        if path in SKIP_AUTH_PATHS:
+            return await call_next(request)
+
         ip = _client_ip(request)
 
         # Shield 3: Check login lockout first
@@ -237,6 +245,7 @@ ALLOWED_ORIGINS = [
     "https://mass-mash.vercel.app",
     "https://lumnos-german-tutor-app-mzmkkhlp.devinapps.com",
     "https://mass-mash-git-devin-1772317-607977-songoku1callme-devs-projects.vercel.app",
+    "https://mass-mash-git-devin-1773107-1e55b8-songoku1callme-devs-projects.vercel.app",
     "https://massmash.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",

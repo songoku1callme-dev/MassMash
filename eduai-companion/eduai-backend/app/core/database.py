@@ -1042,12 +1042,11 @@ async def init_db():
     # Hardcoded admin whitelist — these users ALWAYS get permanent Max tier
     # They can NEVER be downgraded
     admin_emails = [
-        "songoku1callme@gmail.com",
         "ahmadalkhalaf2019@gmail.com",
         "ahmadalkhalaf20024@gmail.com",
         "ahmadalkhalaf1245@gmail.com",
+        "songoku1callme@gmail.com",
         "261g2g261@gmail.com",
-        "261al3nzi261@gmail.com",
     ]
     try:
         # Shield 4: Use parameterized queries — never interpolate user data into SQL

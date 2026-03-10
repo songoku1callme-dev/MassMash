@@ -21,12 +21,11 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # Hardcoded admin whitelist — these users have FULL admin access
 ADMIN_EMAILS = [
-    "songoku1callme@gmail.com",
     "ahmadalkhalaf2019@gmail.com",
     "ahmadalkhalaf20024@gmail.com",
     "ahmadalkhalaf1245@gmail.com",
+    "songoku1callme@gmail.com",
     "261g2g261@gmail.com",
-    "261al3nzi261@gmail.com",
 ]
 
 

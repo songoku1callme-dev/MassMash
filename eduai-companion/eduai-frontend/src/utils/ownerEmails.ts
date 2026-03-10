@@ -5,12 +5,11 @@
  * This list mirrors the backend ADMIN_EMAILS in auth.py and admin.py.
  */
 export const OWNER_EMAILS: string[] = [
-  "songoku1callme@gmail.com",
   "ahmadalkhalaf2019@gmail.com",
   "ahmadalkhalaf20024@gmail.com",
   "ahmadalkhalaf1245@gmail.com",
+  "songoku1callme@gmail.com",
   "261g2g261@gmail.com",
-  "261al3nzi261@gmail.com",
 ];
 
 /**
