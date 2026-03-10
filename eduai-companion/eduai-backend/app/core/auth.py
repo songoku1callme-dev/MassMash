@@ -99,22 +99,41 @@ async def get_current_user(
 
     # --- Attempt 1: Clerk OAuth JWT (RS256) ---
     try:
-        from app.core.clerk import verify_clerk_token, CLERK_ENABLED
+        from app.core.clerk import verify_clerk_token, fetch_clerk_user, CLERK_ENABLED
         if CLERK_ENABLED:
             clerk_claims = await verify_clerk_token(token)
             if clerk_claims and clerk_claims.get("sub"):
                 clerk_user_id = clerk_claims["sub"]
+                # Step 1: Look up by clerk_user_id
                 cursor = await db.execute(
                     "SELECT * FROM users WHERE clerk_user_id = ?", (clerk_user_id,)
                 )
                 user = await cursor.fetchone()
                 if user:
                     return dict(user)
-                # Auto-create user from Clerk claims (first login)
-                email = clerk_claims.get("email", "")
-                name = clerk_claims.get("name", "") or email.split("@")[0]
+
+                # Step 2: Clerk session JWTs don't contain email/name.
+                # Fetch user details from Clerk Backend API.
+                clerk_user_data = await fetch_clerk_user(clerk_user_id)
+                email = ""
+                full_name = ""
+                avatar_url = ""
+                username = ""
+                if clerk_user_data:
+                    email = clerk_user_data.get("email", "")
+                    first = clerk_user_data.get("first_name", "")
+                    last = clerk_user_data.get("last_name", "")
+                    full_name = f"{first} {last}".strip() or email.split("@")[0] if email else clerk_user_id
+                    avatar_url = clerk_user_data.get("image_url", "")
+                    username = clerk_user_data.get("username", "") or email.split("@")[0] if email else clerk_user_id
+                else:
+                    # Fallback: use claims (may be empty)
+                    email = clerk_claims.get("email", "")
+                    full_name = clerk_claims.get("name", "") or (email.split("@")[0] if email else clerk_user_id)
+                    username = email.split("@")[0] if email else clerk_user_id
+
+                # Step 3: Check if email already exists (link accounts)
                 if email:
-                    # Check if email already exists
                     cursor = await db.execute(
                         "SELECT * FROM users WHERE email = ?", (email,)
                     )
@@ -122,12 +141,42 @@ async def get_current_user(
                     if user:
                         # Link existing account to Clerk
                         await db.execute(
-                            "UPDATE users SET clerk_user_id = ?, auth_provider = 'clerk' WHERE email = ?",
-                            (clerk_user_id, email),
+                            "UPDATE users SET clerk_user_id = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), auth_provider = 'clerk' WHERE email = ?",
+                            (clerk_user_id, avatar_url, email),
                         )
                         await db.commit()
-                        return dict(user)
-    except Exception:
+                        # Re-fetch to get updated row
+                        cursor = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
+                        user = await cursor.fetchone()
+                        if user:
+                            return dict(user)
+
+                # Step 4: Auto-create new user from Clerk profile
+                import secrets as _secrets
+                dummy_password = get_password_hash(_secrets.token_urlsafe(32))
+                await db.execute(
+                    """INSERT INTO users (email, username, hashed_password, full_name, school_grade, school_type,
+                    preferred_language, clerk_user_id, avatar_url, auth_provider)
+                    VALUES (?, ?, ?, ?, '10', 'Gymnasium', 'de', ?, ?, 'clerk')""",
+                    (email or f"{clerk_user_id}@clerk.local", username, dummy_password, full_name, clerk_user_id, avatar_url),
+                )
+                await db.commit()
+                # Fetch the newly created user
+                cursor = await db.execute(
+                    "SELECT * FROM users WHERE clerk_user_id = ?", (clerk_user_id,)
+                )
+                user = await cursor.fetchone()
+                if user:
+                    import logging as _logging
+                    _logging.getLogger(__name__).info(
+                        "Auto-created user from Clerk: %s (email=%s)", clerk_user_id, email
+                    )
+                    return dict(user)
+    except HTTPException:
+        raise  # Don't swallow auth exceptions
+    except Exception as e:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("Clerk auth attempt failed: %s", e)
         pass  # Fall through to built-in JWT
 
     # --- Attempt 2: Built-in JWT (HS256) ---

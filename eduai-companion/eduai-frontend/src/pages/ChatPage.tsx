@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { ocrApi, quizApi, guestApi, visionApi, audioApi, getAccessToken } from "../services/api";
+import { useIsOwner } from "../utils/ownerEmails";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -107,6 +108,7 @@ export default function ChatPage() {
  deleteSession,
  } = useChatStore();
  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
+ const isOwner = useIsOwner();
  const [input, setInput] = useState("");
  const [guestRemaining, setGuestRemaining] = useState(3);
  const [showPaywall, setShowPaywall] = useState(false);
@@ -261,9 +263,9 @@ export default function ChatPage() {
  const handleActionButton = (action: string) => {
  if (messages.length === 0 || isSending) return;
  const prompts: Record<string, string> = {
- einfacher: "Erkl\u00e4re das nochmal einfacher, als w\u00e4re ich 10 Jahre alt.",
+ einfacher: "Erkläre das nochmal einfacher, als wäre ich 10 Jahre alt.",
  details: "Gib mir mehr Details und Hintergrundinformationen dazu.",
- aufgabe: "Gib mir eine \u00dcbungsaufgabe zu diesem Thema mit L\u00f6sung.",
+ aufgabe: "Gib mir eine Übungsaufgabe zu diesem Thema mit Lösung.",
  };
  if (prompts[action]) {
  sendMessageStream(prompts[action], selectedPersonality, tutorModus, eli5, modus);
@@ -370,7 +372,7 @@ export default function ChatPage() {
  }
  }, [isListening, startListening, stopListening]);
 
- const tierLabel = isGuest ? "Gast" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
+ const tierLabel = isGuest ? "Gast" : isOwner ? "Owner" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
 
  // Textarea auto-resize handler
  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -519,7 +521,7 @@ export default function ChatPage() {
  onClick={() => setShowPaywall(false)}
  className="mt-3 text-sm text-slate-500 hover:text-slate-400"
  >
- Sp\u00e4ter
+ Später
  </button>
  </div>
  </div>
@@ -576,8 +578,8 @@ export default function ChatPage() {
  ELI5 {eli5 ? "AN" : "AUS"}
  </button>
 
- {/* Upgrade Button for Free users */}
- {user?.subscription_tier === "free" && (
+  {/* Upgrade Button for Free users (hidden for Owners) */}
+  {user?.subscription_tier === "free" && !isOwner && (
  <button
  onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105"
@@ -587,8 +589,8 @@ export default function ChatPage() {
  </button>
  )}
 
- {/* Tier Badge */}
- {user?.subscription_tier !== "free" && (
+  {/* Tier Badge */}
+  {(user?.subscription_tier !== "free" || isOwner) && (
  <span
  className="px-3 py-1 rounded-full text-xs font-bold"
  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff" }}
@@ -603,7 +605,7 @@ export default function ChatPage() {
  onClick={() => setShowPersonalities(!showPersonalities)}
  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-purple-300 hover:bg-purple-900/50 transition-colors border border-purple-700"
  style={{ background: "rgba(88,28,135,0.3)" }}
- title="KI-Pers\u00f6nlichkeit w\u00e4hlen"
+ title="KI-Persönlichkeit wählen"
  >
  <span>{currentPersonality?.emoji || "\ud83d\ude0a"}</span>
  <span className="hidden sm:inline">{currentPersonality?.name || "Freundlich"}</span>
@@ -615,7 +617,7 @@ export default function ChatPage() {
  style={{ background: "rgba(var(--surface-rgb),0.95)", backdropFilter: "blur(20px)" }}
  >
  <div className="p-2 border-b border-indigo-500/10">
- <p className="text-xs font-semibold text-slate-400 px-2">KI-Pers\u00f6nlichkeit</p>
+ <p className="text-xs font-semibold text-slate-400 px-2">KI-Persönlichkeit</p>
  </div>
  <div className="p-1">
  {personalities.map((p) => (
@@ -678,20 +680,20 @@ export default function ChatPage() {
  {/* KI Orb */}
  <LumnosOrb fach={currentSubject} size="lg" />
  <h2 className="text-3xl font-bold text-white mb-2">
- {language === "de" ? "Was m\u00f6chtest du wissen?" : "What would you like to know?"}
+ {language === "de" ? "Was möchtest du wissen?" : "What would you like to know?"}
  </h2>
  <p className="text-slate-400 max-w-md mb-8 text-sm">
  {language === "de"
- ? "Stelle eine konkrete Frage \u2014 ich antworte direkt und pr\u00e4zise."
- : "Ask a specific question \u2014 I answer directly and precisely."}
+ ? "Stelle eine konkrete Frage — ich antworte direkt und präzise."
+ : "Ask a specific question — I answer directly and precisely."}
  </p>
  {/* Example Questions */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
  {[
  { text: "Was ist \u221A122?", fach: "math" },
- { text: "Erkl\u00e4re den Satz des Pythagoras", fach: "math" },
+ { text: "Erkläre den Satz des Pythagoras", fach: "math" },
  { text: "Was ist Photosynthese?", fach: "biologie" },
- { text: "Erkl\u00e4re die Weimarer Republik", fach: "geschichte" },
+ { text: "Erkläre die Weimarer Republik", fach: "geschichte" },
  ].map((q, i) => (
  <button
  key={i}
@@ -1195,7 +1197,7 @@ export default function ChatPage() {
  {([
  { id: "fast" as const, label: "\u26a1 Fast", desc: "Blitzschnell \u2014 1-2 Sek", color: "text-yellow-400 border-yellow-400/30", activeColor: "bg-yellow-400/20 border-yellow-400", activeBg: "rgba(250,204,21,0.15)" },
  { id: "normal" as const, label: "\u2728 Standard", desc: "Ausgewogen \u2014 3-5 Sek", color: "text-blue-400 border-blue-400/30", activeColor: "bg-blue-400/20 border-blue-400", activeBg: "rgba(96,165,250,0.15)" },
- { id: "deep" as const, label: "\ud83e\udde0 Deep", desc: "Pr\u00e4zision \u2014 15-30 Sek", color: "text-purple-400 border-purple-400/30", activeColor: "bg-purple-400/20 border-purple-400", activeBg: "rgba(192,132,252,0.15)" },
+ { id: "deep" as const, label: "\ud83e\udde0 Deep", desc: "Präzision — 15-30 Sek", color: "text-purple-400 border-purple-400/30", activeColor: "bg-purple-400/20 border-purple-400", activeBg: "rgba(192,132,252,0.15)" },
  ]).map(m => (
  <button
  key={m.id}
@@ -1310,7 +1312,7 @@ export default function ChatPage() {
  : isListening
  ? (language === "de" ? "Sprich jetzt..." : "Speak now...")
  : tutorModus
- ? (language === "de" ? "Stelle eine Frage \u2014 die KI antwortet nur mit Gegenfragen..." : "Ask \u2014 AI responds with guiding questions only...")
+ ? (language === "de" ? "Stelle eine Frage — die KI antwortet nur mit Gegenfragen..." : "Ask — AI responds with guiding questions only...")
  : (language === "de" ? "Stelle eine Frage..." : "Ask a question...")
  }
  disabled={isSending}

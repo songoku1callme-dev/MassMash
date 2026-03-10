@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { authApi, type User, setTokens, clearTokens, getAccessToken, isTokenExpiringSoon, refreshAccessToken } from "../services/api";
+import { authApi, type User, setTokens, clearTokens, getAccessToken, isTokenExpiringSoon, refreshAccessToken, isClerkToken } from "../services/api";
 
 interface AuthState {
   user: User | null;
@@ -94,8 +94,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       return;
     }
 
+    // Clerk tokens (RS256) are managed by the Clerk SDK, not by our refresh endpoint.
+    // Don't try to refresh them here — let the Clerk sync in App.tsx handle it.
+    if (isClerkToken(token)) {
+      // For Clerk tokens, just try /api/auth/me directly.
+      // If it fails, don't clear tokens — Clerk SDK will re-sync.
+      try {
+        const user = await authApi.me();
+        set({ user, isLoading: false, isAuthenticated: true });
+      } catch {
+        // Backend might not be ready yet or token expired.
+        // Set isLoading=false but keep isAuthenticated so Clerk sync can take over.
+        set({ isLoading: false });
+      }
+      return;
+    }
+
     try {
-      // Proactively refresh if token is close to expiry
+      // Proactively refresh if token is close to expiry (local JWT only)
       if (isTokenExpiringSoon(120)) {
         try {
           const newToken = await refreshAccessToken();

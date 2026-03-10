@@ -137,7 +137,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [...messages, userMsg],
       isSending: true,
       isStreaming: true,
-      streamStatus: modus === "deep" ? "🧠 Deep Thinking l\u00e4uft..." : "Verbinde...",
+      streamStatus: modus === "deep" ? "🧠 Deep Thinking läuft..." : "Verbinde...",
       streamingText: "",
       thinkingText: "",
       isThinking: false,
