@@ -578,8 +578,8 @@ export default function ChatPage() {
  ELI5 {eli5 ? "AN" : "AUS"}
  </button>
 
- {/* Upgrade Button for Free users */}
- {user?.subscription_tier === "free" && (
+  {/* Upgrade Button for Free users (hidden for Owners) */}
+  {user?.subscription_tier === "free" && !isOwner && (
  <button
  onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105"
@@ -589,8 +589,8 @@ export default function ChatPage() {
  </button>
  )}
 
- {/* Tier Badge */}
- {user?.subscription_tier !== "free" && (
+  {/* Tier Badge */}
+  {(user?.subscription_tier !== "free" || isOwner) && (
  <span
  className="px-3 py-1 rounded-full text-xs font-bold"
  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", color: "#fff" }}
