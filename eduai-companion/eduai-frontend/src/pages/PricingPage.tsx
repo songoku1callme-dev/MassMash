@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuthStore } from "../stores/authStore";
 import { stripeApi } from "../services/api";
+import { useIsOwner } from "../utils/ownerEmails";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,7 @@ export default function PricingPage() {
  const [billing, setBilling] = useState<BillingPeriod>("yearly");
 
  const tier = user?.subscription_tier || "free";
+ const isOwner = useIsOwner();
 
  const paymentLinks: Record<PlanKey, Record<BillingPeriod, string | undefined>> = {
  pro: {
@@ -35,6 +37,7 @@ export default function PricingPage() {
  };
 
  const handleUpgrade = async (plan: PlanKey) => {
+ if (isOwner) return; // Owner braucht kein Upgrade
  setLoading(plan);
  setError("");
 
@@ -139,11 +142,11 @@ export default function PricingPage() {
  )}
  </div>
 
- {tier !== "free" && (
+ {(tier !== "free" || isOwner) && (
  <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-yellow-800" style={{ background: "rgba(234,179,8,0.1)" }}>
  <Crown className="w-6 h-6 text-yellow-500" />
  <span className="text-lg font-semibold text-yellow-300">
- Du bist {tier === "max" ? "Max" : "Pro"}-Mitglied!
+ Du bist {isOwner ? "Owner" : tier === "max" ? "Max" : "Pro"}-Mitglied!
  </span>
  <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
  </div>
