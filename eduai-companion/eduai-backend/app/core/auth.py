@@ -123,9 +123,9 @@ async def get_current_user(
                     email = clerk_user_data.get("email", "")
                     first = clerk_user_data.get("first_name", "")
                     last = clerk_user_data.get("last_name", "")
-                    full_name = f"{first} {last}".strip() or email.split("@")[0] if email else clerk_user_id
+                    full_name = f"{first} {last}".strip() or (email.split("@")[0] if email else clerk_user_id)
                     avatar_url = clerk_user_data.get("image_url", "")
-                    username = clerk_user_data.get("username", "") or email.split("@")[0] if email else clerk_user_id
+                    username = clerk_user_data.get("username", "") or (email.split("@")[0] if email else clerk_user_id)
                 else:
                     # Fallback: use claims (may be empty)
                     email = clerk_claims.get("email", "")

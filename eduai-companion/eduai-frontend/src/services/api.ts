@@ -197,7 +197,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         newToken = await refreshAccessToken();
       }
       if (newToken) {
-        setTokens(newToken, newToken);
+        if (token && isClerkToken(token)) {
+          setTokens(newToken, newToken); // Clerk tokens don't have separate refresh
+        }
+        // For built-in JWT, refreshAccessToken() already stores the new token
         headers["Authorization"] = `Bearer ${newToken}`;
         response = await fetch(`${API_URL}${endpoint}`, {
           method: options.method || "GET",
