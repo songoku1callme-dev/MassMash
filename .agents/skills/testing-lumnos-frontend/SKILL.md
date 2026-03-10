@@ -1,64 +1,69 @@
 # Testing LUMNOS Frontend
 
 ## Overview
-LUMNOS is a full-stack AI tutoring platform for German students. The frontend is a React + Vite app with Clerk authentication, Zustand state management, and a polling-based notification system.
+LUMNOS is a German AI tutoring app (React + Vite) with Clerk authentication, deployed on Vercel (frontend) and Render (backend).
 
 ## Devin Secrets Needed
-- `VITE_CLERK_PUBLISHABLE_KEY` — Clerk publishable key (pk_test_* for dev, pk_live_* for prod)
-- No other secrets needed for frontend-only testing
+- None required for basic frontend testing (dev-token bypass available)
+- For production backend testing: backend may need Render access
 
-## Local Dev Server Setup
-1. `cd eduai-companion/eduai-frontend`
-2. `npm install`
-3. `npm run dev` — starts Vite on http://localhost:5173
+## Authentication for Testing
 
-## Auth Bypass for Testing
-The app requires authentication. To bypass without a running backend:
-1. Open browser console on `http://localhost:5173`
-2. Run:
-   ```js
-   localStorage.setItem('lumnos_token', 'dev-max-token-lumnos');
-   localStorage.setItem('lumnos_user', JSON.stringify({
-     id: 999, email: 'admin@lumnos.de', username: 'TestAdmin',
-     full_name: 'Test Admin', school_grade: '12', school_type: 'Gymnasium',
-     preferred_language: 'de', is_pro: true, subscription_tier: 'max',
-     ki_personality_id: 1, ki_personality_name: 'Mentor', avatar_url: '',
-     auth_provider: 'dev', created_at: new Date().toISOString()
-   }));
-   location.reload();
-   ```
-3. The app will load with a dev user session (authStore.ts recognizes `dev-max-token-lumnos`)
+The app uses Clerk for authentication. To bypass Clerk login in the browser:
 
-## Key UI Navigation
-- **Sidebar** (left) contains all page links: Dashboard, KI-Tutor, Quiz, etc.
-- **GlobalHeader** (top) shows user name, NotificationBell, and theme toggles
-- Default page after auth is **Chat** (KI-Tutor)
-- Page routing is state-based via `currentPage` in App.tsx (not URL-based)
+1. Navigate to the preview/production URL
+2. Open browser console and run:
+```js
+localStorage.setItem('lumnos_token', 'dev-max-token-lumnos');
+localStorage.setItem('lumnos_access_token', 'dev-max-token-lumnos');
+localStorage.setItem('lumnos_user', JSON.stringify({
+  id: 999, email: 'admin@lumnos.de', username: 'TestAdmin',
+  full_name: 'Test Admin', school_grade: '12', school_type: 'Gymnasium',
+  preferred_language: 'de', is_pro: true, subscription_tier: 'max',
+  ki_personality_id: 1, ki_personality_name: 'Mentor', avatar_url: '',
+  auth_provider: 'dev', created_at: new Date().toISOString()
+}));
+window.location.reload();
+```
+3. This creates a dev user with Max subscription tier and full access
 
-## Testing NotificationBell (Polling)
-- The NotificationBell is rendered in `GlobalHeader.tsx`
-- It uses a **polling-first** architecture: GET `/api/notifications/bell` every 30s
-- WebSocket is attempted as an optional upgrade but fails silently
-- To verify: Check browser console for absence of WebSocket 403 errors
-- The `/api/ws/ticket` endpoint may return 500 without a backend — this is expected and handled gracefully
+## Navigation
 
-## Testing Dashboard (React Key Warnings)
-- Navigate to Dashboard via sidebar
-- The Quests section uses `key={quest.id || \`quest-${i}\`}` for fallback keys
-- Check browser console for absence of "Each child in a list should have a unique 'key' prop" warnings
-- Dashboard renders stats cards, quests, KI-Tutor card, and Lernstatistik chart
+The app is a SPA — direct URL paths (e.g. `/dashboard`) return 404 on Vercel preview. Always navigate via:
+- Root URL loads AuthPage or ChatPage (if authenticated)
+- Use the **sidebar** to navigate between pages (Dashboard, KI-Tutor, Quiz, Pricing, etc.)
+- Sidebar items at the bottom require scrolling: Abo & Preise, Einstellungen, Admin-Panel
 
-## Common Console Errors (Expected Without Backend)
-- `500 Internal Server Error` on `/api/auth/refresh`, `/api/chat/sessions`, `/api/admin/check` — expected when no backend is running
-- `404` on Clerk avatar images — sometimes happens with dev keys
-- `Clerk: Clerk has been loaded with development keys` — expected warning in dev mode
+## Key Pages to Test
 
-## Backend /health Endpoint
-- `GET /health` returns `{"status": "ok", "version": "..."}`
-- This endpoint is excluded from BotProtectionMiddleware (security.py)
-- Can be tested with `curl https://lumnos-backend.onrender.com/health` after deployment
+### Dashboard (`Dashboard` in sidebar)
+- Shows greeting, 4 stat cards (Streak, XP, Fächer, Rang)
+- Tägliche Quests section with fallback quests when API fails
+- 7-Tage XP Chart with fallback random data
+- Quick Actions: Chat starten, Quiz spielen, Karteikarten, Abitur-Sim
+- Bottom tiles: Tages-Quiz, Scanner, Turnier, Belohnungs-Shop, Gamification
+- API failures are logged to console as `[Dashboard] API xyz failed`
 
-## Lint & Build
-- `npm run lint` — ESLint check
-- `npm run build` — Vite production build
-- `npm run test` — Vitest unit tests
+### ChatPage (`KI-Tutor` in sidebar)
+- Welcome message: "Was möchtest du wissen?"
+- Example questions with correct German umlauts
+- Subject selector, personality selector, language toggle
+- Textarea placeholder changes based on mode (tutor/ELI5/normal)
+
+### PricingPage (`Abo & Preise` in sidebar — scroll down in sidebar to find it)
+- 4 pricing tiers: Kostenlos, Pro, Max, Eltern
+- Feature lists with German text (Fächer, über, etc.)
+
+## Common Issues
+
+- **Dashboard appears empty**: API calls may fail silently. Check browser console for `[Dashboard]` warnings. The Dashboard should still render all sections with fallback/demo data.
+- **Unicode escapes visible**: If you see `\u00e4` instead of `ä`, the source files need UTF-8 character replacement.
+- **Cookie banner blocks interaction**: Click "Alle akzeptieren" to dismiss. If it doesn't work via devinid, try coordinates.
+- **Vercel preview 404 on direct paths**: Use root URL + sidebar navigation instead of direct paths like `/dashboard`.
+- **Backend cold start**: Render free-tier may take 30+ seconds to wake up. The app has a keep-alive ping every 10 minutes.
+
+## Backend Health Check
+
+- `/health` endpoint should return 200 OK with `{"status":"ok"}`
+- If it returns 403, check that `/health` is in `SKIP_AUTH_PATHS` in `BotProtectionMiddleware` (security.py)
+- Test with: `curl https://lumnos-backend.onrender.com/health`
