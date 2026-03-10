@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { ocrApi, quizApi, guestApi, visionApi, audioApi, getAccessToken } from "../services/api";
+import { useIsOwner } from "../utils/ownerEmails";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -107,6 +108,7 @@ export default function ChatPage() {
  deleteSession,
  } = useChatStore();
  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
+ const isOwner = useIsOwner();
  const [input, setInput] = useState("");
  const [guestRemaining, setGuestRemaining] = useState(3);
  const [showPaywall, setShowPaywall] = useState(false);
@@ -370,7 +372,7 @@ export default function ChatPage() {
  }
  }, [isListening, startListening, stopListening]);
 
- const tierLabel = isGuest ? "Gast" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
+ const tierLabel = isGuest ? "Gast" : isOwner ? "Owner" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
 
  // Textarea auto-resize handler
  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

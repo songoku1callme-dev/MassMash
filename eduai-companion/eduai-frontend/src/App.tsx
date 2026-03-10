@@ -99,6 +99,16 @@ function App() {
     preWarmBackend();
   }, [preWarmBackend]);
 
+  // Keep-Alive: Ping backend every 10 minutes to prevent Render free-tier sleep
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (!apiUrl) return;
+    const ping = () => fetch(`${apiUrl}/healthz`, { method: "GET", mode: "cors" }).catch(() => {});
+    // Initial ping already handled by preWarmBackend, start interval only
+    const interval = setInterval(ping, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Clerk → AuthStore sync: when Clerk signs in, get token and sync
   useEffect(() => {
     if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {

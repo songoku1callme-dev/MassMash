@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { learningApi, gamificationApi, shopApi, type Progress, type GamificationProfile } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
+import { useIsOwner } from "../utils/ownerEmails";
 import BentoTile from "../components/BentoTile";
 import { ErrorState } from "../components/PageStates";
 import LumnosOrb from "../components/LumnosOrb";
@@ -65,6 +66,7 @@ interface DashboardProps {
 
 export default function DashboardPage({ onNavigate }: DashboardProps) {
  const { user } = useAuthStore();
+ const isOwner = useIsOwner();
  const [progress, setProgress] = useState<Progress | null>(null);
  const [gamification, setGamification] = useState<GamificationProfile | null>(null);
  const [loading, setLoading] = useState(true);
@@ -749,8 +751,8 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  </div>
  )}
 
- {/* Upgrade-Banner */}
- {tier === "free" && (
+ {/* Upgrade-Banner (nicht fuer Owner) */}
+ {!isOwner && tier === "free" && (
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
