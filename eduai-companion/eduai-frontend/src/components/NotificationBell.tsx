@@ -51,77 +51,70 @@ export default function NotificationBell() {
     }
   };
 
-  // Perfect School 4.1: WebSocket with ticket system + fallback to polling
+  // Polling-first approach: fetch notifications every 30s
+  // WebSocket is attempted as upgrade but polling is always the reliable fallback
   useEffect(() => {
     fetchBell();
 
     const token = localStorage.getItem("lumnos_token") || localStorage.getItem("lumnos_access_token");
-    if (!token) {
-      const interval = setInterval(fetchBell, 30000);
-      return () => clearInterval(interval);
+
+    // Always start polling immediately (reliable fallback)
+    const pollInterval = setInterval(fetchBell, 30000);
+
+    // Attempt WebSocket upgrade (non-blocking, silent failure)
+    let wsCleanup: (() => void) | null = null;
+
+    if (token) {
+      const tryWebSocket = async () => {
+        try {
+          const ticketResp = await fetch(`${API_URL}/api/ws/ticket`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!ticketResp.ok) return; // Silently fall back to polling
+
+          const { ticket } = await ticketResp.json();
+          const userStr = localStorage.getItem("lumnos_user");
+          const userId = userStr ? JSON.parse(userStr).id : 0;
+          const wsBase = API_URL.replace(/^http/, "ws");
+          const wsUrl = `${wsBase}/api/notifications/ws/notifications/${userId}?ticket=${ticket}`;
+
+          const ws = new WebSocket(wsUrl);
+          wsRef.current = ws;
+
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.type === "init") setUnread(data.unread_count || 0);
+              else if (data.type === "new_notification") { setUnread((p) => p + 1); fetchBell(); }
+            } catch { /* ignore */ }
+          };
+
+          // No reconnect on close — polling handles it
+          ws.onclose = () => { wsRef.current = null; };
+          ws.onerror = () => { ws.close(); };
+
+          const pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) ws.send("ping");
+          }, 25000);
+
+          wsCleanup = () => {
+            clearInterval(pingInterval);
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+              ws.close();
+            }
+          };
+        } catch {
+          // WebSocket not available — polling continues silently
+        }
+      };
+      tryWebSocket();
     }
 
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    let fallbackInterval: ReturnType<typeof setInterval> | null = null;
-
-    const connectWS = async () => {
-      try {
-        // Get a short-lived ticket from the backend (Block 1.3)
-        const ticketResp = await fetch(`${API_URL}/api/ws/ticket`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!ticketResp.ok) {
-          if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
-          return;
-        }
-        const { ticket } = await ticketResp.json();
-
-        // Parse user_id from stored user data
-        const userStr = localStorage.getItem("lumnos_user");
-        const userId = userStr ? JSON.parse(userStr).id : 0;
-
-        const wsBase = API_URL.replace(/^http/, "ws");
-        const wsUrl = `${wsBase}/api/notifications/ws/notifications/${userId}?ticket=${ticket}`;
-
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          if (fallbackInterval) { clearInterval(fallbackInterval); fallbackInterval = null; }
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === "init") setUnread(data.unread_count || 0);
-            else if (data.type === "new_notification") { setUnread((p) => p + 1); fetchBell(); }
-          } catch { /* ignore */ }
-        };
-
-        ws.onclose = () => {
-          wsRef.current = null;
-          if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
-          reconnectTimer = setTimeout(connectWS, 5000);
-        };
-
-        ws.onerror = () => ws.close();
-
-        const pingInterval = setInterval(() => {
-          if (ws.readyState === WebSocket.OPEN) ws.send("ping");
-        }, 25000);
-        ws.addEventListener("close", () => clearInterval(pingInterval));
-      } catch {
-        if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
-      }
-    };
-
-    connectWS();
-
     return () => {
+      clearInterval(pollInterval);
+      if (wsCleanup) wsCleanup();
       if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      if (fallbackInterval) clearInterval(fallbackInterval);
     };
   }, [fetchBell]);
 

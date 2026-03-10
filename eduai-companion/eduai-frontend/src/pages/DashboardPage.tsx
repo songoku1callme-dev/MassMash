@@ -503,9 +503,9 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  </span>
  </h3>
  <div className="space-y-2.5">
- {displayQuests.map((quest, i) => (
+  {displayQuests.map((quest, i) => (
  <motion.div
- key={quest.id}
+ key={quest.id || `quest-${i}`}
  initial={{ opacity: 0, x: -10 }}
  animate={{ opacity: 1, x: 0 }}
  transition={{ delay: 0.35 + i * 0.08 }}
