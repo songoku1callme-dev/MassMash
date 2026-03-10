@@ -12,8 +12,8 @@ import { APPLE_EASE, staggerContainer } from "../lib/animations";
 function getGreeting(): { text: string; emoji: string; motivation: string } {
  const h = new Date().getHours();
  if (h < 6) return { text: "Gute Nacht", emoji: "\uD83C\uDF19", motivation: "Schlaf ist der beste Lernbooster!" };
- if (h < 12) return { text: "Guten Morgen", emoji: "\u2600\uFE0F", motivation: "Fr\u00fch am Morgen lernt es sich am besten!" };
- if (h < 17) return { text: "Guten Tag", emoji: "\uD83D\uDC4B", motivation: "Perfekte Zeit f\u00fcr eine Lernsession!" };
+ if (h < 12) return { text: "Guten Morgen", emoji: "☀️", motivation: "Früh am Morgen lernt es sich am besten!" };
+ if (h < 17) return { text: "Guten Tag", emoji: "👋", motivation: "Perfekte Zeit für eine Lernsession!" };
  if (h < 21) return { text: "Guten Abend", emoji: "\uD83C\uDF06", motivation: "Abends speichert dein Gehirn besonders gut!" };
  return { text: "Gute Nacht", emoji: "\uD83C\uDF19", motivation: "Noch eine schnelle Runde vor dem Schlaf?" };
 }
@@ -176,7 +176,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
 
  // Generate fallback quests if none from backend
  const displayQuests: Quest[] = quests.length > 0 ? quests : [
- { id: "q1", title: "T\u00e4gliches Quiz", description: "Absolviere 1 Quiz heute", progress: Math.min(totalQuizzes, 1), target: 1, xp_reward: 50, completed: totalQuizzes >= 1, icon: "\u26A1" },
+ { id: "q1", title: "Tägliches Quiz", description: "Absolviere 1 Quiz heute", progress: Math.min(totalQuizzes, 1), target: 1, xp_reward: 50, completed: totalQuizzes >= 1, icon: "⚡" },
  { id: "q2", title: "Chat-Session", description: "Starte 1 Chat mit dem KI-Tutor", progress: Math.min(totalSessions, 1), target: 1, xp_reward: 30, completed: totalSessions >= 1, icon: "\uD83D\uDCAC" },
  { id: "q3", title: "Streak halten", description: `Halte deinen ${streak}-Tage-Streak`, progress: streak > 0 ? 1 : 0, target: 1, xp_reward: 20, completed: streak > 0, icon: "\uD83D\uDD25" },
  ];
@@ -295,7 +295,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  )}
  </AnimatePresence>
 
- {/* === Header: Personalisierte Begr\u00fc\u00dfung === */}
+ {/* === Header: Personalisierte Begrüßung === */}
  <motion.div
  initial={{ opacity: 0, x: -20 }}
  animate={{ opacity: 1, x: 0 }}
@@ -415,7 +415,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  </div>
  </motion.div>
 
- {/* F\u00e4cher aktiv */}
+ {/* Fächer aktiv */}
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
@@ -428,7 +428,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  onClick={() => onNavigate("stats")}>
  <div className="flex items-center gap-2 mb-1">
  <span className="text-2xl">{"\uD83D\uDCDA"}</span>
- <span className="text-xs text-muted-foreground font-medium">F\u00e4cher</span>
+ <span className="text-xs text-muted-foreground font-medium">Fächer</span>
  </div>
  <div className="text-2xl font-black text-foreground">{profiles.length} aktiv</div>
  <div className="text-xs text-muted-foreground mt-0.5">{totalQuizzes} Quizze</div>
@@ -486,7 +486,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  )}
  </AnimatePresence>
 
- {/* === T\u00e4gliche Quests === */}
+ {/* === Tägliche Quests === */}
  <motion.div
  initial={{ opacity: 0, y: 15 }}
  animate={{ opacity: 1, y: 0 }}
@@ -497,7 +497,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
- {"\uD83C\uDFAF"} T\u00e4gliche Quests
+ {"🎯"} Tägliche Quests
  <span className="text-xs text-muted-foreground font-normal">
  {displayQuests.filter(q => q.completed).length}/{displayQuests.length} erledigt
  </span>
@@ -694,7 +694,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="text-2xl">{"\uD83D\uDED2"}</div>
  <div>
  <div className="font-bold text-white text-sm">Belohnungs-Shop</div>
- <div className="text-xs text-slate-400">{userCoins || userXp} XP verf\u00fcgbar</div>
+ <div className="text-xs text-slate-400">{userCoins || userXp} XP verfügbar</div>
  </div>
  </div>
  </BentoTile>
@@ -766,10 +766,10 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="text-4xl">{"\uD83D\uDE80"}</div>
  <div className="flex-1">
  <div className="font-black text-foreground">
- Upgrade auf Pro — 4,99\u20AC/Monat
+ Upgrade auf Pro — 4,99€/Monat
  </div>
  <div className="text-muted-foreground text-sm">
- Schulbuch-Scanner {"\u00B7"} alle 32 F\u00e4cher {"\u00B7"} unbegrenzte Chats {"\u00B7"} Multi-Step KI
+ Schulbuch-Scanner {"·"} alle 32 Fächer {"·"} unbegrenzte Chats {"·"} Multi-Step KI
  </div>
  </div>
  <motion.div

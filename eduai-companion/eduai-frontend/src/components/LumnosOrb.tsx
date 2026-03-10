@@ -96,7 +96,7 @@ export default function LumnosOrb({
       whileHover={{ scale: 1.06 }}
       whileTap={{ scale: 0.95 }}>
 
-      {/* \u00c4u\u00dferer Glow-Ring */}
+      {/* Äußerer Glow-Ring */}
       <div style={{
         position: "absolute", inset: -px * 0.15,
         borderRadius: "50%",
@@ -152,7 +152,7 @@ export default function LumnosOrb({
           }} />
         ))}
 
-        {/* H\u00f6r-Partikel */}
+        {/* Hör-Partikel */}
         {isListening && [...Array(6)].map((_, i) => (
           <motion.div key={i} style={{
             position: "absolute",
