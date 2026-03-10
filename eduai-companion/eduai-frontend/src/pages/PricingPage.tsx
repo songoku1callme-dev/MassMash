@@ -76,8 +76,8 @@ export default function PricingPage() {
  "50 OCR-Anfragen/Monat",
  "50 Spracheingaben/Monat",
  "5 KI-Stile",
- "Basis Quiz-Themen (16 F\u00e4cher)",
- "16 F\u00e4cher + Quiz & Lernpfade",
+ "Basis Quiz-Themen (16 Fächer)",
+ "16 Fächer + Quiz & Lernpfade",
  ];
 
  const proPlan = [
@@ -85,7 +85,7 @@ export default function PricingPage() {
  "Unbegrenzt OCR & Mathe-Fotos",
  "Unbegrenzt Spracheingabe & Vorlesen",
  "12 KI-Stile (+ Humorvoll, Abi-Coach, Mentor, ...)",
- "300+ Quiz-Themen \u00fcber 16 F\u00e4cher",
+ "300+ Quiz-Themen über 16 Fächer",
  "Custom Quiz-Themen erstellen",
  "PDF-Export von Chats",
  "Priorisierte KI (schnellere Antworten)",
@@ -354,7 +354,7 @@ export default function PricingPage() {
  <Brain className="w-5 h-5 text-blue-500 mt-0.5" />
  <div>
  <p className="font-medium text-white text-sm">300+ Quiz-Themen</p>
- <p className="text-xs text-slate-400">16 F\u00e4cher, alle Klassenstufen</p>
+ <p className="text-xs text-slate-400">16 Fächer, alle Klassenstufen</p>
  </div>
  </div>
  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
