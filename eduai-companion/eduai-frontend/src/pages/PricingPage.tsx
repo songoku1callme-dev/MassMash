@@ -142,7 +142,7 @@ export default function PricingPage() {
  )}
  </div>
 
- {tier !== "free" && (
+ {(tier !== "free" || isOwner) && (
  <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-yellow-800" style={{ background: "rgba(234,179,8,0.1)" }}>
  <Crown className="w-6 h-6 text-yellow-500" />
  <span className="text-lg font-semibold text-yellow-300">
