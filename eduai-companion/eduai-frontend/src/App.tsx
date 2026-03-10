@@ -119,7 +119,8 @@ function App() {
     }
   }, [clerkAuth.isSignedIn]);
 
-  // Clerk → AuthStore sync: when Clerk signs in, get token and sync
+  // Clerk → AuthStore sync: when Clerk signs in, get token and sync.
+  // Also re-fires when isAuthenticated changes (e.g. loadUser clears tokens).
   useEffect(() => {
     if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {
       clerkAuth.getToken().then((token) => {
@@ -134,7 +135,7 @@ function App() {
         }
       });
     }
-  }, [clerkAuth.isSignedIn, clerkUser.user]);
+  }, [clerkAuth.isSignedIn, clerkUser.user, isAuthenticated]);
 
   useEffect(() => {
     loadUser();

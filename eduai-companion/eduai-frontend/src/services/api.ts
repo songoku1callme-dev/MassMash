@@ -31,7 +31,7 @@ async function getFreshClerkToken(): Promise<string | null> {
  * Check if the current stored token is a Clerk token (RS256 JWT).
  * Clerk tokens have an 'azp' claim and use RS256 algorithm.
  */
-function isClerkToken(token: string): boolean {
+export function isClerkToken(token: string): boolean {
   if (token === "dev-max-token-lumnos") return false;
   try {
     const header = JSON.parse(atob(token.split(".")[0]));
