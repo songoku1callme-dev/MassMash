@@ -1,0 +1,44 @@
+# docker-compose.yml — Local development setup for Lumnos Companion
+#
+# Usage:
+#   cp .env.template .env   # fill in your keys
+#   docker compose up --build
+#
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:8000
+# API docs: http://localhost:8000/docs
+
+services:
+  backend:
+    build:
+      context: ./lumnos-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8080"
+    env_file:
+      - .env
+    environment:
+      - LUMNOS_DEV_MODE=1
+      - DATABASE_PATH=/data/app.db
+      - PORT=8080
+    volumes:
+      - lumnos-data:/data
+      - ./lumnos-backend/app:/app/app  # hot-reload source
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+
+  frontend:
+    build:
+      context: ./lumnos-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./lumnos-frontend/src:/app/src  # hot-reload source
+    depends_on:
+      - backend
+
+volumes:
+  lumnos-data:

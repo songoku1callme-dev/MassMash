@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Poetry / virtualenv
+.venv/
+
+# Local env
+.env
+
+# Local DBs / caches
+app.db
+rag.db
+.pytest_cache/
+
+# Tests (not needed in runtime image)
+tests/
+
+# Git
+.git/
+.gitignore
+
+# Editor
+.vscode/
+.idea/
