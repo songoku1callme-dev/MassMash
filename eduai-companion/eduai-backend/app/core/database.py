@@ -1042,6 +1042,7 @@ async def init_db():
     # Hardcoded admin whitelist — these users ALWAYS get permanent Max tier
     # They can NEVER be downgraded
     admin_emails = [
+        "songoku1callme@gmail.com",
         "ahmadalkhalaf2019@gmail.com",
         "ahmadalkhalaf20024@gmail.com",
         "ahmadalkhalaf1245@gmail.com",

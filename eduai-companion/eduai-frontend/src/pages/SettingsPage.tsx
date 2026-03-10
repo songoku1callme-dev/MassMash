@@ -8,9 +8,11 @@ import {
  Settings, User, Shield, Moon, Globe, Save, Loader2, Star, Crown, CreditCard, CheckCircle2
 } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
+import { isOwnerEmail } from "../utils/ownerEmails";
 
 export default function SettingsPage() {
  const { user, updateUser, logout, loadUser, isLoading } = useAuthStore();
+ const isOwner = isOwnerEmail(user?.email);
  const [fullName, setFullName] = useState("");
  const [schoolGrade, setSchoolGrade] = useState("10");
  const [schoolType, setSchoolType] = useState("Gymnasium");
@@ -75,7 +77,24 @@ export default function SettingsPage() {
  </div>
 
  {/* Pro Status */}
- {user?.is_pro ? (
+ {isOwner ? (
+ <Card className="border-emerald-200">
+ <CardContent className="flex items-center gap-4 p-6">
+ <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+ <Shield className="w-6 h-6 text-white" />
+ </div>
+ <div className="flex-1">
+ <p className="font-semibold theme-text flex items-center gap-2">
+ Owner
+ <Star className="w-4 h-4 text-emerald-500 fill-emerald-500" />
+ </p>
+ <p className="text-sm theme-text-secondary">
+ Alle Funktionen freigeschaltet — keine Limits
+ </p>
+ </div>
+ </CardContent>
+ </Card>
+ ) : user?.is_pro ? (
  <Card className="border-yellow-200">
  <CardContent className="flex items-center gap-4 p-6">
  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
@@ -138,7 +157,7 @@ export default function SettingsPage() {
  <div>
  <label className="text-sm font-medium theme-text-tertiary mb-1 block">Mitglied seit</label>
  <Input
- value={user?.created_at ? new Date(user.created_at).toLocaleDateString("de-DE") : ""}
+ value={user?.created_at ? new Date(user.created_at).toLocaleDateString(undefined) : ""}
  disabled
  className="opacity-60"
  />

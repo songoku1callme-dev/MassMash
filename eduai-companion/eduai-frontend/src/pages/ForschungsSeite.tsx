@@ -399,7 +399,7 @@ export default function ForschungsSeite() {
  {update.quellen_count} Quellen
  </span>
  <p className="text-lumnos-muted text-[10px] mt-1">
- {new Date(update.created_at).toLocaleTimeString("de-DE", {
+ {new Date(update.created_at).toLocaleTimeString(undefined, {
  hour: "2-digit", minute: "2-digit"
  })}
  </p>
@@ -460,7 +460,7 @@ export default function ForschungsSeite() {
  </span>
  </div>
  <span className="text-[10px] text-lumnos-muted">
- {new Date(v.created_at).toLocaleDateString("de-DE")}
+ {new Date(v.created_at).toLocaleDateString(undefined)}
  </span>
  </div>
 
@@ -506,7 +506,7 @@ export default function ForschungsSeite() {
 
  {v.status === "genehmigt" && (
  <p className="text-xs text-green-400 font-medium">
- Genehmigt am {new Date(v.genehmigt_am).toLocaleDateString("de-DE")}
+ Genehmigt am {new Date(v.genehmigt_am).toLocaleDateString(undefined)}
  </p>
  )}
  </motion.div>

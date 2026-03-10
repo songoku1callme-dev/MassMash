@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload, BookOpen, Brain, Layers, Lock } from "lucide-react";
 import { useAuthStore } from "../stores/authStore";
+import { isOwnerEmail } from "../utils/ownerEmails";
 import FachSelector from "../components/FachSelector";
 
 const SCAN_STEPS = [
@@ -14,7 +15,8 @@ const SCAN_STEPS = [
 export default function ScannerPage() {
  const { user } = useAuthStore();
  const tier = user?.subscription_tier || "free";
- const isPro = tier === "pro" || tier === "max";
+ const isOwner = isOwnerEmail(user?.email);
+ const isPro = isOwner || tier === "pro" || tier === "max";
 
  const [fach, setFach] = useState("");
  const [file, setFile] = useState<File | null>(null);

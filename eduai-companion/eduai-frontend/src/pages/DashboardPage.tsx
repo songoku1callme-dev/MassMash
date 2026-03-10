@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { learningApi, gamificationApi, shopApi, type Progress, type GamificationProfile } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
+import { isOwnerEmail } from "../utils/ownerEmails";
 import BentoTile from "../components/BentoTile";
 import { ErrorState } from "../components/PageStates";
 import LumnosOrb from "../components/LumnosOrb";
@@ -32,7 +33,7 @@ function getKIGreeting(xp: number, streak: number, coins: number, level: number)
 }
 
 function formatTime(): string {
- return new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+ return new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 interface Quest {
@@ -65,6 +66,7 @@ interface DashboardProps {
 
 export default function DashboardPage({ onNavigate }: DashboardProps) {
  const { user } = useAuthStore();
+ const isOwner = isOwnerEmail(user?.email);
  const [progress, setProgress] = useState<Progress | null>(null);
  const [gamification, setGamification] = useState<GamificationProfile | null>(null);
  const [loading, setLoading] = useState(true);
@@ -750,7 +752,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  )}
 
  {/* Upgrade-Banner */}
- {tier === "free" && (
+ {tier === "free" && !isOwner && (
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}

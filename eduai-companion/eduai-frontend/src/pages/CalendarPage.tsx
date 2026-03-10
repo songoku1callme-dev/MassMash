@@ -162,7 +162,7 @@ export default function CalendarPage() {
  </span>
  <span className="flex items-center gap-1">
  <Clock className="w-4 h-4" />
- {new Date(exam.exam_date).toLocaleDateString("de-DE")}
+ {new Date(exam.exam_date).toLocaleDateString(undefined)}
  </span>
  <span className={`font-medium ${urgent ? "text-red-500" : "text-indigo-600"}`}>
  {days === 0 ? "Heute!" : `noch ${days} Tage`}
@@ -210,7 +210,7 @@ export default function CalendarPage() {
  {day.tag}
  </span>
  <span className="theme-text-secondary w-20 shrink-0">
- {day.datum ? new Date(day.datum).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" }) : `Tag ${day.tag}`}
+ {day.datum ? new Date(day.datum).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) : `Tag ${day.tag}`}
  </span>
  <span className="theme-text flex-1">{day.aufgabe}</span>
  <span className="theme-text-secondary text-xs shrink-0">{day.dauer_minuten} Min.</span>

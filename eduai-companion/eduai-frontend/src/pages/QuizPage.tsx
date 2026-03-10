@@ -338,7 +338,7 @@ export default function QuizPage() {
  </div>
  <div>
  <p className="text-sm font-medium theme-text">{SUBJECTS.find(s => s.id === h.subject)?.name || h.subject}</p>
- <p className="text-xs theme-text-secondary">{new Date(h.completed_at).toLocaleDateString("de-DE")} - {h.difficulty}</p>
+ <p className="text-xs theme-text-secondary">{new Date(h.completed_at).toLocaleDateString(undefined)} - {h.difficulty}</p>
  </div>
  </div>
  <Badge variant={h.score >= 80 ? "success" : h.score >= 50 ? "warning" : "destructive"}>

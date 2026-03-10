@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { authApi, type User, setTokens, clearTokens, getAccessToken, isTokenExpiringSoon, refreshAccessToken } from "../services/api";
+import { isOwnerEmail } from "../utils/ownerEmails";
 
 interface AuthState {
   user: User | null;
@@ -35,6 +36,27 @@ function getOrCreateGuestId(): string {
   return id;
 }
 
+function applyOwnerOverrides(user: User): User {
+  if (!isOwnerEmail(user.email)) return user;
+  return {
+    ...user,
+    is_pro: true,
+    subscription_tier: "max",
+  };
+}
+
+function persistUser(user: User | null): void {
+  if (!user) {
+    localStorage.removeItem("lumnos_user");
+    return;
+  }
+  try {
+    localStorage.setItem("lumnos_user", JSON.stringify(user));
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   token: localStorage.getItem("lumnos_token"),
@@ -47,18 +69,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     const response = await authApi.login({ username, password });
     setTokens(response.access_token, response.refresh_token);
     localStorage.removeItem("lumnos_guest_session_id");
-    set({ user: response.user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
+    const user = applyOwnerOverrides(response.user);
+    persistUser(user);
+    set({ user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
   },
 
   register: async (data) => {
     const response = await authApi.register(data);
     setTokens(response.access_token, response.refresh_token);
     localStorage.removeItem("lumnos_guest_session_id");
-    set({ user: response.user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
+    const user = applyOwnerOverrides(response.user);
+    persistUser(user);
+    set({ user, token: response.access_token, isAuthenticated: true, isGuest: false, guestSessionId: null });
   },
 
   logout: () => {
     clearTokens();
+    persistUser(null);
     localStorage.removeItem("lumnos_guest_session_id");
     set({ user: null, token: null, isAuthenticated: false, isGuest: false, guestSessionId: null });
   },
@@ -75,21 +102,35 @@ export const useAuthStore = create<AuthState>((set) => ({
       const savedUser = localStorage.getItem("lumnos_user");
       if (savedUser) {
         try {
-          const user = JSON.parse(savedUser);
+          const user = applyOwnerOverrides(JSON.parse(savedUser));
+          persistUser(user);
           set({ user, token, isLoading: false, isAuthenticated: true });
           return;
         } catch { /* fall through */ }
       }
       // Fallback dev user
+      const user = applyOwnerOverrides({
+        id: 999,
+        email: "admin@lumnos.de",
+        username: "TestAdmin",
+        full_name: "Test Admin",
+        school_grade: "12",
+        school_type: "Gymnasium",
+        preferred_language: "de",
+        is_pro: true,
+        subscription_tier: "max",
+        ki_personality_id: 1,
+        ki_personality_name: "Mentor",
+        avatar_url: "",
+        auth_provider: "dev",
+        created_at: new Date().toISOString(),
+      } as User);
+      persistUser(user);
       set({
-        user: {
-          id: 999, email: "admin@lumnos.de", username: "TestAdmin",
-          full_name: "Test Admin", school_grade: "12", school_type: "Gymnasium",
-          preferred_language: "de", is_pro: true, subscription_tier: "max",
-          ki_personality_id: 1, ki_personality_name: "Mentor", avatar_url: "",
-          auth_provider: "dev", created_at: new Date().toISOString(),
-        } as User,
-        token, isLoading: false, isAuthenticated: true,
+        user,
+        token,
+        isLoading: false,
+        isAuthenticated: true,
       });
       return;
     }
@@ -107,7 +148,8 @@ export const useAuthStore = create<AuthState>((set) => ({
           return;
         }
       }
-      const user = await authApi.me();
+      const user = applyOwnerOverrides(await authApi.me());
+      persistUser(user);
       set({ user, isLoading: false, isAuthenticated: true });
     } catch {
       clearTokens();
@@ -136,7 +178,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         headers: { Authorization: `Bearer ${clerkToken}` },
       });
       if (res.ok) {
-        const user = await res.json();
+        const user = applyOwnerOverrides(await res.json());
+        persistUser(user);
         set({
           user,
           token: clerkToken,
@@ -150,23 +193,25 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch { /* fall through */ }
     // Even if /me fails (first-time user), mark as authenticated
     // The backend will auto-create the user on the next API call
+    const user = applyOwnerOverrides({
+      id: 0,
+      email: clerkUser.email || "",
+      username: clerkUser.firstName || clerkUser.email?.split("@")[0] || "User",
+      full_name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
+      school_grade: "10",
+      school_type: "Gymnasium",
+      preferred_language: "de",
+      is_pro: false,
+      subscription_tier: "free",
+      ki_personality_id: 1,
+      ki_personality_name: "Mentor",
+      avatar_url: clerkUser.imageUrl || "",
+      auth_provider: "clerk",
+      created_at: new Date().toISOString(),
+    } as User);
+    persistUser(user);
     set({
-      user: {
-        id: 0,
-        email: clerkUser.email || "",
-        username: clerkUser.firstName || clerkUser.email?.split("@")[0] || "User",
-        full_name: `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim(),
-        school_grade: "10",
-        school_type: "Gymnasium",
-        preferred_language: "de",
-        is_pro: false,
-        subscription_tier: "free",
-        ki_personality_id: 1,
-        ki_personality_name: "Mentor",
-        avatar_url: clerkUser.imageUrl || "",
-        auth_provider: "clerk",
-        created_at: new Date().toISOString(),
-      } as User,
+      user,
       token: clerkToken,
       isAuthenticated: true,
       isLoading: false,
@@ -183,8 +228,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await res.json();
       setTokens(data.access_token, data.refresh_token);
       localStorage.removeItem("lumnos_guest_session_id");
+      const user = applyOwnerOverrides(data.user);
+      persistUser(user);
       set({
-        user: data.user,
+        user,
         token: data.access_token,
         isAuthenticated: true,
         isLoading: false,
@@ -198,7 +245,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   updateUser: async (data) => {
-    const user = await authApi.update(data);
+    const user = applyOwnerOverrides(await authApi.update(data));
+    persistUser(user);
     set({ user });
   },
 }));

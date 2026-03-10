@@ -26,7 +26,7 @@ function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: str
  }, duration / steps);
  return () => clearInterval(timer);
  }, [target]);
- return <>{count.toLocaleString("de-DE")}{suffix}</>;
+ return <>{count.toLocaleString(undefined)}{suffix}</>;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "";

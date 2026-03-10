@@ -147,7 +147,7 @@ export default function NotificationsPage() {
                   </div>
                   <p className="text-sm theme-text-secondary">{n.message}</p>
                   <p className="text-xs theme-text-secondary mt-2">
-                    {new Date(n.created_at).toLocaleDateString("de-DE", {
+                    {new Date(n.created_at).toLocaleDateString(undefined, {
                       day: "2-digit",
                       month: "long",
                       year: "numeric",

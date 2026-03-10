@@ -216,7 +216,7 @@ export default function NotesPage() {
  </button>
  </div>
  <p className="text-xs theme-text-secondary mt-2">
- {note.word_count} Wörter &middot; {new Date(note.updated_at).toLocaleDateString("de-DE")}
+ {note.word_count} Wörter &middot; {new Date(note.updated_at).toLocaleDateString(undefined)}
  </p>
  </CardContent>
  </Card>

@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { ocrApi, quizApi, guestApi, visionApi, audioApi, getAccessToken } from "../services/api";
+import { isOwnerEmail } from "../utils/ownerEmails";
 import type { KIPersonality } from "../services/api";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition";
 import FachSelector, { ALLE_FAECHER } from "../components/FachSelector";
@@ -107,6 +108,7 @@ export default function ChatPage() {
  deleteSession,
  } = useChatStore();
  const { user, isGuest, guestSessionId, exitGuestMode } = useAuthStore();
+ const isOwner = isOwnerEmail(user?.email);
  const [input, setInput] = useState("");
  const [guestRemaining, setGuestRemaining] = useState(3);
  const [showPaywall, setShowPaywall] = useState(false);
@@ -370,7 +372,7 @@ export default function ChatPage() {
  }
  }, [isListening, startListening, stopListening]);
 
- const tierLabel = isGuest ? "Gast" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
+ const tierLabel = isGuest ? "Gast" : isOwner ? "Owner" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : "Free";
 
  // Textarea auto-resize handler
  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -577,7 +579,7 @@ export default function ChatPage() {
  </button>
 
  {/* Upgrade Button for Free users */}
- {user?.subscription_tier === "free" && (
+ {!isOwner && user?.subscription_tier === "free" && (
  <button
  onClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "pricing" }))}
  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white transition-all hover:scale-105"

@@ -221,7 +221,7 @@ export default function GroupsPage() {
  <div className="flex-1">
  <div className="flex items-center gap-2 mb-1">
  <span className="text-sm font-medium theme-text">{msg.username}</span>
- <span className="text-xs theme-text-secondary">{new Date(msg.timestamp).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}</span>
+ <span className="text-xs theme-text-secondary">{new Date(msg.timestamp).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}</span>
  </div>
  <p className="text-sm theme-text-secondary bg-[var(--bg-surface)] rounded-lg p-3">{msg.content}</p>
  </div>
@@ -302,7 +302,7 @@ export default function GroupsPage() {
  )}
  </div>
  <p className="text-xs theme-text-secondary mt-2">
- Erstellt: {new Date(group.created_at).toLocaleDateString("de-DE")}
+ Erstellt: {new Date(group.created_at).toLocaleDateString(undefined)}
  </p>
  </CardContent>
  </Card>

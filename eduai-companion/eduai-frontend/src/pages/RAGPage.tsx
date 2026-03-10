@@ -389,7 +389,7 @@ export default function RAGPage() {
             </span>
            )}
            <span className="text-xs theme-text-secondary">
-            {new Date(doc.created_at).toLocaleDateString("de-DE")}
+            {new Date(doc.created_at).toLocaleDateString(undefined)}
            </span>
           </div>
          </div>

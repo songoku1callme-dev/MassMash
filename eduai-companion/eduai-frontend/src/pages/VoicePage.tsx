@@ -199,7 +199,7 @@ export default function VoicePage() {
          </>
         )}
         <span className="text-[10px] theme-text-secondary ml-auto">
-         {entry.timestamp.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+         {entry.timestamp.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
         </span>
        </div>
        <p className="text-sm theme-text">{entry.text}</p>

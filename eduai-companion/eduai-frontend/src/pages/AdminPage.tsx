@@ -9,6 +9,7 @@ import {
  TrendingUp, DollarSign, Brain, ShieldOff
 } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
+import { isOwnerEmail } from "../utils/ownerEmails";
 
 // Hardcoded admin whitelist — Fallback falls API nicht erreichbar
 const ADMIN_EMAILS = [
@@ -64,20 +65,26 @@ interface AnalyticsData {
 export default function AdminPage() {
  const { user } = useAuthStore();
  const userEmail = (user?.email || "").toLowerCase();
- const localAdminCheck = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+ const isOwner = isOwnerEmail(user?.email);
+ const localAdminCheck = isOwner || ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
 
  // API-basierter Admin-Check (Single Source of Truth)
  const [apiAdmin, setApiAdmin] = useState<boolean | null>(null);
  const [adminCheckDone, setAdminCheckDone] = useState(false);
 
  useEffect(() => {
+   if (isOwner) {
+     setApiAdmin(true);
+     setAdminCheckDone(true);
+     return;
+   }
    adminApi.check()
      .then((res) => { setApiAdmin(res.is_admin); setAdminCheckDone(true); })
      .catch(() => { setApiAdmin(null); setAdminCheckDone(true); });
- }, []);
+ }, [isOwner]);
 
- // API hat Vorrang, Fallback auf lokale Whitelist
- const isAdmin = apiAdmin !== null ? apiAdmin : localAdminCheck;
+ // API hat Vorrang, Fallback auf lokale Whitelist (Owner immer Admin)
+ const isAdmin = isOwner || (apiAdmin !== null ? apiAdmin : localAdminCheck);
 
  const [stats, setStats] = useState<AdminStats | null>(null);
  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);

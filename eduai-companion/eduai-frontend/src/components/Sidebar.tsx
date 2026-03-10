@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { adminApi } from "../services/api";
+import { isOwnerEmail } from "../utils/ownerEmails";
 import { Button } from "@/components/ui/button";
 import GlobalSearch from "./GlobalSearch";
 import ThemeToggle from "./ThemeToggle";
@@ -46,6 +47,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     "261al3nzi261@gmail.com",
   ];
   const localAdminCheck = ADMIN_EMAILS.some(e => e.toLowerCase() === (user?.email || "").toLowerCase());
+  const isOwner = isOwnerEmail(user?.email);
   const [apiAdmin, setApiAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -211,8 +213,8 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         padding: "12px 16px",
         borderTop: "1px solid var(--border-color)",
       }}>
-        {/* UPGRADE BANNER für Free-User */}
-        {(!user?.subscription_tier || user.subscription_tier === "free") && (
+        {/* UPGRADE BANNER für Free-User (versteckt für Owner) */}
+        {!isOwner && (!user?.subscription_tier || user.subscription_tier === "free") && (
           <div className="mb-3 rounded-xl p-3 cursor-pointer"
                style={{
                  background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15))",
@@ -259,11 +261,12 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-lumnos-text truncate flex items-center gap-1">
                 {user?.full_name || user?.username}
-                {user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
-                {user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
+                {isOwner && <Star className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />}
+                {!isOwner && user?.subscription_tier === "max" && <Star className="w-3.5 h-3.5 text-purple-500 fill-purple-500" />}
+                {!isOwner && user?.subscription_tier === "pro" && <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />}
               </p>
               <p className="text-xs text-lumnos-muted">
-                {user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
+                {isOwner ? "Owner" : user?.subscription_tier === "max" ? "Max" : user?.subscription_tier === "pro" ? "Pro" : user?.school_type} {user?.school_grade}. Klasse
               </p>
             </div>
             <ThemeToggle compact />

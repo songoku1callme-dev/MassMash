@@ -330,7 +330,7 @@ export default function AbiturPage() {
  <div key={h.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)]">
  <div>
  <p className="text-sm font-medium">{h.subject} ({h.duration_minutes}min)</p>
- <p className="text-xs theme-text-secondary">{new Date(h.created_at).toLocaleDateString("de-DE")}</p>
+ <p className="text-xs theme-text-secondary">{new Date(h.created_at).toLocaleDateString(undefined)}</p>
  </div>
  <div className="text-right">
  <Badge variant={h.note_punkte >= 10 ? "success" : h.note_punkte >= 5 ? "warning" : "destructive"}>
