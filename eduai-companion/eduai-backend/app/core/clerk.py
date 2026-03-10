@@ -108,6 +108,53 @@ async def verify_clerk_token(token: str) -> Optional[dict]:
         return None
 
 
+async def fetch_clerk_user(clerk_user_id: str) -> Optional[dict]:
+    """Fetch user details from Clerk Backend API.
+
+    Clerk session JWTs only contain `sub` (user ID) — they do NOT contain
+    email or name. We must call the Clerk Backend API to get those details
+    when auto-creating a user on first login.
+
+    Returns dict with: email, first_name, last_name, image_url, username
+    Returns None on failure.
+    """
+    if not CLERK_SECRET_KEY:
+        return None
+
+    try:
+        url = f"https://api.clerk.com/v1/users/{clerk_user_id}"
+        headers = {"Authorization": f"Bearer {CLERK_SECRET_KEY}"}
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, headers=headers)
+            if resp.status_code != 200:
+                logger.error("Clerk API user fetch failed: %s %s", resp.status_code, resp.text[:200])
+                return None
+
+            data = resp.json()
+            email = ""
+            email_addresses = data.get("email_addresses", [])
+            if email_addresses:
+                # Prefer the primary email
+                for ea in email_addresses:
+                    if ea.get("id") == data.get("primary_email_address_id"):
+                        email = ea.get("email_address", "")
+                        break
+                if not email:
+                    email = email_addresses[0].get("email_address", "")
+
+            return {
+                "email": email,
+                "first_name": data.get("first_name", "") or "",
+                "last_name": data.get("last_name", "") or "",
+                "image_url": data.get("image_url", "") or "",
+                "username": data.get("username", "") or "",
+            }
+    except Exception as e:
+        logger.error("Failed to fetch Clerk user %s: %s", clerk_user_id, e)
+        return None
+
+
 def invalidate_jwks_cache():
     """Clear the JWKS cache (useful if keys are rotated)."""
     global _jwks_cache

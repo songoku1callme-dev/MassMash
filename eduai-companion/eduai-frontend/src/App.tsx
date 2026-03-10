@@ -5,6 +5,7 @@ import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
+import { registerClerkGetToken } from "./services/api";
 import { pageVariants } from "./lib/animations";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -108,6 +109,15 @@ function App() {
     const interval = setInterval(ping, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Register Clerk getToken with API layer for automatic token refresh.
+  // Clerk session tokens expire every ~60s, so the API layer needs this
+  // callback to get fresh tokens before each request.
+  useEffect(() => {
+    if (clerkAuth.isSignedIn) {
+      registerClerkGetToken(() => clerkAuth.getToken());
+    }
+  }, [clerkAuth.isSignedIn]);
 
   // Clerk → AuthStore sync: when Clerk signs in, get token and sync
   useEffect(() => {

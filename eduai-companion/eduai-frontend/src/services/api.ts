@@ -1,5 +1,46 @@
 import { jwtDecode } from "jwt-decode";
 
+// --- Clerk Token Refresh ---
+// Clerk session JWTs expire every ~60 seconds. We need to get fresh tokens
+// from the Clerk SDK before each API call. This callback is set by the App
+// component once Clerk is initialized.
+let _clerkGetTokenFn: (() => Promise<string | null>) | null = null;
+
+/**
+ * Register the Clerk getToken function so the API layer can refresh tokens.
+ * Called once from App.tsx after Clerk auth is initialized.
+ */
+export function registerClerkGetToken(fn: () => Promise<string | null>): void {
+  _clerkGetTokenFn = fn;
+}
+
+/**
+ * Get a fresh Clerk token if we're using Clerk auth.
+ * Returns null if not using Clerk or if token fetch fails.
+ */
+async function getFreshClerkToken(): Promise<string | null> {
+  if (!_clerkGetTokenFn) return null;
+  try {
+    return await _clerkGetTokenFn();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if the current stored token is a Clerk token (RS256 JWT).
+ * Clerk tokens have an 'azp' claim and use RS256 algorithm.
+ */
+function isClerkToken(token: string): boolean {
+  if (token === "dev-max-token-lumnos") return false;
+  try {
+    const header = JSON.parse(atob(token.split(".")[0]));
+    return header.alg === "RS256";
+  } catch {
+    return false;
+  }
+}
+
 // URL-Sanitizer: Browser blockiert fetch() wenn die Origin credentials enthält (user:pass@host).
 // Das passiert bei Tunnel-URLs wie https://user:pass@host.devinapps.com.
 // Lösung: Immer eine saubere Base-URL ohne Credentials verwenden.
@@ -114,8 +155,15 @@ export async function refreshAccessToken(): Promise<string> {
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   let token = getAccessToken();
 
-  // Proactively refresh if token is expiring soon (within 2 min)
-  if (!options.skipAuth && token && isTokenExpiringSoon(120)) {
+  // For Clerk tokens: always get a fresh token (they expire every ~60s)
+  if (!options.skipAuth && token && isClerkToken(token)) {
+    const freshToken = await getFreshClerkToken();
+    if (freshToken) {
+      token = freshToken;
+      setTokens(freshToken, freshToken); // Update stored token
+    }
+  } else if (!options.skipAuth && token && isTokenExpiringSoon(120)) {
+    // For built-in JWT: proactively refresh if expiring soon
     try {
       token = await refreshAccessToken();
     } catch {
@@ -140,13 +188,23 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   // On 401, try refreshing once and retry the original request
   if (response.status === 401 && !options.skipAuth) {
     try {
-      const newToken = await refreshAccessToken();
-      headers["Authorization"] = `Bearer ${newToken}`;
-      response = await fetch(`${API_URL}${endpoint}`, {
-        method: options.method || "GET",
-        headers,
-        body: options.body ? JSON.stringify(options.body) : undefined,
-      });
+      // For Clerk tokens, try getting fresh token from Clerk SDK
+      let newToken: string | null = null;
+      if (token && isClerkToken(token)) {
+        newToken = await getFreshClerkToken();
+      }
+      if (!newToken) {
+        newToken = await refreshAccessToken();
+      }
+      if (newToken) {
+        setTokens(newToken, newToken);
+        headers["Authorization"] = `Bearer ${newToken}`;
+        response = await fetch(`${API_URL}${endpoint}`, {
+          method: options.method || "GET",
+          headers,
+          body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+      }
     } catch {
       // Refresh failed — clear tokens and let the error propagate
       clearTokens();
@@ -221,7 +279,14 @@ export const chatApi = {
     modus?: string;
   }): Promise<Response> => {
     let token = getAccessToken();
-    if (token && isTokenExpiringSoon(120)) {
+    // For Clerk tokens: always get fresh token
+    if (token && isClerkToken(token)) {
+      const freshToken = await getFreshClerkToken();
+      if (freshToken) {
+        token = freshToken;
+        setTokens(freshToken, freshToken);
+      }
+    } else if (token && isTokenExpiringSoon(120)) {
       try { token = await refreshAccessToken(); } catch { /* use current */ }
     }
     const headers: Record<string, string> = {
