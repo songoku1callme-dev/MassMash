@@ -51,6 +51,18 @@ ENDPOINT_RATE_LIMITS: dict[str, int] = {
     "/api/abitur": 10,
 }
 
+# Multiplier for authenticated users (5x the normal limit)
+AUTH_RATE_LIMIT_MULTIPLIER = 5
+
+# Owner emails get no rate limiting at all
+OWNER_EMAILS_FOR_RATE_LIMIT = {
+    "songoku1callme@gmail.com",
+    "alkhalaf.ahmad.b@gmail.com",
+    "ahmadalkhalaf@protonmail.com",
+    "ahmad@lumnos.de",
+    "admin@lumnos.de",
+}
+
 
 def _client_ip(request: Request) -> str:
     """Extract client IP, respecting X-Forwarded-For behind proxies."""
@@ -77,15 +89,19 @@ def _is_rate_limited(ip: str) -> bool:
 _endpoint_stores: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
 
 
-def _is_endpoint_rate_limited(ip: str, path: str) -> bool:
-    """Check endpoint-specific rate limit."""
+def _is_endpoint_rate_limited(ip: str, path: str, is_authenticated: bool = False) -> bool:
+    """Check endpoint-specific rate limit.
+
+    Authenticated users get AUTH_RATE_LIMIT_MULTIPLIER times the normal limit.
+    """
     for prefix, max_req in ENDPOINT_RATE_LIMITS.items():
         if path.startswith(prefix):
+            effective_max = max_req * AUTH_RATE_LIMIT_MULTIPLIER if is_authenticated else max_req
             now = time.monotonic()
             store = _endpoint_stores[prefix]
             window_start = now - RATE_LIMIT_WINDOW_SEC
             store[ip] = [t for t in store[ip] if t > window_start]
-            if len(store[ip]) >= max_req:
+            if len(store[ip]) >= effective_max:
                 return True
             store[ip].append(now)
             return False
@@ -93,13 +109,28 @@ def _is_endpoint_rate_limited(ip: str, path: str) -> bool:
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Shield 3: Rate-limit endpoints per IP with login lockout."""
+    """Shield 3: Rate-limit endpoints per IP with login lockout.
+
+    Relax rate limits for authenticated users (AUTH_RATE_LIMIT_MULTIPLIER).
+    """
 
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         path = request.url.path
         ip = _client_ip(request)
 
-        # Shield 3: Check login lockout first
+        # Determine whether this request is authenticated (Bearer token present)
+        auth_header = request.headers.get("authorization", "")
+        is_authenticated = auth_header.startswith("Bearer ") and len(auth_header) > 10
+
+        # Never rate-limit health/ping endpoints
+        if path in ("/health", "/healthz", "/api/ping"):
+            return await call_next(request)
+
+        # Don't rate limit common bootstrapping auth endpoints
+        if path in ("/api/auth/me", "/api/auth/clerk-config"):
+            return await call_next(request)
+
+        # Shield 3: Check login lockout first (only applies to login endpoint)
         if path.startswith("/api/auth/login"):
             lockout_until = _login_lockout_store.get(ip, 0)
             if time.monotonic() < lockout_until:
@@ -111,9 +142,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     headers={"Retry-After": str(remaining)},
                 )
 
-        # Check endpoint-specific limits
-        if _is_endpoint_rate_limited(ip, path):
-            logger.warning("Rate limit exceeded for IP %s on %s", ip, path)
+        # Check endpoint-specific limits (authenticated users get relaxed limits)
+        if _is_endpoint_rate_limited(ip, path, is_authenticated=is_authenticated):
+            logger.warning(
+                "Rate limit exceeded for IP %s on %s (auth=%s)", ip, path, is_authenticated
+            )
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Zu viele Anfragen. Bitte warte einen Moment."},
@@ -132,6 +165,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     content={"detail": "Zu viele Anfragen. Bitte warte einen Moment."},
                     headers={"Retry-After": "60"},
                 )
+
         return await call_next(request)
 
 
@@ -203,7 +237,7 @@ class BotProtectionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         # Skip for health checks, ping, and public endpoints
         path = request.url.path
-        if path in ("/healthz", "/api/ping", "/docs", "/openapi.json"):
+        if path in ("/health", "/healthz", "/api/ping", "/docs", "/openapi.json"):
             return await call_next(request)
 
         user_agent = (request.headers.get("user-agent") or "").lower()
