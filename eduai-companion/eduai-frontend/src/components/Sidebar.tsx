@@ -54,7 +54,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
     if (!user) return;
     adminApi.check()
       .then((res) => setApiAdmin(res.is_admin))
-      .catch(() => setApiAdmin(null)); // Fallback auf lokale Pr\u00fcfung
+      .catch(() => setApiAdmin(null)); // Fallback auf lokale Prüfung
   }, [user?.email]);
 
   // Owner = immer Admin; sonst API hat Vorrang, Fallback auf lokale Whitelist
@@ -213,7 +213,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         padding: "12px 16px",
         borderTop: "1px solid var(--border-color)",
       }}>
-        {/* UPGRADE BANNER f\u00fcr Free-User (nicht f\u00fcr Owner) */}
+        {/* UPGRADE BANNER für Free-User (nicht für Owner) */}
         {!isOwner && (!user?.subscription_tier || user.subscription_tier === "free") && (
           <div className="mb-3 rounded-xl p-3 cursor-pointer"
                style={{
