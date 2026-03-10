@@ -616,6 +616,12 @@ async def ping():
     return {"pong": True}
 
 
+@app.get("/health")
+async def health():
+    """Simple health check endpoint (no auth, no bot protection)."""
+    return {"status": "ok", "version": app.version}
+
+
 @app.get("/healthz")
 async def healthz():
     """Production health check used by Koyeb/Railway and monitoring."""
