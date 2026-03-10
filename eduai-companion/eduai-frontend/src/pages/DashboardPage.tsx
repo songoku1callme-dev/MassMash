@@ -333,7 +333,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <span>{"\uD83D\uDCB0"}</span>
  <span className="text-yellow-500">{userCoins || userXp}</span>
  </div>
- {tier === "free" && (
+ {tier === "free" && !isOwner && (
  <motion.button
  whileHover={{ scale: 1.05 }}
  whileTap={{ scale: 0.97 }}
