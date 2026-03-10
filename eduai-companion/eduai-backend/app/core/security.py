@@ -203,7 +203,7 @@ class BotProtectionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
         # Skip for health checks, ping, and public endpoints
         path = request.url.path
-        if path in ("/healthz", "/api/ping", "/docs", "/openapi.json"):
+        if path in ("/health", "/healthz", "/api/ping", "/docs", "/openapi.json"):
             return await call_next(request)
 
         user_agent = (request.headers.get("user-agent") or "").lower()
