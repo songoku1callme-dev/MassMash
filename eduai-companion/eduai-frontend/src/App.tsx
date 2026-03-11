@@ -110,17 +110,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Register Clerk getToken with API layer for automatic token refresh.
-  // Clerk session tokens expire every ~60s, so the API layer needs this
-  // callback to get fresh tokens before each request.
-  useEffect(() => {
-    if (clerkAuth.isSignedIn) {
-      registerClerkGetToken(() => clerkAuth.getToken());
-    }
-  }, [clerkAuth.isSignedIn]);
 
-  // Clerk → AuthStore sync: when Clerk signs in, get token and sync.
-  // Also re-fires when isAuthenticated changes (e.g. loadUser clears tokens).
   useEffect(() => {
     if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {
       clerkAuth.getToken().then((token) => {
