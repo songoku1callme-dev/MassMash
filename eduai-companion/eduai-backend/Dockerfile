@@ -32,6 +32,14 @@ WORKDIR /app
 
 # Install python deps first (better layer caching)
 COPY pyproject.toml poetry.lock /app/
+
+# Pre-install CPU-only PyTorch BEFORE poetry install.
+# sentence-transformers depends on torch, which by default pulls in ~2 GB of
+# NVIDIA CUDA packages (nvidia-cusolver-cu12, nvidia-cublas-cu12, …).
+# Render free tier is CPU-only, so we install the lightweight CPU wheel first;
+# poetry then sees the requirement already satisfied and skips the GPU variant.
+RUN pip install --no-cache-dir torch==2.10.0+cpu --index-url https://download.pytorch.org/whl/cpu
+
 RUN poetry install --only main --no-interaction --no-ansi
 
 # Copy application code
