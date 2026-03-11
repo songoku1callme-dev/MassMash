@@ -6,6 +6,7 @@ import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { registerClerkGetToken } from "./services/api";
+import { useStatusBar } from "./hooks/useCapacitor";
 import { pageVariants } from "./lib/animations";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -73,6 +74,7 @@ function App() {
   const clerkUser = useClerkUser();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
+  useStatusBar(); // Configure native status bar (dark theme, #0f172a background)
   const [currentPage, setCurrentPage] = useState("chat");
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);

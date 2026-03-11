@@ -1,25 +1,22 @@
 import { useEffect, useState } from "react";
 import { WifiOff, Wifi } from "lucide-react";
+import { useNetworkStatus } from "../hooks/useCapacitor";
 
 export default function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const { isOnline } = useNetworkStatus();
+  const [isOffline, setIsOffline] = useState(!isOnline);
   const [showReconnect, setShowReconnect] = useState(false);
 
   useEffect(() => {
-    const handleOffline = () => setIsOffline(true);
-    const handleOnline = () => {
+    if (isOnline && isOffline) {
+      // Was offline, now back online
       setIsOffline(false);
       setShowReconnect(true);
       setTimeout(() => setShowReconnect(false), 3000);
-    };
-
-    window.addEventListener("offline", handleOffline);
-    window.addEventListener("online", handleOnline);
-    return () => {
-      window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("online", handleOnline);
-    };
-  }, []);
+    } else if (!isOnline) {
+      setIsOffline(true);
+    }
+  }, [isOnline]);
 
   if (!isOffline && !showReconnect) return null;
 
