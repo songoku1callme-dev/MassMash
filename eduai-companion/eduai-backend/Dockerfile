@@ -38,7 +38,7 @@ COPY pyproject.toml poetry.lock /app/
 # NVIDIA CUDA packages (nvidia-cusolver-cu12, nvidia-cublas-cu12, …).
 # Render free tier is CPU-only, so we install the lightweight CPU wheel first;
 # poetry then sees the requirement already satisfied and skips the GPU variant.
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir torch==2.10.0+cpu --index-url https://download.pytorch.org/whl/cpu
 
 RUN poetry install --only main --no-interaction --no-ansi
 
