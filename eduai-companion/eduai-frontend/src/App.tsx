@@ -5,6 +5,7 @@ import { useAuthStore } from "./stores/authStore";
 import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
+import { registerClerkGetToken } from "./services/api";
 import { pageVariants } from "./lib/animations";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -109,7 +110,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Clerk → AuthStore sync: when Clerk signs in, get token and sync
+
   useEffect(() => {
     if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {
       clerkAuth.getToken().then((token) => {
@@ -124,7 +125,7 @@ function App() {
         }
       });
     }
-  }, [clerkAuth.isSignedIn, clerkUser.user]);
+  }, [clerkAuth.isSignedIn, clerkUser.user, isAuthenticated]);
 
   useEffect(() => {
     loadUser();
