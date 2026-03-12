@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { quizApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
+import { quizApi, gamificationApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
 import ConfidenceSlider from "../components/ConfidenceSlider";
 import {
  BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
@@ -204,6 +204,8 @@ export default function QuizPage() {
  setResult(res);
  setState("results");
  loadHistory();
+ // Award XP for quiz completion
+ try { await gamificationApi.addXp(10, "quiz"); } catch { /* silent */ }
  } catch (err) {
  console.error("Failed to submit quiz:", err);
  } finally {

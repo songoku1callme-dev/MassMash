@@ -75,14 +75,10 @@ export default function NotificationBell() {
           if (!fallbackInterval) fallbackInterval = setInterval(fetchBell, 30000);
           return;
         }
-        const { ticket } = await ticketResp.json();
-
-        // Parse user_id from stored user data
-        const userStr = localStorage.getItem("lumnos_user");
-        const userId = userStr ? JSON.parse(userStr).id : 0;
+        const { ticket, user_id } = await ticketResp.json();
 
         const wsBase = API_URL.replace(/^http/, "ws");
-        const wsUrl = `${wsBase}/api/notifications/ws/notifications/${userId}?ticket=${ticket}`;
+        const wsUrl = `${wsBase}/api/notifications/ws/notifications/${user_id}?ticket=${ticket}`;
 
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;

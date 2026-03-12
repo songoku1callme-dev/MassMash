@@ -10,7 +10,7 @@ load_dotenv()
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.core.database import init_db
+from app.core.database import init_db, get_db
 from app.core.auth import get_current_user
 from app.core.security import (
     RateLimitMiddleware,
@@ -495,18 +495,38 @@ def validate_ws_ticket(ticket: str) -> int | None:
 
 
 @app.post("/api/ws/ticket")
-async def get_ws_ticket(current_user: dict = Depends(get_current_user)):
+async def get_ws_ticket(
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_db),
+):
     """Issue a short-lived ticket for WebSocket authentication.
 
     The ticket expires after 30 seconds and can only be used once.
     This avoids passing the JWT in the WebSocket URL path.
+
+    NOTE: Ticket is stored in DB (ws_tickets table) to work across multiple instances.
     """
     ticket = _secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(seconds=30)
+
+    # In-memory (legacy)
     ws_tickets[ticket] = {
         "user_id": current_user["id"],
-        "expires": datetime.utcnow() + timedelta(seconds=30),
+        "expires": expires_at,
     }
-    return {"ticket": ticket}
+
+    # DB-backed ticket storage (production-safe)
+    try:
+        await db.execute(
+            "INSERT INTO ws_tickets (ticket, user_id, expires_at) VALUES (?, ?, ?)",
+            (ticket, current_user["id"], expires_at.isoformat()),
+        )
+        await db.commit()
+    except Exception:
+        # Don't fail WS ticket issuance if DB insert fails
+        pass
+
+    return {"ticket": ticket, "user_id": current_user["id"], "expires_at": expires_at.isoformat()}
 
 
 @app.websocket("/ws/{ticket}")

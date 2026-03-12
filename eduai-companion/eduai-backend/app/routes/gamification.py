@@ -85,18 +85,13 @@ async def add_xp(user_id: int, xp_amount: int, activity: str, db: aiosqlite.Conn
     streak = gam["streak_days"]
     last_date = gam.get("streak_last_date", "")
     if last_date != today_str:
-        if last_date == (date.today().replace(day=date.today().day)).isoformat():
-            pass  # Already counted today
+        # Check if yesterday
+        from datetime import timedelta
+        yesterday = (date.today() - timedelta(days=1)).isoformat()
+        if last_date == yesterday:
+            streak += 1
         else:
-            # Check if yesterday
-            from datetime import timedelta
-            yesterday = (date.today() - timedelta(days=1)).isoformat()
-            if last_date == yesterday:
-                streak += 1
-            elif last_date:
-                streak = 1  # Reset streak
-            else:
-                streak = 1  # First day
+            streak = 1
 
     # Calculate new level
     level_info = _calculate_level(new_xp)
