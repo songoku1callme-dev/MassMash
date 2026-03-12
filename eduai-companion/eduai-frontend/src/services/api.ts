@@ -188,19 +188,20 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   // On 401, try refreshing once and retry the original request
   if (response.status === 401 && !options.skipAuth) {
     try {
-      // For Clerk tokens, try getting fresh token from Clerk SDK
       let newToken: string | null = null;
       if (token && isClerkToken(token)) {
+        // Clerk tokens: get fresh token from Clerk SDK only.
+        // Do NOT fall through to refreshAccessToken — it causes 429 loops.
         newToken = await getFreshClerkToken();
-      }
-      if (!newToken) {
+        if (newToken) {
+          setTokens(newToken, newToken);
+        }
+      } else {
+        // Built-in JWT: use our backend refresh endpoint
         newToken = await refreshAccessToken();
+        // refreshAccessToken() already stores the new token
       }
       if (newToken) {
-        if (token && isClerkToken(token)) {
-          setTokens(newToken, newToken); // Clerk tokens don't have separate refresh
-        }
-        // For built-in JWT, refreshAccessToken() already stores the new token
         headers["Authorization"] = `Bearer ${newToken}`;
         response = await fetch(`${API_URL}${endpoint}`, {
           method: options.method || "GET",
@@ -209,8 +210,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         });
       }
     } catch {
-      // Refresh failed — clear tokens and let the error propagate
-      clearTokens();
+      // Only clear tokens for non-Clerk auth. Clerk tokens are managed by Clerk SDK.
+      if (!token || !isClerkToken(token)) {
+        clearTokens();
+      }
       throw new Error("Session expired. Please log in again.");
     }
   }

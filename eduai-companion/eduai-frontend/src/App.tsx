@@ -111,6 +111,14 @@ function App() {
   }, []);
 
 
+  // Register Clerk's getToken so the API layer can refresh tokens automatically.
+  // This MUST run before any API calls so getFreshClerkToken() works.
+  useEffect(() => {
+    if (clerkAuth.isSignedIn && clerkAuth.getToken) {
+      registerClerkGetToken(() => clerkAuth.getToken());
+    }
+  }, [clerkAuth.isSignedIn, clerkAuth.getToken]);
+
   useEffect(() => {
     if (clerkAuth.isSignedIn && clerkUser.user && !isAuthenticated) {
       clerkAuth.getToken().then((token) => {
