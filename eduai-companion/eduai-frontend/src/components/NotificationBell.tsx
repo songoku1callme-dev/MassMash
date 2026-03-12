@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell } from "lucide-react";
+import { Network } from "@capacitor/network";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -114,10 +115,39 @@ export default function NotificationBell() {
 
     connectWS();
 
+    // Capacitor Network: reconnect WebSocket when connectivity is restored
+    let networkListenerHandle: { remove: () => void } | null = null;
+    (async () => {
+      try {
+        networkListenerHandle = await Network.addListener("networkStatusChange", (status) => {
+          if (status.connected && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
+            // Network restored — reconnect WebSocket
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            connectWS();
+          }
+        });
+      } catch {
+        // Capacitor Network plugin not available (web) — use browser online/offline events
+        const handleOnline = () => {
+          if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+            if (reconnectTimer) clearTimeout(reconnectTimer);
+            connectWS();
+          }
+        };
+        window.addEventListener("online", handleOnline);
+        // Store cleanup ref
+        (window as unknown as Record<string, () => void>).__notifBellOnline = handleOnline;
+      }
+    })();
+
     return () => {
       if (wsRef.current) { wsRef.current.close(); wsRef.current = null; }
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (fallbackInterval) clearInterval(fallbackInterval);
+      if (networkListenerHandle) networkListenerHandle.remove();
+      // Clean up browser fallback listener
+      const handler = (window as unknown as Record<string, () => void>).__notifBellOnline;
+      if (handler) { window.removeEventListener("online", handler); delete (window as unknown as Record<string, () => void>).__notifBellOnline; }
     };
   }, [fetchBell]);
 

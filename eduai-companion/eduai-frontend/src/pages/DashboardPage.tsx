@@ -323,15 +323,18 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <motion.div
  initial={{ opacity: 0, x: -20 }}
  animate={{ opacity: 1, x: 0 }}
- className="flex items-center justify-between mb-5">
- <div>
- <h1 className="text-2xl font-black text-foreground">
+ className="flex flex-col gap-2 mb-5">
+ {/* Row 1: Title + Coins */}
+ <div className="flex items-start justify-between gap-2">
+ <div className="min-w-0 flex-1">
+ <h1 className="text-xl sm:text-2xl font-black text-foreground leading-tight">
  {greeting.text}, {userName}! {greeting.emoji}
  </h1>
- <p className="text-muted-foreground text-sm flex items-center gap-2">
+ <p className="text-muted-foreground text-xs sm:text-sm flex flex-wrap items-center gap-1 mt-0.5">
  <span className="opacity-60">{currentTime}</span>
- <span className="mx-1">{"\u00B7"}</span>
- {greeting.motivation}
+ <span className="mx-0.5">{"\u00B7"}</span>
+ <span className="truncate">{greeting.motivation}</span>
+ </p>
          {/* KI-Begrüßung: Proaktive Nachricht basierend auf Stats */}
          {(() => {
            const kiMsg = getKIGreeting(userXp, streak, userCoins, userLevel);
@@ -346,21 +349,21 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
              </motion.p>
            ) : null;
          })()}
- </p>
  </div>
- <div className="flex items-center gap-3">
- {/* Coins Display */}
- <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold"
+ {/* Coins — always visible */}
+ <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-bold shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(234,179,8,0.3)" }}>
  <span>{"\uD83D\uDCB0"}</span>
  <span className="text-yellow-500">{userCoins || userXp}</span>
  </div>
+ </div>
+ {/* Row 2: Pro button — full width on mobile */}
  {tier === "free" && !isOwner && (
  <motion.button
  whileHover={{ scale: 1.05 }}
  whileTap={{ scale: 0.97 }}
  onClick={() => onNavigate("pricing")}
- className="px-4 py-2 rounded-xl text-sm font-bold text-white"
+ className="w-full sm:w-auto sm:self-end px-4 py-2 rounded-xl text-sm font-bold text-white"
  style={{
  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
  boxShadow: "0 0 20px rgba(99,102,241,0.5)",
@@ -368,7 +371,6 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {"\u26A1"} Pro upgraden
  </motion.button>
  )}
- </div>
  </motion.div>
 
  {/* === Stats-Karten (animiert) === */}
@@ -376,14 +378,14 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  variants={staggerContainer}
  initial="initial"
  animate="animate"
- className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+ className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-5">
 
  {/* Streak */}
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.1 }}
- className="relative rounded-2xl p-4 overflow-hidden cursor-pointer"
+ className="relative rounded-2xl p-3 sm:p-4 overflow-hidden cursor-pointer"
  style={{
  background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(249,115,22,0.3)",
@@ -394,10 +396,10 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <motion.span
  animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}
  transition={{ duration: 1.5, repeat: Infinity }}
- className="text-2xl">{"\uD83D\uDD25"}</motion.span>
+ className="text-xl sm:text-2xl">{"\uD83D\uDD25"}</motion.span>
  <span className="text-xs text-muted-foreground font-medium">Streak</span>
  </div>
- <div className="text-2xl font-black text-foreground">{streak} Tage</div>
+ <div className="text-xl sm:text-2xl font-black text-foreground">{streak} Tage</div>
  {streak >= 7 && (
  <div className="text-xs text-orange-400 mt-0.5">{"\uD83C\uDFAF"} Rekord-Streak!</div>
  )}
@@ -408,17 +410,17 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.15 }}
- className="relative rounded-2xl p-4 overflow-hidden cursor-pointer"
+ className="relative rounded-2xl p-3 sm:p-4 overflow-hidden cursor-pointer"
  style={{
  background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(139,92,246,0.3)",
  }}
  onClick={() => onNavigate("stats")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-2xl">{"\u26A1"}</span>
+ <span className="text-xl sm:text-2xl">{"\u26A1"}</span>
  <span className="text-xs text-muted-foreground font-medium">XP Gesamt</span>
  </div>
- <div className="text-2xl font-black text-foreground">{userXp} XP</div>
+ <div className="text-xl sm:text-2xl font-black text-foreground">{userXp} XP</div>
  <div className="text-xs text-muted-foreground mt-0.5">
  {levelEmoji} {levelName}
  </div>
@@ -444,17 +446,17 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.2 }}
- className="relative rounded-2xl p-4 overflow-hidden cursor-pointer"
+ className="relative rounded-2xl p-3 sm:p-4 overflow-hidden cursor-pointer"
  style={{
  background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(6,182,212,0.3)",
  }}
  onClick={() => onNavigate("stats")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-2xl">{"\uD83D\uDCDA"}</span>
+ <span className="text-xl sm:text-2xl">{"\uD83D\uDCDA"}</span>
  <span className="text-xs text-muted-foreground font-medium">Fächer</span>
  </div>
- <div className="text-2xl font-black text-foreground">{profiles.length} aktiv</div>
+ <div className="text-xl sm:text-2xl font-black text-foreground">{profiles.length} aktiv</div>
  <div className="text-xs text-muted-foreground mt-0.5">{totalQuizzes} Quizze</div>
  </motion.div>
 
@@ -463,17 +465,17 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.25 }}
- className="relative rounded-2xl p-4 overflow-hidden cursor-pointer"
+ className="relative rounded-2xl p-3 sm:p-4 overflow-hidden cursor-pointer"
  style={{
  background: "rgba(var(--surface-rgb),0.6)",
  border: "1px solid rgba(234,179,8,0.3)",
  }}
  onClick={() => onNavigate("gamification")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-2xl">{"\uD83C\uDFC6"}</span>
+ <span className="text-xl sm:text-2xl">{"\uD83C\uDFC6"}</span>
  <span className="text-xs text-muted-foreground font-medium">Rang</span>
  </div>
- <div className="text-2xl font-black text-foreground">Lv.{userLevel}</div>
+ <div className="text-xl sm:text-2xl font-black text-foreground">Lv.{userLevel}</div>
  <div className="text-xs text-muted-foreground mt-0.5">{correctPercent}% richtig</div>
  </motion.div>
  </motion.div>
@@ -745,7 +747,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  background: "rgba(var(--surface-rgb),0.4)",
  border: "1px solid rgba(99,102,241,0.15)",
  }}>
- <div className="grid grid-cols-4 gap-0">
+ <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-0">
  {[
  { icon: "\uD83D\uDCAC", wert: totalSessions, label: "Chats" },
  { icon: "\uD83C\uDFAF", wert: totalQuizzes, label: "Quizze" },
@@ -757,9 +759,10 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.9 + i * 0.08 }}
- className="text-center">
- <div className="text-xl">{icon}</div>
- <div className="text-lg font-black text-foreground">{wert}</div>
+ className="flex flex-col items-center justify-center text-center min-h-[80px] rounded-xl sm:rounded-none"
+ style={{ background: "rgba(var(--surface-rgb),0.3)" }}>
+ <div className="text-2xl mb-1">{icon}</div>
+ <div className="text-xl font-black text-foreground">{wert}</div>
  <div className="text-xs text-muted-foreground">{label}</div>
  </motion.div>
  ))}
@@ -780,25 +783,25 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 1.0 }}
  whileHover={{ scale: 1.01 }}
- className="rounded-2xl p-5 flex items-center gap-4 cursor-pointer"
+ className="rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 cursor-pointer"
  style={{
  background: "linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.15))",
  border: "1px solid rgba(99,102,241,0.4)",
  boxShadow: "0 0 25px rgba(99,102,241,0.15)",
  }}
  onClick={() => onNavigate("pricing")}>
- <div className="text-4xl">{"\uD83D\uDE80"}</div>
- <div className="flex-1">
- <div className="font-black text-foreground">
- Upgrade auf Pro — 4,99\u20AC/Monat
+ <div className="text-3xl sm:text-4xl">{"\uD83D\uDE80"}</div>
+ <div className="flex-1 text-center sm:text-left">
+ <div className="font-bold sm:font-black text-foreground text-sm sm:text-base">
+ Upgrade auf Pro
  </div>
- <div className="text-muted-foreground text-sm">
- Schulbuch-Scanner · alle 32 Fächer · unbegrenzte Chats · Multi-Step KI
+ <div className="text-muted-foreground text-xs sm:text-sm">
+ 4,99€/Monat · 32 Fächer · KI-Chat
  </div>
  </div>
  <motion.div
  whileHover={{ scale: 1.05 }}
- className="px-5 py-2.5 rounded-xl font-bold text-white shrink-0"
+ className="w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-white text-center text-sm"
  style={{
  background: "linear-gradient(135deg, #6366f1, #8b5cf6)"
  }}>

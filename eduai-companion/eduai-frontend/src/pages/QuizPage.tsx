@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { quizApi, gamificationApi, type QuizData, type QuizResult, type QuizHistoryItem, type AnswerCheckResult } from "../services/api";
 import ConfidenceSlider from "../components/ConfidenceSlider";
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
 import {
  BrainCircuit, CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy,
  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Loader2,
@@ -134,6 +135,19 @@ export default function QuizPage() {
  finally { setLoading(false); }
  };
 
+ // Haptic feedback helper (safe for web — no-op if Capacitor not available)
+ const triggerHaptic = async (correct: boolean) => {
+ try {
+ if (correct) {
+ await Haptics.notification({ type: NotificationType.Success });
+ } else {
+ await Haptics.impact({ style: ImpactStyle.Heavy });
+ }
+ } catch {
+ // Capacitor not available (web browser) — silent fallback
+ }
+ };
+
  const selectAnswer = async (questionId: number, answer: string) => {
  if (showAnswer || !quiz) return;
  stopTimer();
@@ -147,6 +161,8 @@ export default function QuizPage() {
  user_answer: answer,
  });
  setAnswerResult(checkResult);
+ // Haptic feedback on answer result
+ triggerHaptic(checkResult.correct);
  } catch (err) {
  console.error("Failed to check answer:", err);
  setAnswerResult(null);
