@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { api } from "../services/api";
+import { useMicrophone } from "../hooks/useMicrophone";
 import LumnosOrb from "../components/LumnosOrb";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,23 +58,24 @@ export default function VoiceExamPage() {
  const [fach, setFach] = useState("Mathematik");
  const [frageNr, setFrageNr] = useState(0);
  const [aktuelleFrage, setAktuelleFrage] = useState("");
- const [transcript, setTranscript] = useState("");
  const [verlauf, setVerlauf] = useState<VerlaufItem[]>([]);
  const [currentFeedback, setCurrentFeedback] = useState<VerlaufItem | null>(null);
  const [result, setResult] = useState<ExamResult | null>(null);
  const [error, setError] = useState("");
 
  const synthRef = useRef<SpeechSynthesisUtterance | null>(null);
- const recognRef = useRef<SpeechRecognition | null>(null);
- const transcriptRef = useRef("");
+
+ // Cross-Browser Mikrofon-Hook (KRITISCH 5)
+ const mic = useMicrophone("de");
+
+ // Sync mic transcript to local state
+ const transcript = mic.transcript;
 
  // Cleanup on unmount
  useEffect(() => {
  return () => {
  window.speechSynthesis.cancel();
- if (recognRef.current) {
- try { recognRef.current.abort(); } catch { /* noop */ }
- }
+ mic.stopListening();
  };
  }, []);
 
@@ -95,35 +97,19 @@ export default function VoiceExamPage() {
  }, []);
 
  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- // STT: Zuhören
+ // STT: Zuhören (Cross-Browser via useMicrophone)
  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  const startListening = useCallback(() => {
- const SR = (window as unknown as Record<string, unknown>).SpeechRecognition ||
- (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
- if (!SR) {
- setError("Spracherkennung nicht unterstützt. Bitte Chrome verwenden.");
+ if (!mic.isSupported) {
+ setError(
+ "Spracherkennung nicht unterstützt. Bitte Chrome, Edge oder Safari verwenden. " +
+ `(Backend: ${mic.backend})`
+ );
  return;
  }
- const recog = new (SR as new () => SpeechRecognition)();
- recog.lang = "de-DE";
- recog.continuous = false;
- recog.interimResults = true;
 
  setState("listening");
- setTranscript("");
- transcriptRef.current = "";
-
- recog.onresult = (e: SpeechRecognitionEvent) => {
- let text = "";
- for (let i = 0; i < e.results.length; i++) {
- text += e.results[i][0].transcript;
- }
- setTranscript(text);
- transcriptRef.current = text;
- };
-
- recog.onend = () => {
- const finalText = transcriptRef.current;
+ mic.startListening((finalText) => {
  if (finalText.trim().length < 3) {
  speak("Ich habe dich nicht verstanden. Bitte versuche es nochmal.", () => {
  startListening();
@@ -131,17 +117,8 @@ export default function VoiceExamPage() {
  return;
  }
  evaluateAnswer(finalText);
- };
-
- recog.onerror = (e: SpeechRecognitionErrorEvent) => {
- if (e.error !== "no-speech") {
- setError(`Spracherkennungsfehler: ${e.error}`);
- }
- };
-
- recognRef.current = recog;
- recog.start();
- }, [speak]);
+ });
+ }, [speak, mic]);
 
  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  // Antwort bewerten
@@ -321,9 +298,9 @@ export default function VoiceExamPage() {
  </div>
  )}
 
- {/* Fehler */}
+ {/* Fehler (eigene + Mikrofon-Fehler) */}
  <AnimatePresence>
- {error && (
+ {(error || mic.error) && (
  <motion.div
  initial={{ opacity: 0, y: -10 }}
  animate={{ opacity: 1, y: 0 }}
@@ -331,11 +308,21 @@ export default function VoiceExamPage() {
  className="p-3 rounded-xl text-sm text-red-300"
  style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}
  >
- {error}
- <button onClick={() => setError("")} className="ml-2 underline">Schließen</button>
+ {error || mic.error}
+ <button onClick={() => { setError(""); mic.clearError(); }} className="ml-2 underline">Schließen</button>
  </motion.div>
  )}
  </AnimatePresence>
+
+ {/* Browser-Kompatibilität Info */}
+ {!mic.isSupported && state === "idle" && (
+ <div className="p-3 rounded-xl text-sm text-amber-300" style={{
+ background: "rgba(245,158,11,0.1)",
+ border: "1px solid rgba(245,158,11,0.3)",
+ }}>
+ Dein Browser unterstützt keine Spracheingabe. Bitte verwende Chrome, Edge oder Safari für die beste Erfahrung.
+ </div>
+ )}
 
  {/* Idle: Fach-Auswahl */}
  {state === "idle" && !result && (
