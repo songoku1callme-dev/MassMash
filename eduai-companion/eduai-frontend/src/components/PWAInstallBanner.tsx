@@ -20,21 +20,24 @@ export default function PWAInstallBanner() {
       return;
     }
 
-    // Track visit count for showing banner on 3rd visit
-    const visits = parseInt(localStorage.getItem("lumnos_visit_count") || "0") + 1;
-    localStorage.setItem("lumnos_visit_count", String(visits));
+    let promptEvent: BeforeInstallPromptEvent | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show on 3rd visit or later
-      if (visits >= 3) {
+      promptEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(promptEvent);
+      // Show banner after 30 seconds of usage
+      timer = setTimeout(() => {
         setShowBanner(true);
-      }
+      }, 30_000);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const handleInstall = async () => {
@@ -76,7 +79,7 @@ export default function PWAInstallBanner() {
                 Installieren
               </Button>
               <Button onClick={handleDismiss} variant="ghost" size="sm" className="text-xs text-gray-500">
-                Spaeter
+                Später
               </Button>
             </div>
           </div>
