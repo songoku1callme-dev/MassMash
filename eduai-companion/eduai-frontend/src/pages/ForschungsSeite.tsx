@@ -310,7 +310,7 @@ export default function ForschungsSeite() {
  label="Qualitätsrate"
  value={`${stats.qualitätsrate}%`}
  color="#10b981"
- icon={"\u2728"}
+ icon={"✨"}
  />
  <StatCard
  label="Positiv heute"
@@ -357,7 +357,7 @@ export default function ForschungsSeite() {
  color: crawling === fach ? "#f59e0b" : "#a5b4fc",
  }}
  >
- {crawling === fach ? "\u23F3" : (FACH_EMOJIS[fach] || "\u{1F4DA}")} {fach}
+ {crawling === fach ? "⏳" : (FACH_EMOJIS[fach] || "\u{1F4DA}")} {fach}
  </button>
  ))}
  </div>
@@ -519,7 +519,7 @@ export default function ForschungsSeite() {
  {/* Bottom: Orbs der Evolution */}
  <div className="glass rounded-2xl p-6 border border-lumnos-border">
  <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
- {"\u2726"} Orbs der Evolution
+ {"✦"} Orbs der Evolution
  </h2>
  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-4">
  {CRAWL_FÄCHER.map((fach) => {

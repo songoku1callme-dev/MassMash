@@ -60,7 +60,7 @@ function PageLoader() {
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-pulse-glow rounded-full h-10 w-10 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-sm font-bold">{"\u2726"}</div>
+        <div className="animate-pulse-glow rounded-full h-10 w-10 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-sm font-bold">{"✦"}</div>
         <p className="mt-3 text-lumnos-muted text-xs">Laden...</p>
       </div>
     </div>
@@ -72,7 +72,7 @@ function ClerkSplash() {
   return (
     <div className="min-h-screen cyber-bg flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-pulse-glow rounded-full h-16 w-16 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-2xl font-bold">{"\u2726"}</div>
+        <div className="animate-pulse-glow rounded-full h-16 w-16 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-2xl font-bold">{"✦"}</div>
         <h1 className="mt-4 text-lumnos-accent text-lg font-bold tracking-wide">Lumnos</h1>
         <p className="mt-1 text-lumnos-muted text-xs">KI-Lerncoach wird geladen...</p>
       </div>
@@ -183,7 +183,7 @@ function App() {
     return (
       <div className="min-h-screen cyber-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"\u2726"}</div>
+          <div className="animate-pulse-glow rounded-full h-12 w-12 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-lg font-bold">{"✦"}</div>
           {backendWaking ? (
             <>
               <p className="mt-4 text-lumnos-accent text-sm font-medium">KI-Gehirn wird geweckt...</p>

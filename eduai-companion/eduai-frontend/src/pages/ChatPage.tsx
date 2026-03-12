@@ -96,6 +96,7 @@ export default function ChatPage() {
  currentSubject,
  language,
  sendMessageStream,
+ cancelStream,
  setSubject,
  setLanguage,
  addMessage,
@@ -478,8 +479,8 @@ export default function ChatPage() {
  >
  <span className="text-emerald-400">
  {guestRemaining > 0
- ? `\uD83D\uDC4B Gast-Modus: Du kannst noch ${guestRemaining} ${guestRemaining === 1 ? "Frage" : "Fragen"} stellen.`
- : "\u26A0\uFE0F Gast-Limit erreicht! Melde dich an, um weiter zu lernen."}
+ ? `👋 Gast-Modus: Du kannst noch ${guestRemaining} ${guestRemaining === 1 ? "Frage" : "Fragen"} stellen.`
+ : "⚠️ Gast-Limit erreicht! Melde dich an, um weiter zu lernen."}
  </span>
  <button
  onClick={() => { exitGuestMode(); window.location.reload(); }}
@@ -501,7 +502,7 @@ export default function ChatPage() {
  boxShadow: "0 0 40px rgba(99,102,241,0.3)",
  }}
  >
- <div className="text-4xl mb-4">{"\u2728"}</div>
+ <div className="text-4xl mb-4">{"✨"}</div>
  <h2 className="text-xl font-bold text-white mb-2">Dein Probe-Limit ist erreicht!</h2>
  <p className="text-slate-400 mb-6">
  Melde dich kostenlos an, um LUMNOS weiter zu nutzen und deinen Fortschritt zu speichern.
@@ -606,7 +607,7 @@ export default function ChatPage() {
  style={{ background: "rgba(88,28,135,0.3)" }}
  title="KI-Persönlichkeit wählen"
  >
- <span>{currentPersonality?.emoji || "\ud83d\ude0a"}</span>
+ <span>{currentPersonality?.emoji || "😊"}</span>
  <span className="hidden sm:inline">{currentPersonality?.name || "Freundlich"}</span>
  </button>
 
@@ -689,7 +690,7 @@ export default function ChatPage() {
  {/* Example Questions */}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
  {[
- { text: "Was ist \u221A122?", fach: "math" },
+ { text: "Was ist √122?", fach: "math" },
  { text: "Erkläre den Satz des Pythagoras", fach: "math" },
  { text: "Was ist Photosynthese?", fach: "biologie" },
  { text: "Erkläre die Weimarer Republik", fach: "geschichte" },
@@ -1009,7 +1010,7 @@ export default function ChatPage() {
  ? "text-emerald-400 bg-emerald-900/20"
  : "text-red-400 bg-red-900/20"
  }`}>
- {feedbackGiven[idx] === "positive" ? "Danke! \u2713" : "Feedback gesendet"}
+ {feedbackGiven[idx] === "positive" ? "Danke! ✓" : "Feedback gesendet"}
  </span>
  )}
 
@@ -1031,7 +1032,7 @@ export default function ChatPage() {
   </div>
  ) : (
   <span className="text-[10px] px-2 py-0.5 rounded-full text-amber-400 bg-amber-900/20 ml-1">
-   {"\u2B50".repeat(starRating[idx])} Bewertet
+   {"⭐".repeat(starRating[idx])} Bewertet
   </span>
  )}
 
@@ -1043,7 +1044,7 @@ export default function ChatPage() {
  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all"
  title="Kopieren"
  >
- {copiedIdx === idx ? "\u2713 Kopiert" : "Kopieren"}
+ {copiedIdx === idx ? "✓ Kopiert" : "Kopieren"}
  </button>
  {/* Einfacher */}
  <button
@@ -1081,24 +1082,45 @@ export default function ChatPage() {
  </motion.div>
  ))}
 
- {/* Typing indicator with KI avatar */}
+ {/* Typing indicator with KI avatar + Cancel button */}
  {isSending && (
- <div className="flex gap-3 justify-start">
+ <div className="flex gap-3 justify-start items-end">
  <div
  className="w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0"
  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", fontSize: "14px" }}
  >
  &#10022;
  </div>
+ <div className="flex flex-col gap-2">
  <div
  className="rounded-2xl rounded-bl-md px-4 py-3"
  style={{ background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(99,102,241,0.2)" }}
  >
+ <div className="flex items-center gap-2">
  <div className="flex items-center gap-1.5">
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#6366f1", animationDelay: "0ms" }} />
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#8b5cf6", animationDelay: "150ms" }} />
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#06b6d4", animationDelay: "300ms" }} />
  </div>
+ <span className="text-[11px] text-slate-400 ml-1">
+ {modus === "deep" ? "KI denkt nach..." : isThinking ? "Lumnos überlegt..." : "Schreibt..."}
+ </span>
+ </div>
+ </div>
+ {/* Abbrechen-Button during streaming */}
+ {isStreaming && (
+ <button
+ onClick={cancelStream}
+ className="self-start px-3 py-1 rounded-lg text-[11px] font-medium transition-all hover:scale-105"
+ style={{
+ background: "rgba(239,68,68,0.1)",
+ border: "1px solid rgba(239,68,68,0.3)",
+ color: "#f87171",
+ }}
+ >
+ Abbrechen
+ </button>
+ )}
  </div>
  </div>
  )}
@@ -1156,7 +1178,7 @@ export default function ChatPage() {
  <img src={uploadedFile.preview} alt="Vorschau" className="w-12 h-12 rounded-lg object-cover" />
  ) : (
  <div className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl" style={{ background: "rgba(99,102,241,0.2)" }}>
- {uploadedFile.type === "audio" ? "\uD83C\uDFB5" : "\uD83D\uDDBC"}
+ {uploadedFile.type === "audio" ? "🎵" : "🖼"}
  </div>
  )}
  <div className="flex-1 min-w-0">
@@ -1194,9 +1216,9 @@ export default function ChatPage() {
  {/* ===== KI-MODUS BUTTONS (Fast / Standard / Deep) ===== */}
  <div className="flex gap-2 mb-2 max-w-4xl mx-auto overflow-x-auto">
  {([
- { id: "fast" as const, label: "\u26a1 Fast", desc: "Blitzschnell \u2014 1-2 Sek", color: "text-yellow-400 border-yellow-400/30", activeColor: "bg-yellow-400/20 border-yellow-400", activeBg: "rgba(250,204,21,0.15)" },
- { id: "normal" as const, label: "\u2728 Standard", desc: "Ausgewogen \u2014 3-5 Sek", color: "text-blue-400 border-blue-400/30", activeColor: "bg-blue-400/20 border-blue-400", activeBg: "rgba(96,165,250,0.15)" },
- { id: "deep" as const, label: "\ud83e\udde0 Deep", desc: "Präzision — 15-30 Sek", color: "text-purple-400 border-purple-400/30", activeColor: "bg-purple-400/20 border-purple-400", activeBg: "rgba(192,132,252,0.15)" },
+ { id: "fast" as const, label: "⚡ Fast", desc: "Blitzschnell — 1-2 Sek", color: "text-yellow-400 border-yellow-400/30", activeColor: "bg-yellow-400/20 border-yellow-400", activeBg: "rgba(250,204,21,0.15)" },
+ { id: "normal" as const, label: "✨ Standard", desc: "Ausgewogen — 3-5 Sek", color: "text-blue-400 border-blue-400/30", activeColor: "bg-blue-400/20 border-blue-400", activeBg: "rgba(96,165,250,0.15)" },
+ { id: "deep" as const, label: "🧠 Deep", desc: "Präzision — 15-30 Sek", color: "text-purple-400 border-purple-400/30", activeColor: "bg-purple-400/20 border-purple-400", activeBg: "rgba(192,132,252,0.15)" },
  ]).map(m => (
  <button
  key={m.id}
@@ -1217,7 +1239,7 @@ export default function ChatPage() {
  {/* Deep Thinking loading animation */}
  {isSending && modus === "deep" && (
  <div className="flex items-center gap-2 mb-2 max-w-4xl mx-auto text-purple-400 text-sm animate-pulse">
- <span>\ud83e\udde0</span>
+ <span>🧠</span>
  <span>Deep Thinking l&auml;uft... (bis 30s)</span>
  <div className="flex gap-1">
  {[0, 1, 2].map(i => (
@@ -1287,7 +1309,7 @@ export default function ChatPage() {
  : (language === "de" ? "Spracheingabe starten" : "Start voice input")
  }
  >
- <span style={{ fontSize: "16px" }}>{isListening ? "\u23F9" : "\uD83C\uDF99"}</span>
+ <span style={{ fontSize: "16px" }}>{isListening ? "⏹" : "🎙"}</span>
  </button>
 
  {/* Textarea (auto-resize, max 5 Zeilen) */}

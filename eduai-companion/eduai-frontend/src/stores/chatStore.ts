@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { chatApi, gamificationApi, type ChatMessage, type ChatSession } from "../services/api";
 
+// AbortController reference for stream cancellation
+let _streamAbortController: AbortController | null = null;
+
 interface ChatState {
   sessions: ChatSession[];
   currentSessionId: number | null;
@@ -20,6 +23,7 @@ interface ChatState {
   loadSession: (id: number) => Promise<void>;
   sendMessage: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean, modus?: string) => Promise<void>;
   sendMessageStream: (message: string, personalityId?: number, tutorModus?: boolean, eli5?: boolean, modus?: string) => Promise<void>;
+  cancelStream: () => void;
   newChat: () => void;
   setSubject: (subject: string) => void;
   setLanguage: (lang: string) => void;
@@ -146,6 +150,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       isThinking: false,
     });
 
+    // Create AbortController for cancellation
+    const abortController = new AbortController();
+    _streamAbortController = abortController;
+
     try {
       const response = await chatApi.stream({
         message,
@@ -168,6 +176,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }
 
       const reader = response.body.getReader();
+
+      // Wire up abort to cancel the reader
+      abortController.signal.addEventListener("abort", () => {
+        reader.cancel().catch(() => {});
+      });
       const decoder = new TextDecoder();
       let buffer = "";
       let fullText = "";
@@ -283,9 +296,27 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Award XP for chat message
       try { await gamificationApi.addXp(5, "chat"); } catch { /* silent */ }
     } catch (err) {
-      console.error("Streaming failed, falling back:", err);
+      // Only log if not user-cancelled
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        console.error("Streaming failed, falling back:", err);
+      }
       set({ isStreaming: false, streamStatus: "", isSending: false, isThinking: false });
+    } finally {
+      _streamAbortController = null;
     }
+  },
+
+  cancelStream: () => {
+    if (_streamAbortController) {
+      _streamAbortController.abort();
+      _streamAbortController = null;
+    }
+    set({
+      isSending: false,
+      isStreaming: false,
+      streamStatus: "",
+      isThinking: false,
+    });
   },
 
   newChat: () => {
