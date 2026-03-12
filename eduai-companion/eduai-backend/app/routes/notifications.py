@@ -363,42 +363,70 @@ ws_manager = _WSConnectionManager()
 
 
 @router.websocket("/ws/notifications/{user_id}")
-async def websocket_notifications(websocket: WebSocket, user_id: int, ticket: str = ""):
+async def websocket_notifications(
+    websocket: WebSocket,
+    user_id: int,
+    ticket: str = "",
+    db: aiosqlite.Connection = Depends(get_db),
+):
     """WebSocket endpoint for real-time notifications (Perfect School 4.1).
 
     Clients authenticate via a short-lived ticket obtained from POST /api/ws/ticket.
     The ticket expires after 30 seconds and can only be used once.
     This avoids passing the JWT in the WebSocket URL path (security fix).
+
+    Ticket validation is DB-backed (ws_tickets table) so it works across instances.
     """
-    from app.main import ws_tickets
     from datetime import datetime as _dt
 
     # Validate ticket
-    ticket_data = ws_tickets.get(ticket)
-    if not ticket_data or ticket_data["user_id"] != user_id:
+    cursor = await db.execute(
+        "SELECT user_id, expires_at FROM ws_tickets WHERE ticket = ?",
+        (ticket,),
+    )
+    row = await cursor.fetchone()
+    if not row:
         await websocket.close(code=4001, reason="Invalid ticket")
         return
-    if _dt.utcnow() > ticket_data["expires"]:
+
+    td = dict(row)
+    if int(td.get("user_id", 0)) != int(user_id):
+        await websocket.close(code=4001, reason="Invalid ticket")
+        return
+
+    expires_at = td.get("expires_at", "")
+    try:
+        expires_dt = _dt.fromisoformat(expires_at)
+    except Exception:
+        expires_dt = _dt.utcnow()
+
+    if _dt.utcnow() > expires_dt:
+        try:
+            await db.execute("DELETE FROM ws_tickets WHERE ticket = ?", (ticket,))
+            await db.commit()
+        except Exception:
+            pass
         await websocket.close(code=4002, reason="Ticket expired")
         return
+
     # Consume the ticket (one-time use)
-    del ws_tickets[ticket]
+    try:
+        await db.execute("DELETE FROM ws_tickets WHERE ticket = ?", (ticket,))
+        await db.commit()
+    except Exception:
+        pass
 
     await ws_manager.connect(user_id, websocket)
     logger.info("WebSocket connected for user %d", user_id)
 
     try:
         # Send initial unread count
-        db_path = os.getenv("DATABASE_PATH", "app.db")
-        import aiosqlite as _aiosqlite
-        async with _aiosqlite.connect(db_path) as db:
-            db.row_factory = _aiosqlite.Row
-            cursor = await db.execute(
-                "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0",
-                (user_id,),
-            )
-            row = await cursor.fetchone()
-            unread = dict(row)["cnt"] if row else 0
+        cursor = await db.execute(
+            "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = ? AND is_read = 0",
+            (user_id,),
+        )
+        row = await cursor.fetchone()
+        unread = dict(row).get("cnt", 0) if row else 0
         await websocket.send_json({"type": "init", "unread_count": unread})
 
         # Keep connection alive; listen for client pings

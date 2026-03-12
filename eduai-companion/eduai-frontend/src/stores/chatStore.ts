@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { chatApi, type ChatMessage, type ChatSession } from "../services/api";
+import { chatApi, gamificationApi, type ChatMessage, type ChatSession } from "../services/api";
 
 interface ChatState {
   sessions: ChatSession[];
@@ -115,6 +115,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       // Reload sessions list
       get().loadSessions();
+
+      // Award XP for chat message
+      try { await gamificationApi.addXp(5, "chat"); } catch { /* silent */ }
     } catch (err) {
       console.error("Failed to send message:", err);
       set({ isSending: false });
@@ -276,6 +279,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
 
       get().loadSessions();
+
+      // Award XP for chat message
+      try { await gamificationApi.addXp(5, "chat"); } catch { /* silent */ }
     } catch (err) {
       console.error("Streaming failed, falling back:", err);
       set({ isStreaming: false, streamStatus: "", isSending: false, isThinking: false });

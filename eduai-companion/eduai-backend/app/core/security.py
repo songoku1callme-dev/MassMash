@@ -240,6 +240,10 @@ class BotProtectionMiddleware(BaseHTTPMiddleware):
         if path in ("/health", "/healthz", "/api/ping", "/docs", "/openapi.json"):
             return await call_next(request)
 
+        # Don't block WebSocket handshakes
+        if path.startswith("/ws/") or path.startswith("/api/notifications/ws/") or path.startswith("/api/multiplayer/ws/"):
+            return await call_next(request)
+
         user_agent = (request.headers.get("user-agent") or "").lower()
 
         # Block requests with no user-agent on API endpoints

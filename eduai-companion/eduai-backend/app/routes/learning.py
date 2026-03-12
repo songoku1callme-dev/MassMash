@@ -88,13 +88,15 @@ async def get_progress(
     cursor = await db.execute(
         "SELECT COUNT(*) as cnt FROM chat_sessions WHERE user_id = ?", (user_id,)
     )
-    sessions = (await cursor.fetchone())[0]
+    row = await cursor.fetchone()
+    sessions = dict(row).get("cnt", 0) if row else 0
 
     # Count quizzes
     cursor = await db.execute(
         "SELECT COUNT(*) as cnt FROM quiz_results WHERE user_id = ?", (user_id,)
     )
-    quizzes = (await cursor.fetchone())[0]
+    row = await cursor.fetchone()
+    quizzes = dict(row).get("cnt", 0) if row else 0
 
     # Recent activity
     cursor = await db.execute(
