@@ -120,7 +120,7 @@ export default function LandingPage({ onLogin, onRegister, onIQTest, onGuestChat
  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
  <div className="flex items-center gap-2">
  <div className="w-8 h-8 rounded-lg bg-lumnos-gradient flex items-center justify-center text-white animate-pulse-glow">
- <span className="font-bold">{"\u2726"}</span>
+ <span className="font-bold">{"✦"}</span>
  </div>
  <span className="font-bold text-lg text-lumnos-text">Lumnos</span>
  </div>

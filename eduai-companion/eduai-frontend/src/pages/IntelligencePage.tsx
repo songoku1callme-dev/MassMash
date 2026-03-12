@@ -394,9 +394,9 @@ export default function IntelligencePage() {
  {/* Level Buttons */}
  <div className="flex gap-2 mb-4">
  {([
- { key: "einfach" as const, label: "Einfach", emoji: "\uD83E\uDDD2" },
- { key: "normal" as const, label: "Normal", emoji: "\uD83D\uDCDA" },
- { key: "profi" as const, label: "Profi", emoji: "\uD83D\uDD2C" },
+ { key: "einfach" as const, label: "Einfach", emoji: "🧒" },
+ { key: "normal" as const, label: "Normal", emoji: "📚" },
+ { key: "profi" as const, label: "Profi", emoji: "🔬" },
  ]).map((s) => (
  <button
  key={s.key}
@@ -423,9 +423,9 @@ export default function IntelligencePage() {
  erklaererStufe === "normal" ? "text-blue-600" :
  "text-purple-600"
  }`}>
- {erklaererStufe === "einfach" ? "\uD83E\uDDD2 Einfach erklärt" :
- erklaererStufe === "normal" ? "\uD83D\uDCDA Normal" :
- "\uD83D\uDD2C Profi-Level"}
+ {erklaererStufe === "einfach" ? "🧒 Einfach erklärt" :
+ erklaererStufe === "normal" ? "📚 Normal" :
+ "🔬 Profi-Level"}
  </p>
  <p className="theme-text-secondary whitespace-pre-wrap leading-relaxed">
  {erklaererResult[erklaererStufe]}

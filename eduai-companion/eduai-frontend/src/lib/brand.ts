@@ -7,7 +7,7 @@ export const BRAND = {
     support_email: "hilfe@lumnos.de",
     color_primary: "#6366f1",    // Indigo-Neon
     color_secondary: "#8b5cf6",  // Violet
-    logo_emoji: "\u2726",
+    logo_emoji: "✦",
     founded: "2026",
 
     // Fach-Farben für Neon-Glow

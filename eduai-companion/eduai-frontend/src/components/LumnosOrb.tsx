@@ -125,14 +125,14 @@ export default function LumnosOrb({
           transform: "rotate(-30deg)",
         }} />
 
-        {/* \u2726 Symbol */}
+        {/* ✦ Symbol */}
         <span style={{
           color: "rgba(255,255,255,0.95)",
           fontSize: px * 0.38,
           fontWeight: 900,
           textShadow: `0 0 ${px * 0.15}px rgba(255,255,255,0.8)`,
           zIndex: 1, userSelect: "none",
-        }}>{"\u2726"}</span>
+        }}>{"✦"}</span>
 
         {/* Tipp-Wellen */}
         {isTyping && [0, 1, 2].map(i => (

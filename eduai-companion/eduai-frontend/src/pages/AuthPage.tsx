@@ -169,7 +169,7 @@ export default function AuthPage() {
  boxShadow: "0 0 30px rgba(99,102,241,0.3), 0 0 60px rgba(139,92,246,0.15)",
  }}
  >
- <span className="text-2xl font-bold">{"\u2726"}</span>
+ <span className="text-2xl font-bold">{"✦"}</span>
  </div>
  <h1 className="text-3xl font-bold text-foreground tracking-tight">Lumnos</h1>
  <p className="text-muted-foreground mt-1 flex items-center justify-center gap-1.5 text-sm">

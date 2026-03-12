@@ -11,23 +11,23 @@ import { APPLE_EASE, staggerContainer } from "../lib/animations";
 /* --- Helpers --- */
 function getGreeting(): { text: string; emoji: string; motivation: string } {
  const h = new Date().getHours();
- if (h < 6) return { text: "Gute Nacht", emoji: "\uD83C\uDF19", motivation: "Schlaf ist der beste Lernbooster!" };
- if (h < 12) return { text: "Guten Morgen", emoji: "\u2600\uFE0F", motivation: "Früh am Morgen lernt es sich am besten!" };
- if (h < 17) return { text: "Guten Tag", emoji: "\uD83D\uDC4B", motivation: "Perfekte Zeit für eine Lernsession!" };
- if (h < 21) return { text: "Guten Abend", emoji: "\uD83C\uDF06", motivation: "Abends speichert dein Gehirn besonders gut!" };
- return { text: "Gute Nacht", emoji: "\uD83C\uDF19", motivation: "Noch eine schnelle Runde vor dem Schlaf?" };
+ if (h < 6) return { text: "Gute Nacht", emoji: "🌙", motivation: "Schlaf ist der beste Lernbooster!" };
+ if (h < 12) return { text: "Guten Morgen", emoji: "☀️", motivation: "Früh am Morgen lernt es sich am besten!" };
+ if (h < 17) return { text: "Guten Tag", emoji: "👋", motivation: "Perfekte Zeit für eine Lernsession!" };
+ if (h < 21) return { text: "Guten Abend", emoji: "🌆", motivation: "Abends speichert dein Gehirn besonders gut!" };
+ return { text: "Gute Nacht", emoji: "🌙", motivation: "Noch eine schnelle Runde vor dem Schlaf?" };
 }
 
 /** Proaktive KI-Begrüßung basierend auf User-Stats */
 function getKIGreeting(xp: number, streak: number, coins: number, level: number): string | null {
- if (streak >= 30) return `\uD83C\uDF1F Unfassbar! ${streak} Tage Streak — du bist unaufhaltbar!`;
- if (streak >= 14) return `\uD83D\uDD25 ${streak} Tage Streak! Das ist echte Disziplin!`;
- if (streak >= 7) return `\uD83C\uDFAF Eine Woche Streak! Weiter so!`;
- if (xp >= 10000) return `\u26A1 Über 10.000 XP — du bist ein Lernprofi!`;
- if (xp >= 5000) return `\uD83D\uDE80 5.000+ XP gesammelt — beeindruckend!`;
- if (level >= 10) return `\uD83C\uDFC6 Level ${level}! Du gehörst zur Lumnos-Elite!`;
- if (coins >= 1000) return `\uD83D\uDCB0 ${coins} Coins! Schau mal im Shop vorbei!`;
- if (streak === 0) return `\uD83D\uDCAA Starte heute deinen Streak — ein Quiz genügt!`;
+ if (streak >= 30) return `🌟 Unfassbar! ${streak} Tage Streak — du bist unaufhaltbar!`;
+ if (streak >= 14) return `🔥 ${streak} Tage Streak! Das ist echte Disziplin!`;
+ if (streak >= 7) return `🎯 Eine Woche Streak! Weiter so!`;
+ if (xp >= 10000) return `⚡ Über 10.000 XP — du bist ein Lernprofi!`;
+ if (xp >= 5000) return `🚀 5.000+ XP gesammelt — beeindruckend!`;
+ if (level >= 10) return `🏆 Level ${level}! Du gehörst zur Lumnos-Elite!`;
+ if (coins >= 1000) return `💰 ${coins} Coins! Schau mal im Shop vorbei!`;
+ if (streak === 0) return `💪 Starte heute deinen Streak — ein Quiz genügt!`;
  return null;
 }
 
@@ -193,20 +193,20 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  const userXp = gamification?.xp || (user as Record<string, unknown>)?.xp as number || 0;
  const userLevel = gamification?.level || (user as Record<string, unknown>)?.level as number || 1;
  const levelName = gamification?.level_name || `Level ${userLevel}`;
- const levelEmoji = gamification?.level_emoji || "\u2B50";
+ const levelEmoji = gamification?.level_emoji || "⭐";
  const xpToNext = gamification?.xp_to_next_level || 1000;
  const xpProgress = xpToNext > 0 ? Math.min(100, ((userXp % xpToNext) / xpToNext) * 100) : 100;
 
  // Generate fallback quests if none from backend
  const displayQuests: Quest[] = quests.length > 0 ? quests : [
- { id: "q1", title: "Tägliches Quiz", description: "Absolviere 1 Quiz heute", progress: Math.min(totalQuizzes, 1), target: 1, xp_reward: 50, completed: totalQuizzes >= 1, icon: "\u26A1" },
- { id: "q2", title: "Chat-Session", description: "Starte 1 Chat mit dem KI-Tutor", progress: Math.min(totalSessions, 1), target: 1, xp_reward: 30, completed: totalSessions >= 1, icon: "\uD83D\uDCAC" },
- { id: "q3", title: "Streak halten", description: `Halte deinen ${streak}-Tage-Streak`, progress: streak > 0 ? 1 : 0, target: 1, xp_reward: 20, completed: streak > 0, icon: "\uD83D\uDD25" },
+ { id: "q1", title: "Tägliches Quiz", description: "Absolviere 1 Quiz heute", progress: Math.min(totalQuizzes, 1), target: 1, xp_reward: 50, completed: totalQuizzes >= 1, icon: "⚡" },
+ { id: "q2", title: "Chat-Session", description: "Starte 1 Chat mit dem KI-Tutor", progress: Math.min(totalSessions, 1), target: 1, xp_reward: 30, completed: totalSessions >= 1, icon: "💬" },
+ { id: "q3", title: "Streak halten", description: `Halte deinen ${streak}-Tage-Streak`, progress: streak > 0 ? 1 : 0, target: 1, xp_reward: 20, completed: streak > 0, icon: "🔥" },
  ];
 
  // Generate fallback events
  const displayEvents: ActiveEvent[] = events.length > 0 ? events : streak >= 7 ? [
- { id: "e1", name: "Streak-Bonus aktiv!", xp_multiplier: 1.5, emoji: "\uD83D\uDD25", ends_at: "" },
+ { id: "e1", name: "Streak-Bonus aktiv!", xp_multiplier: 1.5, emoji: "🔥", ends_at: "" },
  ] : [];
 
  // Weekly XP chart data (fallback)
@@ -331,7 +331,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  </h1>
  <p className="text-muted-foreground text-xs sm:text-sm flex flex-wrap items-center gap-1 mt-0.5">
  <span className="opacity-60">{currentTime}</span>
- <span className="mx-0.5">{"\u00B7"}</span>
+ <span className="mx-0.5">{"·"}</span>
  <span className="truncate">{greeting.motivation}</span>
  </p>
          {/* KI-Begrüßung: Proaktive Nachricht basierend auf Stats */}
@@ -352,7 +352,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {/* Coins — always visible */}
  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-sm font-bold shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(234,179,8,0.3)" }}>
- <span>{"\uD83D\uDCB0"}</span>
+ <span>{"💰"}</span>
  <span className="text-yellow-500">{userCoins || userXp}</span>
  </div>
  </div>
@@ -367,7 +367,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
  boxShadow: "0 0 20px rgba(99,102,241,0.5)",
  }}>
- {"\u26A1"} Pro upgraden
+ {"⚡"} Pro upgraden
  </motion.button>
  )}
  </motion.div>
@@ -395,12 +395,12 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <motion.span
  animate={streak > 0 ? { scale: [1, 1.3, 1] } : {}}
  transition={{ duration: 1.5, repeat: Infinity }}
- className="text-xl sm:text-2xl">{"\uD83D\uDD25"}</motion.span>
+ className="text-xl sm:text-2xl">{"🔥"}</motion.span>
  <span className="text-xs text-muted-foreground font-medium">Streak</span>
  </div>
  <div className="text-xl sm:text-2xl font-black text-foreground">{streak} Tage</div>
  {streak >= 7 && (
- <div className="text-xs text-orange-400 mt-0.5">{"\uD83C\uDFAF"} Rekord-Streak!</div>
+ <div className="text-xs text-orange-400 mt-0.5">{"🎯"} Rekord-Streak!</div>
  )}
  </motion.div>
 
@@ -416,7 +416,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  }}
  onClick={() => onNavigate("stats")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-xl sm:text-2xl">{"\u26A1"}</span>
+ <span className="text-xl sm:text-2xl">{"⚡"}</span>
  <span className="text-xs text-muted-foreground font-medium">XP Gesamt</span>
  </div>
  <div className="text-xl sm:text-2xl font-black text-foreground">{userXp} XP</div>
@@ -452,7 +452,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  }}
  onClick={() => onNavigate("stats")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-xl sm:text-2xl">{"\uD83D\uDCDA"}</span>
+ <span className="text-xl sm:text-2xl">{"📚"}</span>
  <span className="text-xs text-muted-foreground font-medium">Fächer</span>
  </div>
  <div className="text-xl sm:text-2xl font-black text-foreground">{profiles.length} aktiv</div>
@@ -471,7 +471,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  }}
  onClick={() => onNavigate("gamification")}>
  <div className="flex items-center gap-2 mb-1">
- <span className="text-xl sm:text-2xl">{"\uD83C\uDFC6"}</span>
+ <span className="text-xl sm:text-2xl">{"🏆"}</span>
  <span className="text-xs text-muted-foreground font-medium">Rang</span>
  </div>
  <div className="text-xl sm:text-2xl font-black text-foreground">Lv.{userLevel}</div>
@@ -522,7 +522,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
- {"\uD83C\uDFAF"} Tägliche Quests
+ {"🎯"} Tägliche Quests
  <span className="text-xs text-muted-foreground font-normal">
  {displayQuests.filter(q => q.completed).length}/{displayQuests.length} erledigt
  </span>
@@ -550,7 +550,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="flex-1 min-w-0">
  <div className="font-medium text-foreground text-sm flex items-center gap-2">
  {quest.title}
- {quest.completed && <span className="text-emerald-400 text-xs">{"\u2713"}</span>}
+ {quest.completed && <span className="text-emerald-400 text-xs">{"✓"}</span>}
  </div>
  <div className="text-xs text-muted-foreground">{quest.description}</div>
  {/* Progress Bar */}
@@ -580,10 +580,10 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  transition={{ delay: 0.4 }}
  className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
  {[
- { label: "Chat starten", icon: "\uD83D\uDCAC", page: "chat", color: "#6366f1" },
- { label: "Quiz spielen", icon: "\u26A1", page: "quiz", color: "#06b6d4" },
- { label: "Karteikarten", icon: "\uD83D\uDCDA", page: "flashcards", color: "#8b5cf6" },
- { label: "Abitur-Sim", icon: "\uD83C\uDF93", page: "abitur", color: "#f97316" },
+ { label: "Chat starten", icon: "💬", page: "chat", color: "#6366f1" },
+ { label: "Quiz spielen", icon: "⚡", page: "quiz", color: "#06b6d4" },
+ { label: "Karteikarten", icon: "📚", page: "flashcards", color: "#8b5cf6" },
+ { label: "Abitur-Sim", icon: "🎓", page: "abitur", color: "#f97316" },
  ].map((action, i) => (
  <motion.button
  key={action.page}
@@ -619,7 +619,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  whileHover={{ scale: 1.05 }}
  className="px-5 py-2 rounded-xl font-bold text-sm text-white"
  style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)" }}>
- Chat starten {"\u2192"}
+ Chat starten {"→"}
  </motion.div>
  </div>
  </BentoTile>
@@ -635,7 +635,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  border: "1px solid rgba(99,102,241,0.2)",
  }}>
  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
- {"\uD83D\uDCCA"} Lernstatistik (7 Tage)
+ {"📊"} Lernstatistik (7 Tage)
  </h3>
  <div className="flex items-end gap-1.5 h-32">
  {chartData.map((d, i) => (
@@ -682,12 +682,12 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <motion.div
  animate={{ rotate: [0, 10, -10, 0] }}
  transition={{ duration: 2, repeat: Infinity }}
- className="text-4xl">{"\u26A1"}</motion.div>
+ className="text-4xl">{"⚡"}</motion.div>
  <div>
  <div className="font-bold text-white">Tages-Quiz</div>
  <div className="text-sm text-slate-400">{totalQuizzes} absolviert</div>
  </div>
- <div className="ml-auto text-2xl text-cyan-400">{"\u2192"}</div>
+ <div className="ml-auto text-2xl text-cyan-400">{"→"}</div>
  </div>
  </BentoTile>
 
@@ -699,7 +699,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="absolute top-2 right-2 text-xs px-1.5 py-0.5 rounded-md font-bold"
  style={{ background: "rgba(139,92,246,0.3)", color: "#a78bfa" }}>PRO</div>
  )}
- <div className="text-2xl">{"\uD83D\uDCF7"}</div>
+ <div className="text-2xl">{"📷"}</div>
  <div className="text-xs font-bold text-white mt-1">Scanner</div>
  </div>
  </BentoTile>
@@ -707,7 +707,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {/* Turnier */}
  <BentoTile color="#f59e0b" delay={0.7} onClick={() => onNavigate("turnier")}>
  <div className="p-4 text-center h-full flex flex-col items-center justify-center">
- <div className="text-2xl">{"\uD83C\uDFC6"}</div>
+ <div className="text-2xl">{"🏆"}</div>
  <div className="text-xs font-bold text-white mt-1">Turnier</div>
  <div className="text-xs text-cyan-400">Live!</div>
  </div>
@@ -716,7 +716,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {/* Shop */}
  <BentoTile col={2} color="#f97316" delay={0.75} onClick={() => onNavigate("shop")}>
  <div className="flex items-center gap-3 p-4 h-full">
- <div className="text-2xl">{"\uD83D\uDED2"}</div>
+ <div className="text-2xl">{"🛒"}</div>
  <div>
  <div className="font-bold text-white text-sm">Belohnungs-Shop</div>
  <div className="text-xs text-slate-400">{userCoins || userXp} XP verfügbar</div>
@@ -727,7 +727,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  {/* Gamification */}
  <BentoTile col={2} color="#6366f1" delay={0.8} onClick={() => onNavigate("gamification")}>
  <div className="flex items-center gap-3 p-4 h-full">
- <div className="text-2xl">{"\uD83C\uDFAE"}</div>
+ <div className="text-2xl">{"🎮"}</div>
  <div>
  <div className="font-bold text-white text-sm">Gamification</div>
  <div className="text-xs text-slate-400">XP, Badges & Achievements</div>
@@ -748,10 +748,10 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  }}>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-0">
  {[
- { icon: "\uD83D\uDCAC", wert: totalSessions, label: "Chats" },
- { icon: "\uD83C\uDFAF", wert: totalQuizzes, label: "Quizze" },
- { icon: "\u2705", wert: `${correctPercent}%`, label: "Richtig" },
- { icon: "\uD83D\uDD25", wert: streak, label: "Streak" },
+ { icon: "💬", wert: totalSessions, label: "Chats" },
+ { icon: "🎯", wert: totalQuizzes, label: "Quizze" },
+ { icon: "✅", wert: `${correctPercent}%`, label: "Richtig" },
+ { icon: "🔥", wert: streak, label: "Streak" },
  ].map(({ icon, wert, label }, i) => (
  <motion.div
  key={label}
@@ -789,7 +789,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  boxShadow: "0 0 25px rgba(99,102,241,0.15)",
  }}
  onClick={() => onNavigate("pricing")}>
- <div className="text-3xl sm:text-4xl">{"\uD83D\uDE80"}</div>
+ <div className="text-3xl sm:text-4xl">{"🚀"}</div>
  <div className="flex-1 text-center sm:text-left">
  <div className="font-bold sm:font-black text-foreground text-sm sm:text-base">
  Upgrade auf Pro
@@ -804,7 +804,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  style={{
  background: "linear-gradient(135deg, #6366f1, #8b5cf6)"
  }}>
- Jetzt upgraden {"\u2192"}
+ Jetzt upgraden {"→"}
  </motion.div>
  </motion.div>
  )}
