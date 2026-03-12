@@ -96,6 +96,7 @@ export default function ChatPage() {
  currentSubject,
  language,
  sendMessageStream,
+ cancelStream,
  setSubject,
  setLanguage,
  addMessage,
@@ -1081,24 +1082,45 @@ export default function ChatPage() {
  </motion.div>
  ))}
 
- {/* Typing indicator with KI avatar */}
+ {/* Typing indicator with KI avatar + Cancel button */}
  {isSending && (
- <div className="flex gap-3 justify-start">
+ <div className="flex gap-3 justify-start items-end">
  <div
  className="w-8 h-8 rounded-lg flex items-center justify-center text-white flex-shrink-0"
  style={{ background: "linear-gradient(135deg, #6366f1, #8b5cf6)", fontSize: "14px" }}
  >
  &#10022;
  </div>
+ <div className="flex flex-col gap-2">
  <div
  className="rounded-2xl rounded-bl-md px-4 py-3"
  style={{ background: "rgba(var(--surface-rgb),0.6)", border: "1px solid rgba(99,102,241,0.2)" }}
  >
+ <div className="flex items-center gap-2">
  <div className="flex items-center gap-1.5">
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#6366f1", animationDelay: "0ms" }} />
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#8b5cf6", animationDelay: "150ms" }} />
  <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: "#06b6d4", animationDelay: "300ms" }} />
  </div>
+ <span className="text-[11px] text-slate-400 ml-1">
+ {modus === "deep" ? "KI denkt nach..." : isThinking ? "Lumnos überlegt..." : "Schreibt..."}
+ </span>
+ </div>
+ </div>
+ {/* Abbrechen-Button during streaming */}
+ {isStreaming && (
+ <button
+ onClick={cancelStream}
+ className="self-start px-3 py-1 rounded-lg text-[11px] font-medium transition-all hover:scale-105"
+ style={{
+ background: "rgba(239,68,68,0.1)",
+ border: "1px solid rgba(239,68,68,0.3)",
+ color: "#f87171",
+ }}
+ >
+ Abbrechen
+ </button>
+ )}
  </div>
  </div>
  )}

@@ -396,8 +396,8 @@ async def send_message(
             weak_names = [dict(r)["topic_name"] for r in mem_rows if dict(r)["topic_name"]]
             if weak_names:
                 memory_hint = (
-                    f"\nERINNERUNG: Der Sch\u00fcler hat Schwierigkeiten mit: {', '.join(weak_names)}. "
-                    "Erkl\u00e4re diese Themen besonders gr\u00fcndlich und gib zus\u00e4tzliche Beispiele.\n"
+                    f"\nERINNERUNG: Der Schüler hat Schwierigkeiten mit: {', '.join(weak_names)}. "
+                    "Erkläre diese Themen besonders gründlich und gib zusätzliche Beispiele.\n"
                 )
     except Exception:
         pass  # Non-fatal
