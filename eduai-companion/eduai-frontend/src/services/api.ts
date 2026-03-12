@@ -246,6 +246,8 @@ export const authApi = {
   update: (data: { full_name?: string; school_grade?: string; school_type?: string; preferred_language?: string }) =>
     request<User>("/api/auth/me", { method: "PUT", body: data }),
 
+  deleteAccount: () => request<{ message: string }>("/api/auth/account", { method: "DELETE" }),
+
   refresh: () => refreshAccessToken(),
 };
 
