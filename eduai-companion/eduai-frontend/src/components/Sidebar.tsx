@@ -331,7 +331,8 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             initial={mobileSidebarSlide.initial}
             animate={mobileSidebarSlide.animate}
             exit={mobileSidebarSlide.exit}
-            className="lg:hidden fixed inset-y-0 left-0 z-40 w-72 bg-lumnos-bg border-r border-lumnos-border"
+            className="lg:hidden fixed inset-y-0 left-0 z-40 w-72 bg-lumnos-bg border-r border-lumnos-border backdrop-blur-xl shadow-2xl"
+            style={{ willChange: "transform" }}
           >
             {sidebarContent}
           </motion.aside>
