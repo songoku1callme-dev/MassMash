@@ -1,50 +1,86 @@
-# Testing Lumnos Frontend (Vercel Preview)
+# Testing Lumnos Frontend & PWA
 
 ## Overview
-The Lumnos frontend is a React + Vite app deployed to Vercel. PRs automatically get Vercel preview deployments.
+Lumnos is a React + Vite frontend with Clerk authentication, VitePWA for progressive web app features, and Capacitor for native mobile builds. The frontend is deployed on Vercel.
+
+## URLs
+- **Production:** https://mass-mash.vercel.app
+- **Backend:** https://lumnos-backend.onrender.com
+- **Preview deployments:** Generated automatically by Vercel for each PR branch
 
 ## Devin Secrets Needed
-- No secrets required for basic web regression testing (unauthenticated)
-- For authenticated testing: Clerk test account credentials would be needed
+- No secrets required for unauthenticated testing (splash screen, manifest, SW)
+- For authenticated testing: Clerk test credentials would be needed
 
-## How to Test
+## Testing PWA Features
 
-### 1. Find the Vercel Preview URL
-- After CI passes on a PR, check the Vercel bot comment on the PR for the preview URL
-- Format: `mass-mash-git-{branch-slug}-songoku1callme-devs-projects.vercel.app`
+### Manifest Verification
+1. Navigate to the deployed URL
+2. In browser console, run:
+   ```js
+   fetch('/manifest.webmanifest').then(r => r.json()).then(m => console.log(JSON.stringify(m, null, 2)))
+   ```
+3. Verify: name, short_name, theme_color, background_color, display, icons
+4. **Note:** Vercel preview deployments may return 401 for manifest.webmanifest due to preview auth protection. The JS fetch workaround above bypasses this. Production URL won't have this issue.
 
-### 2. Basic Web Regression
-1. Navigate to the Vercel preview URL
-2. Verify the Clerk auth page loads (shows "Lumnos" + "KI-Lerncoach" + OAuth buttons)
-3. Open browser DevTools console and check for JavaScript errors
-4. Known pre-existing warnings (NOT bugs):
-   - `manifest.webmanifest` 401 error — pre-existing, not related to new changes
-   - Clerk development keys warning — expected in dev/preview deployments
-   - `[DOM] Input elements should have autocomplete attributes` — browser suggestion, not an error
+### Service Worker Verification
+1. In browser console, run:
+   ```js
+   navigator.serviceWorker.getRegistrations().then(regs => console.log(regs.length, 'registrations'))
+   ```
+2. Verify at least 1 registration is active
+3. Check Cache Storage in DevTools Application tab for cache names
 
-### 3. Capacitor Hooks (Web Regression)
-If testing Capacitor-related changes:
-- Run in console: `window.Capacitor.isNativePlatform()` — should return `false` on web
-- Run in console: `window.Capacitor.getPlatform()` — should return `'web'`
-- All Capacitor hooks are designed as no-ops on web via `Capacitor.isNativePlatform()` checks
-- The OfflineBanner uses `useNetworkStatus` which falls back to `navigator.onLine` on web
+### Theme-Color Meta Tag
+1. In browser console:
+   ```js
+   document.querySelector('meta[name="theme-color"]')?.content
+   ```
+2. Should match the manifest theme_color value
 
-### 4. Offline Banner Testing
-- In DevTools Network tab, toggle "Offline" mode
-- Expected: Orange banner appears at bottom: "Offline - Karteikarten und Notizen verfügbar"
-- Toggle back online
-- Expected: Green banner appears briefly: "Wieder online - Daten werden synchronisiert"
+### PWA Install Banner
+- The install banner (`PWAInstallBanner.tsx`) shows after 30 seconds of usage
+- It requires the `beforeinstallprompt` browser event which only fires on HTTPS with valid manifest
+- The banner can be dismissed and stores `lumnos_pwa_dismissed` in localStorage
+- To re-test: clear localStorage item `lumnos_pwa_dismissed`
+- **Note:** The embedded Playwright browser may not fire `beforeinstallprompt` — this is a browser limitation, not a code bug
 
-## Architecture Notes
-- App uses Clerk for authentication (OAuth: Apple, GitHub, Google + email)
-- The app is a single-page app with sidebar navigation (not URL-based routing for most pages)
-- `App.tsx` renders all pages via a `currentPage` state + switch statement
-- Pages are lazy-loaded via `React.lazy()`
-- Backend is on Render (free tier, may have cold-start delays up to 30s)
-- Backend URL configured via `VITE_API_URL` env var
+### Splash Screen
+- `ClerkSplash` component in App.tsx shows while Clerk SDK initializes
+- Shows "Lumnos" branding with pulsing icon on dark background
+- Should appear immediately on page load (no white screen)
+- Very brief on fast connections — annotate recording early
 
-## Native Testing (iOS/Android)
-- Requires Android Studio (for Android) or Xcode on macOS (for iOS)
-- Cannot be tested in browser — Capacitor native features only activate when `isNativePlatform()` is true
-- Android build: `cd eduai-companion/eduai-frontend/android && ./gradlew assembleDebug`
-- iOS build: `npx cap open ios` then build in Xcode
+## Testing Frontend Generally
+
+### Running Locally
+```bash
+cd eduai-companion/eduai-frontend
+npm install
+npm run dev
+```
+The dev server runs on port 5173 with proxy to backend at localhost:8000.
+
+### Lint Check
+```bash
+npm run lint
+```
+Note: There are many pre-existing lint warnings (unused imports) across pages. Focus on errors introduced by your changes.
+
+### Build Check
+```bash
+npm run build
+```
+
+### Key Files
+- `vite.config.ts` — VitePWA manifest + service worker config
+- `src/App.tsx` — Main app with splash screen, auth guard, page routing
+- `src/components/PWAInstallBanner.tsx` — PWA install prompt component
+- `index.html` — Meta tags including theme-color
+- `MOBILE_RELEASE.md` — Android APK + iOS build guide
+
+## Common Issues
+- **Vercel preview 401 on manifest:** Normal for preview deployments with auth protection. Use JS fetch to verify manifest content.
+- **Clerk development keys warning:** Expected on preview/dev, not an error.
+- **Backend cold start:** Render free-tier backend may take 30s+ to wake up. The app has keep-alive pings every 5 minutes.
+- **White screen:** If Clerk fails to load, the ClerkSplash component prevents white screen.
