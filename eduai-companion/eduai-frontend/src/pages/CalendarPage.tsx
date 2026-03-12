@@ -103,9 +103,9 @@ export default function CalendarPage() {
  if (loading) return <LoadingSkeleton lines={6} />;
  if (error) return <ErrorState message="Fehler beim Laden des Kalenders." onRetry={loadExams} />;
 
- return (
- <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
- <div className="flex items-center justify-between">
+  return (
+  <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
  <div>
  <h1 className="text-2xl font-bold theme-text flex items-center gap-2">
  <CalendarDays className="w-7 h-7 text-indigo-600" />
@@ -113,26 +113,26 @@ export default function CalendarPage() {
  </h1>
  <p className="theme-text-secondary mt-1">Plane deine Klausuren und lass dir einen KI-Lernplan erstellen</p>
  </div>
- <Button onClick={() => setShowAdd(true)} className="gap-1">
+ <Button onClick={() => setShowAdd(true)} className="gap-1 w-full sm:w-auto">
  <Plus className="w-4 h-4" /> Klausur eintragen
  </Button>
  </div>
 
  {showAdd && (
  <Card className="border-indigo-200">
- <CardContent className="p-4 space-y-3">
- <div className="grid grid-cols-2 gap-3">
+  <CardContent className="p-4 space-y-3">
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <Input placeholder="Klausur-Titel" value={title} onChange={(e) => setTitle(e.target.value)} />
  <Input placeholder="Fach" value={subject} onChange={(e) => setSubject(e.target.value)} />
- </div>
- <div className="grid grid-cols-2 gap-3">
+  </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
  <Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
  <Input placeholder="Themen (optional)" value={topics} onChange={(e) => setTopics(e.target.value)} />
- </div>
- <div className="flex gap-2">
- <Button onClick={addExam}>Speichern</Button>
- <Button variant="ghost" onClick={() => setShowAdd(false)}>Abbrechen</Button>
- </div>
+  </div>
+  <div className="flex flex-col sm:flex-row gap-2">
+  <Button onClick={addExam} className="w-full sm:w-auto">Speichern</Button>
+  <Button variant="ghost" onClick={() => setShowAdd(false)} className="w-full sm:w-auto">Abbrechen</Button>
+  </div>
  </CardContent>
  </Card>
  )}
@@ -152,8 +152,8 @@ export default function CalendarPage() {
  const urgent = days <= 3;
  return (
  <Card key={exam.id} className={urgent ? "border-red-200" : ""}>
- <CardContent className="p-4">
- <div className="flex items-center justify-between">
+  <CardContent className="p-4">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
  <div>
  <h3 className="font-medium theme-text">{exam.title}</h3>
  <div className="flex items-center gap-3 mt-1 text-sm theme-text-secondary">
@@ -171,11 +171,11 @@ export default function CalendarPage() {
  {exam.topics && (
  <p className="text-xs theme-text-secondary mt-1">Themen: {exam.topics}</p>
  )}
- </div>
- <div className="flex gap-2">
- <Button
- variant="outline"
- size="sm"
+  </div>
+  <div className="flex flex-col sm:flex-row gap-2">
+  <Button
+  variant="outline"
+  size="sm"
  onClick={() => generatePlan(exam.id)}
  disabled={planLoading === exam.id}
  className="gap-1"

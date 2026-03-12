@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { shopApi, ShopItem } from "../services/api";
 import { useShopItems } from "../hooks/useApiQueries";
 import { ShoppingBag, Palette, Bot, Crown, Gem, Zap, Lightbulb, SkipForward, Loader2, Check } from "lucide-react";
-import { PageLoader, ErrorState } from "../components/PageStates";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
  palette: <Palette className="w-6 h-6" />,

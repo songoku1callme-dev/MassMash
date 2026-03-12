@@ -334,7 +334,7 @@ function App() {
               animate="animate"
               exit="exit"
               style={{ flex: 1, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column" }}
-              className="scrollable"
+              className="scrollable mobile-safe-bottom"
             >
               <Suspense fallback={<PageLoader />}>
                 {renderPage()}

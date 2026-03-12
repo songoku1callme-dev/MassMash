@@ -250,12 +250,12 @@ export default function QuizPage() {
  <Card>
  <CardHeader><CardTitle className="text-base">Fach wählen</CardTitle></CardHeader>
  <CardContent>
- <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+ <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-8 gap-2 sm:gap-3">
  {SUBJECTS.map((s) => (
  <button key={s.id} onClick={() => { setSubject(s.id); setSelectedPresetTopic(""); }}
- className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${subject === s.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
+ className={`flex flex-col items-center gap-1.5 sm:gap-2 p-3 sm:p-4 rounded-xl border-2 transition-all ${subject === s.id ? "border-blue-500 bg-blue-500/10" : "border-[var(--border-color)] hover:border-[var(--border-color)]"}`}>
  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center text-white`}>{s.icon}</div>
- <span className="text-sm font-medium theme-text-secondary">{s.name}</span>
+ <span className="text-xs sm:text-sm font-medium theme-text-secondary">{s.name}</span>
  </button>
  ))}
  </div>
@@ -429,7 +429,7 @@ export default function QuizPage() {
  <Card className="shadow-lg">
  <CardContent className="p-6">
  <div className="flex items-start justify-between gap-3 mb-6">
- <p className="text-lg font-medium theme-text">
+ <p className="text-base sm:text-lg font-medium theme-text">
  {question.question}
  </p>
  <ErklaerButton
@@ -468,12 +468,12 @@ export default function QuizPage() {
  onClick={() => selectAnswer(question.id, opt)}
  disabled={isAnswered}
  className="w-full text-left p-4 rounded-xl border-2 transition-colors flex items-center gap-3"
- style={{ background: optionBg, borderColor: optionBorder }}
+ style={{ background: optionBg, borderColor: optionBorder, minHeight: "56px" }}
  >
  <span className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium shrink-0">
  {String.fromCharCode(65 + idx)}
  </span>
- <span className="theme-text flex-1">{opt}</span>
+ <span className="theme-text flex-1 text-base sm:text-sm">{opt}</span>
  {isAnswered && isRight && (
  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
  <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />

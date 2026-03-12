@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { questsApi } from "../services/api";
-import { Target, CheckCircle, Circle, Flame, Swords, BookOpen, Loader2, Sparkles } from "lucide-react";
-import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
+import { Target, CheckCircle, Circle, Flame, Swords, BookOpen, Sparkles } from "lucide-react";
+import { PageLoader, ErrorState } from "../components/PageStates";
 
 const QUEST_ICONS: Record<string, React.ReactNode> = {
  target: <Target className="w-5 h-5" />,

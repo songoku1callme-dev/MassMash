@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { eventsApi } from "../services/api";
-import { Calendar, Trophy, Star, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { Calendar, Trophy, Star, Clock, CheckCircle } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
 
 export default function EventsPage() {

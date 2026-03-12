@@ -7,7 +7,7 @@ import {
  Loader2, Check, X, Brain
 } from "lucide-react";
 import { getAccessToken } from "../services/api";
-import { CardSkeleton, ErrorState, EmptyState } from "../components/PageStates";
+import { CardSkeleton, ErrorState } from "../components/PageStates";
 
 const API = import.meta.env.VITE_API_URL || "";
 

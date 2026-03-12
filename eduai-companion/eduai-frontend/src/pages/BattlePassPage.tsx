@@ -82,11 +82,11 @@ export default function BattlePassPage() {
  if (loading) return <PageLoader text="Battle Pass laden..." />;
  if (!status) return <ErrorState message="Battle Pass konnte nicht geladen werden." onRetry={fetchStatus} />;
 
- return (
- <div className="p-6 max-w-5xl mx-auto">
+  return (
+  <div className="p-4 sm:p-6 max-w-5xl mx-auto">
  {/* Header */}
  <div className="mb-8">
- <h1 className="text-3xl font-bold theme-text flex items-center gap-3">
+ <h1 className="text-2xl sm:text-3xl font-bold theme-text flex items-center gap-3">
  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white shadow-lg">
  <Trophy className="w-6 h-6" />
  </div>
@@ -128,7 +128,7 @@ export default function BattlePassPage() {
  )}
 
  {/* XP Sources */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
  {[
  { label: "Quiz", xp: "+50 XP", icon: "zap", color: "bg-blue-500" },
  { label: "Turnier", xp: "+100 XP", icon: "trophy", color: "bg-orange-500" },
@@ -183,7 +183,7 @@ export default function BattlePassPage() {
  {canClaim && (
  <button
  onClick={() => claimReward(reward.level)}
- className="mt-2 w-full py-1 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+ className="mt-2 w-full py-2 text-xs font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors min-h-[44px]"
  >
  Abholen
  </button>

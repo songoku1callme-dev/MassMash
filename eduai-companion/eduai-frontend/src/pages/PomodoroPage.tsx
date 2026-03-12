@@ -124,8 +124,8 @@ export default function PomodoroPage() {
  long_break: "Lange Pause",
  };
 
- return (
- <div className="p-6 max-w-2xl mx-auto">
+  return (
+  <div className="p-4 sm:p-6 max-w-2xl mx-auto">
  <h1 className="text-2xl font-bold theme-text mb-2 flex items-center gap-2">
  <Timer className="w-7 h-7 text-red-500" />
  Pomodoro Lern-Timer
@@ -166,7 +166,7 @@ export default function PomodoroPage() {
  <select
  value={subject}
  onChange={(e) => setSubject(e.target.value)}
- className="p-2 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg text-sm"
+ className="p-2 border border-[var(--border-color)] bg-[var(--lumnos-surface)] theme-text rounded-lg text-sm w-full max-w-xs min-h-[44px]"
  >
  <option value="general">Allgemein</option>
  <option value="math">Mathematik</option>
@@ -181,7 +181,7 @@ export default function PomodoroPage() {
  )}
 
  {/* Controls */}
- <div className="flex justify-center gap-3">
+ <div className="flex flex-col sm:flex-row justify-center gap-3">
  {timerState === "idle" ? (
  <Button onClick={startWork} size="lg" className="gap-2">
  <Play className="w-5 h-5" />
@@ -239,7 +239,7 @@ export default function PomodoroPage() {
  />
  )}
  {stats && (
- <div className="grid grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
  <div className="theme-card rounded-xl p-4 text-center border border-[var(--border-color)]">
  <p className="text-2xl font-bold text-blue-600">{stats.today}</p>
  <p className="text-xs theme-text-secondary">Heute ({stats.today_minutes} Min)</p>

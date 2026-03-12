@@ -407,14 +407,44 @@ body {
     white-space: nowrap;
   }
 
-  /* Full-width cards on small screens */
-  .grid.grid-cols-2 { grid-template-columns: 1fr !important; }
-  .grid.grid-cols-3 { grid-template-columns: 1fr !important; }
-  .grid.grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+  /* Reduce overly-wide base grids on <= lg (use .keep-2-cols / .keep-3-cols to opt out) */
+  .grid.grid-cols-3:not(.keep-3-cols):not(.keep-2-cols) { grid-template-columns: repeat(2, 1fr) !important; }
+  .grid.grid-cols-4:not(.keep-2-cols) { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Global: prevent horizontal overflow on every page */
+  body, #root, main, .scrollable {
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+
+  /* Global: padding-bottom for mobile browser navigation bar */
+  .mobile-safe-bottom {
+    padding-bottom: 80px !important;
+  }
 }
 
 @media (max-width: 640px) {
-  /* Even smaller: single column for 4-col grids */
-  .grid.grid-cols-4 { grid-template-columns: 1fr !important; }
+  /* Mobile: single column for base grids */
+  .grid.grid-cols-2:not(.keep-2-cols) { grid-template-columns: 1fr !important; }
+  .grid.grid-cols-3:not(.keep-3-cols):not(.keep-2-cols) { grid-template-columns: 1fr !important; }
+  .grid.grid-cols-4:not(.keep-2-cols) { grid-template-columns: 1fr !important; }
+
+  /* Touch targets: ensure minimum 44px tap area */
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Exception: inline tiny buttons (emoji, star rating) */
+  .inline-touch-sm { min-height: 32px; min-width: 32px; }
+
+  /* Font-size 16px on inputs to prevent iOS zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+
+  /* Mobile page padding-bottom for browser nav bar */
+  .page-container, [data-page] {
+    padding-bottom: 80px;
+  }
 }
 

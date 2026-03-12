@@ -7,7 +7,6 @@ import {
  Loader2, AlertCircle, CheckCircle2, Lightbulb, Puzzle,
  Calculator, BookOpen, Box, MemoryStick
 } from "lucide-react";
-import { PageLoader, ErrorState } from "../components/PageStates";
 
 type Step = "intro" | "test" | "results";
 
@@ -179,7 +178,7 @@ export default function IQTestPage() {
  </div>
 
  {/* Categories */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
  {Object.entries(KATEGORIE_LABELS).map(([key, { label, icon, color }]) => (
  <Card key={key} className="text-center">
  <CardContent className="pt-4 pb-3">
@@ -192,7 +191,7 @@ export default function IQTestPage() {
  </div>
 
  {/* Info Cards */}
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
  <Card>
  <CardContent className="pt-4 flex items-start gap-3">
  <Clock className="w-5 h-5 text-blue-500 mt-0.5" />
@@ -341,16 +340,17 @@ export default function IQTestPage() {
  ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
  : "border-[var(--border-color)] hover:border-[var(--border-color)] hover:bg-[var(--bg-surface)]"
  }`}
+ style={{ minHeight: "56px" }}
  >
  <div className="flex items-center gap-3">
- <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+ <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
  selectedAnswer === index
  ? "bg-indigo-500 text-white"
  : "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>
  {String.fromCharCode(65 + index)}
  </span>
- <span className={`text-sm ${
+ <span className={`text-base sm:text-sm ${
  selectedAnswer === index
  ? "text-indigo-900 font-medium"
  : "theme-text-secondary"
@@ -411,7 +411,7 @@ export default function IQTestPage() {
  </div>
 
  {/* Stats Grid */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+ <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
  <Card>
  <CardContent className="pt-4 text-center">
  <p className={`text-2xl font-bold ${iqColor}`}>{result.iq}</p>

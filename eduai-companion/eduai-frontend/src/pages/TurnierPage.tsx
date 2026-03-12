@@ -231,11 +231,11 @@ export default function TurnierPage() {
  <button
  key={i}
  onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: letter }))}
- className={`p-3 rounded-lg text-left text-sm border transition-colors ${
- selected
- ? "border-yellow-500 bg-yellow-50 text-yellow-800"
- : "border-[var(--border-color)] hover:border-yellow-300"
- }`}
+  className={`p-3 rounded-lg text-left text-base sm:text-sm border transition-colors min-h-[56px] ${
+  selected
+  ? "border-yellow-500 bg-yellow-50 text-yellow-800"
+  : "border-[var(--border-color)] hover:border-yellow-300"
+  }`}
  >
  <span className="font-bold mr-2">{letter}.</span>
  {opt}
