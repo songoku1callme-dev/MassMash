@@ -747,7 +747,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  background: "rgba(var(--surface-rgb),0.4)",
  border: "1px solid rgba(99,102,241,0.15)",
  }}>
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-0">
+ <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-0 keep-2-cols">
  {[
  { icon: "\uD83D\uDCAC", wert: totalSessions, label: "Chats" },
  { icon: "\uD83C\uDFAF", wert: totalQuizzes, label: "Quizze" },
