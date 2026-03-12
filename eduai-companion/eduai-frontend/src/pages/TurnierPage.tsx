@@ -319,7 +319,7 @@ export default function TurnierPage() {
  <div key={w.rank} className="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-yellow-50 to-amber-50">
  <div className="flex items-center gap-3">
  <span className={`text-lg ${w.rank === 1 ? "text-yellow-500" : w.rank === 2 ? "text-gray-400" : "text-orange-400"}`}>
- {w.rank === 1 ? "\uD83E\uDD47" : w.rank === 2 ? "\uD83E\uDD48" : "\uD83E\uDD49"}
+ {w.rank === 1 ? "🥇" : w.rank === 2 ? "🥈" : "🥉"}
  </span>
  <span className="font-medium">{w.username}</span>
  </div>

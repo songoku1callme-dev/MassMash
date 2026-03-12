@@ -124,7 +124,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
         {/* Brand */}
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-xl bg-lumnos-gradient flex items-center justify-center text-white shadow-glow-sm animate-pulse-glow">
-            <span className="text-lg font-bold">{"\u2726"}</span>
+            <span className="text-lg font-bold">{"✦"}</span>
           </div>
           <div>
             <h2 className="font-bold text-lumnos-text text-sm">Lumnos</h2>
@@ -223,7 +223,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                }}
                onClick={() => { onPageChange("pricing"); setMobileOpen(false); }}>
             <div className="flex items-center gap-2">
-              <span className="text-lg">{"\u26A1"}</span>
+              <span className="text-lg">{"⚡"}</span>
               <div className="flex-1">
                 <div className="font-bold text-white text-xs">Pro upgraden</div>
                 <div className="text-[10px] text-slate-400">Ab 4,99&euro;/Monat</div>

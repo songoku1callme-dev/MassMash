@@ -340,7 +340,7 @@ export default function AdminPage() {
  <span className="font-mono font-bold">{c.code}</span>
  <span className="theme-text-secondary ml-2">{c.tier} / {c.duration_days}d</span>
  </div>
- <span className="text-xs theme-text-secondary">{c.current_uses}/{c.max_uses || "\u221e"}</span>
+ <span className="text-xs theme-text-secondary">{c.current_uses}/{c.max_uses || "∞"}</span>
  </div>
  ))}
  </div>
