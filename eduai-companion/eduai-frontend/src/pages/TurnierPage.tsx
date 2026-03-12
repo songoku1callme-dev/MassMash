@@ -146,7 +146,7 @@ export default function TurnierPage() {
  <div>
  <h1 className="text-2xl font-bold theme-text flex items-center gap-2">
  <Trophy className="w-7 h-7 text-yellow-500" />
- T&auml;gliches Turnier
+ Tägliches Turnier
  </h1>
  <p className="theme-text-secondary mt-1">
  Jeden Tag um 18:00 Uhr - Teste dein Wissen und gewinne Preise!
@@ -198,7 +198,7 @@ export default function TurnierPage() {
  <Card>
  <CardContent className="p-8 text-center">
  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
- <p className="text-gray-500">Kein aktives Turnier. N&auml;chstes Turnier um 18:00 Uhr!</p>
+ <p className="text-gray-500">Kein aktives Turnier. Nächstes Turnier um 18:00 Uhr!</p>
  </CardContent>
  </Card>
  )}

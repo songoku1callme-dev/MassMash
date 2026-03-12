@@ -25,7 +25,7 @@ def _require_max_tier(user_tier: str) -> None:
     if user_tier != "max":
         raise HTTPException(
             status_code=403,
-            detail="Internet-Recherche ist nur f\u00fcr Max-Abonnenten verf\u00fcgbar. Upgrade auf Max f\u00fcr 19,99\u20ac/Monat.",
+            detail="Internet-Recherche ist nur für Max-Abonnenten verfügbar. Upgrade auf Max für 19,99€/Monat.",
         )
 
 
@@ -95,13 +95,13 @@ def _mock_search_results(query: str) -> list[dict]:
             "title": f"Lehrplan: {query}",
             "url": "https://lehrplanplus.bayern.de",
             "content": f"Lehrplaninhalte zu '{query}' - Bayerischer Lehrplan. "
-                       "Hinweis: F\u00fcr echte Suchergebnisse TAVILY_API_KEY setzen.",
+                       "Hinweis: Für echte Suchergebnisse TAVILY_API_KEY setzen.",
             "score": 0.9,
         },
         {
-            "title": f"Studyflix: {query} einfach erkl\u00e4rt",
+            "title": f"Studyflix: {query} einfach erklärt",
             "url": "https://studyflix.de",
-            "content": f"Einfache Erkl\u00e4rung zu '{query}' mit Videos und Beispielen.",
+            "content": f"Einfache Erklärung zu '{query}' mit Videos und Beispielen.",
             "score": 0.85,
         },
         {
@@ -182,7 +182,7 @@ async def ask_with_sources(
     system_prompt = (
         "Du bist ein Abitur-Experte mit Zugang zu aktuellen Quellen.\n"
         f"AKTUELLE QUELLEN (Internet):\n{source_context}\n"
-        "Beantworte die Frage des Sch\u00fclers basierend auf diesen Quellen.\n"
+        "Beantworte die Frage des Schülers basierend auf diesen Quellen.\n"
         "Zitiere die Quellen in deiner Antwort."
     )
 

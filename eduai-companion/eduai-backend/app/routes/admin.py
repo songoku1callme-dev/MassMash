@@ -299,7 +299,7 @@ async def grant_subscription(
     await db.commit()
 
     return {
-        "message": f"Abo {req.tier} f\u00fcr User {req.user_id} aktiviert ({req.duration_days} Tage)",
+        "message": f"Abo {req.tier} für User {req.user_id} aktiviert ({req.duration_days} Tage)",
         "user_id": req.user_id,
         "tier": req.tier,
         "expires_at": expires_at,
@@ -385,19 +385,19 @@ async def redeem_coupon(
     )
     row = await cursor.fetchone()
     if not row:
-        raise HTTPException(status_code=404, detail="Ung\u00fcltiger oder abgelaufener Gutschein-Code")
+        raise HTTPException(status_code=404, detail="Ungültiger oder abgelaufener Gutschein-Code")
 
     coupon = dict(row)
 
     if coupon["max_uses"] > 0 and coupon["current_uses"] >= coupon["max_uses"]:
-        raise HTTPException(status_code=400, detail="Gutschein wurde bereits zu oft eingel\u00f6st")
+        raise HTTPException(status_code=400, detail="Gutschein wurde bereits zu oft eingelöst")
 
     cursor = await db.execute(
         "SELECT id FROM coupon_redemptions WHERE coupon_id = ? AND user_id = ?",
         (coupon["id"], user_id),
     )
     if await cursor.fetchone():
-        raise HTTPException(status_code=400, detail="Du hast diesen Gutschein bereits eingel\u00f6st")
+        raise HTTPException(status_code=400, detail="Du hast diesen Gutschein bereits eingelöst")
 
     expires_at = (datetime.now() + timedelta(days=coupon["duration_days"])).isoformat()
     await db.execute(
@@ -418,7 +418,7 @@ async def redeem_coupon(
     await db.commit()
 
     return {
-        "message": f"Gutschein eingel\u00f6st! {coupon['tier'].capitalize()}-Abo f\u00fcr {coupon['duration_days']} Tage aktiviert.",
+        "message": f"Gutschein eingelöst! {coupon['tier'].capitalize()}-Abo für {coupon['duration_days']} Tage aktiviert.",
         "tier": coupon["tier"],
         "duration_days": coupon["duration_days"],
         "expires_at": expires_at,

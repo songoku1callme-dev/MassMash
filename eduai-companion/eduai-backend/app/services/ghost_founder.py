@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def _get_groq_key() -> str:
     return settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", "")
-FROM = "Lumnos \u2726 <onboarding@resend.dev>"
+FROM = "Lumnos ✦ <onboarding@resend.dev>"
 APP_URL = os.getenv(
     "LUMNOS_APP_URL",
     "https://mass-mash-git-devin-1772462-fd938d-songoku1callme-devs-projects.vercel.app",
@@ -148,7 +148,7 @@ async def send_daily_impulse():
 font-family:Inter,sans-serif;padding:32px 20px;margin:0;">
 <div style="max-width:480px;margin:0 auto;">
   <div style="text-align:center;margin-bottom:24px;">
-    <div style="font-size:40px;">\u2726</div>
+    <div style="font-size:40px;">✦</div>
     <h2 style="color:#fff;margin:8px 0;font-size:22px;">
       Guten Morgen, {ud['username']}!
     </h2>
@@ -160,7 +160,7 @@ font-family:Inter,sans-serif;padding:32px 20px;margin:0;">
   <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
               border-radius:12px;padding:16px;margin-bottom:20px;">
     <div style="color:#f87171;font-size:12px;font-weight:700;margin-bottom:6px;">
-      \u26A0\uFE0F FOKUS HEUTE</div>
+      ⚠️ FOKUS HEUTE</div>
     <div style="color:#fff;font-weight:700;">{schwächstes_fach}</div>
     <div style="color:#94a3b8;font-size:13px;">
       {niedrigster_score:.0f}% letzte Woche — heute besser machen!</div>
@@ -171,17 +171,17 @@ font-family:Inter,sans-serif;padding:32px 20px;margin:0;">
        style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
               color:white;padding:12px 28px;border-radius:12px;
               text-decoration:none;font-weight:700;font-size:14px;">
-      {schwächstes_fach} jetzt üben \u2192
+      {schwächstes_fach} jetzt üben →
     </a>
   </div>
   <p style="color:#475569;font-size:11px;text-align:center;margin-top:24px;">
-    Lumnos \u00b7 Abmelden: Einstellungen \u2192 Benachrichtigungen
+    Lumnos · Abmelden: Einstellungen → Benachrichtigungen
   </p>
 </div></body></html>"""
 
                     await _send_email_resend(
                         ud["email"],
-                        f"\u2726 Guten Morgen, {ud['username']}! Heute: {schwächstes_fach}",
+                        f"✦ Guten Morgen, {ud['username']}! Heute: {schwächstes_fach}",
                         html,
                     )
                     count += 1
@@ -241,13 +241,13 @@ font-family:Inter,sans-serif;padding:32px 20px;">
      style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
             color:white;padding:12px 28px;border-radius:12px;
             text-decoration:none;font-weight:700;">
-    Weiterlernen \u2192
+    Weiterlernen →
   </a>
 </div></body></html>"""
 
                     await _send_email_resend(
                         ud["email"],
-                        f"Hey {ud['username']}, alles okay? \u2726",
+                        f"Hey {ud['username']}, alles okay? ✦",
                         html,
                     )
                     count += 1
@@ -339,7 +339,7 @@ font-family:Inter,sans-serif;padding:32px 20px;">
        style="display:inline-block;background:linear-gradient(135deg,#6366f1,#8b5cf6);
               color:white;padding:12px 28px;border-radius:12px;
               text-decoration:none;font-weight:700;">
-      Nächste Woche noch besser \u2192
+      Nächste Woche noch besser →
     </a>
   </div>
 </div></body></html>"""

@@ -396,8 +396,8 @@ async def send_message(
             weak_names = [dict(r)["topic_name"] for r in mem_rows if dict(r)["topic_name"]]
             if weak_names:
                 memory_hint = (
-                    f"\nERINNERUNG: Der Sch\u00fcler hat Schwierigkeiten mit: {', '.join(weak_names)}. "
-                    "Erkl\u00e4re diese Themen besonders gr\u00fcndlich und gib zus\u00e4tzliche Beispiele.\n"
+                    f"\nERINNERUNG: Der Schüler hat Schwierigkeiten mit: {', '.join(weak_names)}. "
+                    "Erkläre diese Themen besonders gründlich und gib zusätzliche Beispiele.\n"
                 )
     except Exception:
         pass  # Non-fatal
@@ -611,7 +611,7 @@ async def send_message(
             frage=request.message,
             system_prompt=combined_prompt,
         )
-        modus_label = "\u26a1 Fast"
+        modus_label = "⚡ Fast"
         router_internet = False
         router_multi_step = False
         router_web_quellen = []
@@ -621,7 +621,7 @@ async def send_message(
 
     else:
         # Normal mode — use Model Router
-        modus_label = "\u2728 Standard"
+        modus_label = "✨ Standard"
         routing = route_request(request.message, subject, user_tier)
         logger.info(
             "Model-Routing: %s | multi_step=%s | internet=%s | %s",
@@ -1004,13 +1004,13 @@ async def send_message_stream(
                 is_verified = True
                 modus_label = "\U0001f9e0 Deep Thinking"
             else:
-                yield f"event: status\ndata: {json.dumps({'text': '\u26a1 Fast Mode...'}, ensure_ascii=False)}\n\n"
+                yield f"event: status\ndata: {json.dumps({'text': '⚡ Fast Mode...'}, ensure_ascii=False)}\n\n"
                 antwort, modell = await fast_response(
                     frage=request.message,
                     system_prompt=combined_prompt,
                 )
                 is_verified = False
-                modus_label = "\u26a1 Fast"
+                modus_label = "⚡ Fast"
 
             # Clean response
             antwort = clean_ai_response(antwort) if antwort else ""

@@ -253,8 +253,8 @@ async def get_adaptive_prompt(
 
     topic_names = [t["topic_name"] for t in weak_topics if t["topic_name"]]
     prompt = (
-        f"ERINNERUNG: Der Sch\u00fcler hat Schwierigkeiten mit: {', '.join(topic_names)}. "
-        "Erkl\u00e4re diese Themen besonders gr\u00fcndlich und gib zus\u00e4tzliche Beispiele."
+        f"ERINNERUNG: Der Schüler hat Schwierigkeiten mit: {', '.join(topic_names)}. "
+        "Erkläre diese Themen besonders gründlich und gib zusätzliche Beispiele."
     )
 
     return {"prompt": prompt, "weak_topics": weak_topics}

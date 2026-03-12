@@ -1219,7 +1219,7 @@ export default function ChatPage() {
  {isSending && modus === "deep" && (
  <div className="flex items-center gap-2 mb-2 max-w-4xl mx-auto text-purple-400 text-sm animate-pulse">
  <span>\ud83e\udde0</span>
- <span>Deep Thinking l&auml;uft... (bis 30s)</span>
+ <span>Deep Thinking läuft... (bis 30s)</span>
  <div className="flex gap-1">
  {[0, 1, 2].map(i => (
  <span

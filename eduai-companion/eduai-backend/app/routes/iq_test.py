@@ -203,21 +203,21 @@ def _calculate_iq(answers: list[dict], questions: list[dict]) -> dict:
     training = []
     kat_labels = {
         "logik": "Logisches Denken",
-        "verbal": "Sprachverst\u00e4ndnis",
+        "verbal": "Sprachverständnis",
         "mathe": "Mathematisches Denken",
-        "raum": "R\u00e4umliches Vorstellungsverm\u00f6gen",
-        "gedaechtnis": "Ged\u00e4chtnis & Merkf\u00e4higkeit",
+        "raum": "Räumliches Vorstellungsvermögen",
+        "gedaechtnis": "Gedächtnis & Merkfähigkeit",
     }
     sorted_kats = sorted(kategorie_prozent.items(), key=lambda x: x[1])
     for kat_key, kat_pct in sorted_kats[:2]:
         if kat_pct < 75:
             label = kat_labels.get(kat_key, kat_key)
-            training.append(f"{label}: T\u00e4glich 10 Min \u00fcben ({kat_pct}% aktuell)")
+            training.append(f"{label}: Täglich 10 Min üben ({kat_pct}% aktuell)")
 
     # IQ classification table for results page
     iq_table = [
         {"range": "130+", "label": "Hochbegabt", "percent": "Top 2%"},
-        {"range": "120-129", "label": "\u00dcberdurchschnittlich", "percent": "Top 10%"},
+        {"range": "120-129", "label": "Überdurchschnittlich", "percent": "Top 10%"},
         {"range": "110-119", "label": "Hoch-Normal", "percent": "Top 25%"},
         {"range": "90-109", "label": "Durchschnittlich", "percent": "Mitte 50%"},
         {"range": "80-89", "label": "Niedrig-Normal", "percent": "Untere 25%"},
@@ -233,7 +233,7 @@ def _calculate_iq(answers: list[dict], questions: list[dict]) -> dict:
         "kategorie_iq": kategorie_iq,
         "staerken": staerken,
         "schwaechen": schwaechen,
-        "vergleich": f"Besser als {overall_percentile}% der Bev\u00f6lkerung",
+        "vergleich": f"Besser als {overall_percentile}% der Bevölkerung",
         "raw_score": round(total_weighted_score, 2),
         "max_score": round(max_weighted_score, 2),
         "training": training,

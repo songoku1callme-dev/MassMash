@@ -26,7 +26,7 @@ def _require_max_tier(user_tier: str) -> None:
     if user_tier != "max":
         raise HTTPException(
             status_code=403,
-            detail="Abitur-Simulation ist nur f\u00fcr Max-Abonnenten verf\u00fcgbar. Upgrade auf Max f\u00fcr 19,99\u20ac/Monat.",
+            detail="Abitur-Simulation ist nur für Max-Abonnenten verfügbar. Upgrade auf Max für 19,99€/Monat.",
         )
 
 
@@ -73,7 +73,7 @@ def _notenpunkte_to_note(punkte: int) -> str:
         9: "3+ (befriedigend)", 8: "3 (befriedigend)", 7: "3- (befriedigend)",
         6: "4+ (ausreichend)", 5: "4 (ausreichend)", 4: "4- (ausreichend)",
         3: "5+ (mangelhaft)", 2: "5 (mangelhaft)", 1: "5- (mangelhaft)",
-        0: "6 (ungen\u00fcgend)",
+        0: "6 (ungenügend)",
     }
     return grades.get(punkte, "unbekannt")
 
@@ -368,17 +368,17 @@ async def create_study_plan(
 
     weak_hint = ""
     if weak_topics:
-        weak_hint = f"\nSchwache Themen des Sch\u00fclers: {', '.join(weak_topics)}. Diese besonders ber\u00fccksichtigen!"
+        weak_hint = f"\nSchwache Themen des Schülers: {', '.join(weak_topics)}. Diese besonders berücksichtigen!"
 
     system_prompt = (
         "Du bist ein erfahrener Abitur-Coach. Erstelle einen detaillierten Lernplan.\n"
-        "Antworte NUR mit validem JSON (keine Markdown-Codebl\u00f6cke).\n"
+        "Antworte NUR mit validem JSON (keine Markdown-Codeblöcke).\n"
         "Format: [{\"woche\": 1, \"thema\": \"...\", \"aufgaben\": [\"...\"], \"tage_pro_woche\": 5, \"stunden_pro_tag\": 2}]\n"
         f"Fach: {subject}. Zeitraum: {weeks} Wochen bis zum Abitur.{weak_hint}"
     )
 
     plan_text = call_groq_llm(
-        prompt=f"Erstelle einen {weeks}-Wochen Abitur-Lernplan f\u00fcr {subject}.",
+        prompt=f"Erstelle einen {weeks}-Wochen Abitur-Lernplan für {subject}.",
         system_prompt=system_prompt,
         subject=subject,
         level="advanced",

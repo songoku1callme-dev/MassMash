@@ -10,7 +10,7 @@ KI_PERSONALITIES = [
     {
         "id": 1,
         "name": "Mentor",
-        "emoji": "\U0001f9d1\u200d\U0001f3eb",
+        "emoji": "\U0001f9d1‍\U0001f3eb",
         "tier": "free",
         "temperature": 0.4,
         "voice_id": "de-DE-ConradNeural",

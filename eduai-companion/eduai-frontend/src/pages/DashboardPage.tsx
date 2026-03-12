@@ -611,8 +611,8 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="h-full flex flex-col items-center justify-center gap-3 p-6 min-h-[180px]">
  <LumnosOrb size="lg" />
  <div className="text-center">
- <h2 className="text-lg font-black text-white">KI-Tutor</h2>
- <p className="text-slate-400 text-xs">Frag mich alles — ich helfe dir!</p>
+  <h2 className="text-lg font-black text-foreground">KI-Tutor</h2>
+ <p className="text-muted-foreground text-xs">Frag mich alles — ich helfe dir!</p>
  </div>
  <motion.div
  whileHover={{ scale: 1.05 }}
@@ -683,8 +683,8 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  transition={{ duration: 2, repeat: Infinity }}
  className="text-4xl">{"\u26A1"}</motion.div>
  <div>
- <div className="font-bold text-white">Tages-Quiz</div>
- <div className="text-sm text-slate-400">{totalQuizzes} absolviert</div>
+  <div className="font-bold text-foreground">Tages-Quiz</div>
+ <div className="text-sm text-muted-foreground">{totalQuizzes} absolviert</div>
  </div>
  <div className="ml-auto text-2xl text-cyan-400">{"\u2192"}</div>
  </div>
@@ -699,7 +699,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  style={{ background: "rgba(139,92,246,0.3)", color: "#a78bfa" }}>PRO</div>
  )}
  <div className="text-2xl">{"\uD83D\uDCF7"}</div>
- <div className="text-xs font-bold text-white mt-1">Scanner</div>
+ <div className="text-xs font-bold text-foreground mt-1">Scanner</div>
  </div>
  </BentoTile>
 
@@ -707,7 +707,7 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <BentoTile color="#f59e0b" delay={0.7} onClick={() => onNavigate("turnier")}>
  <div className="p-4 text-center h-full flex flex-col items-center justify-center">
  <div className="text-2xl">{"\uD83C\uDFC6"}</div>
- <div className="text-xs font-bold text-white mt-1">Turnier</div>
+ <div className="text-xs font-bold text-foreground mt-1">Turnier</div>
  <div className="text-xs text-cyan-400">Live!</div>
  </div>
  </BentoTile>
@@ -717,8 +717,8 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="flex items-center gap-3 p-4 h-full">
  <div className="text-2xl">{"\uD83D\uDED2"}</div>
  <div>
- <div className="font-bold text-white text-sm">Belohnungs-Shop</div>
- <div className="text-xs text-slate-400">{userCoins || userXp} XP verfügbar</div>
+  <div className="font-bold text-foreground text-sm">Belohnungs-Shop</div>
+ <div className="text-xs text-muted-foreground">{userCoins || userXp} XP verfügbar</div>
  </div>
  </div>
  </BentoTile>
@@ -728,8 +728,8 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  <div className="flex items-center gap-3 p-4 h-full">
  <div className="text-2xl">{"\uD83C\uDFAE"}</div>
  <div>
- <div className="font-bold text-white text-sm">Gamification</div>
- <div className="text-xs text-slate-400">XP, Badges & Achievements</div>
+  <div className="font-bold text-foreground text-sm">Gamification</div>
+ <div className="text-xs text-muted-foreground">XP, Badges & Achievements</div>
  </div>
  </div>
  </BentoTile>

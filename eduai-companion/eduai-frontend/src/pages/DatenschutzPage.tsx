@@ -9,14 +9,14 @@ interface Section { title: string; content: string; }
 /* Static fallback content — works even without backend */
 const STATIC_SECTIONS: Section[] = [
  { title: "1. Verantwortlicher", content: "Lumnos Companion ist ein Bildungstechnologie-Projekt. Kontakt: support@lumnos-companion.de" },
- { title: "2. Welche Daten wir erheben", content: "Wir erheben: E-Mail-Adresse, Benutzername, Schulklasse, Schultyp, Lernfortschritt, Quiz-Ergebnisse, Chat-Verlaeufe. Alle Daten dienen ausschliesslich der Lernunterstuetzung." },
+ { title: "2. Welche Daten wir erheben", content: "Wir erheben: E-Mail-Adresse, Benutzername, Schulklasse, Schultyp, Lernfortschritt, Quiz-Ergebnisse, Chat-Verläufe. Alle Daten dienen ausschließlich der Lernunterstützung." },
  { title: "3. Zweck der Verarbeitung", content: "Personalisiertes Lernen, KI-gestütztes Tutoring, Fortschrittsverfolgung, Gamification. Keine Daten werden an Dritte verkauft." },
  { title: "4. KI-Verarbeitung (Groq)", content: "Chat-Nachrichten werden an die Groq API gesendet für KI-Antworten. Es werden keine personenbezogenen Daten (Name, E-Mail) an Groq übermittelt. Nur der Fragetext und minimaler Kontext." },
  { title: "5. Zahlungsdaten (Stripe)", content: "Zahlungen werden über Stripe abgewickelt. Wir speichern keine Kreditkartendaten. Stripe ist PCI-DSS zertifiziert." },
- { title: "6. Cookies", content: "Wir verwenden: Notwendige Cookies (Session, Auth-Token), Optionale Cookies (Dark Mode Praeferenz, Sprache). Keine Tracking-Cookies ohne Einwilligung." },
- { title: "7. Deine Rechte (DSGVO Art. 15-22)", content: "Du hast das Recht auf: Auskunft, Berichtigung, Loeschung, Einschraenkung, Datenportabilitaet, Widerspruch. Kontaktiere uns jederzeit." },
- { title: "8. Account loeschen", content: "Du kannst deinen Account jederzeit in den Einstellungen loeschen. Alle deine Daten werden unwiderruflich entfernt." },
- { title: "9. Speicherdauer", content: "Deine Daten werden gespeichert solange dein Account aktiv ist. Nach Loeschung werden alle Daten innerhalb von 30 Tagen entfernt." },
+ { title: "6. Cookies", content: "Wir verwenden: Notwendige Cookies (Session, Auth-Token), Optionale Cookies (Dark Mode Präferenz, Sprache). Keine Tracking-Cookies ohne Einwilligung." },
+ { title: "7. Deine Rechte (DSGVO Art. 15-22)", content: "Du hast das Recht auf: Auskunft, Berichtigung, Löschung, Einschränkung, Datenportabilität, Widerspruch. Kontaktiere uns jederzeit." },
+ { title: "8. Account löschen", content: "Du kannst deinen Account jederzeit in den Einstellungen löschen. Alle deine Daten werden unwiderruflich entfernt." },
+ { title: "9. Speicherdauer", content: "Deine Daten werden gespeichert solange dein Account aktiv ist. Nach Löschung werden alle Daten innerhalb von 30 Tagen entfernt." },
 ];
 
 const STATIC_IMPRESSUM: Record<string, string> = {
@@ -29,7 +29,7 @@ const STATIC_IMPRESSUM: Record<string, string> = {
 
 function getSectionIcon(title: string) {
  if (title.includes("Cookie")) return <Cookie className="w-5 h-5 text-orange-400" />;
- if (title.includes("loeschen") || title.includes("Loeschung")) return <Trash2 className="w-5 h-5 text-red-400" />;
+ if (title.includes("löschen") || title.includes("Löschung")) return <Trash2 className="w-5 h-5 text-red-400" />;
  if (title.includes("Rechte") || title.includes("DSGVO")) return <Scale className="w-5 h-5 text-blue-400" />;
  if (title.includes("Verantwortlicher")) return <Mail className="w-5 h-5 text-indigo-400" />;
  if (title.includes("Daten") && title.includes("erheben")) return <Eye className="w-5 h-5 text-purple-400" />;

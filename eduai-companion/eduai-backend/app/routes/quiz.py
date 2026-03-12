@@ -402,11 +402,11 @@ async def submit_quiz(
     if score >= 0.8:
         feedback = "Ausgezeichnet! Du beherrschst dieses Thema sehr gut! \U0001f31f" if lang == "de" else "Excellent! You've mastered this topic! \U0001f31f"
     elif score >= 0.6:
-        feedback = "Gut gemacht! Noch ein bisschen \u00dcbung und du hast es drauf! \U0001f4aa" if lang == "de" else "Good job! A bit more practice and you'll master it! \U0001f4aa"
+        feedback = "Gut gemacht! Noch ein bisschen Übung und du hast es drauf! \U0001f4aa" if lang == "de" else "Good job! A bit more practice and you'll master it! \U0001f4aa"
     elif score >= 0.4:
         feedback = "Nicht schlecht, aber hier gibt es noch Verbesserungspotenzial. Lass uns die Fehler anschauen! \U0001f4da" if lang == "de" else "Not bad, but there's room for improvement. Let's review the mistakes! \U0001f4da"
     else:
-        feedback = "Das Thema braucht noch etwas \u00dcbung. Keine Sorge, wir schaffen das zusammen! \U0001f91d" if lang == "de" else "This topic needs more practice. Don't worry, we'll get there together! \U0001f91d"
+        feedback = "Das Thema braucht noch etwas Übung. Keine Sorge, wir schaffen das zusammen! \U0001f91d" if lang == "de" else "This topic needs more practice. Don't worry, we'll get there together! \U0001f91d"
 
     # Detect weak topic if score < 70%
     weak_topic_detected = None
