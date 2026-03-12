@@ -107,10 +107,10 @@ export default function PricingPage() {
  <div className="min-h-screen p-4 lg:p-6 max-w-6xl mx-auto space-y-8" style={{ background: "var(--lumnos-bg)" }}>
  {/* Header */}
  <div className="text-center">
- <h1 className="text-3xl font-bold text-white">
+ <h1 className="text-2xl sm:text-3xl font-bold text-white">
  Wähle deinen Plan
  </h1>
- <p className="text-slate-400 mt-2 text-lg">
+ <p className="text-slate-400 mt-2 text-base sm:text-lg">
  Lerne besser mit Lumnos — vom Einsteiger bis zum Abitur
  </p>
  </div>
@@ -159,7 +159,7 @@ export default function PricingPage() {
  )}
 
  {/* Pricing Cards - 4 Tiers */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
  {/* Free Plan */}
  <Card className="relative border border-indigo-500/20 bg-[var(--lumnos-surface)]">
  <CardHeader>
@@ -342,7 +342,7 @@ export default function PricingPage() {
  <CardTitle className="text-lg text-white">Alle Features im Überblick</CardTitle>
  </CardHeader>
  <CardContent>
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
  <div className="flex items-start gap-3 p-3 rounded-lg bg-slate-800/50 border border-indigo-500/10">
  <Palette className="w-5 h-5 text-purple-500 mt-0.5" />
  <div>

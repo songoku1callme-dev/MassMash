@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { parentsApi } from "../services/api";
 import { Users, Link, Unlink, TrendingUp, BookOpen, Flame, Trophy, Loader2 } from "lucide-react";
-import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
 
 export default function ParentsPage() {
  const [childEmail, setChildEmail] = useState("");

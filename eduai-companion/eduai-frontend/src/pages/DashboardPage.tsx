@@ -4,7 +4,6 @@ import { learningApi, gamificationApi, shopApi, type Progress, type Gamification
 import { useAuthStore } from "../stores/authStore";
 import { useIsOwner } from "../utils/ownerEmails";
 import BentoTile from "../components/BentoTile";
-import { ErrorState } from "../components/PageStates";
 import LumnosOrb from "../components/LumnosOrb";
 import BlindSpotHeatmap from "../components/BlindSpotHeatmap";
 import { APPLE_EASE, staggerContainer } from "../lib/animations";

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import LumnosOrb from "../components/LumnosOrb";
 import { getAccessToken, researchApi, type ResearchResult } from "../services/api";
-import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
+import { PageLoader, ErrorState } from "../components/PageStates";
 import { Search, Loader2, Globe, ExternalLink, GitBranch } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "";

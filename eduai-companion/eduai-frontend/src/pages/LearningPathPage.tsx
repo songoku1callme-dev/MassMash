@@ -8,7 +8,6 @@ import {
  Calculator, Languages, BookOpenCheck, Clock, FlaskConical, Target
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
-import { PageLoader, ErrorState } from "../components/PageStates";
 
 const SUBJECTS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" />, color: "from-blue-500 to-blue-600" },
@@ -79,7 +78,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  <button
  key={s.id}
  onClick={() => setSelectedSubject(s.id)}
- className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all ${
+ className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all min-h-[44px] ${
  selectedSubject === s.id
  ? "bg-blue-600 text-white shadow-md"
  : "bg-[var(--bg-surface)] theme-text-secondary hover:opacity-80"
@@ -204,7 +203,7 @@ export default function LearningPathPage({ onNavigate }: LearningPathPageProps) 
  <CardTitle className="text-base">Gesamtübersicht</CardTitle>
  </CardHeader>
  <CardContent>
- <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
  {profiles.map((p) => {
  const s = SUBJECTS.find(sub => sub.id === p.subject);
  return (

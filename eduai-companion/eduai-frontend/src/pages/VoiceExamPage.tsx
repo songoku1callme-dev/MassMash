@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "../stores/authStore";
 import { api } from "../services/api";
 import LumnosOrb from "../components/LumnosOrb";
-import { ErrorState } from "../components/PageStates";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Typen & Konstanten

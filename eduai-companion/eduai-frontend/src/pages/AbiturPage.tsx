@@ -10,7 +10,7 @@ import {
  Calculator, Languages, BookOpenCheck, FlaskConical, Atom, Leaf, Lightbulb, MessageCircle
 } from "lucide-react";
 import ErklaerButton from "../components/ui/ErklaerButton";
-import { PageLoader, ErrorState } from "../components/PageStates";
+import { PageLoader } from "../components/PageStates";
 
 const SUBJECTS = [
  { id: "math", name: "Mathe", icon: <Calculator className="w-5 h-5" /> },

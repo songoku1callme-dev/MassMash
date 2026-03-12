@@ -55,7 +55,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  <button
  key={g}
  onClick={() => setGrade(g)}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+ className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
  grade === g
  ? "bg-indigo-600 text-white shadow-md"
  : "bg-[var(--bg-surface)] theme-text-secondary hover:bg-[var(--bg-card-hover)]"
@@ -73,7 +73,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  <button
  key={t}
  onClick={() => setSchoolType(t)}
- className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+ className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
  schoolType === t
  ? "bg-indigo-600 text-white shadow-md"
  : "bg-[var(--bg-surface)] theme-text-secondary hover:bg-[var(--bg-card-hover)]"
@@ -92,12 +92,12 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  subtitle: "Der Lehrplan unterscheidet sich je nach Bundesland",
  content: (
  <div className="space-y-4">
- <div className="grid grid-cols-2 gap-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
  {BUNDESLAENDER.map((bl) => (
  <button
  key={bl}
  onClick={() => setBundesland(bl)}
- className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+ className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
  bundesland === bl
  ? "bg-indigo-600 text-white shadow-md"
  : "bg-[var(--bg-surface)] theme-text-secondary hover:bg-[var(--bg-card-hover)]"
@@ -119,7 +119,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  <button
  key={s}
  onClick={() => toggleSubject(s)}
- className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+ className={`px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 min-h-[44px] ${
  selectedSubjects.includes(s)
  ? "bg-indigo-600 text-white shadow-md"
  : "bg-[var(--bg-surface)] theme-text-secondary hover:bg-[var(--bg-card-hover)]"
@@ -188,11 +188,11 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
  <div className="w-full max-w-lg">
  {/* Progress */}
- <div className="flex gap-2 mb-8">
+ <div className="flex gap-2 mb-6 sm:mb-8">
  {steps.map((_, i) => (
  <div
  key={i}
- className={`h-1.5 flex-1 rounded-full transition-all ${
+ className={`h-2 sm:h-1.5 flex-1 rounded-full transition-all ${
  i <= step ? "bg-indigo-600" : "bg-[var(--progress-bg)]"
  }`}
  />
@@ -200,7 +200,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  </div>
 
  <Card className="shadow-xl border-0">
- <CardContent className="p-8">
+ <CardContent className="p-5 sm:p-8">
  <div className="mb-6">
  <h2 className="text-2xl font-bold theme-text">{currentStep.title}</h2>
  <p className="theme-text-secondary mt-1">{currentStep.subtitle}</p>
@@ -208,7 +208,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
 
  {currentStep.content}
 
- <div className="flex justify-between mt-8">
+ <div className="flex justify-between mt-6 sm:mt-8">
  {step > 0 ? (
  <Button variant="outline" onClick={() => setStep(step - 1)}>
  Zurück
@@ -218,7 +218,7 @@ export default function OnboardingPage({ onComplete }: OnboardingProps) {
  )}
  <Button
  onClick={() => (isLast ? onComplete() : setStep(step + 1))}
- className="gap-2"
+ className="gap-2 min-h-[48px] px-6"
  >
  {isLast ? "Los geht's!" : "Weiter"}
  <ChevronRight className="w-4 h-4" />

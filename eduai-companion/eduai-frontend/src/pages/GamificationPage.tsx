@@ -1,13 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { gamificationApi, type GamificationProfile, type LeaderboardEntry } from "../services/api";
+import type { GamificationProfile, LeaderboardEntry } from "../services/api";
 import { useGamificationProfile, useLeaderboard } from "../hooks/useApiQueries";
-import { PageLoader, ErrorState } from "../components/PageStates";
 import {
  Trophy, Flame, Star, Medal, Target, Zap, Crown, Users,
- Loader2, TrendingUp, Award
+ TrendingUp, Award
 } from "lucide-react";
 
 export default function GamificationPage() {
@@ -26,7 +23,7 @@ export default function GamificationPage() {
  <div className="p-4 lg:p-6 max-w-4xl mx-auto space-y-4">
  <div className="animate-pulse space-y-4">
  <div className="h-10 rounded-xl w-64" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
  {[1,2,3,4].map(i => (
  <div key={i} className="h-24 rounded-xl" style={{ background: "rgba(var(--surface-rgb),0.5)" }} />
  ))}
@@ -62,7 +59,7 @@ export default function GamificationPage() {
  initial={{ opacity: 0, y: 12 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 0.35 }}
- className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6 pb-20">
+ className="p-4 lg:p-6 max-w-4xl mx-auto space-y-6">
  <div>
  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
  <Trophy className="w-7 h-7 text-yellow-500" /> Gamification
@@ -71,7 +68,7 @@ export default function GamificationPage() {
  </div>
 
  {/* Stats Cards */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
  {[
  { icon: <span className="text-3xl">{profile.level_emoji}</span>, value: `Level ${profile.level}`, label: profile.level_name, color: "rgba(234,179,8,0.15)", border: "rgba(234,179,8,0.3)" },
  { icon: <Star className="w-8 h-8 text-yellow-500" />, value: String(profile.xp), label: "XP gesamt", color: "rgba(139,92,246,0.15)", border: "rgba(139,92,246,0.3)" },
@@ -120,14 +117,14 @@ export default function GamificationPage() {
  </motion.div>
 
  {/* Tabs */}
- <div className="flex gap-2 border-b" style={{ borderColor: "rgba(var(--surface-rgb),0.8)" }}>
+ <div className="flex gap-2 border-b overflow-x-auto" style={{ borderColor: "rgba(var(--surface-rgb),0.8)" }}>
  {[
  { id: "overview" as const, label: "Übersicht", icon: <TrendingUp className="w-4 h-4" /> },
  { id: "achievements" as const, label: "Achievements", icon: <Award className="w-4 h-4" /> },
  { id: "leaderboard" as const, label: "Rangliste", icon: <Crown className="w-4 h-4" /> },
  ].map((t) => (
  <button key={t.id} onClick={() => setTab(t.id)}
- className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+ className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors min-h-[44px] whitespace-nowrap ${
  tab === t.id ? "border-indigo-500 text-indigo-400" : "border-transparent text-muted-foreground hover:text-foreground"
  }`}>
  {t.icon} {t.label}

@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { marketplaceApi } from "../services/api";
 import { Store, Download, Star, Package, BookOpen, Layers, Loader2 } from "lucide-react";
-import { PageLoader, ErrorState, EmptyState } from "../components/PageStates";
 
 const TYPE_LABELS: Record<string, string> = {
  quiz_set: "Quiz-Set",

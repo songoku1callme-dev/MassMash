@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useChatStore } from "../stores/chatStore";
 import { useAuthStore } from "../stores/authStore";
 import ReactMarkdown from "react-markdown";
-import { ErrorState } from "../components/PageStates";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
@@ -542,7 +541,7 @@ export default function ChatPage() {
  {/* Sidebar Toggle */}
  <button
   onClick={() => setShowSidebar(!showSidebar)}
-  className="flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
+  className="flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all"
   title="Chat-Verlauf"
  >
   <span style={{ fontSize: "16px" }}>&#9776;</span>
@@ -554,7 +553,7 @@ export default function ChatPage() {
  {/* Tutor-Modus Toggle */}
  <button
  onClick={handleTutorToggle}
- className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+ className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full text-xs font-bold transition-all border ${
  tutorModus
  ? "text-emerald-300 border-emerald-500/50"
  : "text-slate-400 border-slate-600 hover:border-slate-500"
@@ -568,7 +567,7 @@ export default function ChatPage() {
  {/* ELI5 Toggle */}
  <button
  onClick={() => setEli5(!eli5)}
- className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+ className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full text-xs font-bold transition-all border ${
  eli5
  ? "text-pink-300 border-pink-500/50"
  : "text-slate-400 border-slate-600 hover:border-slate-500"
@@ -603,7 +602,7 @@ export default function ChatPage() {
  <div className="ml-auto flex items-center gap-2 relative">
  <button
  onClick={() => setShowPersonalities(!showPersonalities)}
- className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-purple-300 hover:bg-purple-900/50 transition-colors border border-purple-700"
+ className="flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full text-xs font-medium text-purple-300 hover:bg-purple-900/50 transition-colors border border-purple-700"
  style={{ background: "rgba(88,28,135,0.3)" }}
  title="KI-Persönlichkeit wählen"
  >
@@ -613,7 +612,7 @@ export default function ChatPage() {
 
  {showPersonalities && (
  <div
- className="absolute top-full right-12 mt-1 w-72 rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto border border-indigo-500/20"
+ className="absolute top-full right-0 sm:right-12 mt-1 w-72 max-w-[calc(100vw-2rem)] rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto border border-indigo-500/20"
  style={{ background: "rgba(var(--surface-rgb),0.95)", backdropFilter: "blur(20px)" }}
  >
  <div className="p-2 border-b border-indigo-500/10">
@@ -1113,7 +1112,7 @@ export default function ChatPage() {
  <div
  style={{
  flexShrink: 0,
- padding: "16px 20px 20px",
+ padding: "12px 12px 16px",
  borderTop: "1px solid var(--border-color)",
  background: "rgba(var(--overlay-rgb),0.98)",
  backdropFilter: "blur(20px)",
@@ -1193,7 +1192,7 @@ export default function ChatPage() {
  )}
 
  {/* ===== KI-MODUS BUTTONS (Fast / Standard / Deep) ===== */}
- <div className="flex gap-2 mb-2 max-w-4xl mx-auto">
+ <div className="flex gap-2 mb-2 max-w-4xl mx-auto overflow-x-auto">
  {([
  { id: "fast" as const, label: "\u26a1 Fast", desc: "Blitzschnell \u2014 1-2 Sek", color: "text-yellow-400 border-yellow-400/30", activeColor: "bg-yellow-400/20 border-yellow-400", activeBg: "rgba(250,204,21,0.15)" },
  { id: "normal" as const, label: "\u2728 Standard", desc: "Ausgewogen \u2014 3-5 Sek", color: "text-blue-400 border-blue-400/30", activeColor: "bg-blue-400/20 border-blue-400", activeBg: "rgba(96,165,250,0.15)" },
@@ -1202,7 +1201,7 @@ export default function ChatPage() {
  <button
  key={m.id}
  onClick={() => setModus(m.id)}
- className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+ className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-medium border transition-all whitespace-nowrap flex-1 sm:flex-none ${
  modus === m.id
  ? m.activeColor
  : m.color + " opacity-60 hover:opacity-100"
@@ -1238,7 +1237,7 @@ export default function ChatPage() {
  <button
  onClick={() => mediaInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
- className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
+ className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  title="Bild oder Audio hochladen"
  >
@@ -1254,7 +1253,7 @@ export default function ChatPage() {
  <button
  onClick={() => fileInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
- className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
+ className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  title={language === "de" ? "Kamera / Mathe-Foto" : "Camera / math photo"}
  >
@@ -1269,7 +1268,7 @@ export default function ChatPage() {
  <button
  onClick={speechSupported ? handleMicToggle : () => {}}
  disabled={isSending || !speechSupported}
- className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 flex-shrink-0 ${
+ className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 flex-shrink-0 ${
  isListening
  ? "text-red-400 border-red-500/50 animate-pulse"
  : !speechSupported
@@ -1317,13 +1316,14 @@ export default function ChatPage() {
  }
  disabled={isSending}
  rows={1}
- className="flex-1 px-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500 outline-none disabled:opacity-50 resize-none"
+ className="flex-1 px-4 py-2.5 rounded-xl text-base sm:text-sm text-white placeholder-slate-500 outline-none disabled:opacity-50 resize-none"
  style={{
  background: "rgba(var(--surface-rgb),0.5)",
  border: "1px solid rgba(99,102,241,0.2)",
  maxHeight: "120px",
- minHeight: "40px",
+ minHeight: "44px",
  lineHeight: "1.5",
+ fontSize: "16px",
  }}
  />
 
@@ -1331,7 +1331,7 @@ export default function ChatPage() {
  <button
  onClick={uploadedFile ? handleMediaUploadSend : handleSend}
  disabled={(!input.trim() && !uploadedFile) || isSending || isAnalysing}
- className="flex items-center justify-center w-10 h-10 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0"
+ className="flex items-center justify-center w-12 h-12 sm:w-10 sm:h-10 rounded-xl text-white transition-all hover:scale-105 disabled:opacity-30 disabled:hover:scale-100 flex-shrink-0"
  style={{
  background: (input.trim() || uploadedFile) && !isSending && !isAnalysing
  ? "linear-gradient(135deg, #6366f1, #8b5cf6)"
