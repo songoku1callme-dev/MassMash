@@ -6,6 +6,7 @@ import { useChatStore } from "./stores/chatStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useAuthRefresh } from "./hooks/useAuthRefresh";
 import { registerClerkGetToken } from "./services/api";
+import { useStatusBar } from "./hooks/useCapacitor";
 import { pageVariants } from "./lib/animations";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -66,6 +67,19 @@ function PageLoader() {
   );
 }
 
+/** Lumnos-branded splash screen shown while Clerk SDK initialises */
+function ClerkSplash() {
+  return (
+    <div className="min-h-screen cyber-bg flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-pulse-glow rounded-full h-16 w-16 bg-lumnos-gradient mx-auto flex items-center justify-center text-white text-2xl font-bold">{"\u2726"}</div>
+        <h1 className="mt-4 text-lumnos-accent text-lg font-bold tracking-wide">Lumnos</h1>
+        <p className="mt-1 text-lumnos-muted text-xs">KI-Lerncoach wird geladen...</p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const { isAuthenticated, isLoading, loadUser, isGuest, enterGuestMode, loginWithClerk } = useAuthStore();
   // Clerk auth state
@@ -73,6 +87,7 @@ function App() {
   const clerkUser = useClerkUser();
   const { loadSessions } = useChatStore();
   useAuthRefresh();
+  useStatusBar(); // Configure native status bar (dark theme, #0f172a background)
   const [currentPage, setCurrentPage] = useState("chat");
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -100,13 +115,13 @@ function App() {
     preWarmBackend();
   }, [preWarmBackend]);
 
-  // Keep-Alive: Ping backend every 10 minutes to prevent Render free-tier sleep
+  // Keep-Alive: Ping backend every 5 minutes to prevent Render free-tier sleep
   useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL;
     if (!apiUrl) return;
     const ping = () => fetch(`${apiUrl}/healthz`, { method: "GET", mode: "cors" }).catch(() => {});
     // Initial ping already handled by preWarmBackend, start interval only
-    const interval = setInterval(ping, 10 * 60 * 1000);
+    const interval = setInterval(ping, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -158,6 +173,11 @@ function App() {
     window.addEventListener("navigate", handler);
     return () => window.removeEventListener("navigate", handler);
   }, []);
+
+  // Show branded splash while Clerk SDK is loading (prevents blank white page)
+  if (!clerkAuth.isLoaded) {
+    return <ClerkSplash />;
+  }
 
   if (isLoading) {
     return (

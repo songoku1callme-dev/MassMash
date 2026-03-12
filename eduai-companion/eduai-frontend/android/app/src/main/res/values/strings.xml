@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lumnos</string>
+    <string name="title_activity_main">Lumnos</string>
+    <string name="package_name">de.lumnos.app</string>
+    <string name="custom_url_scheme">de.lumnos.app</string>
+</resources>

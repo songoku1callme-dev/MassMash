@@ -81,6 +81,9 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  optimizeDeps: {
+    include: ['@clerk/clerk-react', '@clerk/shared', 'react', 'react-dom'],
+  },
   build: {
     sourcemap: false,
     chunkSizeWarningLimit: 600,
