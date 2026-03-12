@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { isTokenExpiringSoon, refreshAccessToken, clearTokens, getAccessToken } from "../services/api";
+import { isTokenExpiringSoon, refreshAccessToken, clearTokens, getAccessToken, isClerkToken } from "../services/api";
 import { useAuthStore } from "../stores/authStore";
 
 /** How often to check token expiry (ms). Default: every 60 seconds. */
@@ -10,6 +10,9 @@ const CHECK_INTERVAL_MS = 60_000;
  * before it expires. On failure, logs the user out.
  *
  * Should be mounted once at the app root when authenticated.
+ *
+ * IMPORTANT: Clerk tokens are refreshed automatically by the Clerk SDK
+ * and must NOT be sent to /api/auth/refresh — doing so causes 429 loops.
  */
 export function useAuthRefresh() {
   const logout = useAuthStore((s) => s.logout);
@@ -20,7 +23,11 @@ export function useAuthRefresh() {
       const token = getAccessToken();
       if (!token) return;
 
-      // Refresh if token expires within 2 minutes
+      // Clerk tokens auto-refresh via the Clerk SDK.
+      // Never call our backend /api/auth/refresh for them — it causes 429 rate-limit loops.
+      if (isClerkToken(token)) return;
+
+      // Only refresh built-in JWT tokens via our backend
       if (isTokenExpiringSoon(120)) {
         try {
           await refreshAccessToken();
