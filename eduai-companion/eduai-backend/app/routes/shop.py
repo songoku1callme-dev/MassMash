@@ -13,19 +13,40 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/shop", tags=["shop"])
 
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Default Shop Items — werden automatisch geladen
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 SHOP_ITEMS = [
-    {"id": "theme_dark_blue", "name": "Dark Blue Theme", "category": "theme", "price": 500, "icon": "palette"},
-    {"id": "theme_purple", "name": "Purple Theme", "category": "theme", "price": 500, "icon": "palette"},
-    {"id": "theme_sunset", "name": "Sunset Theme", "category": "theme", "price": 500, "icon": "palette"},
-    {"id": "theme_forest", "name": "Forest Theme", "category": "theme", "price": 500, "icon": "palette"},
-    {"id": "ki_yoda", "name": "Yoda KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot"},
-    {"id": "ki_sherlock", "name": "Sherlock KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot"},
-    {"id": "ki_pirat", "name": "Pirat KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot"},
-    {"id": "frame_gold", "name": "Gold Profilrahmen", "category": "frame", "price": 750, "icon": "crown"},
-    {"id": "frame_diamond", "name": "Diamant Profilrahmen", "category": "frame", "price": 1500, "icon": "gem"},
-    {"id": "boost_double_xp", "name": "Doppel-XP (1 Stunde)", "category": "boost", "price": 200, "icon": "zap"},
-    {"id": "boost_hint", "name": "Hint-Token für IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb"},
-    {"id": "boost_skip", "name": "Frage-Überspringen Token", "category": "boost", "price": 150, "icon": "skip-forward"},
+    # Themes (500 XP)
+    {"id": "theme_dark_blue", "name": "Dark Blue Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Dunkles Blau für konzentriertes Lernen"},
+    {"id": "theme_purple", "name": "Purple Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Elegantes Lila für kreative Köpfe"},
+    {"id": "theme_sunset", "name": "Sunset Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Warme Sonnenuntergangsfarben"},
+    {"id": "theme_forest", "name": "Forest Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Natürliches Waldgrün"},
+    {"id": "theme_ocean", "name": "Ocean Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Tiefes Meeresblau"},
+    {"id": "theme_cherry", "name": "Cherry Blossom Theme", "category": "theme", "price": 600, "icon": "palette", "description": "Zartes Kirschblüten-Rosa"},
+    {"id": "theme_neon", "name": "Neon Cyber Theme", "category": "theme", "price": 750, "icon": "palette", "description": "Leuchtende Neonfarben im Cyber-Stil"},
+    # KI-Persönlichkeiten (1000 XP)
+    {"id": "ki_yoda", "name": "Yoda KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Weise Antworten im Yoda-Stil"},
+    {"id": "ki_sherlock", "name": "Sherlock KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Analytisch und deduktiv"},
+    {"id": "ki_pirat", "name": "Pirat KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Arrr! Lernen auf hoher See"},
+    {"id": "ki_rapper", "name": "Rapper KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Erklärt alles im Rap-Stil"},
+    {"id": "ki_astronaut", "name": "Astronaut KI-Persönlichkeit", "category": "ki", "price": 1200, "icon": "bot", "description": "Wissen aus dem Weltall"},
+    # Profilrahmen (750-2000 XP)
+    {"id": "frame_gold", "name": "Gold Profilrahmen", "category": "frame", "price": 750, "icon": "crown", "description": "Goldener Rahmen für dein Profil"},
+    {"id": "frame_diamond", "name": "Diamant Profilrahmen", "category": "frame", "price": 1500, "icon": "gem", "description": "Funkelnder Diamant-Rahmen"},
+    {"id": "frame_fire", "name": "Feuer Profilrahmen", "category": "frame", "price": 1000, "icon": "flame", "description": "Lodernder Flammenrahmen"},
+    {"id": "frame_rainbow", "name": "Regenbogen Profilrahmen", "category": "frame", "price": 2000, "icon": "rainbow", "description": "Schillernder Regenbogenrahmen"},
+    # Boosts (150-500 XP)
+    {"id": "boost_double_xp", "name": "Doppel-XP (1 Stunde)", "category": "boost", "price": 200, "icon": "zap", "description": "1 Stunde doppelte XP"},
+    {"id": "boost_hint", "name": "Hint-Token für IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb", "description": "Ein Hinweis im IQ-Test"},
+    {"id": "boost_skip", "name": "Frage-Überspringen Token", "category": "boost", "price": 150, "icon": "skip-forward", "description": "Überspringe eine schwierige Frage"},
+    {"id": "boost_streak_shield", "name": "Streak-Schutzschild", "category": "boost", "price": 500, "icon": "shield", "description": "Schützt deinen Streak für einen Tag"},
+    {"id": "boost_extra_life", "name": "Extra Leben (Quiz)", "category": "boost", "price": 250, "icon": "heart", "description": "Ein zusätzlicher Versuch im Quiz"},
+    # Titel & Badges (800-3000 XP)
+    {"id": "title_genius", "name": "Titel: Genie", "category": "title", "price": 2000, "icon": "brain", "description": "Zeige allen, dass du ein Genie bist"},
+    {"id": "title_nerd", "name": "Titel: Nerd", "category": "title", "price": 800, "icon": "glasses", "description": "Trage den Nerd-Titel mit Stolz"},
+    {"id": "title_champion", "name": "Titel: Champion", "category": "title", "price": 3000, "icon": "trophy", "description": "Der ultimative Lern-Champion"},
 ]
 
 
