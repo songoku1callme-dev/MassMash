@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
  Shield, Users, BarChart3, Ticket, Search, Gift, Loader2, Crown, Star,
- TrendingUp, DollarSign, Brain, ShieldOff
+ TrendingUp, DollarSign, Brain, ShieldOff, Clock, Play, CheckCircle, XCircle
 } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
 
@@ -97,8 +97,12 @@ export default function AdminPage() {
  const [couponMaxUses, setCouponMaxUses] = useState("100");
  const [creatingCoupon, setCreatingCoupon] = useState(false);
  const [message, setMessage] = useState("");
+ const [schedulerJobs, setSchedulerJobs] = useState<{ job_id: string; beschreibung: string; zeitplan: string; naechste_ausfuehrung: string; aktiv: boolean }[]>([]);
+ const [schedulerActive, setSchedulerActive] = useState(false);
+ const [loadingScheduler, setLoadingScheduler] = useState(false);
+ const [triggeringJob, setTriggeringJob] = useState<string | null>(null);
 
- useEffect(() => { if (adminCheckDone && isAdmin) loadData(); }, [adminCheckDone, isAdmin]);
+ useEffect(() => { if (adminCheckDone && isAdmin) { loadData(); loadScheduler(); } }, [adminCheckDone, isAdmin]);
 
  const loadData = async () => {
  setLoading(true);
@@ -115,6 +119,31 @@ export default function AdminPage() {
  setError(err instanceof Error ? err.message : "Fehler beim Laden");
  } finally {
  setLoading(false);
+ }
+ };
+
+ const loadScheduler = async () => {
+ setLoadingScheduler(true);
+ try {
+ const data = await adminApi.schedulerStatus();
+ setSchedulerJobs(data.jobs || []);
+ setSchedulerActive(data.scheduler_aktiv);
+ } catch {
+ // Scheduler status not available
+ } finally {
+ setLoadingScheduler(false);
+ }
+ };
+
+ const handleTriggerJob = async (jobId: string) => {
+ setTriggeringJob(jobId);
+ try {
+ const result = await adminApi.triggerJob(jobId);
+ setMessage(result.message);
+ } catch (err) {
+ setError(err instanceof Error ? err.message : "Job-Trigger fehlgeschlagen");
+ } finally {
+ setTriggeringJob(null);
  }
  };
 
@@ -476,6 +505,51 @@ export default function AdminPage() {
  </Card>
  </div>
  )}
+
+ {/* Scheduler Dashboard — AUFGABE 3 */}
+ <Card>
+ <CardHeader>
+ <CardTitle className="text-base flex items-center gap-2">
+ <Clock className="w-5 h-5 text-orange-600" />
+ Scheduler-Jobs (Auto-Updates)
+ <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${schedulerActive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+ {schedulerActive ? "Aktiv" : "Inaktiv"}
+ </span>
+ </CardTitle>
+ </CardHeader>
+ <CardContent>
+ {loadingScheduler ? (
+ <div className="flex justify-center py-4"><Loader2 className="w-6 h-6 animate-spin text-orange-500" /></div>
+ ) : schedulerJobs.length === 0 ? (
+ <p className="text-sm theme-text-secondary">Keine Scheduler-Jobs gefunden (Backend nicht erreichbar?)</p>
+ ) : (
+ <div className="space-y-2 max-h-96 overflow-auto">
+ {schedulerJobs.map((job) => (
+ <div key={job.job_id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-color)]">
+ <div className="flex-1 min-w-0">
+ <div className="flex items-center gap-2">
+ {job.aktiv ? <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> : <XCircle className="w-4 h-4 text-red-400 shrink-0" />}
+ <span className="text-sm font-medium theme-text truncate">{job.beschreibung}</span>
+ </div>
+ <div className="flex items-center gap-3 mt-1 ml-6">
+ <span className="text-xs theme-text-secondary">{job.zeitplan}</span>
+ <span className="text-[10px] font-mono theme-text-secondary">{job.job_id}</span>
+ </div>
+ </div>
+ <button
+ onClick={() => handleTriggerJob(job.job_id)}
+ disabled={triggeringJob === job.job_id}
+ className="shrink-0 flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-orange-500/10 text-orange-600 hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+ >
+ {triggeringJob === job.job_id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+ Jetzt starten
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
+ </CardContent>
+ </Card>
  </div>
  );
 }

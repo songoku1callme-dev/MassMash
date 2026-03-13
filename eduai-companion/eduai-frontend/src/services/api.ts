@@ -966,6 +966,8 @@ export const adminApi = {
   createCoupon: (data: { code: string; tier: string; duration_days: number; max_uses: number }) =>
     request<{ message: string }>("/api/admin/create-coupon", { method: "POST", body: data }),
   coupons: () => request<{ coupons: any[] }>("/api/admin/coupons"),
+  schedulerStatus: () => request<{ scheduler_aktiv: boolean; jobs_count: number; jobs: { job_id: string; beschreibung: string; zeitplan: string; naechste_ausfuehrung: string; aktiv: boolean }[] }>("/api/admin/scheduler/status"),
+  triggerJob: (jobId: string) => request<{ message: string; job_id: string; ergebnis: any }>(`/api/admin/scheduler/trigger/${jobId}`, { method: "POST" }),
 };
 
 // Coupon Redeem
