@@ -10,6 +10,7 @@ import { useStatusBar } from "./hooks/useCapacitor";
 import { pageVariants } from "./lib/animations";
 import Sidebar from "./components/Sidebar";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import PWAUpdateBanner from "./components/PWAUpdateBanner";
 import CookieBanner from "./components/CookieBanner";
 import OfflineBanner from "./components/OfflineBanner";
 import GlobalHeader from "./components/GlobalHeader";
@@ -343,6 +344,7 @@ function App() {
           </AnimatePresence>
         </main>
         <PWAInstallBanner />
+        <PWAUpdateBanner />
         <CookieBanner />
         <OfflineBanner />
       </div>

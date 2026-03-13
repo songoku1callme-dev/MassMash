@@ -1303,6 +1303,38 @@ export const offlineApi = {
   getCachedAt: () => localStorage.getItem("lumnos_offline_cached_at"),
 };
 
+// School License API (B2B Schul-Lizenzen)
+export interface SchoolClass {
+  id: number;
+  school_name: string;
+  class_code: string;
+  student_count: number;
+  max_students: number;
+  is_active: boolean;
+  students: { id: number; username: string; full_name: string; grade: string; xp: number; level: number; streak: number; quizzes: number }[];
+  created_at: string;
+}
+
+export const schoolApi = {
+  createClass: (schoolName: string, maxStudents: number = 30) =>
+    request<{ class_id: number; class_code: string; school_name: string; max_students: number }>(
+      `/api/school/create?school_name=${encodeURIComponent(schoolName)}&max_students=${maxStudents}`,
+      { method: "POST" }
+    ),
+  joinClass: (classCode: string) =>
+    request<{ message: string; class_code: string }>(
+      `/api/school/join/${classCode}`,
+      { method: "POST" }
+    ),
+  dashboard: () => request<{ classes: SchoolClass[] }>("/api/school/dashboard"),
+  myClass: () => request<{ class_code: string | null; school_name: string | null }>("/api/school/my-class"),
+  removeStudent: (classCode: string, studentId: number) =>
+    request<{ message: string; student_id: number; class_code: string }>(
+      `/api/school/remove-student/${classCode}/${studentId}`,
+      { method: "DELETE" }
+    ),
+};
+
 // Supreme 12.0: Stats Dashboard API
 export const statsApi = {
   overview: () => request<any>("/api/stats/overview"),
