@@ -149,6 +149,45 @@ async def teacher_dashboard(
     return {"classes": classes}
 
 
+@router.delete("/remove-student/{class_code}/{student_id}")
+async def remove_student(
+    class_code: str,
+    student_id: int,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Teacher removes a student from their class."""
+    teacher_id = current_user["id"]
+    cursor = await db.execute(
+        "SELECT * FROM school_licenses WHERE class_code = ? AND teacher_id = ? AND is_active = 1",
+        (class_code.upper(), teacher_id),
+    )
+    row = await cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Klasse nicht gefunden oder keine Berechtigung")
+
+    d = dict(row)
+    students = json.loads(d["students"])
+
+    if student_id not in students:
+        raise HTTPException(status_code=404, detail="Schüler nicht in dieser Klasse")
+
+    students.remove(student_id)
+    await db.execute(
+        "UPDATE school_licenses SET students = ? WHERE class_code = ?",
+        (json.dumps(students), class_code.upper()),
+    )
+
+    # Downgrade student back to free tier
+    await db.execute(
+        "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
+        (student_id,),
+    )
+    await db.commit()
+
+    return {"message": "Schüler entfernt", "student_id": student_id, "class_code": class_code}
+
+
 @router.get("/my-class")
 async def my_class(
     current_user: dict = Depends(get_current_user),

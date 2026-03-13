@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle } from "lucide-react";
+import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle, UserMinus } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -90,6 +90,24 @@ export default function SchoolPage() {
  navigator.clipboard.writeText(code);
  setCopied(code);
  setTimeout(() => setCopied(""), 2000);
+ };
+
+ const removeStudent = async (classCode: string, studentId: number, studentName: string) => {
+ if (!confirm(`${studentName} wirklich aus der Klasse entfernen?`)) return;
+ setLoading(true);
+ try {
+ const res = await fetch(`${API}/api/school/remove-student/${classCode}/${studentId}`, { method: "DELETE", headers });
+ if (res.ok) {
+ setMessage({ text: `${studentName} wurde entfernt.`, type: "success" });
+ fetchData();
+ } else {
+ const errData = await res.json().catch(() => null);
+ setMessage({ text: errData?.detail || "Entfernen fehlgeschlagen.", type: "error" });
+ }
+ } catch {
+ setMessage({ text: "Verbindung fehlgeschlagen.", type: "error" });
+ }
+ setLoading(false);
  };
 
  const selectPackage = (pkg: PackageType) => {
@@ -289,13 +307,13 @@ export default function SchoolPage() {
 
  {c.students.length > 0 && (
  <div className="space-y-2">
- <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-slate-500 px-2">
- <span>Schüler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span>
+ <div className="grid grid-cols-6 gap-2 text-xs font-semibold text-slate-500 px-2">
+ <span>Schüler</span><span>Level</span><span>XP</span><span>Streak</span><span>Quizze</span><span></span>
  </div>
  {c.students.map((s) => (
  <div
  key={s.id}
- className="grid grid-cols-5 gap-2 items-center p-2 rounded-lg text-sm"
+ className="grid grid-cols-6 gap-2 items-center p-2 rounded-lg text-sm"
  style={{ background: "var(--bg-card)" }}
  >
  <span className="font-medium text-white truncate">{s.full_name || s.username}</span>
@@ -303,6 +321,13 @@ export default function SchoolPage() {
  <span className="flex items-center gap-1 text-slate-300"><Trophy className="w-3 h-3 text-yellow-500" />{s.xp}</span>
  <span className="flex items-center gap-1 text-slate-300"><Flame className="w-3 h-3 text-orange-500" />{s.streak}d</span>
  <span className="text-slate-400">{s.quizzes}</span>
+ <button
+ onClick={() => removeStudent(c.class_code, s.id, s.full_name || s.username)}
+ className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
+ title="Schüler entfernen"
+ >
+ <UserMinus className="w-4 h-4" />
+ </button>
  </div>
  ))}
  </div>
