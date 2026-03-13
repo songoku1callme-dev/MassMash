@@ -667,6 +667,7 @@ async def delete_account(
         "activity_log", "learning_profiles", "chat_sessions", "chat_messages",
         "quiz_results", "flashcards", "flashcard_decks", "gamification",
         "notes", "pomodoro_sessions", "referrals",
+        "coupon_redemptions", "tournament_entries", "admin_logs",
     ]
     for table in tables_to_clean:
         try:

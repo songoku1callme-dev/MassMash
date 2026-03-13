@@ -153,7 +153,7 @@ export function useMicrophone(language: string = "de"): UseMicrophoneReturn {
       setIsListening(false);
       recognitionRef.current = null;
       const finalText = transcriptRef.current.trim();
-      if (finalText && onResult) {
+      if (onResult) {
         onResult(finalText);
       }
     };
