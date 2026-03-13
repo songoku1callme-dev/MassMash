@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useClerk } from "@clerk/clerk-react";
 import { useAuthStore } from "../stores/authStore";
 import { authApi } from "../services/api";
 import ThemeToggle from "../components/ThemeToggle";
@@ -13,6 +14,17 @@ import { PageLoader, ErrorState } from "../components/PageStates";
 
 export default function SettingsPage() {
  const { user, updateUser, logout, loadUser, isLoading } = useAuthStore();
+ const clerk = useClerk();
+
+ const handleLogout = async () => {
+  try {
+   await clerk.signOut();
+  } catch { /* Clerk may not be active */ }
+  logout();
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = '/auth';
+ };
  const [fullName, setFullName] = useState("");
  const [schoolGrade, setSchoolGrade] = useState("10");
  const [schoolType, setSchoolType] = useState("Gymnasium");
@@ -52,7 +64,11 @@ export default function SettingsPage() {
   setDeleteError("");
   try {
    await authApi.deleteAccount();
+   try { await clerk.signOut(); } catch { /* Clerk may not be active */ }
    logout();
+   localStorage.clear();
+   sessionStorage.clear();
+   window.location.href = '/auth';
   } catch (err) {
    setDeleteError(err instanceof Error ? err.message : "Konto konnte nicht gelöscht werden.");
   } finally {
@@ -276,7 +292,7 @@ export default function SettingsPage() {
  <Globe className="w-4 h-4 mr-2" />
  Daten exportieren
  </Button>
- <Button variant="outline" size="sm" onClick={logout} className="gap-1">
+ <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1">
  <LogOut className="w-4 h-4" />
  Abmelden
  </Button>

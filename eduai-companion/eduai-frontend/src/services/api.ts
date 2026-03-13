@@ -970,11 +970,11 @@ export const adminApi = {
   triggerJob: (jobId: string) => request<{ message: string; job_id: string; ergebnis: any }>(`/api/admin/scheduler/trigger/${jobId}`, { method: "POST" }),
 };
 
-// Coupon Redeem
+// Coupon Redeem — endpoint is under /api/admin prefix
 export const couponApi = {
   redeem: (code: string) =>
     request<{ message: string; tier: string; duration_days: number }>(
-      `/api/redeem-coupon?code=${encodeURIComponent(code)}`, { method: "POST" }
+      `/api/admin/redeem-coupon?code=${encodeURIComponent(code)}`, { method: "POST" }
     ),
 };
 

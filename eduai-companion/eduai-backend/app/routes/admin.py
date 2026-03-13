@@ -381,7 +381,7 @@ async def redeem_coupon(
     code = code.strip().upper()
 
     cursor = await db.execute(
-        "SELECT * FROM coupons WHERE code = ? AND is_active = 1", (code,)
+        "SELECT * FROM coupons WHERE UPPER(code) = ? AND is_active = 1", (code,)
     )
     row = await cursor.fetchone()
     if not row:
