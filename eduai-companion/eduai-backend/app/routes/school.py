@@ -11,6 +11,7 @@ Features:
 """
 import json
 import logging
+import os
 import secrets
 from typing import Optional
 from pydantic import BaseModel
@@ -183,11 +184,17 @@ async def remove_student(
         (json.dumps(students), class_code.upper()),
     )
 
-    # Downgrade student back to free tier
-    await db.execute(
-        "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
-        (student_id,),
+    # Only downgrade if student has no independent Stripe subscription
+    ucursor = await db.execute(
+        "SELECT stripe_customer_id FROM users WHERE id = ?", (student_id,)
     )
+    urow = await ucursor.fetchone()
+    has_stripe = urow and dict(urow).get("stripe_customer_id")
+    if not has_stripe:
+        await db.execute(
+            "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
+            (student_id,),
+        )
     await db.commit()
 
     return {"message": "Schüler entfernt", "student_id": student_id, "class_code": class_code}
@@ -340,7 +347,6 @@ async def get_invite_link(
         raise HTTPException(status_code=404, detail="Klasse nicht gefunden")
 
     d = dict(row)
-    import os
     frontend_url = os.getenv("FRONTEND_URL", "https://mass-mash.vercel.app")
     invite_url = f"{frontend_url}/school?join={class_code.upper()}"
 
@@ -379,11 +385,17 @@ async def leave_class(
         (json.dumps(students), class_code.upper()),
     )
 
-    # Downgrade student back to free tier
-    await db.execute(
-        "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
-        (user_id,),
+    # Only downgrade if student has no independent Stripe subscription
+    ucursor2 = await db.execute(
+        "SELECT stripe_customer_id FROM users WHERE id = ?", (user_id,)
     )
+    urow2 = await ucursor2.fetchone()
+    has_stripe = urow2 and dict(urow2).get("stripe_customer_id")
+    if not has_stripe:
+        await db.execute(
+            "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
+            (user_id,),
+        )
     await db.commit()
 
     return {"message": "Du hast die Klasse verlassen.", "class_code": class_code}

@@ -43,7 +43,17 @@ export default function SchoolPage() {
  } catch { /* ignore */ }
  };
 
- useEffect(() => { fetchData(); }, []);
+ useEffect(() => {
+ fetchData();
+ // Auto-fill join code from ?join= query parameter (invite links)
+ const params = new URLSearchParams(window.location.search);
+ const joinParam = params.get("join");
+ if (joinParam) {
+ setJoinCode(joinParam.toUpperCase());
+ setView("join");
+ window.history.replaceState({}, "", window.location.pathname);
+ }
+ }, []);
 
  const createClass = async () => {
  if (!schoolName.trim()) return;
