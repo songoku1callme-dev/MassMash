@@ -25,6 +25,13 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
+// --- Skip Waiting: triggered by PWAUpdateBanner ---
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 // --- Activate: clean old caches ---
 self.addEventListener("activate", (event) => {
   event.waitUntil(

@@ -697,6 +697,12 @@ export const stripeApi = {
   createCheckout: (data: { success_url: string; cancel_url: string; plan?: string; billing?: string }) =>
     request<{ checkout_url: string; session_id: string }>("/api/stripe/create-checkout", { method: "POST", body: data }),
   subscriptionStatus: () => request<SubscriptionStatus>("/api/stripe/subscription-status"),
+  customerPortal: () =>
+    request<{ portal_url: string }>("/api/stripe/customer-portal", { method: "POST" }),
+  verifySession: (sessionId: string) =>
+    request<{ status: string; message: string; plan?: string; billing?: string }>(
+      `/api/stripe/verify-session/${sessionId}`
+    ),
 };
 
 // Clerk config
@@ -1334,6 +1340,20 @@ export const schoolApi = {
     request<{ message: string; student_id: number; class_code: string }>(
       `/api/school/remove-student/${classCode}/${studentId}`,
       { method: "DELETE" }
+    ),
+  inviteStudents: (classCode: string, emails: string[]) =>
+    request<{ message: string; added: string[]; invited: string[]; already_in: string[]; class_full: boolean }>(
+      "/api/school/invite",
+      { method: "POST", body: { class_code: classCode, emails } }
+    ),
+  getInviteLink: (classCode: string) =>
+    request<{ invite_url: string; class_code: string; school_name: string }>(
+      `/api/school/invite-link/${classCode}`
+    ),
+  leaveClass: (classCode: string) =>
+    request<{ message: string; class_code: string }>(
+      `/api/school/leave/${classCode}`,
+      { method: "POST" }
     ),
 };
 

@@ -370,3 +370,113 @@ async def pro_status(
 ):
     """Legacy endpoint - redirects to subscription-status."""
     return await subscription_status(current_user, db)
+
+
+@router.post("/customer-portal")
+async def customer_portal(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Create a Stripe Customer Portal session for subscription management.
+
+    Allows users to:
+    - View invoices and payment history
+    - Update payment method
+    - Cancel or change subscription
+    - Download receipts
+    """
+    if not STRIPE_ENABLED:
+        raise HTTPException(status_code=503, detail="Stripe ist nicht konfiguriert.")
+
+    import stripe
+    stripe.api_key = STRIPE_SECRET_KEY
+
+    user_id = current_user["id"]
+    cursor = await db.execute(
+        "SELECT stripe_customer_id FROM users WHERE id = ?", (user_id,)
+    )
+    row = await cursor.fetchone()
+    row_dict = dict(row) if row else {}
+    stripe_customer_id = row_dict.get("stripe_customer_id", "")
+
+    if not stripe_customer_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Kein Stripe-Konto gefunden. Bitte zuerst ein Abo abschliessen.",
+        )
+
+    return_url = os.getenv("FRONTEND_URL", "https://mass-mash.vercel.app") + "/pricing"
+
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=stripe_customer_id,
+            return_url=return_url,
+        )
+        return {"portal_url": session.url}
+    except Exception as e:
+        logger.error("Stripe portal error: %s", e)
+        raise HTTPException(status_code=500, detail="Kundenportal konnte nicht erstellt werden.")
+
+
+@router.get("/verify-session/{session_id}")
+async def verify_session(
+    session_id: str,
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Verify a completed Stripe Checkout session and ensure tier is upgraded.
+
+    Called from the success page after redirect from Stripe.
+    Acts as a safety net in case the webhook hasn't fired yet.
+    """
+    if not STRIPE_ENABLED:
+        raise HTTPException(status_code=503, detail="Stripe ist nicht konfiguriert.")
+
+    import stripe
+    stripe.api_key = STRIPE_SECRET_KEY
+
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        logger.error("Session retrieve error: %s", e)
+        raise HTTPException(status_code=400, detail="Session nicht gefunden.")
+
+    if session.payment_status != "paid":
+        return {"status": "pending", "message": "Zahlung noch nicht abgeschlossen."}
+
+    # Extract metadata
+    user_id = session.metadata.get("lumnos_user_id", "")
+    plan = session.metadata.get("plan", "pro")
+    billing = session.metadata.get("billing", "monthly")
+    customer_id = session.customer or ""
+
+    if not user_id:
+        return {"status": "ok", "message": "Zahlung erfolgreich, Upgrade wird verarbeitet."}
+
+    uid = int(user_id)
+
+    # Verify the session belongs to the current user
+    if uid != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Session gehoert einem anderen User.")
+
+    is_pro = 1 if plan in ("pro", "max") else 0
+    await db.execute(
+        """UPDATE users SET is_pro = ?, subscription_tier = ?,
+           stripe_customer_id = ?, pro_since = datetime('now'),
+           billing_period = ?
+           WHERE id = ?""",
+        (is_pro, plan, customer_id, billing, uid),
+    )
+    await db.commit()
+
+    logger.info(
+        "Session verified & tier upgraded: user=%s tier=%s billing=%s",
+        user_id, plan, billing,
+    )
+
+    return {
+        "status": "ok",
+        "message": f"Upgrade auf {plan.capitalize()} erfolgreich!",
+        "plan": plan,
+        "billing": billing,
+    }

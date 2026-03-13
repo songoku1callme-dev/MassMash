@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
 import { stripeApi, couponApi } from "../services/api";
 import { useIsOwner } from "../utils/ownerEmails";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
  Star, Check, Zap, Camera, Mic, FileText, BarChart3, Crown, Loader2,
- Users, GraduationCap, Palette, Brain, Shield, Rocket, Heart, Ticket
+ Users, GraduationCap, Palette, Brain, Shield, Rocket, Heart, Ticket, Settings
 } from "lucide-react";
 
 type PlanKey = "pro" | "max" | "eltern";
@@ -22,6 +22,40 @@ export default function PricingPage() {
  const [couponLoading, setCouponLoading] = useState(false);
  const [couponSuccess, setCouponSuccess] = useState("");
  const [couponError, setCouponError] = useState("");
+ const [portalLoading, setPortalLoading] = useState(false);
+ const [successMessage, setSuccessMessage] = useState("");
+
+ // Check for Stripe success redirect (verify session)
+ useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+  if (sessionId) {
+   stripeApi.verifySession(sessionId).then((result) => {
+    if (result.status === "ok") {
+     setSuccessMessage(result.message);
+     loadUser();
+    }
+   }).catch(() => {
+    // Session verification is a safety net - webhook may have handled it already
+   });
+   // Clean URL
+   window.history.replaceState({}, "", window.location.pathname);
+  }
+ }, [loadUser]);
+
+ const handleManageSubscription = async () => {
+  setPortalLoading(true);
+  try {
+   const result = await stripeApi.customerPortal();
+   if (result.portal_url) {
+    window.location.href = result.portal_url;
+   }
+  } catch (err) {
+   setError(err instanceof Error ? err.message : "Kundenportal konnte nicht geoeffnet werden.");
+  } finally {
+   setPortalLoading(false);
+  }
+ };
 
  const handleRedeemCoupon = async () => {
   if (!couponCode.trim()) return;
@@ -165,6 +199,13 @@ export default function PricingPage() {
  )}
  </div>
 
+ {successMessage && (
+ <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-emerald-800" style={{ background: "rgba(16,185,129,0.1)" }}>
+ <Check className="w-6 h-6 text-emerald-500" />
+ <span className="text-lg font-semibold text-emerald-300">{successMessage}</span>
+ </div>
+ )}
+
  {(tier !== "free" || isOwner) && (
  <div className="flex items-center justify-center gap-2 p-4 rounded-xl border border-yellow-800" style={{ background: "rgba(234,179,8,0.1)" }}>
  <Crown className="w-6 h-6 text-yellow-500" />
@@ -172,6 +213,18 @@ export default function PricingPage() {
  Du bist {isOwner ? "Owner" : tier === "max" ? "Max" : "Pro"}-Mitglied!
  </span>
  <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+ {!isOwner && tier !== "free" && (
+ <Button
+  variant="outline"
+  size="sm"
+  className="ml-3 border-yellow-700 text-yellow-300 hover:bg-yellow-900/20"
+  onClick={handleManageSubscription}
+  disabled={portalLoading}
+ >
+  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Settings className="w-4 h-4 mr-1" />}
+  Abo verwalten
+ </Button>
+ )}
  </div>
  )}
 

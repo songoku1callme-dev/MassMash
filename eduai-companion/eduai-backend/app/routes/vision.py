@@ -27,14 +27,25 @@ GROQ_VISION_MODELS = [
     "meta-llama/llama-4-maverick-17b-128e-instruct",  # Fallback
 ]
 
-BILD_ANALYSE_PROMPT = """Du bist LUMNOS, ein KI-Lerncoach für deutsche Schüler.
-Analysiere dieses Bild VOLLSTÄNDIG und GRÜNDLICH.
+# OpenAI GPT-4o Vision — Gemini-Level quality for complex math
+OPENAI_VISION_MODELS = [
+    "gpt-4o",           # Best quality for math/formulas
+    "gpt-4o-mini",      # Cheaper fallback
+]
+
+BILD_ANALYSE_PROMPT = """Du bist LUMNOS, ein KI-Lerncoach für deutsche Schüler (Gemini-Level Vision).
+Analysiere dieses Bild VOLLSTÄNDIG und GRÜNDLICH mit höchster mathematischer Präzision.
 
 Führe IMMER diese Schritte durch:
 
-**SCHRITT 1 — BILD-BESCHREIBUNG:**
-Beschreibe was du auf dem Bild siehst (Texte, Objekte, Diagramme,
-Tabellen, Formeln, Personen, Szenen — alles).
+**SCHRITT 1 — BILD-ERKENNUNG & TRANSKRIPTION:**
+Beschreibe ALLES was du siehst:
+- Texte: Transkribiere WÖRTLICH
+- Formeln: Schreibe sie EXAKT in LaTeX ($...$)
+- Diagramme: Beschreibe Achsen, Werte, Kurvenverläufe
+- Tabellen: Reproduziere als Markdown-Tabelle
+- Koordinatensysteme: Lies ALLE Werte, Punkte, Geraden ab
+- Geometrie: Erkenne Winkel, Längen, Formen
 
 **SCHRITT 2 — AUFGABEN ERKENNEN:**
 Falls Aufgaben/Fragen auf dem Bild sind:
@@ -42,31 +53,50 @@ Falls Aufgaben/Fragen auf dem Bild sind:
 - Benenne jede Aufgabe (Aufgabe 1, Aufgabe 2, etc.)
 - Erkläre was jede Aufgabe verlangt
 
-**SCHRITT 3 — AUFGABEN LÖSEN:**
-Löse JEDE erkannte Aufgabe vollständig:
-- Bei Mathe: Vollständiger Rechenweg mit LaTeX ($...$)
-- Bei Textaufgaben: Vollständige Antwort
-- Bei Bildbeschreibungs-Aufgaben: Detaillierte Beschreibung
-- Bei Diagrammen: Interpretation aller Daten
-- Bei Chemie/Physik: Formeln und Einheiten korrekt
+**SCHRITT 3 — VOLLSTÄNDIGER LÖSUNGSWEG:**
+Löse JEDE erkannte Aufgabe mit KOMPLETTEM Lösungsweg:
 
-**SCHRITT 4 — LERN-TIPP:**
-Gib einen kurzen Tipp was der Schüler aus dieser Aufgabe
-lernen kann oder wie er ähnliche Aufgaben lösen kann.
+Bei **Mathematik**:
+- Schreibe JEDEN Schritt einzeln auf
+- Verwende LaTeX für alle Formeln: $f(x) = ax^2 + bx + c$
+- Zeige Umformungen Schritt für Schritt
+- Bei Gleichungen: Löse vollständig mit Probe
+- Bei Ableitungen: Zeige jede Regel (Ketten-, Produkt-, Quotientenregel)
+- Bei Integralen: Zeige Stammfunktion + Grenzen einsetzen
+- Bei Geometrie: Zeichne Skizze in Worten, berechne mit Formeln
+- Bei Stochastik: Baumdiagramm, Pfadregeln, Ergebnis
+
+Bei **Physik/Chemie**:
+- Gegebene Größen aufschreiben mit Einheiten
+- Formel angeben, umstellen, einsetzen
+- Ergebnis mit korrekter Einheit
+
+Bei **Textaufgaben**: Vollständige, strukturierte Antwort
+Bei **Diagrammen**: Interpretation aller Datenpunkte
+
+**SCHRITT 4 — ERGEBNIS-CHECK:**
+- Überprüfe dein Ergebnis (Probe, Plausibilität)
+- Markiere das Endergebnis deutlich: **Ergebnis: ...**
+
+**SCHRITT 5 — LERN-TIPP:**
+Gib einen Tipp, wie der Schüler ähnliche Aufgaben lösen kann.
+Nenne die verwendete Methode/Formel beim Namen.
 
 WICHTIG:
 - Antworte IMMER auf Deutsch
-- Wenn Text auf dem Bild ist: Transkribiere ihn WÖRTLICH
-- Wenn Formeln sichtbar sind: Schreibe sie in LaTeX
-- Wenn ein Koordinatensystem sichtbar ist: Lies alle Werte ab
-- Wenn eine Tabelle sichtbar ist: Reproduziere sie als Markdown
-- NIEMALS "Ich kann das Bild nicht sehen" sagen — analysiere immer
+- NIEMALS "Ich kann das Bild nicht sehen" sagen — analysiere IMMER
 - Antworte NIEMALS mit internen Tags wie <think>, <thinking>, <output>
+- Bei Mathe: JEDER Rechenschritt muss sichtbar sein
+- Formeln IMMER in LaTeX: $...$ (inline) oder $$...$$ (Block)
 """
 
 
 def _get_groq_key() -> str:
     return os.getenv("GROQ_API_KEY", "")
+
+
+def _get_openai_key() -> str:
+    return os.getenv("OPENAI_API_KEY", "")
 
 
 def _clean_vision_response(text: str) -> str:
@@ -120,87 +150,142 @@ async def analyse_bild(
         user_prompt += f"\n\nFACH-KONTEXT: {fach}"
 
     groq_key = _get_groq_key()
-    if not groq_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY nicht konfiguriert")
+    openai_key = _get_openai_key()
 
-    # Groq Vision API aufrufen (mit Fallback-Kette + detailliertes Logging)
-    logger.info("[VISION] Start — Datei: %s, Größe: %d bytes, MIME: %s", file.filename, len(bild_bytes), content_type)
+    if not groq_key and not openai_key:
+        raise HTTPException(status_code=500, detail="Weder GROQ_API_KEY noch OPENAI_API_KEY konfiguriert")
+
+    # Vision API aufrufen: Groq (schnell) -> OpenAI GPT-4o (Gemini-Level Qualitaet)
+    logger.info("[VISION] Start — Datei: %s, Groesse: %d bytes, MIME: %s", file.filename, len(bild_bytes), content_type)
     last_error = ""
-    for model in GROQ_VISION_MODELS:
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {groq_key}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": model,
-                        "messages": [{
-                            "role": "user",
-                            "content": [
-                                {
-                                    "type": "image_url",
-                                    "image_url": {
-                                        "url": f"data:{content_type};base64,{bild_b64}",
+
+    # Phase 1: Groq Vision (schnell + kostenlos)
+    if groq_key:
+        for model in GROQ_VISION_MODELS:
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {groq_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": model,
+                            "messages": [{
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:{content_type};base64,{bild_b64}",
+                                        },
                                     },
-                                },
-                                {
-                                    "type": "text",
-                                    "text": user_prompt,
-                                },
-                            ],
-                        }],
-                        "max_tokens": 2000,
-                        "temperature": 0.1,
-                    },
-                )
+                                    {
+                                        "type": "text",
+                                        "text": user_prompt,
+                                    },
+                                ],
+                            }],
+                            "max_tokens": 4000,
+                            "temperature": 0.1,
+                        },
+                    )
 
-                # Detailliertes Logging pro Modell
-                logger.info("[VISION] Model: %s", model)
-                logger.info("[VISION] Status: %d", response.status_code)
+                    logger.info("[VISION] Groq Model: %s, Status: %d", model, response.status_code)
 
-                if response.status_code == 200:
-                    data = response.json()
-                    usage = data.get("usage", {})
-                    if usage:
-                        track_tokens(
-                            usage.get("prompt_tokens", 0),
-                            usage.get("completion_tokens", 0),
-                        )
-                    analyse = data["choices"][0]["message"]["content"]
-                    analyse = _clean_vision_response(analyse)
-                    logger.info("[VISION] Erfolg mit %s — %d Zeichen", model, len(analyse))
-                    return {
-                        "analyse": analyse,
-                        "model": model,
-                        "dateiname": file.filename,
-                        "fach": fach,
-                    }
-                elif response.status_code == 400:
-                    error_body = response.text[:500]
-                    logger.error("[VISION] 400 Bad Request — %s: %s", model, error_body)
-                    last_error = f"400: {error_body}"
-                    continue
-                elif response.status_code == 404:
-                    logger.error("[VISION] 404 — Modell %s existiert nicht!", model)
-                    last_error = f"404: Modell {model} nicht verfügbar"
-                    continue
-                elif response.status_code == 429:
-                    logger.warning("[VISION] 429 — Rate Limit auf %s", model)
-                    last_error = f"429: Rate Limit auf {model}"
-                    continue
-                else:
-                    error_detail = response.text[:500]
-                    logger.error("[VISION] %d Error — %s: %s", response.status_code, model, error_detail)
-                    last_error = f"{response.status_code}: {error_detail}"
-                    continue
+                    if response.status_code == 200:
+                        data = response.json()
+                        usage = data.get("usage", {})
+                        if usage:
+                            track_tokens(
+                                usage.get("prompt_tokens", 0),
+                                usage.get("completion_tokens", 0),
+                            )
+                        analyse = data["choices"][0]["message"]["content"]
+                        analyse = _clean_vision_response(analyse)
+                        logger.info("[VISION] Erfolg mit %s — %d Zeichen", model, len(analyse))
+                        return {
+                            "analyse": analyse,
+                            "model": model,
+                            "dateiname": file.filename,
+                            "fach": fach,
+                        }
+                    else:
+                        error_detail = response.text[:300]
+                        logger.warning("[VISION] %d auf %s: %s", response.status_code, model, error_detail)
+                        last_error = f"{response.status_code}: {error_detail}"
+                        continue
 
-        except Exception as e:
-            logger.error("[VISION ERROR] %s: %s: %s", model, type(e).__name__, e)
-            last_error = f"{type(e).__name__}: {e}"
-            continue
+            except Exception as e:
+                logger.error("[VISION ERROR] %s: %s: %s", model, type(e).__name__, e)
+                last_error = f"{type(e).__name__}: {e}"
+                continue
+
+    # Phase 2: OpenAI GPT-4o Vision (Gemini-Level — beste Qualitaet fuer Mathe)
+    if openai_key:
+        logger.info("[VISION] Groq fehlgeschlagen, versuche OpenAI GPT-4o Vision...")
+        for model in OPENAI_VISION_MODELS:
+            try:
+                async with httpx.AsyncClient(timeout=90.0) as client:
+                    response = await client.post(
+                        "https://api.openai.com/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {openai_key}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": model,
+                            "messages": [{
+                                "role": "user",
+                                "content": [
+                                    {
+                                        "type": "image_url",
+                                        "image_url": {
+                                            "url": f"data:{content_type};base64,{bild_b64}",
+                                            "detail": "high",
+                                        },
+                                    },
+                                    {
+                                        "type": "text",
+                                        "text": user_prompt,
+                                    },
+                                ],
+                            }],
+                            "max_tokens": 4000,
+                            "temperature": 0.1,
+                        },
+                    )
+
+                    logger.info("[VISION] OpenAI Model: %s, Status: %d", model, response.status_code)
+
+                    if response.status_code == 200:
+                        data = response.json()
+                        usage = data.get("usage", {})
+                        if usage:
+                            track_tokens(
+                                usage.get("prompt_tokens", 0),
+                                usage.get("completion_tokens", 0),
+                            )
+                        analyse = data["choices"][0]["message"]["content"]
+                        analyse = _clean_vision_response(analyse)
+                        logger.info("[VISION] Erfolg mit OpenAI %s — %d Zeichen", model, len(analyse))
+                        return {
+                            "analyse": analyse,
+                            "model": f"openai/{model}",
+                            "dateiname": file.filename,
+                            "fach": fach,
+                        }
+                    else:
+                        error_detail = response.text[:300]
+                        logger.warning("[VISION] OpenAI %d auf %s: %s", response.status_code, model, error_detail)
+                        last_error = f"OpenAI {response.status_code}: {error_detail}"
+                        continue
+
+            except Exception as e:
+                logger.error("[VISION ERROR] OpenAI %s: %s: %s", model, type(e).__name__, e)
+                last_error = f"OpenAI {type(e).__name__}: {e}"
+                continue
 
     logger.error("[VISION] Alle Modelle fehlgeschlagen. Letzter Fehler: %s", last_error)
     raise HTTPException(
@@ -234,10 +319,13 @@ async def analyse_bild_stream(
         user_prompt += f"\n\nFACH: {fach}"
 
     groq_key = _get_groq_key()
-    if not groq_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY nicht konfiguriert")
+    openai_key = _get_openai_key()
+
+    if not groq_key and not openai_key:
+        raise HTTPException(status_code=500, detail="Weder GROQ_API_KEY noch OPENAI_API_KEY konfiguriert")
 
     async def generate():
+        # Phase 1: Groq Vision (schnell)
         for model in GROQ_VISION_MODELS:
             try:
                 async with httpx.AsyncClient(timeout=60.0) as client:
@@ -308,6 +396,70 @@ async def analyse_bild_stream(
             except Exception as e:
                 logger.error("[STREAM ERROR] Vision %s: %s", model, e)
                 continue
+
+        # Phase 2: OpenAI GPT-4o Vision fallback (Gemini-Level)
+        if openai_key:
+            logger.info("[VISION STREAM] Groq fehlgeschlagen, versuche OpenAI...")
+            for model in OPENAI_VISION_MODELS:
+                try:
+                    async with httpx.AsyncClient(timeout=90.0) as client:
+                        async with client.stream(
+                            "POST",
+                            "https://api.openai.com/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {openai_key}",
+                                "Content-Type": "application/json",
+                            },
+                            json={
+                                "model": model,
+                                "stream": True,
+                                "messages": [{
+                                    "role": "user",
+                                    "content": [
+                                        {
+                                            "type": "image_url",
+                                            "image_url": {
+                                                "url": f"data:{content_type};base64,{bild_b64}",
+                                                "detail": "high",
+                                            },
+                                        },
+                                        {"type": "text", "text": user_prompt},
+                                    ],
+                                }],
+                                "max_tokens": 4000,
+                                "temperature": 0.1,
+                            },
+                        ) as resp:
+                            logger.info("[VISION STREAM] OpenAI %s, Status: %d", model, resp.status_code)
+                            if resp.status_code != 200:
+                                continue
+
+                            async for line in resp.aiter_lines():
+                                if not line.startswith("data: "):
+                                    continue
+                                payload = line[6:]
+                                if payload.strip() == "[DONE]":
+                                    break
+                                try:
+                                    chunk = json.loads(payload)
+                                    usage = chunk.get("usage", {})
+                                    if usage:
+                                        track_tokens(
+                                            usage.get("prompt_tokens", 0),
+                                            usage.get("completion_tokens", 0),
+                                        )
+                                    delta = chunk["choices"][0].get("delta", {})
+                                    text = delta.get("content", "")
+                                    if text:
+                                        yield f"data: {json.dumps({'content': text})}\n\n"
+                                except Exception:
+                                    continue
+
+                            yield f"data: {json.dumps({'done': True, 'model': f'openai/{model}'})}\n\n"
+                            return  # Success
+                except Exception as e:
+                    logger.error("[STREAM ERROR] OpenAI Vision %s: %s", model, e)
+                    continue
 
         yield f"data: {json.dumps({'error': 'Analyse fehlgeschlagen'})}\n\n"
 
