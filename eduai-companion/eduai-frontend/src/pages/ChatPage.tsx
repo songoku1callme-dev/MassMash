@@ -338,8 +338,45 @@ export default function ChatPage() {
  // Show user message with image
  addMessage({ role: "user", content: `📷 **Bild hochgeladen:** ${file.name}${frage ? `\n\n${frage}` : ""}` });
  try {
- const result = await visionApi.analyse(file, frage, fach);
- addMessage({ role: "assistant", content: result.analyse, subject: fach });
+ // Use streaming Vision API (Groq llama-4 Vision) for live token-by-token display
+ const response = await visionApi.analyseStream(file, frage, fach);
+ const reader = response.body?.getReader();
+ if (!reader) throw new Error("Stream nicht verfügbar");
+ const decoder = new TextDecoder();
+ let fullText = "";
+ // Add placeholder message for streaming
+ addMessage({ role: "assistant", content: "...", subject: fach });
+ const msgIdx = messages.length + 1; // +1 for user msg just added
+
+ let buffer = "";
+ while (true) {
+ const { done, value } = await reader.read();
+ if (done) break;
+ buffer += decoder.decode(value, { stream: true });
+ const lines = buffer.split("\n");
+ buffer = lines.pop() || "";
+ for (const line of lines) {
+ if (!line.startsWith("data: ")) continue;
+ const payload = line.slice(6).trim();
+ if (!payload || payload === "[DONE]") continue;
+ try {
+ const chunk = JSON.parse(payload);
+ if (chunk.content) {
+ fullText += chunk.content;
+ // Update the last assistant message in-place
+ useChatStore.getState().updateLastMessage(cleanThinkingTags(fullText));
+ }
+ if (chunk.error) {
+ fullText = `Fehler: ${chunk.error}`;
+ useChatStore.getState().updateLastMessage(fullText);
+ }
+ } catch { /* skip malformed chunks */ }
+ }
+ }
+ // Final update with cleaned text
+ if (fullText) {
+ useChatStore.getState().updateLastMessage(cleanThinkingTags(fullText));
+ }
  } catch (err) {
  const errorMsg = err instanceof Error ? err.message : "Bild-Analyse fehlgeschlagen";
  addMessage({ role: "assistant", content: `Fehler: ${errorMsg}` });
@@ -359,7 +396,7 @@ export default function ChatPage() {
 
  setInput("");
  setIsAnalysing(false);
- }, [uploadedFile, input, currentSubject, addMessage]);
+ }, [uploadedFile, input, currentSubject, addMessage, messages.length]);
 
  const handleMicToggle = useCallback(() => {
  if (isListening) {
@@ -382,8 +419,65 @@ export default function ChatPage() {
  ta.style.height = Math.min(ta.scrollHeight, 120) + "px";
  };
 
+ // ===== DRAG & DROP + PASTE Support for Chat =====
+ const [isDragOver, setIsDragOver] = useState(false);
+
+ const handleDrop = useCallback((e: React.DragEvent) => {
+ e.preventDefault();
+ e.stopPropagation();
+ setIsDragOver(false);
+ const file = e.dataTransfer.files[0];
+ if (!file) return;
+ const isImage = file.type.startsWith("image/");
+ const isAudio = file.type.startsWith("audio/") || file.type === "video/webm";
+ if (!isImage && !isAudio) return;
+ if (isImage) {
+ const reader = new FileReader();
+ reader.onload = (ev) => {
+ setUploadedFile({ file, type: "image", preview: ev.target?.result as string });
+ };
+ reader.readAsDataURL(file);
+ } else {
+ setUploadedFile({ file, type: "audio" });
+ }
+ }, []);
+
+ const handleDragOver = useCallback((e: React.DragEvent) => {
+ e.preventDefault();
+ e.stopPropagation();
+ setIsDragOver(true);
+ }, []);
+
+ const handleDragLeave = useCallback((e: React.DragEvent) => {
+ e.preventDefault();
+ e.stopPropagation();
+ setIsDragOver(false);
+ }, []);
+
+ const handlePaste = useCallback((e: React.ClipboardEvent) => {
+ const items = e.clipboardData?.items;
+ if (!items) return;
+ for (const item of Array.from(items)) {
+ if (item.type.startsWith("image/")) {
+ e.preventDefault();
+ const file = item.getAsFile();
+ if (!file) continue;
+ const reader = new FileReader();
+ reader.onload = (ev) => {
+ setUploadedFile({ file, type: "image", preview: ev.target?.result as string });
+ };
+ reader.readAsDataURL(file);
+ break;
+ }
+ }
+ }, []);
+
  return (
- <div style={{
+ <div
+ onDrop={handleDrop}
+ onDragOver={handleDragOver}
+ onDragLeave={handleDragLeave}
+ style={{
  display: "flex",
  flexDirection: "column",
  height: "100%",
@@ -391,6 +485,28 @@ export default function ChatPage() {
  position: "relative",
  background: "var(--lumnos-bg)",
  }}>
+
+ {/* Drag & Drop Overlay */}
+ {isDragOver && (
+ <div style={{
+ position: "absolute",
+ inset: 0,
+ zIndex: 100,
+ background: "rgba(99,102,241,0.15)",
+ backdropFilter: "blur(4px)",
+ display: "flex",
+ alignItems: "center",
+ justifyContent: "center",
+ border: "3px dashed rgba(99,102,241,0.6)",
+ borderRadius: "16px",
+ }}>
+ <div className="text-center">
+ <span style={{ fontSize: "48px" }}>📷</span>
+ <p className="text-lg font-bold text-indigo-300 mt-2">Bild hier ablegen</p>
+ <p className="text-sm text-slate-400">Für KI-Analyse mit Groq Vision</p>
+ </div>
+ </div>
+ )}
 
  {/* ===== CHAT-VERLAUF SIDEBAR (Overlay) ===== */}
  <AnimatePresence>
@@ -1259,9 +1375,9 @@ export default function ChatPage() {
  <button
  onClick={() => mediaInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
- className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
+ className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.5)" }}
- title="Bild oder Audio hochladen"
+ title="Bild oder Audio hochladen (Drag & Drop oder Ctrl+V)"
  >
  {isAnalysing ? (
  <span className="animate-spin inline-block w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full" />
@@ -1275,7 +1391,7 @@ export default function ChatPage() {
  <button
  onClick={() => fileInputRef.current?.click()}
  disabled={isSending || isOcrLoading || isAnalysing}
- className="hidden sm:flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
+ className="flex items-center justify-center w-10 h-10 rounded-xl text-slate-400 hover:text-white transition-all border border-slate-600 hover:border-indigo-500/50 disabled:opacity-50 flex-shrink-0"
  style={{ background: "rgba(var(--surface-rgb),0.5)" }}
  title={language === "de" ? "Kamera / Mathe-Foto" : "Camera / math photo"}
  >
@@ -1290,7 +1406,7 @@ export default function ChatPage() {
  <button
  onClick={speechSupported ? handleMicToggle : () => {}}
  disabled={isSending || !speechSupported}
- className={`hidden sm:flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 flex-shrink-0 ${
+ className={`flex items-center justify-center w-10 h-10 rounded-xl transition-all border disabled:opacity-50 flex-shrink-0 ${
  isListening
  ? "text-red-400 border-red-500/50 animate-pulse"
  : !speechSupported
@@ -1317,6 +1433,7 @@ export default function ChatPage() {
  ref={inputRef}
  value={input}
  onChange={handleTextareaChange}
+ onPaste={handlePaste}
  onKeyDown={(e) => {
  if (e.key === "Enter" && !e.shiftKey) {
  e.preventDefault();

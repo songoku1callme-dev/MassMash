@@ -30,6 +30,7 @@ interface ChatState {
   setDetailLevel: (level: string) => void;
   deleteSession: (id: number) => Promise<void>;
   addMessage: (msg: ChatMessage) => void;
+  updateLastMessage: (content: string) => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -329,6 +330,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   addMessage: (msg) => {
     set((state) => ({ messages: [...state.messages, msg] }));
+  },
+
+  updateLastMessage: (content) => {
+    set((state) => {
+      const msgs = [...state.messages];
+      const last = msgs[msgs.length - 1];
+      if (last && last.role === "assistant") {
+        msgs[msgs.length - 1] = { ...last, content };
+      }
+      return { messages: msgs };
+    });
   },
 
   deleteSession: async (id) => {
