@@ -184,13 +184,15 @@ async def remove_student(
         (json.dumps(students), class_code.upper()),
     )
 
-    # Only downgrade if student has no independent Stripe subscription
+    # Only downgrade if student has no active independent Stripe subscription
+    # Check both stripe_customer_id AND billing_period to confirm a completed subscription
     ucursor = await db.execute(
-        "SELECT stripe_customer_id FROM users WHERE id = ?", (student_id,)
+        "SELECT stripe_customer_id, billing_period FROM users WHERE id = ?", (student_id,)
     )
     urow = await ucursor.fetchone()
-    has_stripe = urow and dict(urow).get("stripe_customer_id")
-    if not has_stripe:
+    ud = dict(urow) if urow else {}
+    has_active_stripe = ud.get("stripe_customer_id") and ud.get("billing_period")
+    if not has_active_stripe:
         await db.execute(
             "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
             (student_id,),
@@ -385,13 +387,15 @@ async def leave_class(
         (json.dumps(students), class_code.upper()),
     )
 
-    # Only downgrade if student has no independent Stripe subscription
+    # Only downgrade if student has no active independent Stripe subscription
+    # Check both stripe_customer_id AND billing_period to confirm a completed subscription
     ucursor2 = await db.execute(
-        "SELECT stripe_customer_id FROM users WHERE id = ?", (user_id,)
+        "SELECT stripe_customer_id, billing_period FROM users WHERE id = ?", (user_id,)
     )
     urow2 = await ucursor2.fetchone()
-    has_stripe = urow2 and dict(urow2).get("stripe_customer_id")
-    if not has_stripe:
+    ud2 = dict(urow2) if urow2 else {}
+    has_active_stripe = ud2.get("stripe_customer_id") and ud2.get("billing_period")
+    if not has_active_stripe:
         await db.execute(
             "UPDATE users SET subscription_tier = 'free', is_pro = 0 WHERE id = ?",
             (user_id,),
