@@ -707,7 +707,7 @@ async def execute_routed_chat(
                     erweiterter_prompt + "\n\nAnalysiere zunächst "
                     "NUR die Frage intern. Antworte mit: "
                     "THEMA: ... | KONZEPTE: ... | SCHWIERIGKEIT: ..."},
-                *verlauf[-4:],
+                *verlauf[-10:],
                 {"role": "user", "content": frage}
             ],
             temperature=0.2, max_tokens=200,
@@ -716,7 +716,7 @@ async def execute_routed_chat(
             decision.modell,
             [
                 {"role": "system", "content": erweiterter_prompt},
-                *verlauf[-4:],
+                *verlauf[-10:],
                 {"role": "user", "content": frage},
                 {"role": "assistant", "content":
                     f"[Interne Analyse: {analyse_text}]\n\n"
@@ -729,7 +729,7 @@ async def execute_routed_chat(
             decision.modell,
             [
                 {"role": "system", "content": erweiterter_prompt},
-                *verlauf[-4:],
+                *verlauf[-10:],
                 {"role": "user", "content": frage}
             ],
             temperature=0.7, max_tokens=adaptive_tokens,

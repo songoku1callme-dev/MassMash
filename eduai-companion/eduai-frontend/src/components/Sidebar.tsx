@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useClerk } from "@clerk/clerk-react";
 import { useAuthStore } from "../stores/authStore";
 import { useChatStore } from "../stores/chatStore";
 import { adminApi } from "../services/api";
@@ -34,6 +35,17 @@ interface SidebarProps {
 
 export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
   const { user, logout, isGuest, exitGuestMode } = useAuthStore();
+  const clerk = useClerk();
+
+  const handleLogout = async () => {
+    try {
+      await clerk.signOut();
+    } catch { /* Clerk may not be active */ }
+    logout();
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/auth';
+  };
   const { sessions, newChat, loadSession, deleteSession } = useChatStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const isOwner = useIsOwner();
@@ -271,7 +283,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             </div>
             <ThemeToggle compact />
             <button
-              onClick={logout}
+              onClick={handleLogout}
               className="text-gray-400 hover:text-red-500 transition-colors"
               title="Abmelden"
             >

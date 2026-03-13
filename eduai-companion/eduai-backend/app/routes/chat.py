@@ -634,7 +634,7 @@ async def send_message(
             fach=subject,
             tier=user_tier,
             verlauf=[{"role": m.get("role", "user"), "content": m.get("content", "")}
-                     for m in messages[-8:] if m.get("content")],
+                     for m in messages[-20:] if m.get("content")],
             system_prompt=combined_prompt,
         )
 
@@ -980,9 +980,9 @@ async def send_message_stream(
         combined_prompt += typ_prompt
         logger.info("Antwort-Typ erkannt (stream): %s für: %s", antwort_typ, request.message[:60])
 
-    # Verlauf für Streaming
+    # Verlauf für Streaming — BUG 5 FIX: mehr History für Kontext
     verlauf = [{"role": m.get("role", "user"), "content": m.get("content", "")}
-               for m in messages[-8:] if m.get("content")]
+               for m in messages[-20:] if m.get("content")]
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # MODUS-HANDLING für Streaming: deep | fast | normal
