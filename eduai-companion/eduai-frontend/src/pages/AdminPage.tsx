@@ -40,6 +40,7 @@ interface SearchUser {
  subscription_tier: string;
  pro_expires_at: string;
  created_at: string;
+ clerk_user_id?: string;
 }
 
 interface Coupon {
@@ -242,20 +243,36 @@ export default function AdminPage() {
  onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
  <Button onClick={handleSearch} size="sm"><Search className="w-4 h-4" /></Button>
  </div>
- <div className="max-h-48 overflow-auto space-y-1">
+ <div className="max-h-64 overflow-auto space-y-1">
  {users.map((u) => (
  <div key={u.id}
  className="flex items-center justify-between p-2 rounded bg-[var(--bg-surface)] text-sm cursor-pointer hover:bg-[var(--bg-card-hover)]"
  onClick={() => setGrantUserId(String(u.id))}>
- <div>
+ <div className="flex-1 min-w-0">
+ <div className="flex items-center gap-2">
  <span className="font-medium">{u.username}</span>
- <span className="theme-text-secondary ml-2">{u.email}</span>
+ <span className="text-xs font-mono text-slate-500">ID:{u.id}</span>
+ {u.clerk_user_id && (
+ <span className="text-[10px] font-mono text-indigo-400 truncate max-w-[120px]" title={u.clerk_user_id}>
+ {u.clerk_user_id.slice(0, 12)}...
+ </span>
+ )}
  </div>
+ <span className="theme-text-secondary text-xs">{u.email}</span>
+ </div>
+ <div className="flex items-center gap-2 flex-shrink-0">
  <span className={`text-xs px-2 py-0.5 rounded ${
  u.subscription_tier === "max" ? "bg-purple-100 text-purple-700" :
  u.subscription_tier === "pro" ? "bg-blue-100 text-blue-700" :
  "bg-[var(--bg-surface)] theme-text-secondary"
  }`}>{u.subscription_tier}</span>
+ {u.subscription_tier === "free" && (
+ <Button size="sm" variant="outline" className="h-6 text-[10px] px-2"
+ onClick={(e) => { e.stopPropagation(); setGrantUserId(String(u.id)); setGrantTier("pro"); }}>
+ <Crown className="w-3 h-3 mr-1" /> Upgrade
+ </Button>
+ )}
+ </div>
  </div>
  ))}
  </div>

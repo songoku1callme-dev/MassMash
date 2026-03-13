@@ -640,6 +640,63 @@ async def change_password(
     }
 
 
+@router.delete("/account")
+async def delete_account(
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Konto dauerhaft löschen — alle Daten werden entfernt.
+
+    Löscht den User und alle zugehörigen Daten aus der Datenbank.
+    Optional: Clerk-User wird ebenfalls gelöscht (wenn Clerk aktiv).
+    """
+    user_id = current_user["id"]
+    user_email = current_user.get("email", "")
+
+    # Admin-Accounts können nicht gelöscht werden
+    if is_admin(user_email):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin-Accounts können nicht gelöscht werden."
+        )
+
+    logger.info("Account deletion requested for user_id=%s email=%s", user_id, user_email)
+
+    # Lösche User-Daten aus allen Tabellen (best-effort)
+    tables_to_clean = [
+        "activity_log", "learning_profiles", "chat_sessions", "chat_messages",
+        "quiz_results", "flashcards", "flashcard_decks", "gamification",
+        "notes", "pomodoro_sessions", "referrals",
+    ]
+    for table in tables_to_clean:
+        try:
+            await db.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+        except Exception:
+            pass  # Tabelle existiert möglicherweise nicht
+
+    # Lösche den User selbst
+    await db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    await db.commit()
+
+    # Optional: Clerk-User löschen
+    clerk_user_id = current_user.get("clerk_user_id", "")
+    if clerk_user_id:
+        try:
+            clerk_secret = os.getenv("CLERK_SECRET_KEY", "")
+            if clerk_secret:
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    await client.delete(
+                        f"https://api.clerk.com/v1/users/{clerk_user_id}",
+                        headers={"Authorization": f"Bearer {clerk_secret}"},
+                    )
+        except Exception as e:
+            logger.warning("Clerk user deletion failed: %s", e)
+
+    logger.info("Account deleted: user_id=%s", user_id)
+    return {"message": "Dein Konto wurde dauerhaft gelöscht."}
+
+
 @router.get("/sessions")
 async def list_sessions(
     current_user: dict = Depends(get_current_user),

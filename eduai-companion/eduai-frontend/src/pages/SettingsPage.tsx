@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "../stores/authStore";
+import { authApi } from "../services/api";
 import ThemeToggle from "../components/ThemeToggle";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
- Settings, User, Shield, Moon, Globe, Save, Loader2, Star, Crown, CreditCard, CheckCircle2
+ Settings, User, Shield, Moon, Globe, Save, Loader2, Star, Crown, CreditCard, CheckCircle2,
+ LogOut, Trash2, AlertTriangle
 } from "lucide-react";
 import { PageLoader, ErrorState } from "../components/PageStates";
 
@@ -19,6 +21,10 @@ export default function SettingsPage() {
  const [saved, setSaved] = useState(false);
  const [saveError, setSaveError] = useState("");
  const [loadError, setLoadError] = useState(false);
+ const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+ const [deleteConfirmText, setDeleteConfirmText] = useState("");
+ const [deleting, setDeleting] = useState(false);
+ const [deleteError, setDeleteError] = useState("");
 
  useEffect(() => {
  const init = async () => {
@@ -39,6 +45,20 @@ export default function SettingsPage() {
  setPreferredLanguage(user.preferred_language || "de");
  }
  }, [user]);
+
+ const handleDeleteAccount = async () => {
+  if (deleteConfirmText !== "LÖSCHEN") return;
+  setDeleting(true);
+  setDeleteError("");
+  try {
+   await authApi.deleteAccount();
+   logout();
+  } catch (err) {
+   setDeleteError(err instanceof Error ? err.message : "Konto konnte nicht gelöscht werden.");
+  } finally {
+   setDeleting(false);
+  }
+ };
 
  const handleSave = async () => {
  setSaving(true);
@@ -256,12 +276,70 @@ export default function SettingsPage() {
  <Globe className="w-4 h-4 mr-2" />
  Daten exportieren
  </Button>
- <Button variant="destructive" size="sm" onClick={logout}>
+ <Button variant="outline" size="sm" onClick={logout} className="gap-1">
+ <LogOut className="w-4 h-4" />
+ Abmelden
+ </Button>
+ <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} className="gap-1">
+ <Trash2 className="w-4 h-4" />
  Konto löschen
  </Button>
  </div>
  </CardContent>
  </Card>
+
+ {/* Account Delete Dialog */}
+ {showDeleteDialog && (
+ <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+ <Card className="max-w-md w-full">
+ <CardHeader>
+ <div className="flex items-center gap-2 text-red-500">
+ <AlertTriangle className="w-6 h-6" />
+ <CardTitle className="text-lg">Konto dauerhaft löschen?</CardTitle>
+ </div>
+ <CardDescription>
+ Alle deine Daten werden unwiderruflich gelöscht: Chats, Quiz-Ergebnisse, Karteikarten, Lernfortschritt.
+ </CardDescription>
+ </CardHeader>
+ <CardContent className="space-y-4">
+ <div>
+ <label className="text-sm font-medium theme-text-tertiary mb-1 block">
+ Tippe <strong>LÖSCHEN</strong> zur Bestätigung:
+ </label>
+ <Input
+ value={deleteConfirmText}
+ onChange={(e) => setDeleteConfirmText(e.target.value)}
+ placeholder="LÖSCHEN"
+ className="font-mono"
+ />
+ </div>
+ {deleteError && (
+ <div className="p-3 rounded-lg bg-red-500/10 text-red-500 text-sm">
+ {deleteError}
+ </div>
+ )}
+ <div className="flex gap-3">
+ <Button
+ variant="outline"
+ className="flex-1"
+ onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); setDeleteError(""); }}
+ >
+ Abbrechen
+ </Button>
+ <Button
+ variant="destructive"
+ className="flex-1"
+ disabled={deleteConfirmText !== "LÖSCHEN" || deleting}
+ onClick={handleDeleteAccount}
+ >
+ {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+ Endgültig löschen
+ </Button>
+ </div>
+ </CardContent>
+ </Card>
+ </div>
+ )}
  </div>
  );
 }

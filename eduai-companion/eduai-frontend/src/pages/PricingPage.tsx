@@ -1,22 +1,45 @@
 import { useState } from "react";
 import { useAuthStore } from "../stores/authStore";
-import { stripeApi } from "../services/api";
+import { stripeApi, couponApi } from "../services/api";
 import { useIsOwner } from "../utils/ownerEmails";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
  Star, Check, Zap, Camera, Mic, FileText, BarChart3, Crown, Loader2,
- Users, GraduationCap, Palette, Brain, Shield, Rocket, Heart
+ Users, GraduationCap, Palette, Brain, Shield, Rocket, Heart, Ticket
 } from "lucide-react";
 
 type PlanKey = "pro" | "max" | "eltern";
 type BillingPeriod = "monthly" | "yearly";
 
 export default function PricingPage() {
- const { user } = useAuthStore();
+ const { user, loadUser } = useAuthStore();
  const [loading, setLoading] = useState<PlanKey | null>(null);
  const [error, setError] = useState("");
  const [billing, setBilling] = useState<BillingPeriod>("yearly");
+ const [couponCode, setCouponCode] = useState("");
+ const [couponLoading, setCouponLoading] = useState(false);
+ const [couponSuccess, setCouponSuccess] = useState("");
+ const [couponError, setCouponError] = useState("");
+
+ const handleRedeemCoupon = async () => {
+  if (!couponCode.trim()) return;
+  setCouponLoading(true);
+  setCouponError("");
+  setCouponSuccess("");
+  try {
+   const result = await couponApi.redeem(couponCode.trim().toUpperCase());
+   setCouponSuccess(result.message || "Gutschein erfolgreich eingelöst!");
+   setCouponCode("");
+   // Reload user to reflect new subscription
+   await loadUser();
+  } catch (err) {
+   setCouponError(err instanceof Error ? err.message : "Ungültiger Gutscheincode.");
+  } finally {
+   setCouponLoading(false);
+  }
+ };
 
  const tier = user?.subscription_tier || "free";
  const isOwner = useIsOwner();
@@ -407,6 +430,46 @@ export default function PricingPage() {
  </div>
  </div>
  </div>
+ </CardContent>
+ </Card>
+
+ {/* Gutschein-Eingabe */}
+ <Card className="border border-emerald-500/20 bg-[var(--lumnos-surface)]">
+ <CardHeader>
+ <CardTitle className="text-lg text-white flex items-center gap-2">
+ <Ticket className="w-5 h-5 text-emerald-500" />
+ Gutschein einlösen
+ </CardTitle>
+ <CardDescription className="text-slate-400">Hast du einen Gutscheincode? Löse ihn hier ein.</CardDescription>
+ </CardHeader>
+ <CardContent>
+ <div className="flex gap-3">
+ <Input
+  value={couponCode}
+  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+  placeholder="z.B. ABITUR2026"
+  className="flex-1 bg-slate-800 border-slate-700 text-white placeholder-slate-500 font-mono"
+  onKeyDown={(e) => e.key === "Enter" && handleRedeemCoupon()}
+ />
+ <Button
+  onClick={handleRedeemCoupon}
+  disabled={couponLoading || !couponCode.trim()}
+  className="bg-emerald-600 hover:bg-emerald-700"
+ >
+  {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Ticket className="w-4 h-4 mr-1" />}
+  Einlösen
+ </Button>
+ </div>
+ {couponSuccess && (
+ <div className="mt-3 p-3 rounded-lg bg-emerald-900/30 text-emerald-400 text-sm">
+  {couponSuccess}
+ </div>
+ )}
+ {couponError && (
+ <div className="mt-3 p-3 rounded-lg bg-red-900/20 text-red-400 text-sm">
+  {couponError}
+ </div>
+ )}
  </CardContent>
  </Card>
 
