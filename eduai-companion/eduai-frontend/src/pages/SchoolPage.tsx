@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle, UserMinus } from "lucide-react";
+import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle, UserMinus, Link2, Send, LogOut } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -25,6 +25,9 @@ export default function SchoolPage() {
  const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
  const [selectedPackage, setSelectedPackage] = useState<PackageType>(null);
  const [contactSent, setContactSent] = useState(false);
+ const [inviteEmails, setInviteEmails] = useState("");
+ const [invitingClass, setInvitingClass] = useState<string | null>(null);
+ const [leavingClass, setLeavingClass] = useState(false);
  const token = localStorage.getItem("lumnos_token");
 
  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
@@ -110,6 +113,72 @@ export default function SchoolPage() {
  setLoading(false);
  };
 
+ const inviteStudents = async (classCode: string) => {
+ if (!inviteEmails.trim()) return;
+ setLoading(true);
+ setMessage(null);
+ try {
+ const emails = inviteEmails.split(/[,;\n]+/).map(e => e.trim()).filter(Boolean);
+ const res = await fetch(`${API}/api/school/invite`, {
+ method: "POST",
+ headers,
+ body: JSON.stringify({ class_code: classCode, emails }),
+ });
+ if (res.ok) {
+ const d = await res.json();
+ setMessage({ text: d.message, type: "success" });
+ setInviteEmails("");
+ setInvitingClass(null);
+ fetchData();
+ } else {
+ const errData = await res.json().catch(() => null);
+ setMessage({ text: errData?.detail || "Einladung fehlgeschlagen.", type: "error" });
+ }
+ } catch {
+ setMessage({ text: "Verbindung fehlgeschlagen.", type: "error" });
+ }
+ setLoading(false);
+ };
+
+ const copyInviteLink = async (classCode: string) => {
+ try {
+ const res = await fetch(`${API}/api/school/invite-link/${classCode}`, { headers });
+ if (res.ok) {
+ const d = await res.json();
+ navigator.clipboard.writeText(d.invite_url);
+ setCopied(`link-${classCode}`);
+ setTimeout(() => setCopied(""), 2000);
+ setMessage({ text: "Einladungslink kopiert!", type: "success" });
+ }
+ } catch {
+ // Fallback: construct link manually
+ const url = `${window.location.origin}/school?join=${classCode}`;
+ navigator.clipboard.writeText(url);
+ setCopied(`link-${classCode}`);
+ setTimeout(() => setCopied(""), 2000);
+ }
+ };
+
+ const leaveClass = async () => {
+ if (!myClass.class_code) return;
+ if (!confirm("Willst du wirklich die Klasse verlassen? Du verlierst deinen Max-Zugang.")) return;
+ setLeavingClass(true);
+ try {
+ const res = await fetch(`${API}/api/school/leave/${myClass.class_code}`, { method: "POST", headers });
+ if (res.ok) {
+ setMessage({ text: "Du hast die Klasse verlassen.", type: "success" });
+ setMyClass({ class_code: null, school_name: null });
+ fetchData();
+ } else {
+ const errData = await res.json().catch(() => null);
+ setMessage({ text: errData?.detail || "Verlassen fehlgeschlagen.", type: "error" });
+ }
+ } catch {
+ setMessage({ text: "Verbindung fehlgeschlagen.", type: "error" });
+ }
+ setLeavingClass(false);
+ };
+
  const selectPackage = (pkg: PackageType) => {
  setSelectedPackage(pkg);
  if (pkg === "enterprise") {
@@ -171,9 +240,19 @@ export default function SchoolPage() {
  border: "1px solid rgba(99,102,241,0.2)",
  }}
  >
+ <div className="flex items-center justify-between">
  <p className="text-sm text-indigo-300">
  Du bist in der Klasse <strong className="text-white">{myClass.school_name}</strong> (Code: <span className="font-mono">{myClass.class_code}</span>)
  </p>
+ <button
+ onClick={leaveClass}
+ disabled={leavingClass}
+ className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-red-500/10 transition-colors"
+ >
+ {leavingClass ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
+ Verlassen
+ </button>
+ </div>
  </div>
  )}
 
@@ -333,8 +412,52 @@ export default function SchoolPage() {
  </div>
  )}
  {c.students.length === 0 && (
- <p className="text-sm text-slate-500 text-center py-4">Noch keine Schüler beigetreten. Teile den Code!</p>
+ <p className="text-sm text-slate-500 text-center py-4">Noch keine Schueler beigetreten. Teile den Code!</p>
  )}
+
+ {/* Invite actions */}
+ <div className="mt-4 pt-4 border-t border-white/5 space-y-3">
+ <div className="flex gap-2">
+ <button
+ onClick={() => copyInviteLink(c.class_code)}
+ className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+ style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}
+ >
+ {copied === `link-${c.class_code}` ? <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
+ Einladungslink kopieren
+ </button>
+ <button
+ onClick={() => setInvitingClass(invitingClass === c.class_code ? null : c.class_code)}
+ className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-indigo-300 hover:text-indigo-200 transition-colors"
+ style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.2)" }}
+ >
+ <Mail className="w-3.5 h-3.5" />
+ Per E-Mail einladen
+ </button>
+ </div>
+
+ {invitingClass === c.class_code && (
+ <div className="space-y-2">
+ <textarea
+ value={inviteEmails}
+ onChange={(e) => setInviteEmails(e.target.value)}
+ placeholder="E-Mail-Adressen (komma- oder zeilengetrennt)&#10;z.B. schueler1@schule.de, schueler2@schule.de"
+ rows={3}
+ className="w-full px-3 py-2 rounded-lg text-sm text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-indigo-500/50"
+ style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)" }}
+ />
+ <button
+ onClick={() => inviteStudents(c.class_code)}
+ disabled={loading || !inviteEmails.trim()}
+ className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50"
+ style={{ background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)" }}
+ >
+ {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+ Einladungen senden
+ </button>
+ </div>
+ )}
+ </div>
  </div>
  ))}
  </div>
