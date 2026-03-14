@@ -126,20 +126,33 @@ export default function SettingsPage() {
  <p className="theme-text-secondary mt-1">Verwalte dein Profil und deine Einstellungen</p>
  </div>
 
- {/* Pro Status */}
- {user?.is_pro ? (
+ {/* Abo Status */}
+ {(() => {
+ const tier = user?.subscription_tier || 'free';
+ const isOwner = (user as Record<string, unknown>)?.isOwner || false;
+ const tierConfig: Record<string, { label: string; icon: string; gradient: string; description: string }> = {
+ 'max': { label: 'Max-Mitglied 🚀', icon: 'crown', gradient: 'from-purple-500 to-violet-600', description: 'Alle Features freigeschaltet — Abitur-Simulation, Internet-Recherche & mehr' },
+ 'pro': { label: 'Pro-Mitglied ⭐', icon: 'star', gradient: 'from-yellow-400 to-amber-500', description: 'Unbegrenzte OCR, Spracheingabe & priorisierte KI-Antworten' },
+ 'eltern': { label: 'Eltern-Abo 👨‍👩‍👧', icon: 'users', gradient: 'from-pink-400 to-rose-500', description: 'Lernfortschritt deines Kindes verfolgen' },
+ 'free': { label: 'Kostenloser Plan', icon: 'credit-card', gradient: 'from-blue-400 to-indigo-500', description: '50 OCR & 50 Spracheingaben pro Monat' },
+ };
+ const displayLabel = isOwner ? 'Max-Mitglied 👑 (Owner)' : tierConfig[tier]?.label || 'Kostenloser Plan';
+ const config = tierConfig[tier] || tierConfig['free'];
+ const isPaid = tier !== 'free' || isOwner;
+
+ return isPaid ? (
  <Card className="border-yellow-200">
  <CardContent className="flex items-center gap-4 p-6">
- <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center">
+ <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${config.gradient} flex items-center justify-center`}>
  <Crown className="w-6 h-6 text-white" />
  </div>
  <div className="flex-1">
  <p className="font-semibold theme-text flex items-center gap-2">
- Pro-Mitglied
- <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+ {displayLabel}
+ {!isOwner && <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />}
  </p>
  <p className="text-sm theme-text-secondary">
- Unbegrenzte OCR, Spracheingabe & priorisierte KI-Antworten
+ {config.description}
  </p>
  </div>
  </CardContent>
@@ -162,7 +175,8 @@ export default function SettingsPage() {
  </Button>
  </CardContent>
  </Card>
- )}
+ );
+ })()}
 
  {/* Profile Settings */}
  <Card>
@@ -266,7 +280,7 @@ export default function SettingsPage() {
  <div className="flex items-center justify-between gap-4 flex-wrap">
  <div>
  <p className="font-medium theme-text">Theme</p>
- <p className="text-sm theme-text-secondary">System — paßt sich automatisch deinem Gerät an (Standard)</p>
+ <p className="text-sm theme-text-secondary">System — passt sich automatisch deinem Gerät an (Standard)</p>
  </div>
  <ThemeToggle />
  </div>

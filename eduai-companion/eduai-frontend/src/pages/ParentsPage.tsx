@@ -37,7 +37,7 @@ export default function ParentsPage() {
  setChildEmail("");
  loadChildren();
  } catch (err) {
- setError(err instanceof Error ? err.message : "Fehler beim Verknuepfen");
+ setError(err instanceof Error ? err.message : "Fehler beim Verknüpfen");
  } finally {
  setLinking(false);
  }
@@ -60,7 +60,7 @@ export default function ParentsPage() {
  Eltern-Dashboard
  </h1>
  <p className="theme-text-secondary mt-1">
- Verknuepfe dein Kind und verfolge seinen Lernfortschritt.
+ Verknüpfe dein Kind und verfolge seinen Lernfortschritt.
  </p>
  </div>
 
@@ -84,7 +84,7 @@ export default function ParentsPage() {
  className="px-6 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2"
  >
  {linking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
- Verknuepfen
+ Verknüpfen
  </button>
  </div>
 
@@ -170,7 +170,7 @@ export default function ParentsPage() {
  {/* Week Activity */}
  <div className="px-6 pb-6">
  <p className="text-sm theme-text-secondary">
- Diese Woche: {child.stats?.week_activities || 0} Aktivitaeten,{" "}
+ Diese Woche: {child.stats?.week_activities || 0} Aktivitäten,{" "}
  {child.stats?.week_learning_minutes || 0} Min Lernzeit
  </p>
  </div>
