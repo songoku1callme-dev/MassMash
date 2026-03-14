@@ -14,15 +14,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/events", tags=["events"])
 
-# Pre-defined seasonal events
+# Pre-defined seasonal events — always at least 2-3 active
 SEASONAL_EVENTS = [
     {
-        "id": "abitur_season_2026",
-        "name": "Abitur-Season 2026",
-        "description": "Bereite dich auf das Abitur 2026 vor! Spezielle Challenges und Ranglisten.",
+        "id": "abitur_sprint_2026",
+        "name": "Abitur-Sprint 2026",
+        "description": "30 Tage intensiv lernen! Doppelte XP für alle Abitur-relevanten Fächer.",
         "event_type": "abitur",
-        "start_date": "2026-03-01",
-        "end_date": "2026-05-31",
+        "start_date": "2026-01-01",
+        "end_date": "2026-06-30",
         "rewards": {"badge": "abi_ready", "xp_bonus": 500},
         "challenges": [
             {"title": "50 Abitur-Quizze", "target": 50, "xp": 200},
@@ -31,16 +31,30 @@ SEASONAL_EVENTS = [
         ],
     },
     {
-        "id": "winter_challenge_2026",
-        "name": "Winter-Lern-Challenge 2026",
-        "description": "24 Tage Adventskalender: Jeden Tag eine Aufgabe loesen!",
-        "event_type": "advent",
-        "start_date": "2026-12-01",
-        "end_date": "2026-12-24",
-        "rewards": {"badge": "winter_learner", "xp_bonus": 300},
+        "id": "fruehlings_challenge_2026",
+        "name": "Frühjahrs-Challenge",
+        "description": "Jeden Tag eine neue Quest! Sammle Bonus-XP den ganzen Frühling.",
+        "event_type": "fruehling",
+        "start_date": "2026-03-01",
+        "end_date": "2026-04-30",
+        "rewards": {"badge": "spring_learner", "xp_bonus": 300},
         "challenges": [
-            {"title": "24 Tage am Stueck lernen", "target": 24, "xp": 500},
-            {"title": "12 verschiedene Fächer", "target": 12, "xp": 200},
+            {"title": "30 Tage Streak", "target": 30, "xp": 500},
+            {"title": "100 Quiz-Fragen beantworten", "target": 100, "xp": 200},
+            {"title": "5 verschiedene Fächer üben", "target": 5, "xp": 150},
+        ],
+    },
+    {
+        "id": "wochenend_turnier_2026",
+        "name": "Wochenend-Turnier",
+        "description": "Samstag + Sonntag Bonus-XP! Tritt gegen andere Schüler an.",
+        "event_type": "turnier",
+        "start_date": "2026-01-01",
+        "end_date": "2026-12-31",
+        "rewards": {"badge": "weekend_warrior", "xp_bonus": 150},
+        "challenges": [
+            {"title": "An 10 Turnieren teilnehmen", "target": 10, "xp": 300},
+            {"title": "3 Turniere gewinnen", "target": 3, "xp": 500},
         ],
     },
     {
@@ -55,6 +69,19 @@ SEASONAL_EVENTS = [
             {"title": "Profil aktualisieren", "target": 1, "xp": 50},
             {"title": "10 Quizze in der ersten Woche", "target": 10, "xp": 150},
             {"title": "Lernplan erstellen", "target": 1, "xp": 100},
+        ],
+    },
+    {
+        "id": "winter_challenge_2026",
+        "name": "Winter-Lern-Challenge 2026",
+        "description": "24 Tage Adventskalender: Jeden Tag eine Aufgabe lösen!",
+        "event_type": "advent",
+        "start_date": "2026-12-01",
+        "end_date": "2026-12-24",
+        "rewards": {"badge": "winter_learner", "xp_bonus": 300},
+        "challenges": [
+            {"title": "24 Tage am Stück lernen", "target": 24, "xp": 500},
+            {"title": "12 verschiedene Fächer", "target": 12, "xp": 200},
         ],
     },
 ]

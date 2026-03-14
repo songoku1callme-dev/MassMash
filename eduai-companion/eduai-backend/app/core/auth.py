@@ -146,26 +146,26 @@ async def get_current_user(
                         "SELECT * FROM users WHERE email = ?", (email,)
                     )
                     user = await cursor.fetchone()
+                    if user:
+                        # Link existing account to Clerk
+                        await db.execute(
+                            "UPDATE users SET clerk_user_id = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), auth_provider = 'clerk' WHERE email = ?",
+                            (clerk_user_id, avatar_url, email),
+                        )
+                        await db.commit()
+                        # Re-fetch to get updated row
+                        cursor = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
+                        user = await cursor.fetchone()
                         if user:
-                            # Link existing account to Clerk
-                            await db.execute(
-                                "UPDATE users SET clerk_user_id = ?, avatar_url = COALESCE(NULLIF(?, ''), avatar_url), auth_provider = 'clerk' WHERE email = ?",
-                                (clerk_user_id, avatar_url, email),
-                            )
-                            await db.commit()
-                            # Re-fetch to get updated row
-                            cursor = await db.execute("SELECT * FROM users WHERE email = ?", (email,))
-                            user = await cursor.fetchone()
-                            if user:
-                                user_d = dict(user)
-                                # BUG 4 FIX: Enforce Max tier for owner emails at Clerk login
-                                from app.routes.auth import is_admin, _ensure_admin_max_tier
-                                if is_admin(user_d.get("email", "")):
-                                    await _ensure_admin_max_tier(db, user_d["id"])
-                                    user_d["subscription_tier"] = "max"
-                                    user_d["is_pro"] = 1
-                                    user_d["is_admin"] = 1
-                                return user_d
+                            user_d = dict(user)
+                            # BUG 4 FIX: Enforce Max tier for owner emails at Clerk login
+                            from app.routes.auth import is_admin, _ensure_admin_max_tier
+                            if is_admin(user_d.get("email", "")):
+                                await _ensure_admin_max_tier(db, user_d["id"])
+                                user_d["subscription_tier"] = "max"
+                                user_d["is_pro"] = 1
+                                user_d["is_admin"] = 1
+                            return user_d
 
                 # Step 4: Auto-create new user from Clerk profile
                 import secrets as _secrets

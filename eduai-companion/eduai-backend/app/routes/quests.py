@@ -179,6 +179,82 @@ async def get_daily_quests(
     return {"quests": quests, "date": today}
 
 
+@router.post("/complete")
+async def complete_quest_by_type(
+    quest_type: str = "chat_message",
+    current_user: dict = Depends(get_current_user),
+    db: aiosqlite.Connection = Depends(get_db),
+):
+    """Complete a quest by activity type (chat_message, quiz_completed, etc.).
+
+    Maps activity types to quest types:
+    - chat_message → streak quest (type=time)
+    - quiz_completed → quiz quest (type=quiz)
+    - explore_subject → explore quest (type=explore)
+    - social_action → social quest (type=social)
+    """
+    user_id = current_user["id"]
+    today = date.today().isoformat()
+
+    # Map activity type to quest type
+    type_map = {
+        "chat_message": "time",
+        "quiz_completed": "quiz",
+        "explore_subject": "explore",
+        "social_action": "social",
+    }
+    target_quest_type = type_map.get(quest_type, "time")
+
+    # Find matching uncompleted quest for today
+    cursor = await db.execute(
+        """SELECT * FROM daily_quests
+        WHERE user_id = ? AND quest_date = ? AND completed = 0
+        ORDER BY quest_id""",
+        (user_id, today),
+    )
+    all_quests = await cursor.fetchall()
+
+    # Try to match by quest_id prefix (weak_=quiz, explore_=explore, streak_=time, social_=social)
+    prefix_map = {"quiz": "weak_", "explore": "explore_", "time": "streak_", "social": "social_"}
+    target_prefix = prefix_map.get(target_quest_type, "streak_")
+
+    matched = None
+    for q in all_quests:
+        qd = dict(q)
+        if qd["quest_id"].startswith(target_prefix):
+            matched = qd
+            break
+
+    if not matched:
+        # Fallback: complete any uncompleted quest
+        if all_quests:
+            matched = dict(all_quests[0])
+        else:
+            return {"message": "Keine offenen Quests für heute", "completed": False}
+
+    # Complete the quest
+    await db.execute(
+        "UPDATE daily_quests SET progress = target, completed = 1 WHERE user_id = ? AND quest_id = ? AND quest_date = ?",
+        (user_id, matched["quest_id"], today),
+    )
+    await db.commit()
+
+    xp_earned = 0
+    try:
+        from app.routes.gamification import add_xp
+        await add_xp(user_id, matched["xp_reward"], "quest", db)
+        xp_earned = matched["xp_reward"]
+    except Exception:
+        pass
+
+    return {
+        "quest_id": matched["quest_id"],
+        "completed": True,
+        "xp_earned": xp_earned,
+        "message": f"Quest '{matched['title']}' abgeschlossen!",
+    }
+
+
 @router.post("/progress/{quest_id}")
 async def update_quest_progress(
     quest_id: str,

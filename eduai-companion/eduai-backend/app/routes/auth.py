@@ -641,6 +641,7 @@ async def change_password(
 
 
 @router.delete("/account")
+@router.post("/account/delete")  # POST fallback for proxies that block DELETE
 async def delete_account(
     current_user: dict = Depends(get_current_user),
     db: aiosqlite.Connection = Depends(get_db),
@@ -649,25 +650,26 @@ async def delete_account(
 
     Löscht den User und alle zugehörigen Daten aus der Datenbank.
     Optional: Clerk-User wird ebenfalls gelöscht (wenn Clerk aktiv).
+    Owner/Admin-Accounts können sich AUCH löschen (eigene Entscheidung).
     """
     user_id = current_user["id"]
     user_email = current_user.get("email", "")
-
-    # Admin-Accounts können nicht gelöscht werden
-    if is_admin(user_email):
-        raise HTTPException(
-            status_code=403,
-            detail="Admin-Accounts können nicht gelöscht werden."
-        )
+    clerk_id = current_user.get("clerk_user_id", "") or current_user.get("clerk_id", "")
 
     logger.info("Account deletion requested for user_id=%s email=%s", user_id, user_email)
 
-    # Lösche User-Daten aus allen Tabellen (best-effort)
+    # Alle User-Daten löschen (umfassende Liste)
     tables_to_clean = [
-        "activity_log", "learning_profiles", "chat_sessions", "chat_messages",
-        "quiz_results", "flashcards", "flashcard_decks", "gamification",
-        "notes", "pomodoro_sessions", "referrals",
+        "chat_messages", "chat_sessions",
+        "quiz_results", "gamification",
+        "flashcards", "flashcard_decks", "notes", "xp_log",
+        "daily_quests", "activity_log",
+        "user_memories", "learning_profiles",
+        "pomodoro_sessions", "referrals",
         "coupon_redemptions", "tournament_entries", "admin_logs",
+        "battle_pass", "battle_pass_progress",
+        "iq_results", "abitur_simulations",
+        "notifications", "shop_purchases",
     ]
     for table in tables_to_clean:
         try:
@@ -679,23 +681,21 @@ async def delete_account(
     await db.execute("DELETE FROM users WHERE id = ?", (user_id,))
     await db.commit()
 
-    # Optional: Clerk-User löschen
-    clerk_user_id = current_user.get("clerk_user_id", "")
-    if clerk_user_id:
-        try:
-            clerk_secret = os.getenv("CLERK_SECRET_KEY", "")
-            if clerk_secret:
-                import httpx
-                async with httpx.AsyncClient() as client:
-                    await client.delete(
-                        f"https://api.clerk.com/v1/users/{clerk_user_id}",
-                        headers={"Authorization": f"Bearer {clerk_secret}"},
-                    )
-        except Exception as e:
-            logger.warning("Clerk user deletion failed: %s", e)
+    # Clerk User löschen (optional, kein Crash)
+    try:
+        clerk_secret = os.getenv("CLERK_SECRET_KEY", "")
+        if clerk_id and clerk_secret:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                await client.delete(
+                    f"https://api.clerk.com/v1/users/{clerk_id}",
+                    headers={"Authorization": f"Bearer {clerk_secret}"},
+                )
+    except Exception as e:
+        logger.warning("Clerk user deletion failed (non-fatal): %s", e)
 
     logger.info("Account deleted: user_id=%s", user_id)
-    return {"message": "Dein Konto wurde dauerhaft gelöscht."}
+    return {"message": "Account gelöscht"}
 
 
 @router.get("/sessions")

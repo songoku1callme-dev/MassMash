@@ -110,7 +110,7 @@ async def get_battle_pass_status(
     needed_xp = xp_for_next - xp_for_current
 
     return {
-        "saison": "Fruehling 2026",
+        "saison": "Frühling 2026",
         "current_level": current_level,
         "max_level": 50,
         "current_xp": current_xp,

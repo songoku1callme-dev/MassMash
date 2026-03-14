@@ -23,6 +23,15 @@ async def find_lernpartner(
     """Find learning partners with overlapping weak subjects (grade ±1)."""
     user_id = current_user["id"]
 
+    # Get current user's grade FIRST (needed for demo fallback too)
+    cursor = await db.execute("SELECT school_grade FROM users WHERE id = ?", (user_id,))
+    user_row = await cursor.fetchone()
+    my_grade_str = dict(user_row)["school_grade"] if user_row else "10"
+    try:
+        my_grade_num = int(my_grade_str)
+    except (ValueError, TypeError):
+        my_grade_num = 10
+
     # Get current user's weak topics
     cursor = await db.execute(
         """SELECT DISTINCT subject, topic_name FROM user_memories
@@ -39,18 +48,24 @@ async def find_lernpartner(
             my_weak_topics.add(rd["topic_name"])
 
     if not my_weak_subjects:
-        return {"partners": [], "message": "Keine Schwächen erkannt. Mache mehr Quizze!"}
+        # Fallback: show demo partners so the page is never empty
+        demo_partners = [
+            {"user_id": 0, "username": "Lina M.", "school_grade": my_grade_str,
+             "match_prozent": 85, "common_subjects": ["Mathematik", "Physik"],
+             "common_topics": [], "stats": {"xp": 1250, "level": 5, "level_name": "Fortgeschritten", "streak_days": 12},
+             "is_demo": True},
+            {"user_id": 0, "username": "Tim K.", "school_grade": my_grade_str,
+             "match_prozent": 72, "common_subjects": ["Deutsch", "Geschichte"],
+             "common_topics": [], "stats": {"xp": 890, "level": 3, "level_name": "Lernender", "streak_days": 7},
+             "is_demo": True},
+            {"user_id": 0, "username": "Sara B.", "school_grade": my_grade_str,
+             "match_prozent": 68, "common_subjects": ["Englisch", "Biologie"],
+             "common_topics": [], "stats": {"xp": 2100, "level": 8, "level_name": "Experte", "streak_days": 21},
+             "is_demo": True},
+        ]
+        return {"partners": demo_partners, "my_weak_subjects": [], "message": "Mache mehr Quizze um echte Lernpartner zu finden!"}
 
-    # Get current user's grade
-    cursor = await db.execute("SELECT school_grade FROM users WHERE id = ?", (user_id,))
-    user_row = await cursor.fetchone()
-    my_grade_str = dict(user_row)["school_grade"] if user_row else "10"
-    try:
-        my_grade_num = int(my_grade_str)
-    except (ValueError, TypeError):
-        my_grade_num = 10
-
-    # Supreme 11.0: Filter by grade ±1 for better matching
+    # Grade already fetched above — use for ±1 matching
     valid_grades = [str(my_grade_num - 1), str(my_grade_num), str(my_grade_num + 1)]
 
     # Find other users with similar weaknesses (grade ±1 filter)
