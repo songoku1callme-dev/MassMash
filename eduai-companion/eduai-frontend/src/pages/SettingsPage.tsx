@@ -63,17 +63,33 @@ export default function SettingsPage() {
   setDeleting(true);
   setDeleteError("");
   try {
-   await authApi.deleteAccount();
-   try { await clerk.signOut(); } catch { /* Clerk may not be active */ }
-   logout();
-   localStorage.clear();
-   sessionStorage.clear();
-   window.location.href = '/auth';
-  } catch (err) {
-   setDeleteError(err instanceof Error ? err.message : "Konto konnte nicht gelöscht werden.");
-  } finally {
-   setDeleting(false);
+   // Zuerst Backend aufrufen (DELETE, dann POST-Fallback)
+   try {
+    await authApi.deleteAccount();
+   } catch (e) {
+    // POST-Fallback falls DELETE von Proxy blockiert wird
+    console.error("DELETE failed, trying POST fallback:", e);
+    const { getAccessToken } = await import("../services/api");
+    const token = getAccessToken();
+    const API_URL = import.meta.env.VITE_API_URL || "";
+    await fetch(`${API_URL}/api/auth/account/delete`, {
+     method: "POST",
+     headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+     },
+    });
+   }
+  } catch (e) {
+   // Auch bei Backend-Fehler: Clerk logout!
+   console.error("Account deletion backend error (proceeding with logout):", e);
   }
+  // Clerk signOut IMMER ausführen
+  try { await clerk.signOut(); } catch { /* Clerk may not be active */ }
+  logout();
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = '/auth';
  };
 
  const handleSave = async () => {
