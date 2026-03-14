@@ -26,7 +26,7 @@ async def datenschutzerklärung():
             },
             {
                 "title": "2. Welche Daten wir erheben",
-                "content": "Wir erheben: E-Mail-Adresse, Benutzername, Schulklasse, Schultyp, Lernfortschritt, Quiz-Ergebnisse, Chat-Verlaeufe. Alle Daten dienen ausschliesslich der Lernunterstuetzung."
+                "content": "Wir erheben: E-Mail-Adresse, Benutzername, Schulklasse, Schultyp, Lernfortschritt, Quiz-Ergebnisse, Chat-Verläufe. Alle Daten dienen ausschließlich der Lernunterstützung."
             },
             {
                 "title": "3. Zweck der Verarbeitung",
@@ -42,19 +42,19 @@ async def datenschutzerklärung():
             },
             {
                 "title": "6. Cookies",
-                "content": "Wir verwenden: Notwendige Cookies (Session, Auth-Token), Optionale Cookies (Dark Mode Praeferenz, Sprache). Keine Tracking-Cookies ohne Einwilligung."
+                "content": "Wir verwenden: Notwendige Cookies (Session, Auth-Token), Optionale Cookies (Dark Mode Präferenz, Sprache). Keine Tracking-Cookies ohne Einwilligung."
             },
             {
                 "title": "7. Deine Rechte (DSGVO Art. 15-22)",
-                "content": "Du hast das Recht auf: Auskunft, Berichtigung, Loeschung, Einschraenkung, Datenportabilitaet, Widerspruch. Kontaktiere uns jederzeit."
+                "content": "Du hast das Recht auf: Auskunft, Berichtigung, Löschung, Einschränkung, Datenportabilität, Widerspruch. Kontaktiere uns jederzeit."
             },
             {
-                "title": "8. Account loeschen",
-                "content": "Du kannst deinen Account jederzeit in den Einstellungen loeschen. Alle deine Daten werden unwiderruflich entfernt."
+                "title": "8. Account löschen",
+                "content": "Du kannst deinen Account jederzeit in den Einstellungen löschen. Alle deine Daten werden unwiderruflich entfernt."
             },
             {
                 "title": "9. Speicherdauer",
-                "content": "Deine Daten werden gespeichert solange dein Account aktiv ist. Nach Loeschung werden alle Daten innerhalb von 30 Tagen entfernt."
+                "content": "Deine Daten werden gespeichert solange dein Account aktiv ist. Nach Löschung werden alle Daten innerhalb von 30 Tagen entfernt."
             },
         ],
     }
@@ -86,7 +86,7 @@ async def save_cookie_consent(
     consent_type: 'all' | 'necessary' | 'custom'
     """
     if consent_type not in ("all", "necessary", "custom"):
-        raise HTTPException(status_code=400, detail="Ungueltiger Consent-Typ")
+        raise HTTPException(status_code=400, detail="Ungültiger Consent-Typ")
 
     return {"message": "Cookie-Einstellungen gespeichert", "consent_type": consent_type}
 
@@ -120,4 +120,4 @@ async def delete_account(
     await db.commit()
 
     logger.info("Account deleted for user_id=%s (DSGVO Art. 17)", user_id)
-    return {"message": "Dein Account und alle Daten wurden unwiderruflich geloescht."}
+    return {"message": "Dein Account und alle Daten wurden unwiderruflich gelöscht."}
