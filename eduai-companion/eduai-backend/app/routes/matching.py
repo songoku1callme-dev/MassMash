@@ -23,6 +23,15 @@ async def find_lernpartner(
     """Find learning partners with overlapping weak subjects (grade ±1)."""
     user_id = current_user["id"]
 
+    # Get current user's grade FIRST (needed for demo fallback too)
+    cursor = await db.execute("SELECT school_grade FROM users WHERE id = ?", (user_id,))
+    user_row = await cursor.fetchone()
+    my_grade_str = dict(user_row)["school_grade"] if user_row else "10"
+    try:
+        my_grade_num = int(my_grade_str)
+    except (ValueError, TypeError):
+        my_grade_num = 10
+
     # Get current user's weak topics
     cursor = await db.execute(
         """SELECT DISTINCT subject, topic_name FROM user_memories
@@ -56,16 +65,7 @@ async def find_lernpartner(
         ]
         return {"partners": demo_partners, "my_weak_subjects": [], "message": "Mache mehr Quizze um echte Lernpartner zu finden!"}
 
-    # Get current user's grade
-    cursor = await db.execute("SELECT school_grade FROM users WHERE id = ?", (user_id,))
-    user_row = await cursor.fetchone()
-    my_grade_str = dict(user_row)["school_grade"] if user_row else "10"
-    try:
-        my_grade_num = int(my_grade_str)
-    except (ValueError, TypeError):
-        my_grade_num = 10
-
-    # Supreme 11.0: Filter by grade ±1 for better matching
+    # Grade already fetched above — use for ±1 matching
     valid_grades = [str(my_grade_num - 1), str(my_grade_num), str(my_grade_num + 1)]
 
     # Find other users with similar weaknesses (grade ±1 filter)
