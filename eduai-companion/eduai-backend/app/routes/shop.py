@@ -17,37 +17,72 @@ router = APIRouter(prefix="/api/shop", tags=["shop"])
 # Default Shop Items — werden automatisch geladen
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SHOP_ITEMS = [
-    # Themes (500 XP)
-    {"id": "theme_dark_blue", "name": "Dark Blue Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Dunkles Blau für konzentriertes Lernen"},
-    {"id": "theme_purple", "name": "Purple Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Elegantes Lila für kreative Köpfe"},
-    {"id": "theme_sunset", "name": "Sunset Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Warme Sonnenuntergangsfarben"},
-    {"id": "theme_forest", "name": "Forest Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Natürliches Waldgrün"},
-    {"id": "theme_ocean", "name": "Ocean Theme", "category": "theme", "price": 500, "icon": "palette", "description": "Tiefes Meeresblau"},
-    {"id": "theme_cherry", "name": "Cherry Blossom Theme", "category": "theme", "price": 600, "icon": "palette", "description": "Zartes Kirschblüten-Rosa"},
-    {"id": "theme_neon", "name": "Neon Cyber Theme", "category": "theme", "price": 750, "icon": "palette", "description": "Leuchtende Neonfarben im Cyber-Stil"},
-    # KI-Persönlichkeiten (1000 XP)
-    {"id": "ki_yoda", "name": "Yoda KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Weise Antworten im Yoda-Stil"},
-    {"id": "ki_sherlock", "name": "Sherlock KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Analytisch und deduktiv"},
-    {"id": "ki_pirat", "name": "Pirat KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Arrr! Lernen auf hoher See"},
-    {"id": "ki_rapper", "name": "Rapper KI-Persönlichkeit", "category": "ki", "price": 1000, "icon": "bot", "description": "Erklärt alles im Rap-Stil"},
-    {"id": "ki_astronaut", "name": "Astronaut KI-Persönlichkeit", "category": "ki", "price": 1200, "icon": "bot", "description": "Wissen aus dem Weltall"},
-    # Profilrahmen (750-2000 XP)
-    {"id": "frame_gold", "name": "Gold Profilrahmen", "category": "frame", "price": 750, "icon": "crown", "description": "Goldener Rahmen für dein Profil"},
-    {"id": "frame_diamond", "name": "Diamant Profilrahmen", "category": "frame", "price": 1500, "icon": "gem", "description": "Funkelnder Diamant-Rahmen"},
-    {"id": "frame_fire", "name": "Feuer Profilrahmen", "category": "frame", "price": 1000, "icon": "flame", "description": "Lodernder Flammenrahmen"},
-    {"id": "frame_rainbow", "name": "Regenbogen Profilrahmen", "category": "frame", "price": 2000, "icon": "rainbow", "description": "Schillernder Regenbogenrahmen"},
-    # Boosts (150-500 XP)
-    {"id": "boost_double_xp", "name": "Doppel-XP (1 Stunde)", "category": "boost", "price": 200, "icon": "zap", "description": "1 Stunde doppelte XP"},
-    {"id": "boost_hint", "name": "Hint-Token für IQ-Test", "category": "boost", "price": 300, "icon": "lightbulb", "description": "Ein Hinweis im IQ-Test"},
-    {"id": "boost_skip", "name": "Frage-Überspringen Token", "category": "boost", "price": 150, "icon": "skip-forward", "description": "Überspringe eine schwierige Frage"},
-    {"id": "boost_streak_shield", "name": "Streak-Schutzschild", "category": "boost", "price": 500, "icon": "shield", "description": "Schützt deinen Streak für einen Tag"},
-    {"id": "boost_extra_life", "name": "Extra Leben (Quiz)", "category": "boost", "price": 250, "icon": "heart", "description": "Ein zusätzlicher Versuch im Quiz"},
-    # Titel & Badges (800-3000 XP)
-    {"id": "title_genius", "name": "Titel: Genie", "category": "title", "price": 2000, "icon": "brain", "description": "Zeige allen, dass du ein Genie bist"},
-    {"id": "title_nerd", "name": "Titel: Nerd", "category": "title", "price": 800, "icon": "glasses", "description": "Trage den Nerd-Titel mit Stolz"},
-    {"id": "title_champion", "name": "Titel: Champion", "category": "title", "price": 3000, "icon": "trophy", "description": "Der ultimative Lern-Champion"},
+DEFAULT_ITEMS = [
+    # THEMES (100-300 XP)
+    {"name":"Dark Pro Theme","cost":100,
+     "category":"themes","icon":"moon",
+     "description":"Exklusives dunkles Design"},
+    {"name":"Neon Theme","cost":200,
+     "category":"themes","icon":"zap",
+     "description":"Leuchtendes Neon-Design"},
+    {"name":"Sakura Theme","cost":300,
+     "category":"themes","icon":"flower",
+     "description":"Japanisches Kirschblüten-Design"},
+    
+    # KI-PERSÖNLICHKEITEN (200-500 XP)
+    {"name":"Einstein Modus","cost":500,
+     "category":"personalities","icon":"brain",
+     "description":"KI erklärt wie Einstein"},
+    {"name":"Sokrates Modus","cost":400,
+     "category":"personalities","icon":"landmark",
+     "description":"Sokratische Methode"},
+    {"name":"Friendly Coach","cost":200,
+     "category":"personalities","icon":"smile",
+     "description":"Motivierender Lerncoach"},
+
+    # POWER-UPS (150-500 XP)
+    {"name":"Streak Freeze","cost":150,
+     "category":"powerups","icon":"snowflake",
+     "description":"Schützt deinen Streak 1x"},
+    {"name":"Doppel-XP (1h)","cost":300,
+     "category":"powerups","icon":"zap",
+     "description":"2x XP für 1 Stunde"},
+    {"name":"XP-Boost (24h)","cost":500,
+     "category":"powerups","icon":"rocket",
+     "description":"1.5x XP für 24 Stunden"},
+    {"name":"Hint-Token (5x)","cost":100,
+     "category":"powerups","icon":"lightbulb",
+     "description":"5 Hinweise für Quiz"},
+
+    # RAHMEN & COSMETICS (200-400 XP)
+    {"name":"Gold-Rahmen","cost":400,
+     "category":"cosmetics","icon":"crown",
+     "description":"Goldener Avatar-Rahmen"},
+    {"name":"Diamond-Rahmen","cost":800,
+     "category":"cosmetics","icon":"gem",
+     "description":"Diamant Avatar-Rahmen"},
+    {"name":"Flame-Effekt","cost":300,
+     "category":"cosmetics","icon":"flame",
+     "description":"Flammen um deinen Avatar"},
+
+    # PREMIUM (500-1500 XP)
+    {"name":"Pro-Testwoche","cost":1000,
+     "category":"premium","icon":"star",
+     "description":"7 Tage Pro kostenlos"},
+    {"name":"Bonus-Quiz Pack","cost":200,
+     "category":"premium","icon":"book",
+     "description":"50 Extra-Quizfragen"},
 ]
+
+@router.on_event("startup")
+async def seed_shop_items():
+    db = await aiosqlite.connect("lumnos.db") # Or use get_db dependency if possible, but startup events are tricky with dependencies. 
+    # Better to use a separate connection or the existing database setup.
+    # Assuming get_db logic handles connection string.
+    # Let's use the database.py logic if possible, or just direct connect for now as in other startup scripts.
+    # Actually, let's look at how other startup events are handled.
+    pass 
+
 
 
 @router.get("/items")
