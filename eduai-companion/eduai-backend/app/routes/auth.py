@@ -58,6 +58,84 @@ async def _ensure_admin_max_tier(db: aiosqlite.Connection, user_id: int) -> None
     await db.commit()
 
 
+async def seed_new_user(user_id: int, db: aiosqlite.Connection) -> None:
+    """Seed demo content for a newly registered user.
+
+    Creates:
+    - 1 demo flashcard deck "Mathe Basics" with 3 cards
+    - 1 welcome note explaining the app
+    - Joins the default "Lumnos Community" group (if it exists)
+    """
+    try:
+        # 1. Demo Flashcard Deck
+        try:
+            cursor = await db.execute(
+                """INSERT INTO flashcard_decks (user_id, name, subject, description)
+                VALUES (?, 'Mathe Basics', 'Mathematik', 'Grundlegende Mathe-Konzepte zum Einstieg')""",
+                (user_id,),
+            )
+            await db.commit()
+            deck_id = cursor.lastrowid
+            demo_cards = [
+                ("Was ist a² + b² = c²?", "Der Satz des Pythagoras — gilt für rechtwinklige Dreiecke. Die Summe der Quadrate der Katheten ergibt das Quadrat der Hypotenuse."),
+                ("Was ist π (Pi)?", "π ≈ 3,14159 — das Verhältnis von Umfang zu Durchmesser eines Kreises. Wird in Geometrie und Trigonometrie verwendet."),
+                ("Löse: 2x + 4 = 10", "x = 3. Rechnung: 2x = 10 - 4 = 6, also x = 6 ÷ 2 = 3."),
+            ]
+            for front, back in demo_cards:
+                await db.execute(
+                    """INSERT INTO flashcards (deck_id, user_id, front, back, subject)
+                    VALUES (?, ?, ?, ?, 'Mathematik')""",
+                    (deck_id, user_id, front, back),
+                )
+            await db.commit()
+        except Exception as e:
+            logger.debug("Could not seed flashcards for user %s: %s", user_id, e)
+
+        # 2. Welcome Note
+        try:
+            await db.execute(
+                """INSERT INTO notes (user_id, title, content, subject)
+                VALUES (?, ?, ?, 'Allgemein')""",
+                (user_id,
+                 "🎉 Willkommen bei Lumnos!",
+                 "# Willkommen bei Lumnos!\n\n"
+                 "Hier kannst du deine Notizen speichern und organisieren.\n\n"
+                 "## Tipps:\n"
+                 "- **Fett** für wichtige Begriffe\n"
+                 "- *Kursiv* für Definitionen\n"
+                 "- `Code` für Formeln\n\n"
+                 "## Was du als nächstes tun kannst:\n"
+                 "1. Starte einen **KI-Chat** zu deinem Fach\n"
+                 "2. Mach ein **Quiz** um dein Wissen zu testen\n"
+                 "3. Erstelle **Karteikarten** für wichtige Begriffe\n"),
+            )
+            await db.commit()
+        except Exception as e:
+            logger.debug("Could not seed welcome note for user %s: %s", user_id, e)
+
+        # 3. Join default group "Lumnos Community" (if it exists)
+        try:
+            cursor = await db.execute(
+                "SELECT id, members FROM group_chats WHERE is_default = 1 AND is_active = 1 LIMIT 1"
+            )
+            row = await cursor.fetchone()
+            if row:
+                d = dict(row)
+                members = json.loads(d.get("members", "[]"))
+                if user_id not in members:
+                    members.append(user_id)
+                    await db.execute(
+                        "UPDATE group_chats SET members = ? WHERE id = ?",
+                        (json.dumps(members), d["id"]),
+                    )
+                    await db.commit()
+        except Exception as e:
+            logger.debug("Could not join default group for user %s: %s", user_id, e)
+
+    except Exception as e:
+        logger.warning("seed_new_user failed for user %s: %s", user_id, e)
+
+
 @router.post("/register", response_model=TokenResponse)
 async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db)):
     """Register a new user."""
@@ -99,6 +177,9 @@ async def register(user: UserRegister, db: aiosqlite.Connection = Depends(get_db
         (user_id,)
     )
     await db.commit()
+
+    # Seed demo content for new user (flashcards, note, challenge)
+    await seed_new_user(user_id, db)
 
     # Admin emails: always enforce Max tier at registration
     _is_admin = is_admin(user.email)
@@ -152,6 +233,14 @@ async def login(credentials: UserLogin, db: aiosqlite.Connection = Depends(get_d
         user_dict["subscription_tier"] = "max"
         user_dict["is_pro"] = 1
         user_dict["is_admin"] = 1
+
+    # Auto-join default group on login (if not already member)
+    try:
+        from app.routes.groups import ensure_default_group, join_default_group
+        await ensure_default_group(db)
+        await join_default_group(user_dict["id"], db)
+    except Exception:
+        pass  # Non-critical
 
     access_token = create_access_token(data={"sub": user_dict["id"]})
     refresh_token = create_refresh_token(data={"sub": user_dict["id"]})
