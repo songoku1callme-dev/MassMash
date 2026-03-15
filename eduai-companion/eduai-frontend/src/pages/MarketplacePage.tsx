@@ -58,8 +58,35 @@ export default function MarketplacePage() {
  </p>
  </div>
 
+ {/* Coming Soon Overlay when no real items */}
+ {!loading && items.length === 0 && (
+ <div className="relative rounded-2xl border border-[var(--border-color)] overflow-hidden mb-8">
+   <div className="absolute inset-0 bg-[var(--lumnos-bg)]/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-2xl">
+     <div className="text-center p-8">
+       <span className="text-5xl block mb-4">🔜</span>
+       <h2 className="text-2xl font-bold theme-text">
+         Marketplace coming soon!
+       </h2>
+       <p className="theme-text-secondary mt-2 max-w-md mx-auto">
+         Bald kannst du hier eigene Lernmaterialien kaufen und verkaufen.
+         Lehrer können Quiz-Sets, Karteikarten und Lernpläne anbieten.
+       </p>
+       <p className="text-sm text-indigo-400 mt-3 font-medium">
+         Verfügbar ab Sommer 2026
+       </p>
+     </div>
+   </div>
+   {/* Blurred placeholder grid behind the overlay */}
+   <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 p-6 opacity-30 blur-[2px]">
+     {[1,2,3,4,5,6].map(i => (
+       <div key={i} className="h-48 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-color)]" />
+     ))}
+   </div>
+ </div>
+ )}
+
  {/* Filters */}
- <div className="mb-6 flex gap-2">
+ <div className={`mb-6 flex gap-2 ${!loading && items.length === 0 ? 'hidden' : ''}`}>
  {[
  { value: "", label: "Alle" },
  { value: "quiz_set", label: "Quiz-Sets" },
