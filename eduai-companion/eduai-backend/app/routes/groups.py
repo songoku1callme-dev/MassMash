@@ -21,6 +21,55 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/groups", tags=["groups"])
 
 
+async def ensure_default_group(db: aiosqlite.Connection) -> None:
+    """Ensure the default 'Lumnos Community' group exists.
+
+    Called at app startup or on first group list request.
+    Creates the group with is_default=1 if it doesn't exist yet.
+    """
+    try:
+        # Add is_default column if missing
+        try:
+            await db.execute("ALTER TABLE group_chats ADD COLUMN is_default INTEGER DEFAULT 0")
+            await db.commit()
+        except Exception:
+            pass  # Column already exists
+
+        cursor = await db.execute(
+            "SELECT id FROM group_chats WHERE is_default = 1 AND is_active = 1 LIMIT 1"
+        )
+        if not await cursor.fetchone():
+            await db.execute(
+                """INSERT INTO group_chats (name, subject, created_by, members, is_active, is_default, max_members)
+                VALUES ('🌟 Lumnos Community', 'Allgemein', 0, '[]', 1, 1, 9999)"""
+            )
+            await db.commit()
+            logger.info("Created default group: Lumnos Community")
+    except Exception as e:
+        logger.warning("Could not ensure default group: %s", e)
+
+
+async def join_default_group(user_id: int, db: aiosqlite.Connection) -> None:
+    """Auto-join a user to the default Lumnos Community group if not already a member."""
+    try:
+        cursor = await db.execute(
+            "SELECT id, members FROM group_chats WHERE is_default = 1 AND is_active = 1 LIMIT 1"
+        )
+        row = await cursor.fetchone()
+        if row:
+            d = dict(row)
+            members = json.loads(d.get("members", "[]"))
+            if user_id not in members:
+                members.append(user_id)
+                await db.execute(
+                    "UPDATE group_chats SET members = ? WHERE id = ?",
+                    (json.dumps(members), d["id"]),
+                )
+                await db.commit()
+    except Exception as e:
+        logger.debug("Could not auto-join default group for user %s: %s", user_id, e)
+
+
 async def _get_user_tier(user_id: int, db: aiosqlite.Connection) -> str:
     """Get user's subscription tier."""
     cursor = await db.execute(

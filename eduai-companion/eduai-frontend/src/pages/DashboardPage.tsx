@@ -503,7 +503,12 @@ export default function DashboardPage({ onNavigate }: DashboardProps) {
  className="text-2xl">{event.emoji}</motion.span>
  <div className="flex-1">
  <div className="font-bold text-foreground text-sm">{event.name}</div>
- <div className="text-xs text-muted-foreground">{event.xp_multiplier}x XP aktiv!</div>
+ <div className="text-xs text-muted-foreground">
+ {typeof event.xp_multiplier === 'number' && event.xp_multiplier > 0
+   ? `${event.xp_multiplier}x XP`
+   : "Bonus XP"}
+ {" aktiv!"}
+ </div>
  </div>
  </motion.div>
  ))}
