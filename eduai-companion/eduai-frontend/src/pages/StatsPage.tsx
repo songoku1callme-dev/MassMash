@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BarChart3, Brain, Flame, Trophy, Target, Sparkles, TrendingUp, BookOpen, ArrowUp, ArrowDown, Minus, Download } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 import { PageLoader, ErrorState } from "../components/PageStates";
+import { getValidToken } from "../services/api";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -47,13 +48,16 @@ export default function StatsPage() {
  const [prognoseEmpfehlung, setPrognoseEmpfehlung] = useState("");
  const [prognoseTrend, setPrognoseTrend] = useState("");
 
- const token = localStorage.getItem("lumnos_access_token");
- const headers = { Authorization: `Bearer ${token}` };
+ const getHeaders = useCallback(async () => {
+ const token = await getValidToken();
+ return { Authorization: `Bearer ${token}` };
+ }, []);
 
- const loadStats = async () => {
+ const loadStats = useCallback(async () => {
  setLoadError(false);
  setLoading(true);
  try {
+ const headers = await getHeaders();
  const [ovRes, subjRes] = await Promise.all([
  fetch(`${API_URL}/api/stats/overview`, { headers }),
  fetch(`${API_URL}/api/stats/per-subject`, { headers }),
@@ -69,7 +73,7 @@ export default function StatsPage() {
  setLoadError(true);
  }
  setLoading(false);
- };
+ }, [getHeaders]);
 
  useEffect(() => {
  loadStats();
@@ -78,6 +82,7 @@ export default function StatsPage() {
  const runNotenPrognose = async () => {
  setPrognoseLoading(true);
  try {
+ const headers = await getHeaders();
  const resp = await fetch(`${API_URL}/api/stats/noten-prognose`, {
  method: "POST",
  headers,
@@ -95,6 +100,7 @@ export default function StatsPage() {
  const runKIAnalyse = async () => {
  setAnalysisLoading(true);
  try {
+ const headers = await getHeaders();
  const resp = await fetch(`${API_URL}/api/stats/ki-analyse`, {
  method: "POST",
  headers,

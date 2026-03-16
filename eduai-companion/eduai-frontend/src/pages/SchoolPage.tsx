@@ -525,7 +525,7 @@ export default function SchoolPage() {
  <p className="text-xs text-slate-500">{pkg.students}</p>
  {selectedPackage === pkg.id && (
  <div className="mt-3 text-xs text-indigo-300 flex items-center justify-center gap-1">
- <CheckCircle className="w-3 h-3" /> Ausgewaehlt
+ <CheckCircle className="w-3 h-3" /> Ausgewählt
  </div>
  )}
  </button>
@@ -559,7 +559,7 @@ export default function SchoolPage() {
  <button
  onClick={() => {
  setView("create");
- setMessage({ text: `${selectedPackage === "klassen" ? "Klassen" : "Schul"}-Lizenz ausgewaehlt! Erstelle jetzt deine erste Klasse.`, type: "success" });
+ setMessage({ text: `${selectedPackage === "klassen" ? "Klassen" : "Schul"}-Lizenz ausgewählt! Erstelle jetzt deine erste Klasse.`, type: "success" });
  }}
  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold transition-all"
  style={{
