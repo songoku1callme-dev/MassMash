@@ -29,12 +29,12 @@ KI_PERSONALITIES = [
     },
     {
         "id": 2,
-        "name": "ELI5",
+        "name": "Einfach",
         "emoji": "\U0001f9e9",
         "tier": "free",
         "temperature": 0.5,
         "voice_id": "de-DE-FlorianMultilingualNeural",
-        "preview": "Erklärt wie für einen 10-Jährigen — einfach aber korrekt!",
+        "preview": "Erklärt alles sehr einfach — aber immer korrekt!",
         "system_prompt": (
             "Du erklärst wie für einen 10-Jährigen — ABER IMMER KORREKT.\n"
             "Dein Stil:\n"

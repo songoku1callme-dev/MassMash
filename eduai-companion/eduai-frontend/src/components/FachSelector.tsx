@@ -115,10 +115,8 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
 
   const apiFaecher = useMemo<FachItem[]>(() => {
     const data = subjectsQuery.data;
+    // Always show ALL hardcoded subjects, only append extra API-only subjects
     if (!data || data.length === 0) return ALLE_FAECHER;
-
-    const ids = new Set(data.map((s: Subject) => s.id));
-    const known = ALLE_FAECHER.filter((f) => ids.has(f.id));
 
     const byId = new Map(ALLE_FAECHER.map((f) => [f.id, f] as const));
     const unknown: FachItem[] = data
@@ -130,7 +128,7 @@ export default function FachSelector({ selected, onSelect, showAll = true }: Fac
         kategorie: "Weitere",
       }));
 
-    return [...known, ...unknown];
+    return [...ALLE_FAECHER, ...unknown];
   }, [subjectsQuery.data]);
 
   const kategorien = useMemo(() => {

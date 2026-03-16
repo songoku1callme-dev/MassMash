@@ -485,7 +485,7 @@ async def submit_quiz(
                     user_id,
                     f"Fehlermuster erkannt in {request.subject}",
                     f"Du hast {recent_errors} Fehler in der letzten Stunde gemacht. "
-                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere ELI5 für einfachere Erklärungen. "
+                    "Tipp: Wechsle zum Mentor-Modus oder aktiviere den Einfach-Modus für einfachere Erklärungen. "
                     "Manchmal hilft auch eine kurze Pause!",
                 ),
             )

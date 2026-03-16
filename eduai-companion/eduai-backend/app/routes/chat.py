@@ -545,10 +545,10 @@ async def send_message(
 
     # Bundesland + Tutor-Modus are now handled in build_system_prompt (Nuclear Reset Block A)
 
-    # Perfect School 4.1 Block 2.3: ELI5 (Erkläre wie ich 5 bin)
+    # Perfect School 4.1 Block 2.3: Einfach-Modus
     if request.eli5:
         combined_prompt += (
-            "\n\nELI5-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
+            "\n\nEINFACH-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
             "Nutze: Einfachste Wörter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
             "KEINE Fachbegriffe. KEINE komplizierten Sätze. "
             "Beispiel: Statt 'Photosynthese' sagst du 'Pflanzen kochen sich Essen aus Sonnenlicht'. "
@@ -960,10 +960,10 @@ async def send_message_stream(
         if spezial_prompt:
             combined_prompt += f"\n{spezial_prompt}\n"
 
-    # ELI5
+    # Einfach-Modus
     if request.eli5:
         combined_prompt += (
-            "\n\nELI5-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
+            "\n\nEINFACH-MODUS AKTIV: Erkläre ALLES so, als wäre der Schüler 5 Jahre alt. "
             "Nutze: Einfachste Wörter, Alltagsbeispiele, Vergleiche mit Spielzeug/Tieren/Essen. "
             "KEINE Fachbegriffe. Maximal 3 kurze Sätze pro Absatz.\n"
         )

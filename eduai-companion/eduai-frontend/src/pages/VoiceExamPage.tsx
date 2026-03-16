@@ -153,8 +153,10 @@ export default function VoiceExamPage() {
  nextQuestion([...verlauf, fb]);
  }
  });
- } catch {
- setError("Bewertung fehlgeschlagen. Bitte versuche es erneut.");
+ } catch (err: unknown) {
+ const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+ console.error("Exam evaluate error:", err);
+ setError(`Bewertung fehlgeschlagen: ${msg}`);
  setState("asking");
  }
  };
@@ -187,8 +189,10 @@ export default function VoiceExamPage() {
  startListening();
  });
  });
- } catch {
- setError("Prüfung konnte nicht gestartet werden.");
+ } catch (err: unknown) {
+ const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+ console.error("Exam start error:", err);
+ setError(`Prüfung konnte nicht gestartet werden: ${msg}`);
  setState("idle");
  }
  };
@@ -215,8 +219,10 @@ export default function VoiceExamPage() {
  speak(frage, () => {
  startListening();
  });
- } catch {
- setError("Nächste Frage konnte nicht geladen werden.");
+ } catch (err: unknown) {
+ const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+ console.error("Exam next error:", err);
+ setError(`Nächste Frage konnte nicht geladen werden: ${msg}`);
  }
  };
 
@@ -238,8 +244,10 @@ export default function VoiceExamPage() {
  });
  setResult(resp.data);
  speak(resp.data.feedback || "Prüfung beendet!");
- } catch {
- setError("Ergebnis konnte nicht berechnet werden.");
+ } catch (err: unknown) {
+ const msg = err instanceof Error ? err.message : "Unbekannter Fehler";
+ console.error("Exam finish error:", err);
+ setError(`Ergebnis konnte nicht berechnet werden: ${msg}`);
  }
  };
 

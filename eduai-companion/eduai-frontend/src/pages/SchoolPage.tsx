@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GraduationCap, Users, Plus, Copy, CheckCircle, Loader2, Trophy, Flame, School, Building2, Sparkles, Mail, AlertCircle, UserMinus, Link2, Send, LogOut } from "lucide-react";
+import { getValidToken } from "../services/api";
 
 const API = import.meta.env.VITE_API_URL || "";
 
@@ -28,12 +29,15 @@ export default function SchoolPage() {
  const [inviteEmails, setInviteEmails] = useState("");
  const [invitingClass, setInvitingClass] = useState<string | null>(null);
  const [leavingClass, setLeavingClass] = useState(false);
- const token = localStorage.getItem("lumnos_token");
 
- const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+ const getHeaders = useCallback(async () => {
+ const token = await getValidToken();
+ return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+ }, []);
 
- const fetchData = async () => {
+ const fetchData = useCallback(async () => {
  try {
+ const headers = await getHeaders();
  const [dashRes, myRes] = await Promise.all([
  fetch(`${API}/api/school/dashboard`, { headers }).catch(() => null),
  fetch(`${API}/api/school/my-class`, { headers }).catch(() => null),
@@ -41,7 +45,7 @@ export default function SchoolPage() {
  if (dashRes && dashRes.ok) { const d = await dashRes.json(); setClasses(d.classes || []); }
  if (myRes && myRes.ok) { const m = await myRes.json(); setMyClass(m); }
  } catch { /* ignore */ }
- };
+ }, [getHeaders]);
 
  useEffect(() => {
  fetchData();
@@ -60,6 +64,7 @@ export default function SchoolPage() {
  setLoading(true);
  setMessage(null);
  try {
+ const headers = await getHeaders();
  const res = await fetch(`${API}/api/school/create?school_name=${encodeURIComponent(schoolName)}`, { method: "POST", headers });
  if (res.ok) {
  const d = await res.json();
@@ -82,6 +87,7 @@ export default function SchoolPage() {
  setLoading(true);
  setMessage(null);
  try {
+ const headers = await getHeaders();
  const res = await fetch(`${API}/api/school/join/${joinCode.trim().toUpperCase()}`, { method: "POST", headers });
  if (res.ok) {
  const d = await res.json();
@@ -109,6 +115,7 @@ export default function SchoolPage() {
  if (!confirm(`${studentName} wirklich aus der Klasse entfernen?`)) return;
  setLoading(true);
  try {
+ const headers = await getHeaders();
  const res = await fetch(`${API}/api/school/remove-student/${classCode}/${studentId}`, { method: "DELETE", headers });
  if (res.ok) {
  setMessage({ text: `${studentName} wurde entfernt.`, type: "success" });
@@ -128,6 +135,7 @@ export default function SchoolPage() {
  setLoading(true);
  setMessage(null);
  try {
+ const headers = await getHeaders();
  const emails = inviteEmails.split(/[,;\n]+/).map(e => e.trim()).filter(Boolean);
  const res = await fetch(`${API}/api/school/invite`, {
  method: "POST",
@@ -152,6 +160,7 @@ export default function SchoolPage() {
 
  const copyInviteLink = async (classCode: string) => {
  try {
+ const headers = await getHeaders();
  const res = await fetch(`${API}/api/school/invite-link/${classCode}`, { headers });
  if (res.ok) {
  const d = await res.json();
@@ -174,6 +183,7 @@ export default function SchoolPage() {
  if (!confirm("Willst du wirklich die Klasse verlassen? Du verlierst deinen Max-Zugang.")) return;
  setLeavingClass(true);
  try {
+ const headers = await getHeaders();
  const res = await fetch(`${API}/api/school/leave/${myClass.class_code}`, { method: "POST", headers });
  if (res.ok) {
  setMessage({ text: "Du hast die Klasse verlassen.", type: "success" });

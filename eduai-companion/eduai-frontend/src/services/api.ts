@@ -88,6 +88,19 @@ export function getAccessToken(): string | null {
   return localStorage.getItem("lumnos_token");
 }
 
+/** Returns a valid token, refreshing Clerk tokens if needed. */
+export async function getValidToken(): Promise<string | null> {
+  let token = getAccessToken();
+  if (token && isClerkToken(token)) {
+    const freshToken = await getFreshClerkToken();
+    if (freshToken) {
+      token = freshToken;
+      setTokens(freshToken, freshToken);
+    }
+  }
+  return token;
+}
+
 export function getRefreshToken(): string | null {
   return localStorage.getItem("lumnos_refresh_token");
 }
