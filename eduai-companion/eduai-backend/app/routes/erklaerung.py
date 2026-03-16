@@ -1,7 +1,7 @@
 """Erklärungs-System: Intelligente Erklärungen an jedem Punkt der App.
 
 Feature 1: POST /api/erklaerung/schnell — Quick 2-3 sentence explanation
-Feature 2: POST /api/erklaerung/stufenweise — Three-level explanation (ELI5/Normal/Fortgeschritten)
+Feature 2: POST /api/erklaerung/stufenweise — Three-level explanation (Einfach/Normal/Fortgeschritten)
 Feature 3: POST /api/quiz/erklaerung — Personalized quiz explanation
 """
 import logging
@@ -84,7 +84,7 @@ async def erklaerung_stufenweise(
     request: StufenweiseRequest,
     current_user: dict = Depends(get_current_user),
 ):
-    """Three-level explanation: ELI5, Normal, Fortgeschritten."""
+    """Three-level explanation: Einfach, Normal, Fortgeschritten."""
     prompt = (
         f"Erkläre das Thema '{request.thema}' (Fach: {request.fach}) auf DREI verschiedenen Niveaus.\n\n"
         f"Antworte EXAKT in diesem Format (ohne Markdown-Codeblöcke):\n"

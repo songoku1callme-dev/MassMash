@@ -149,12 +149,26 @@ export default function ChatPage() {
  inputRef.current?.focus();
  }, []);
 
- // Load KI personalities
+ // Hardcoded fallback personalities (backend may return empty list)
+ const FALLBACK_PERSONALITIES: KIPersonality[] = [
+ { id: 1, name: "Mentor", emoji: "\u{1F9D1}\u200D\u{1F3EB}", tier: "free", temperature: 0.4, preview: "Erkl\u00e4rt Schritt f\u00fcr Schritt", system_prompt: "", accessible: true },
+ { id: 2, name: "Einfach", emoji: "\u{1F9E9}", tier: "free", temperature: 0.5, preview: "Erkl\u00e4rt alles sehr einfach", system_prompt: "", accessible: true },
+ { id: 3, name: "Motivator", emoji: "\u{1F525}", tier: "free", temperature: 0.6, preview: "Motivierend und unterst\u00fctzend", system_prompt: "", accessible: true },
+ { id: 4, name: "Streng", emoji: "\u{1F9D0}", tier: "pro", temperature: 0.3, preview: "Direkt und fordernd", system_prompt: "", accessible: true },
+ ];
+
+ // Load KI personalities from API, fallback to hardcoded
  useEffect(() => {
  quizApi.personalities().then((res) => {
+ if (res.personalities && res.personalities.length > 0) {
  setPersonalities(res.personalities);
  setSelectedPersonality(res.current_id);
- }).catch(() => {});
+ } else {
+ setPersonalities(FALLBACK_PERSONALITIES);
+ }
+ }).catch(() => {
+ setPersonalities(FALLBACK_PERSONALITIES);
+ });
  }, []);
 
  // Load chat sessions (sidebar)
@@ -681,7 +695,7 @@ export default function ChatPage() {
  Tutor {tutorModus ? "AN" : "AUS"}
  </button>
 
- {/* ELI5 Toggle */}
+ {/* Einfach-Modus Toggle */}
  <button
  onClick={() => setEli5(!eli5)}
  className={`flex items-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-full text-xs font-bold transition-all border ${
@@ -690,8 +704,9 @@ export default function ChatPage() {
  : "text-slate-400 border-slate-600 hover:border-slate-500"
  }`}
  style={eli5 ? { background: "rgba(236,72,153,0.15)", boxShadow: "0 0 12px rgba(236,72,153,0.3)" } : { background: "rgba(var(--surface-rgb),0.5)" }}
+ title="Erklärt alles sehr einfach"
  >
- ELI5 {eli5 ? "AN" : "AUS"}
+ Einfach {eli5 ? "AN" : "AUS"}
  </button>
 
   {/* Upgrade Button for Free users (hidden for Owners) */}
