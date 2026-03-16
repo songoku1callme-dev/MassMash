@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import { useAuthStore } from "../stores/authStore";
 import { stripeApi, couponApi } from "../services/api";
 import { useIsOwner } from "../utils/ownerEmails";
@@ -95,6 +96,14 @@ export default function PricingPage() {
 
  const handleUpgrade = async (plan: PlanKey) => {
  if (isOwner) return; // Owner braucht kein Upgrade
+
+ if (!import.meta.env.VITE_STRIPE_LINK_PRO_MONTHLY) {
+  toast.error(
+   "Zahlung noch nicht aktiviert. " +
+   "Kontaktiere support@lumnos.de")
+  return
+ }
+
  setLoading(plan);
  setError("");
 
@@ -162,6 +171,7 @@ export default function PricingPage() {
 
  return (
  <div className="min-h-screen p-4 lg:p-6 max-w-6xl mx-auto space-y-8" style={{ background: "var(--lumnos-bg)" }}>
+ <Toaster position="top-center" />
  {/* Header */}
  <div className="text-center">
  <h1 className="text-2xl sm:text-3xl font-bold text-white">
